@@ -3,8 +3,11 @@
 
 using DataFrames, PyPlot, PyCall, Random
 
-## PlotBasic.jl
+"""
+    PlotBasic(df::DataFrame,nn::Integer)
 
+Plot random subset of size nn trajectories.
+"""
 function PlotBasic(df::DataFrame,nn::Integer)
 
    #PyPlot.figure()
@@ -35,8 +38,11 @@ function PlotBasic(df::DataFrame,nn::Integer)
 
 end
 
-# PlotMapProj.jl
+"""
+    PlotMapProj(df::DataFrame,nn::Integer)
 
+Plot random subset of size nn trajectories using PyPlot & basemap.
+"""
 function PlotMapProj(df::DataFrame,nn::Integer)
 
    #PyPlot.figure()

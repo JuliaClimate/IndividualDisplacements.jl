@@ -4,8 +4,11 @@ using DataFrames
 #VelCopy(du,uInit,tmp,3600.0)
 #VelComp(du,uInit,uvetc,3600.0)
 
-# VelComp
+"""
+    VelComp(du,u,p::Dict,tim)
 
+Interpolate velocity from gridded fields and return position increment `du`
+"""
 function VelComp(du,u,p::Dict,tim)
     #compute positions in index units
     dt=(tim-p["t0"])/(p["t1"]-p["t0"])
@@ -45,6 +48,12 @@ end
 
 # VelCopy.jl
 
+"""
+    VelCopy(du,u,p::DataFrame,t)
+
+Interpolate velocity from MITgcm float_trajectories output and return
+position increment `du`.
+"""
 function VelCopy(du,u,p::DataFrame,t)
     tt=t/3600.0
     tt0=Int32(floor(tt))

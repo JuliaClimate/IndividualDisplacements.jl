@@ -17,6 +17,7 @@ if false
    df=IndividualDisplacement.ReadDisplacements(dirIn,prec)
    PyPlot.figure()
    IndividualDisplacement.PlotMapProj(df,300)
+   gcf()
 end
 
 if false

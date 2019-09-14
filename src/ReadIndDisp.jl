@@ -3,14 +3,18 @@ using StatsBase
 using MeshArrays
 using DataFrames
 
-## ReadGriddedFields
+"""
+    ReadGriddedFields()
 
+Read gridded variables from file using MeshArrays and
+return result in uvetc Dictionary.
+"""
 function ReadGriddedFields()
 
 ###### 1) Get gridded variables via MeshArrays.jl
 
-GCMGridSpec("flt_example")
-GCMGridLoad()
+GCMGridSpec("flt_example") #deprecated
+GCMGridLoad() #deprecated
 
 ## Put grid variables in a dictionary:
 
@@ -49,9 +53,13 @@ uvetc=merge(uvetc,msk)
 
 end
 
-## ReadDisplacements
+"""
+    ReadDisplacements(dirIn::String,prec::DataType)
 
-function ReadDisplacements(dirIn::String,prec::DataType);
+Read displacements from MITgcm output file using MeshArrays
+and return as a DataFrame.
+"""
+function ReadDisplacements(dirIn::String,prec::DataType)
 
    #load the data into one array
    prec==Float64 ? reclen=8 : reclen=4
