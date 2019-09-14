@@ -1,4 +1,4 @@
-module IndividualDisplacement
+module IndividualDisplacements
 
 greet() = print("Get ready for IndividualDisplacement!")
 
@@ -14,9 +14,9 @@ if false
    #for global ocean case, e.g.:
    dirIn="run_offflt/"
    prec=Float32
-   df=IndividualDisplacement.ReadDisplacements(dirIn,prec)
+   df=IndividualDisplacements.ReadDisplacements(dirIn,prec)
    PyPlot.figure()
-   IndividualDisplacement.PlotMapProj(df,300)
+   IndividualDisplacements.PlotMapProj(df,300)
    gcf()
 end
 
@@ -24,9 +24,9 @@ if false
    #for flt_example case, e.g.:
    dirIn="run.long2/"
    prec=Float32
-   df=IndividualDisplacement.ReadDisplacements(dirIn,prec)
+   df=IndividualDisplacements.ReadDisplacements(dirIn,prec)
    PyPlot.figure()
-   IndividualDisplacement.PlotBasic(df,300)
+   IndividualDisplacements.PlotBasic(df,300)
    gcf()
    #
    tmp=df[df.ID .== 200, :]
@@ -41,12 +41,12 @@ if false
        ref[2,i+1]-ref[2,i]<-maxLat/2 ? ref[2,i+1:end]+=fill(maxLat,(nSteps-i)) : nothing
    end
    #
-   comp_vel=IndividualDisplacement.VelComp
-   get_vel=IndividualDisplacement.VelCopy
+   comp_vel=IndividualDisplacements.VelComp
+   get_vel=IndividualDisplacements.VelCopy
    uInit=[tmp[1,:lon];tmp[1,:lat]]
    du=fill(0.0,2)
    #
-   uvetc=IndividualDisplacement.ReadGriddedFields()
+   uvetc=IndividualDisplacements.ReadGriddedFields()
    tspan = (0.0,nSteps*3600.0)
    #prob = ODEProblem(get_vel,uInit,tspan,tmp)
    prob = ODEProblem(comp_vel,uInit,tspan,uvetc)

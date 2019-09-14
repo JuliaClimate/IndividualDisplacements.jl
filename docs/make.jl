@@ -1,15 +1,15 @@
 using Documenter
-using IndividualDisplacement
+using IndividualDisplacements
 
 makedocs(
-    sitename = "IndividualDisplacement",
+    sitename = "IndividualDisplacements",
     format = :html,
-    modules = [IndividualDisplacement]
+    modules = [IndividualDisplacements]
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.
 # See "Hosting Documentation" and deploydocs() in the Documenter manual
 # for more information.
-#=deploydocs(
-    repo = "<repository url>"
-)=#
+deploydocs(
+    repo = "github.com/gaelforget/IndividualDisplacements.jl.git",
+)

@@ -1,4 +1,4 @@
-# IndividualDisplacement.jl
+# IndividualDisplacements.jl
 
 To be continued ...
 
