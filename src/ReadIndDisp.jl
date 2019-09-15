@@ -14,7 +14,7 @@ function ReadGriddedFields()
 ###### 1) Get gridded variables via MeshArrays.jl
 
 
-mygrid=gcmgrid("run.long2/","ll",1,[(80,42)], [80 42], Float32, read, write)
+mygrid=gcmgrid("flt_example/","ll",1,[(80,42)], [80 42], Float32, read, write)
 nr=8
 
 ## Put grid variables in a dictionary:

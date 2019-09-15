@@ -25,7 +25,7 @@ Reproducing `MITgcm/verification/flt_example/` case. This is based on an
 extended and modified configuration of the standard MITgcm test case.
 """
 function ex_2()
-   dirIn="run.long2/"
+   dirIn="flt_example/"
    prec=Float32
    df=IndividualDisplacements.ReadDisplacements(dirIn,prec)
    PyPlot.figure()
