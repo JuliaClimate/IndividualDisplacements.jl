@@ -3,8 +3,11 @@
 
 using DataFrames, PyPlot, PyCall, Random
 
-## PlotBasic.jl
+"""
+    PlotBasic(df::DataFrame,nn::Integer)
 
+Plot random subset of size nn trajectories.
+"""
 function PlotBasic(df::DataFrame,nn::Integer)
 
    #PyPlot.figure()
@@ -19,15 +22,15 @@ function PlotBasic(df::DataFrame,nn::Integer)
    for ii=1:nn
       tmp=df[df.ID .== IDs[ii], :]
       if dMax > 0.
-         d=abs.(diff(tmp[:lon]))
+         d=abs.(diff(tmp[!,:lon]))
          jj=findall(d .> dMax)
-         tmp[jj,:lon]=NaN; tmp[jj,:lat]=NaN
-         d=abs.(diff(tmp[:lat]))
+         tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
+         d=abs.(diff(tmp[!,:lat]))
          jj=findall(d .> dMax)
-         tmp[jj,:lon]=NaN; tmp[jj,:lat]=NaN
+         tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
       end
       CO=COs[mod(ii,3)+1]
-      PyPlot.plot(tmp[:lon],tmp[:lat],color=CO,linewidth=0.5)
+      PyPlot.plot(tmp[!,:lon],tmp[!,:lat],color=CO,linewidth=0.5)
    end
 
    #to display the figure in JUNO (not needed in REPL or Jupyter):
@@ -35,8 +38,11 @@ function PlotBasic(df::DataFrame,nn::Integer)
 
 end
 
-# PlotMapProj.jl
+"""
+    PlotMapProj(df::DataFrame,nn::Integer)
 
+Plot random subset of size nn trajectories using PyPlot & basemap.
+"""
 function PlotMapProj(df::DataFrame,nn::Integer)
 
    #PyPlot.figure()
@@ -47,16 +53,16 @@ function PlotMapProj(df::DataFrame,nn::Integer)
    llcrnrlon=20,urcrnrlon=380, resolution="l")
 
    # Draw coastlines, country boundaries, fill continents.
-   map[:drawcoastlines](linewidth=0.25)
-   map[:drawcountries](linewidth=0.25)
-   map[:fillcontinents](color="grey")
+   map.drawcoastlines(linewidth=0.25)
+   map.drawcountries(linewidth=0.25)
+   map.fillcontinents(color="grey")
 
    # Draw the edge of the map projection region (the projection limb)
    #map[:drawmapboundary](fill_color="aqua")
 
    # Draw lat/lon grid lines every 30 degrees.
-   map[:drawmeridians](collect(0:30:360))
-   map[:drawparallels](collect(-90:30:90))
+   map.drawmeridians(collect(0:30:360))
+   map.drawparallels(collect(-90:30:90))
 
    # Draw trajectories
    IDs = randperm(maximum(df.ID))
@@ -68,19 +74,19 @@ function PlotMapProj(df::DataFrame,nn::Integer)
 
    for ii=1:nn
       tmp=df[df.ID .== IDs[ii], :]
-      jj=findall(tmp[:lon] .< 20)
+      jj=findall(tmp[!,:lon] .< 20)
       tmp[jj,:lon]=tmp[jj,:lon] .+ 360.0;
       if dMax > 0.
-         d=abs.(diff(tmp[:lon]))
+         d=abs.(diff(tmp[!,:lon]))
          jj=findall(d .> dMax)
-         tmp[jj,:lon]=NaN; tmp[jj,:lat]=NaN
-         d=abs.(diff(tmp[:lat]))
+         tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
+         d=abs.(diff(tmp[!,:lat]))
          jj=findall(d .> dMax)
-         tmp[jj,:lon]=NaN; tmp[jj,:lat]=NaN
+         tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
       end
       #
       CO=COs[mod(ii,3)+1]
-      x, y = map(tmp[:lon], tmp[:lat])
+      x, y = map(tmp[!,:lon], tmp[!,:lat])
       map.plot(x, y,color=CO,linewidth=0.5)
    end
 
