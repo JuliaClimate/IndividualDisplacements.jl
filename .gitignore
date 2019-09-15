@@ -1,1 +1,4 @@
 devel
+examples/.ipynb_checkpoints/
+examples/*.ipynb
+examples/flt_example
