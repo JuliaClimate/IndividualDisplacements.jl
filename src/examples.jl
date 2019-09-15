@@ -55,7 +55,7 @@ function ex_2()
    prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
    sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
    #
-   Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
-   xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
-   Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,label="MITgcm Solution")
+   Plots.plot(sol[1,:],sol[2,:],linewidth=5,lc=:black, title="One Trajectory Example",
+   xaxis="x",yaxis="y",label="Julia Solution") # legend=false
+   Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
 end
