@@ -1,6 +1,6 @@
 module IndividualDisplacements
 
-greet() = print("Get ready for IndividualDisplacement!")
+greet() = print("Get ready for IndividualDisplacements!")
 
 include("ReadIndDisp.jl")
 include("PlotIndDisp.jl")

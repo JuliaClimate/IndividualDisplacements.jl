@@ -13,39 +13,44 @@ function ReadGriddedFields()
 
 ###### 1) Get gridded variables via MeshArrays.jl
 
-GCMGridSpec("flt_example") #deprecated
-GCMGridLoad() #deprecated
+
+mygrid=gcmgrid("run.long2/","ll",1,[(80,42)], [80 42], Float32, read, write)
+nr=8
 
 ## Put grid variables in a dictionary:
 
-mygrid=Dict("XC" => MeshArrays.XC, "YC" => MeshArrays.YC,
-    "XG" => MeshArrays.XG, "YG" => MeshArrays.YG, "dx" => 5000.0)
+GridVariables=Dict("XC" => myread(mygrid.path*"XC",MeshArray(mygrid,Float32)),
+"YC" => myread(mygrid.path*"YC",MeshArray(mygrid,Float32)),
+"XG" => myread(mygrid.path*"XG",MeshArray(mygrid,Float32)),
+"YG" => myread(mygrid.path*"YG",MeshArray(mygrid,Float32)),
+"dx" => 5000.0)
 
 ## Put velocity fields in a dictionary:
 
 t0=0.0 #approximation / simplification
 t1=18001.0*3600.0
-u0=read_bin2(MeshArrays.grDir*"U.0000000001",Float32)
-u1=read_bin2(MeshArrays.grDir*"U.0000018001",Float32)
-v0=read_bin2(MeshArrays.grDir*"V.0000000001",Float32)
-v1=read_bin2(MeshArrays.grDir*"V.0000018001",Float32)
+
+u0=myread(mygrid.path*"U.0000000001",MeshArray(mygrid,Float32,nr))
+u1=myread(mygrid.path*"U.0000018001",MeshArray(mygrid,Float32,nr))
+v0=myread(mygrid.path*"V.0000000001",MeshArray(mygrid,Float32,nr))
+v1=myread(mygrid.path*"V.0000018001",MeshArray(mygrid,Float32,nr))
 
 kk=3 #3 to match -1406.25 in pkg/flt output
-u0=u0[:,:,kk]; u1=u1[:,:,kk];
-v0=v0[:,:,kk]; v1=v1[:,:,kk];
+u0=u0[:,kk]; u1=u1[:,kk];
+v0=v0[:,kk]; v1=v1[:,kk];
 
 ## Merge the two dictionaries:
 
 uvetc=Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1)
 
-uvetc=merge(uvetc,mygrid)
+uvetc=merge(uvetc,GridVariables)
 
 ## Visualize velocity fields
 
-mskW=read_bin2(MeshArrays.grDir*"hFacW",Float32)
-mskW=1. + 0. * mask(mskW[:,:,kk],NaN,0.0)
-mskS=read_bin2(MeshArrays.grDir*"hFacS",Float32)
-mskS=1. + 0. * mask(mskS[:,:,kk],NaN,0.0)
+mskW=myread(mygrid.path*"hFacW",MeshArray(mygrid,Float32,nr))
+mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
+mskS=myread(mygrid.path*"hFacS",MeshArray(mygrid,Float32,nr))
+mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
 
 msk=Dict("mskW" => mskW, "mskS" => mskS)
 
@@ -127,4 +132,33 @@ function ReadDisplacements(dirIn::String,prec::DataType)
    println("# steps=$nsteps")
 
    return df
+end
+
+"""
+    myread()
+
+Read a gridded variable from 2x2 tile files. This is used
+in `ReadGriddedFields()` with `flt_example/`
+"""
+function myread(filRoot::String,x::MeshArray)
+   prec=eltype(x)
+   prec==Float64 ? reclen=8 : reclen=4;
+
+   (n1,n2)=Int64.(x.grid.ioSize ./ 2);
+   fil=filRoot*".001.001.data"
+   tmp1=stat(fil);
+   n3=Int64(tmp1.size/n1/n2/reclen);
+
+   v00=x.grid.write(x)
+   for ii=1:2; for jj=1:2;
+      fid = open(filRoot*".00$ii.00$jj.data")
+      fld = Array{prec,1}(undef,(n1*n2*n3))
+      read!(fid,fld)
+      fld = hton.(fld)
+
+      n3>1 ? s=(n1,n2,n3) : s=(n1,n2)
+      v00[1+(ii-1)*n1:ii*n1,1+(jj-1)*n2:jj*n2,:]=reshape(fld,s)
+   end; end;
+
+   return x.grid.read(v00,x)
 end
