@@ -1,7 +1,8 @@
 
 #PlotIndDisp.jl
 
-using DataFrames, PyPlot, PyCall, Random
+using DataFrames, Random
+#using PyPlot, PyCall
 
 """
     PlotBasic(df::DataFrame,nn::Integer)
