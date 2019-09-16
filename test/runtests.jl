@@ -23,8 +23,8 @@ tspan = (0.0,nSteps*3600.0)
 prob = ODEProblem(IndividualDisplacements.VelComp,uInit,tspan,uvetc)
 sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 
-@test isapprox(sol[1,end],117237.0; atol=1.)
-@test isapprox(sol[2,end],40448.0; atol=1.)
+@test isapprox(sol[1,end],117237.0; atol=100.)
+@test isapprox(sol[2,end],40448.0; atol=100.)
 
 end
 
