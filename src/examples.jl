@@ -2,20 +2,25 @@
 #using Revise, IndividualDisplacements
 #include(joinpath(dirname(pathof(IndividualDisplacements)),"examples.jl"))
 
-using MeshArrays, DifferentialEquations, Plots, PyPlot
+using MeshArrays, DifferentialEquations, Plots
 
 """
     ex_1()
 
 Global ocean case -- just reading from file for now.
+
+```
+df=IndividualDisplacements.ex_1()
+
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"PlotIndDisp.jl"))
+PyPlot.figure(); PlotMapProj(df,300); gcf()
+```
 """
 function ex_1()
    dirIn="run_offflt/"
    prec=Float32
    df=IndividualDisplacements.ReadDisplacements(dirIn,prec)
-   PyPlot.figure()
-   IndividualDisplacements.PlotMapProj(df,300)
-   gcf()
 end
 
 """
@@ -23,14 +28,19 @@ end
 
 Reproducing `MITgcm/verification/flt_example/` case. This is based on an
 extended and modified configuration of the standard MITgcm test case.
+
+```
+(df,pl)=IndividualDisplacements.ex_2(); display(pl)
+
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"PlotIndDisp.jl"))
+PyPlot.figure(); PlotBasic(df,300); gcf()
+```
 """
 function ex_2()
    dirIn="flt_example/"
    prec=Float32
    df=IndividualDisplacements.ReadDisplacements(dirIn,prec)
-   PyPlot.figure()
-   IndividualDisplacements.PlotBasic(df,300)
-   gcf()
    #
    tmp=df[df.ID .== 200, :]
    nSteps=Int32(tmp[end,:time]/3600)-2
@@ -57,5 +67,7 @@ function ex_2()
    #
    Plots.plot(sol[1,:],sol[2,:],linewidth=5,lc=:black, title="One Trajectory Example",
    xaxis="x",yaxis="y",label="Julia Solution") # legend=false
-   Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
+   pl=Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
+   #
+   return df,pl
 end
