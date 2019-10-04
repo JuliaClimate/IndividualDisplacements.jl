@@ -45,5 +45,5 @@ display(pl)
 
 **Example:** `MITgcm/pkg/flt` output displayed using via `IndividualDisplacements.jl`
 
-![alt-text-2](examples/ex_1.png "From MITgcm")
+![alt-text-2](examples/ex_1_mitgcm.png "From MITgcm")
 

@@ -14,7 +14,7 @@ function PlotBasic(df::DataFrame,nn::Integer)
    #PyPlot.figure()
 
    IDs = randperm(maximum(df.ID))
-   COs=["k" "r" "b" "m" "c"]
+   COs=["w" "y" "g" "k"]
    #for global ocean case: dMax=90.
    #for flt_example case:
    dMax=100000.
@@ -30,8 +30,8 @@ function PlotBasic(df::DataFrame,nn::Integer)
          jj=findall(d .> dMax)
          tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
       end
-      CO=COs[mod(ii,3)+1]
-      PyPlot.plot(tmp[!,:lon],tmp[!,:lat],color=CO,linewidth=0.5)
+      CO=COs[mod(ii,4)+1]
+      PyPlot.plot(tmp[!,:lon],tmp[!,:lat],color=CO,linewidth=0.3)
    end
 
    #to display the figure in JUNO (not needed in REPL or Jupyter):
@@ -50,13 +50,13 @@ function PlotMapProj(df::DataFrame,nn::Integer)
 
    # Set up Equidistant cylindrical map projection. Use low resolution coastlines.
    ccrs=pyimport("cartopy.crs")
-   ax = plt.axes(projection=ccrs.PlateCarree())
-   ax.coastlines()
+   ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=-160.0))
+   ax.coastlines(linewidth=0.3)
    ax.stock_img()
 
    # Draw trajectories
    IDs = randperm(maximum(df.ID))
-   COs=["k" "r" "b" "m" "c"]
+   COs=["w" "y" "g" "k"]
 
    #for global ocean case:
    dMax=90.
@@ -75,8 +75,8 @@ function PlotMapProj(df::DataFrame,nn::Integer)
          tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
       end
       #
-      CO=COs[mod(ii,3)+1]
-      plt.plot(tmp[!,:lon], tmp[!,:lat], color=CO, linewidth=0.5, transform=ccrs.Geodetic() )
+      CO=COs[mod(ii,4)+1]
+      plt.plot(tmp[!,:lon], tmp[!,:lat], color=CO, linewidth=0.2, transform=ccrs.Geodetic() )
    end
 
    #to display the figure in JUNO (not needed in REPL or Jupyter):
