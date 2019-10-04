@@ -2,7 +2,7 @@
 #PlotIndDisp.jl
 
 using DataFrames, Random
-#using PyPlot, PyCall
+using PyPlot, PyCall
 
 """
     PlotBasic(df::DataFrame,nn::Integer)
@@ -14,7 +14,7 @@ function PlotBasic(df::DataFrame,nn::Integer)
    #PyPlot.figure()
 
    IDs = randperm(maximum(df.ID))
-   COs=["k" "r" "b" "m" "c"]
+   COs=["w" "y" "g" "k"]
    #for global ocean case: dMax=90.
    #for flt_example case:
    dMax=100000.
@@ -30,8 +30,8 @@ function PlotBasic(df::DataFrame,nn::Integer)
          jj=findall(d .> dMax)
          tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
       end
-      CO=COs[mod(ii,3)+1]
-      PyPlot.plot(tmp[!,:lon],tmp[!,:lat],color=CO,linewidth=0.5)
+      CO=COs[mod(ii,4)+1]
+      PyPlot.plot(tmp[!,:lon],tmp[!,:lat],color=CO,linewidth=0.3)
    end
 
    #to display the figure in JUNO (not needed in REPL or Jupyter):
@@ -49,25 +49,14 @@ function PlotMapProj(df::DataFrame,nn::Integer)
    #PyPlot.figure()
 
    # Set up Equidistant cylindrical map projection. Use low resolution coastlines.
-   basemap=pyimport("mpl_toolkits.basemap")
-   map = basemap.Basemap(projection="cyl", llcrnrlat=-80, urcrnrlat=90,
-   llcrnrlon=20,urcrnrlon=380, resolution="l")
-
-   # Draw coastlines, country boundaries, fill continents.
-   map.drawcoastlines(linewidth=0.25)
-   map.drawcountries(linewidth=0.25)
-   map.fillcontinents(color="grey")
-
-   # Draw the edge of the map projection region (the projection limb)
-   #map[:drawmapboundary](fill_color="aqua")
-
-   # Draw lat/lon grid lines every 30 degrees.
-   map.drawmeridians(collect(0:30:360))
-   map.drawparallels(collect(-90:30:90))
+   ccrs=pyimport("cartopy.crs")
+   ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=-160.0))
+   ax.coastlines(linewidth=0.3)
+   ax.stock_img()
 
    # Draw trajectories
    IDs = randperm(maximum(df.ID))
-   COs=["k" "r" "b" "m" "c"]
+   COs=["w" "y" "g" "k"]
 
    #for global ocean case:
    dMax=90.
@@ -86,9 +75,8 @@ function PlotMapProj(df::DataFrame,nn::Integer)
          tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
       end
       #
-      CO=COs[mod(ii,3)+1]
-      x, y = map(tmp[!,:lon], tmp[!,:lat])
-      map.plot(x, y,color=CO,linewidth=0.5)
+      CO=COs[mod(ii,4)+1]
+      plt.plot(tmp[!,:lon], tmp[!,:lat], color=CO, linewidth=0.2, transform=ccrs.Geodetic() )
    end
 
    #to display the figure in JUNO (not needed in REPL or Jupyter):
