@@ -6,7 +6,7 @@
 #       extension: .jl
 #       format_name: light
 #       format_version: '1.4'
-#       jupytext_version: 1.2.1
+#       jupytext_version: 1.2.4
 #   kernelspec:
 #     display_name: Julia 1.1.0
 #     language: julia
@@ -22,22 +22,24 @@
 #
 # _Notes:_ For documentation see <https://gaelforget.github.io/MeshArrays.jl/stable/>, <https://docs.juliadiffeq.org/latest/solvers/ode_solve.html> and <https://en.wikipedia.org/wiki/Displacement_(vector)>
 
-# ## 1. import software and `pkg/flt` trajectories
+# ## 1. import software
 
 using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"PlotIndDisp.jl"))
+
+# ## 2. reload trajectories from `MITgcm/pkg/flt` 
 
 dirIn="flt_example/"
 prec=Float32
 df=IndividualDisplacements.ReadDisplacements(dirIn,prec)
 PyPlot.figure(); PlotBasic(df,300)
 
-# ## 2. Read gridded variables as `MeshArray`s
-
-# _Note:_ `myread` function deals with tiled files from `flt_example/`; should be able to use it via `gcmgrid`...
+# ## 3. Read gridded variables via `MeshArrays.jl`
 #
-# Put grid variables in a dictionary:
+# Put grid variables in a dictionary.
+#
+# _Note:_ `myread` function deals with tiled files from `flt_example/`.
 
 # +
 import IndividualDisplacements: myread
@@ -52,7 +54,7 @@ GridVariables=Dict("XC" => myread(mygrid.path*"XC",MeshArray(mygrid,Float32)),
 "dx" => 5000.0);
 # -
 
-# Put velocity fields in a dictionary:
+# Put velocity fields in in another dictionary and merge the two dictionaries.
 
 # +
 t0=0.0 #approximation / simplification
@@ -72,14 +74,12 @@ u1=u1./GridVariables["dx"]
 v0=v0./GridVariables["dx"]
 v1=v1./GridVariables["dx"]
 
-uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1) ;
-# -
-
-# Merge the two dictionaries:
+uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1)
 
 uvetc=merge(uvt,GridVariables);
+# -
 
-# ## 3. Visualize velocity fields
+# ## 4. Visualize velocity fields
 
 # +
 mskW=myread(mygrid.path*"hFacW",MeshArray(mygrid,Float32,nr))
@@ -98,8 +98,8 @@ heatmap(mskS[1,1].*v0[1,1],title="V at the start")
 
 heatmap(mskW[1,1].*u1[1,1]-u0[1,1],title="U end - U start")
 
-# ## 3. Visualize  `pkg/flt` trajectories
-
+# ## 5. Visualize trajectories from `MITgcm/pkg/flt`
+#
 # Select one trajectory
 
 tmp=df[df.ID .== 200, :]
@@ -117,7 +117,7 @@ PyPlot.contourf(GridVariables["XG"].f[1], GridVariables["YC"].f[1], mskS.f[1].*v
 PyPlot.plot(tmp[:,:lon],tmp[:,:lat],color="r")
 colorbar()
 
-# ## 4. Recompute displacements from gridded flow fields
+# ## 6. Recompute displacements from gridded flow fields
 
 # +
 comp_vel=IndividualDisplacements.VelComp
@@ -178,7 +178,9 @@ Plots.plot!(tmpv)
 Plots.plot!(refu)
 Plots.plot!(refv)
 
-# ## 5. Solve through time using `DifferentialEquations.jl`
+# ## 6. Recompute trajectories from gridded flow fields
+#
+# Solve through time using `DifferentialEquations.jl`
 
 using DifferentialEquations
 tspan = (0.0,nSteps*3600.0)

@@ -1,4 +1,8 @@
+.DS_Store
+.ipynb_checkpoints/
 devel
 examples/.ipynb_checkpoints/
 examples/*.ipynb
 examples/flt_example
+examples/run_offflt
+examples/llc90_latlon
