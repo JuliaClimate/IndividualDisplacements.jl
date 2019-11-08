@@ -9,16 +9,9 @@ using PyPlot, PyCall
 
 Plot random subset of size nn trajectories.
 """
-function PlotBasic(df::DataFrame,nn::Integer)
-
-   #PyPlot.figure()
-
+function PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
    IDs = randperm(maximum(df.ID))
    COs=["w" "y" "g" "k"]
-   #for global ocean case: dMax=90.
-   #for flt_example case:
-   dMax=100000.
-   println("dMax=$dMax")
 
    for ii=1:nn
       tmp=df[df.ID .== IDs[ii], :]
