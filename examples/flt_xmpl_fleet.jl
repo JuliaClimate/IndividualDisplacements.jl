@@ -162,7 +162,7 @@ lat=5000* mod.(sol[2,:,:],42)
 df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:])
 size(df)
 
-PyPlot.figure(); PlotBasic(df,size(sol,2))
+PyPlot.figure(); PlotBasic(df,size(sol,2),100000.0)
 
 Plots.plot(sol_one[1,:],sol_one[2,:])
 #i1=38.0; i2=5.0; i=i1+(i2-1)*n1;
