@@ -39,6 +39,11 @@ kk=3 #3 to match -1406.25 in pkg/flt output
 u0=u0[:,kk]; u1=u1[:,kk];
 v0=v0[:,kk]; v1=v1[:,kk];
 
+u0=u0./GridVariables["dx"]
+u1=u1./GridVariables["dx"]
+v0=v0./GridVariables["dx"]
+v1=v1./GridVariables["dx"]
+
 ## Merge the two dictionaries:
 
 uvetc=Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1)
