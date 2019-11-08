@@ -33,7 +33,7 @@ include(joinpath(p,"PlotIndDisp.jl"))
 dirIn="flt_example/"
 prec=Float32
 df=IndividualDisplacements.ReadDisplacements(dirIn,prec)
-PyPlot.figure(); PlotBasic(df,300)
+PyPlot.figure(); PlotBasic(df,300,100000.0)
 
 # ## 3. Read gridded variables via `MeshArrays.jl`
 #

@@ -34,7 +34,7 @@ extended and modified configuration of the standard MITgcm test case.
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"PlotIndDisp.jl"))
-PyPlot.figure(); PlotBasic(df,300); gcf()
+PyPlot.figure(); PlotBasic(df,300,100000.0); gcf()
 ```
 """
 function ex_2()
