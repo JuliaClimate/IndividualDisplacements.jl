@@ -136,8 +136,8 @@ x=0.0:1.0:179.0
 y=[GridVariables["YC"][1,1][1,1].-1.0 ; GridVariables["YC"][1,1][1,:] ; GridVariables["YC"][1,1][1,end].+1.0]
 spl_lat = Spline1D(x,y)
 
-df[:,:lon].=spl_lon(df[:,:i])
-df[:,:lat].=spl_lat(df[:,:j])
+df.lon=spl_lon(df[:,:i])
+df.lat=spl_lat(df[:,:j])
 
 show(df)
 # -
