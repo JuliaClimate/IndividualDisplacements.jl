@@ -41,7 +41,7 @@ heatmap(Rend[1])
 # Derive velocity fields using Rend as a scalar potential (**later: streamfunction...**)
 
 (u,v)=gradient(Rend,GridVariables)
-u0=u; u1=u; v0=v; v1=v;
+u0=-v; u1=-v; v0=u; v1=u;
 
 # Put velocity fields and time range in a dictionary.
 
@@ -120,10 +120,8 @@ du
 # **Note how the size of sol (ie nb of steps) depends on initial location:**
 
 # +
-#ii1=1:10:80; ii2=1:10:42; #->sol is (2, 40, 40065)
-#ii1=30:37; ii2=16:20; #->sol is (2, 40, 9674)
-#ii1=10:17; ii2=16:20; #->sol is (2, 40, 51709)
-ii1=5:35; ii2=5:35; #->sol is (2, 40, 51709)
+#ii1=1:40; ii2=1:40;
+ii1=0.25:0.25:40; ii2=0.25:0.25:40;
 
 n1=length(ii1); n2=length(ii2);
 uInitS=Array{Float64,2}(undef,(2,n1*n2))
@@ -138,7 +136,7 @@ du
 # -
 
 prob = ODEProblem(comp_vel,uInitS,tspan,uvetc)
-sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+sol = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
 size(sol)
 
 ID=collect(1:size(sol,2))*ones(1,size(sol,3))
@@ -147,6 +145,7 @@ lat=mod.(sol[2,:,:],40)
 df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:])
 size(df)
 
-PyPlot.figure(); PlotBasic(df,size(sol,2),20.0)
+nn=minimum([5000 size(du,2)])
+PyPlot.figure(); PlotBasic(df,nn,20.0)
 
 
