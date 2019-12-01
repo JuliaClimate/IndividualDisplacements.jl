@@ -5,6 +5,72 @@ using DataFrames
 #VelComp(du,uInit,uvetc,3600.0)
 
 """
+    VelComp!(du,u,p::Dict,tim)
+
+Interpolate velocity from gridded fields and return position increment `du`
+"""
+function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
+    #compute positions in index units
+    dt=(tim-p["t0"])/(p["t1"]-p["t0"])
+    #
+    x,y = u[1:2]
+    fIndex = Int(u[3])
+    nx,ny=p["u0"].grid.fSize[fIndex]
+    #
+    if x<0
+        x=x+nx
+    elseif x>=nx
+        x=x-nx
+    end
+    #
+    if y<0
+        y=y+ny
+    elseif y>=ny
+        y=y-ny
+    end
+    #
+    if (mod(x,nx)!=x) | (mod(y,ny)!=y)
+        println("crossing domain edge"*"$x and $y")
+    end
+    #
+    dx,dy=[x - floor(x),y - floor(y)]
+    i_c,j_c = Int32.(floor.([x y])) .+ 2
+    #
+    i_w,i_e=[i_c i_c+1]
+    j_s,j_n=[j_c j_c+1]
+    #debugging stuff
+    if false
+        println((x,y,i_c,j_c))
+        println((i_w,i_e,j_s,j_n))
+        println((dx,dy,dt))
+        #println(du)
+    end
+    #interpolate u to position and time
+    du[1]=(1.0-dx)*(1.0-dt)*p["u0"].f[1][i_w,j_c]+
+    dx*(1.0-dt)*p["u0"].f[1][i_e,j_c]+
+    (1.0-dx)*dt*p["u1"].f[1][i_w,j_c]+
+    dx*dt*p["u1"].f[1][i_e,j_c]
+    #interpolate v to position and time
+    du[2]=(1.0-dy)*(1.0-dt)*p["v0"].f[1][i_c,j_s]+
+    dy*(1.0-dt)*p["v0"].f[1][i_c,j_n]+
+    (1.0-dy)*dt*p["v1"].f[1][i_c,j_s]+
+    dy*dt*p["v1"].f[1][i_c,j_n]
+    #leave face index unchanged
+    du[3]=0.0
+    #
+    return du
+end
+
+function VelComp!(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
+    for i=1:size(u,2)
+        tmpdu=du[1:3,i]
+        VelComp!(tmpdu,u[1:3,i],p,tim)
+        du[1:3,i]=tmpdu
+    end
+    return du
+end
+
+"""
     VelComp(du,u,p::Dict,tim)
 
 Interpolate velocity from gridded fields and return position increment `du`
