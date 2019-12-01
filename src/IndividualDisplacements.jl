@@ -7,7 +7,7 @@ include("ReadIndDisp.jl")
 include("VelocityIndDisp.jl")
 include("examples.jl")
 
-export VelComp, VelCopy, ReadGriddedFields, ReadDisplacements
+export VelComp, VelComp!, VelCopy, ReadGriddedFields, ReadDisplacements
 #export PlotBasic, PlotMapProj
 
 end # module
