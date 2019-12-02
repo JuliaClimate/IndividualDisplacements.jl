@@ -30,7 +30,7 @@ include(joinpath(p,"PlotIndDisp.jl"))
 # Put grid variables in a dictionary.
 
 # +
-GridVariables=GridOfOnes("dpdo",1,40)
+GridVariables=GridOfOnes("dpdo",16,20)
 (Rini,Rend,DXCsm,DYCsm)=MeshArrays.demo2(GridVariables)
 
 #GridVariables=GridOfOnes("ll",1,40)
@@ -125,7 +125,7 @@ du
 
 # +
 #ii1=1:40; ii2=1:40;
-ii1=0.25:0.25:40; ii2=0.25:0.25:40;
+ii1=0.25:0.25:20; ii2=0.25:0.25:20;
 
 n1=length(ii1); n2=length(ii2);
 uInitS=Array{Float64,2}(undef,(3,n1*n2))
@@ -145,10 +145,12 @@ sol = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
 size(sol)
 
 ID=collect(1:size(sol,2))*ones(1,size(sol,3))
-lon=mod.(sol[1,:,:],40)
-lat=mod.(sol[2,:,:],40)
-df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:])
+lon=sol[1,:,:]+20.0*mod.(sol[3,:,:].-1,4)
+lat=sol[2,:,:]+20.0*floor.((sol[3,:,:].-1)/4)
+#lat=mod.(sol[2,:,:],40)
+fIndex=sol[3,:,:]
+df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:], fIndex=fIndex[:])
 size(df)
 
 nn=minimum([5000 size(du,2)])
-PyPlot.figure(); PlotBasic(df,nn,20.0)
+PyPlot.figure(); PlotBasic(df,nn,10.0)
