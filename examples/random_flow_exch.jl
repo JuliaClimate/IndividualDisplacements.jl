@@ -30,34 +30,21 @@ include(joinpath(p,"PlotIndDisp.jl"))
 # Put grid variables in a dictionary.
 
 # +
-#GridVariables=GridOfOnes("dpdo",1,40)
-#(Rini,Rend,DXCsm,DYCsm)=MeshArrays.demo2(GridVariables)
-
-GridVariables=GridOfOnes("ll",1,40)
+GridVariables=GridOfOnes("dpdo",1,40)
 (Rini,Rend,DXCsm,DYCsm)=MeshArrays.demo2(GridVariables)
+
+#GridVariables=GridOfOnes("ll",1,40)
+#(Rini,Rend,DXCsm,DYCsm)=MeshArrays.demo2(GridVariables)
 heatmap(Rend[1])
 # -
 
 # Derive velocity fields using Rend as a scalar potential (**later: streamfunction...**)
 
 (u,v)=gradient(Rend,GridVariables)
+u=u./GridVariables["DXC"]#normalization to grid units
+v=v./GridVariables["DYC"]
 (u,v)=exchange(u,v,1)
 u0=-v; u1=-v; v0=u; v1=u;
-
-# +
-dxc,dyc=exchange(GridVariables["DXC"],GridVariables["DYC"])
-dxc=abs.(dxc)
-dyc=abs.(dyc)
-
-#hack to fix ll grid case
-dxc[findall(dxc.<1.0)]=1.0
-dyc[findall(dyc.<1.0)]=1.0
-
-u0=u0./dxc#normalization to grid units
-u1=u1./dxc
-v0=v0./dyc
-v1=v1./dyc
-# -
 
 # Put velocity fields and time range in a dictionary.
 
@@ -145,7 +132,7 @@ uInitS=Array{Float64,2}(undef,(3,n1*n2))
 for i1 in eachindex(ii1); for i2 in eachindex(ii2);
         i=i1+(i2-1)*n1
         uInitS[1,i]=ii1[i1]-0.5
-        uInitS[2,i]=ii2[i2]-0.5       
+        uInitS[2,i]=ii2[i2]-0.5
         uInitS[3,i]=1.0
 end; end;
 du=fill(0.0,size(uInitS));
@@ -165,5 +152,3 @@ size(df)
 
 nn=minimum([5000 size(du,2)])
 PyPlot.figure(); PlotBasic(df,nn,20.0)
-
-
