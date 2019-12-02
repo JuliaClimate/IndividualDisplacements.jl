@@ -50,7 +50,7 @@ u0=-v; u1=-v; v0=u; v1=u;
 
 # +
 t0=0.0 #approximation / simplification
-t1=100.0
+t1=200.0
 dt=0.1
 nSteps=(t1-t0)/dt
 
@@ -125,16 +125,16 @@ du
 
 # +
 #ii1=1:40; ii2=1:40;
-ii1=0.25:0.25:20; ii2=0.25:0.25:20;
+ii1=0.5:0.5:20; ii2=0.5:0.5:20; ii3=[2.0 4.0 5.0 7.0 10.0 12.0 13.0 15.0];
 
-n1=length(ii1); n2=length(ii2);
-uInitS=Array{Float64,2}(undef,(3,n1*n2))
-for i1 in eachindex(ii1); for i2 in eachindex(ii2);
-        i=i1+(i2-1)*n1
-        uInitS[1,i]=ii1[i1]-0.5
-        uInitS[2,i]=ii2[i2]-0.5
-        uInitS[3,i]=1.0
-end; end;
+n1=length(ii1); n2=length(ii2); n3=length(ii3);
+uInitS=Array{Float64,2}(undef,(3,n3*n1*n2))
+for i1 in eachindex(ii1); for i2 in eachindex(ii2); for i3 in eachindex(ii3);
+        i=i1+(i2-1)*n1+(i3-1)*n1*n2
+        uInitS[1,i]=ii1[i1]
+        uInitS[2,i]=ii2[i2]
+        uInitS[3,i]=ii3[i3]
+end; end; end;
 du=fill(0.0,size(uInitS));
 comp_vel(du,uInitS,uvetc,0.0)
 du
