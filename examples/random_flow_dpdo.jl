@@ -23,18 +23,14 @@ using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statist
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"PlotIndDisp.jl"))
 
-# ## 2. Read gridded variables as `MeshArray`s
+# ## 2. Define gridded variables as `MeshArray`s
 
-# _Note:_ `myread` function deals with tiled files from `flt_example/`; should be able to use it via `gcmgrid`...
-#
 # Put grid variables in a dictionary.
 
 # +
 GridVariables=GridOfOnes("dpdo",16,20)
 (Rini,Rend,DXCsm,DYCsm)=MeshArrays.demo2(GridVariables)
 
-#GridVariables=GridOfOnes("ll",1,40)
-#(Rini,Rend,DXCsm,DYCsm)=MeshArrays.demo2(GridVariables)
 heatmap(Rend[1])
 # -
 
@@ -62,7 +58,8 @@ uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t
 # +
 uvetc=merge(uvt,GridVariables);
 
-#this would need to be exchanged too...
+# _Note:_ in general case, mskW & mskS would need to be exchanged ...
+
 mskW=fill(1.0,u)
 mskS=fill(1.0,v)
 
@@ -101,8 +98,6 @@ for i in eachindex(ii)
     comp_vel(du,[ii[i];jj[i];fIndex[i]],uvetc,0.0)
     tmpu[i],tmpv[i],tmpf[i]=du
 end
-#tmp=zeros(10,1)
-#for comp_vel(du,[180.1;40.1],uvetc,0.0)
 Plots.plot(tmpu)
 Plots.plot!(tmpv)
 # -
@@ -111,7 +106,6 @@ Plots.plot!(tmpv)
 
 using DifferentialEquations
 tspan = (0.0,nSteps*dt)
-#prob = ODEProblem(get_vel,uInit,tspan,tmp)
 prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
 sol_one = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 size(sol_one)
@@ -121,10 +115,7 @@ du=fill(0.0,size(uInitS));
 comp_vel(du,uInitS,uvetc,0.0)
 du
 
-# **Note how the size of sol (ie nb of steps) depends on initial location:**
-
 # +
-#ii1=1:40; ii2=1:40;
 ii1=0.5:0.5:20; ii2=0.5:0.5:20; ii3=[2.0 4.0 5.0 7.0 10.0 12.0 13.0 15.0];
 
 n1=length(ii1); n2=length(ii2); n3=length(ii3);
@@ -147,7 +138,6 @@ size(sol)
 ID=collect(1:size(sol,2))*ones(1,size(sol,3))
 lon=sol[1,:,:]+20.0*mod.(sol[3,:,:].-1,4)
 lat=sol[2,:,:]+20.0*floor.((sol[3,:,:].-1)/4)
-#lat=mod.(sol[2,:,:],40)
 fIndex=sol[3,:,:]
 df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:], fIndex=fIndex[:])
 size(df)
