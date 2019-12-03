@@ -1,17 +1,13 @@
 
 using DataFrames
 
-#VelCopy(du,uInit,tmp,3600.0)
-#VelComp(du,uInit,uvetc,3600.0)
-
-
 """
-    getNeighborList(ni::Int,nj::Int)
+    NeighborTileIndices_dpdo(ni::Int,nj::Int)
 
-Get list of E, W, S, N neighbors in the doubly perdiodic domain case
+List of W, E, S, N neighbor tile IDs in the case of a doubly
+periodic domain with ni x nj tiles.
 """
-function getNeighborList(ni::Int,nj::Int)
-
+function NeighborTileIndices_dpdo(ni::Int,nj::Int)
     tmp=fill(0,ni*nj,4)
     for i=1:ni
         for j=1:nj
@@ -26,7 +22,6 @@ function getNeighborList(ni::Int,nj::Int)
             tmp[k,4]=kN
         end
     end
-
     return tmp
 end
 
@@ -44,41 +39,33 @@ function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     nx,ny=p["u0"].grid.fSize[fIndex]
     #
     ni,nj=Int.(transpose(p["u0"].grid.ioSize)./p["u0"].grid.fSize[1])
-    NeighborList=getNeighborList(ni,nj)
-    #debugging stuff
-    if false
-        println(("a",x,y,fIndex))
-    end
+    WESN=NeighborTileIndices_dpdo(ni,nj)
     #
     if x<0
         x=x+nx
         u[1]=x
-        fIndex=NeighborList[fIndex,1]
+        fIndex=WESN[fIndex,1]
         u[3]=fIndex
     elseif x>=nx
         x=x-nx
         u[1]=x
-        fIndex=NeighborList[fIndex,2]
+        fIndex=WESN[fIndex,2]
         u[3]=fIndex
     end
     #
     if y<0
         y=y+ny
         u[2]=y
-        fIndex=NeighborList[fIndex,3]
+        fIndex=WESN[fIndex,3]
         u[3]=fIndex
     elseif y>=ny
         y=y-ny
         u[2]=y
-        fIndex=NeighborList[fIndex,4]
+        fIndex=WESN[fIndex,4]
         u[3]=fIndex
     end
     #debugging stuff
-    if false
-        println(("b",x,y,fIndex))
-    end
-    #
-    if (mod(x,nx)!=x) | (mod(y,ny)!=y)
+    if (false & (mod(x,nx)!=x)|(mod(y,ny)!=y))
         println("crossing domain edge"*"$x and $y")
     end
     #
@@ -87,13 +74,6 @@ function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     #
     i_w,i_e=[i_c i_c+1]
     j_s,j_n=[j_c j_c+1]
-    #debugging stuff
-    if i_w>22|i_c>22|i_e>22|j_s>22|j_c>22|j_n>22
-        println((x,y,fIndex,i_c,j_c))
-        println((i_w,i_e,j_s,j_n))
-        println((dx,dy,dt))
-        #println(du)
-    end
     #interpolate u to position and time
     du[1]=(1.0-dx)*(1.0-dt)*p["u0"].f[fIndex][i_w,j_c]+
     dx*(1.0-dt)*p["u0"].f[fIndex][i_e,j_c]+
