@@ -2,7 +2,7 @@
 #using Revise, IndividualDisplacements
 #include(joinpath(dirname(pathof(IndividualDisplacements)),"examples.jl"))
 
-using MeshArrays, DifferentialEquations, Plots
+using MeshArrays, DifferentialEquations
 
 """
     ex_1()
@@ -30,11 +30,16 @@ Reproducing `MITgcm/verification/flt_example/` case. This is based on an
 extended and modified configuration of the standard MITgcm test case.
 
 ```
-(df,pl)=IndividualDisplacements.ex_2(); display(pl)
+(df,ref,sol)=IndividualDisplacements.ex_2();
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"PlotIndDisp.jl"))
 PyPlot.figure(); PlotBasic(df,300,100000.0); gcf()
+
+using Plots
+Plots.plot(sol[1,:],sol[2,:],linewidth=5,lc=:black, title="One Trajectory Example",
+xaxis="x",yaxis="y",label="Julia Solution") # legend=false
+pl=Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
 ```
 """
 function ex_2()
@@ -66,9 +71,5 @@ function ex_2()
    prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
    sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
    #
-   Plots.plot(sol[1,:],sol[2,:],linewidth=5,lc=:black, title="One Trajectory Example",
-   xaxis="x",yaxis="y",label="Julia Solution") # legend=false
-   pl=Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
-   #
-   return df,pl
+   return df,ref,sol
 end
