@@ -23,18 +23,13 @@ using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statist
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"PlotIndDisp.jl"))
 
-# ## 2. Read gridded variables as `MeshArray`s
+# ## 2. Define gridded variables as `MeshArray`s
 
-# _Note:_ `myread` function deals with tiled files from `flt_example/`; should be able to use it via `gcmgrid`...
-#
 # Put grid variables in a dictionary.
-
-# +
-#GridVariables=GridOfOnes("dpdo",16,20)
-#(Rini,Rend,DXCsm,DYCsm)=MeshArrays.demo2(GridVariables)
 
 GridVariables=GridOfOnes("ll",1,40)
 (Rini,Rend,DXCsm,DYCsm)=MeshArrays.demo2(GridVariables)
+
 heatmap(Rend[1])
 # -
 
@@ -85,7 +80,6 @@ uInit=[20.0,20.0]
 du=fill(0.0,2);
 
 comp_vel=IndividualDisplacements.VelComp
-get_vel=IndividualDisplacements.VelCopy
 # -
 
 # Inspect how `comp_vel` behaves.
@@ -98,8 +92,6 @@ for i in eachindex(ii)
     comp_vel(du,[ii[i];jj[i]],uvetc,0.0)
     tmpu[i],tmpv[i]=du
 end
-#tmp=zeros(10,1)
-#for comp_vel(du,[180.1;40.1],uvetc,0.0)
 Plots.plot(tmpu)
 Plots.plot!(tmpv)
 
@@ -107,7 +99,6 @@ Plots.plot!(tmpv)
 
 using DifferentialEquations
 tspan = (0.0,nSteps*dt)
-#prob = ODEProblem(get_vel,uInit,tspan,tmp)
 prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
 sol_one = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 size(sol_one)
@@ -117,18 +108,15 @@ du=fill(0.0,size(uInitS));
 comp_vel(du,uInitS,uvetc,0.0)
 du
 
-# **Note how the size of sol (ie nb of steps) depends on initial location:**
-
 # +
-#ii1=1:40; ii2=1:40;
 ii1=0.25:0.25:40; ii2=0.25:0.25:40;
 
 n1=length(ii1); n2=length(ii2);
 uInitS=Array{Float64,2}(undef,(2,n1*n2))
 for i1 in eachindex(ii1); for i2 in eachindex(ii2);
         i=i1+(i2-1)*n1
-        uInitS[1,i]=ii1[i1]-0.5
-        uInitS[2,i]=ii2[i2]-0.5       
+        uInitS[1,i]=ii1[i1]
+        uInitS[2,i]=ii2[i2]
 end; end;
 du=fill(0.0,size(uInitS));
 comp_vel(du,uInitS,uvetc,0.0)
@@ -147,5 +135,3 @@ size(df)
 
 nn=minimum([5000 size(du,2)])
 PyPlot.figure(); PlotBasic(df,nn,20.0)
-
-
