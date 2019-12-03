@@ -19,7 +19,7 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statistics
+using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statistics, Dierckx
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"PlotIndDisp.jl"))
 
@@ -115,14 +115,35 @@ prob = ODEProblem(comp_vel,uInitS,tspan,uvetc)
 sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
 size(sol)
 
-# ## 4. Store trajectories in a `DataFrame` and plot
+# ## 4. Plot trajectories
+#
+# - Copy `sol` to a `DataFrame`
 
 ID=collect(1:size(sol,2))*ones(1,size(sol,3))
-lon=mod.(sol[1,:,:],360)
-lat=mod.(sol[2,:,:],180)
-df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:])
+i=mod.(sol[1,:,:],360)
+j=mod.(sol[2,:,:],180)
+df = DataFrame(ID=Int.(ID[:]), i=i[:], j=j[:])
 size(df)
 
-PyPlot.figure(); PlotBasic(df,size(sol,2),90.0)
+# - Map i,j position to lon,lat coordinates
+
+# +
+x=0.0:1.0:361.0
+y=[GridVariables["XC"][1,1][1,1].-1.0 ; GridVariables["XC"][1,1][:,1] ; GridVariables["XC"][1,1][end,1].+1.0]
+spl_lon = Spline1D(x,y)
+
+x=0.0:1.0:179.0
+y=[GridVariables["YC"][1,1][1,1].-1.0 ; GridVariables["YC"][1,1][1,:] ; GridVariables["YC"][1,1][1,end].+1.0]
+spl_lat = Spline1D(x,y)
+
+df.lon=spl_lon(df[:,:i])
+df.lat=spl_lat(df[:,:j])
+
+show(df)
+# -
+# - Plot trajectories
+
+PyPlot.figure(); PlotMapProj(df,3000)
+
 
 
