@@ -3,7 +3,7 @@ using IndividualDisplacements
 
 makedocs(
     sitename = "IndividualDisplacements",
-    format = :html,
+    format = Documenter.HTML(),
     modules = [IndividualDisplacements]
 )
 
