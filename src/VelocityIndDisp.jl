@@ -26,19 +26,17 @@ function NeighborTileIndices_dpdo(ni::Int,nj::Int)
 end
 
 """
-    VelComp!(du,u,p::Dict,tim)
+    UpdateLocation!
 
-Interpolate velocity from gridded fields and return position increment `du`
+Update location (x,y,fIndex) when out of domain. Note: initially, this
+only works for the `dpdo` grid type provided by `MeshArrays.jl`.
 """
-function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
-    #compute positions in index units
-    dt=(tim-p["t0"])/(p["t1"]-p["t0"])
-    #
+function UpdateLocation!(u::Array{Float64,1},grid::gcmgrid)
     x,y = u[1:2]
     fIndex = Int(u[3])
-    nx,ny=p["u0"].grid.fSize[fIndex]
     #
-    ni,nj=Int.(transpose(p["u0"].grid.ioSize)./p["u0"].grid.fSize[1])
+    nx,ny=grid.fSize[fIndex]
+    ni,nj=Int.(transpose(grid.ioSize)./grid.fSize[1])
     WESN=NeighborTileIndices_dpdo(ni,nj)
     #
     if x<0
@@ -64,6 +62,24 @@ function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
         fIndex=WESN[fIndex,4]
         u[3]=fIndex
     end
+    #
+    return u
+end
+
+
+"""
+    VelComp!(du,u,p::Dict,tim)
+
+Interpolate velocity from gridded fields and return position increment `du`
+"""
+function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
+    #compute positions in index units
+    dt=(tim-p["t0"])/(p["t1"]-p["t0"])
+    #
+    UpdateLocation!(u,p["u0"].grid)
+    x,y = u[1:2]
+    fIndex = Int(u[3])
+    nx,ny=p["u0"].grid.fSize[fIndex]
     #debugging stuff
     if (false & (mod(x,nx)!=x)|(mod(y,ny)!=y))
         println("crossing domain edge"*"$x and $y")
