@@ -26,12 +26,41 @@ function NeighborTileIndices_dpdo(ni::Int,nj::Int)
 end
 
 """
-    UpdateLocation!
+    UpdateLocation_cs!
 
 Update location (x,y,fIndex) when out of domain. Note: initially, this
 only works for the `dpdo` grid type provided by `MeshArrays.jl`.
 """
-function UpdateLocation!(u::Array{Float64,1},grid::gcmgrid)
+function UpdateLocation_cs!(u::Array{Float64,1},grid::Dict)
+    x,y = u[1:2]
+    fIndex = Int(u[3])
+    nx,ny=grid["XC"].fSize[fIndex]
+
+    if x<0||x>nx||y<0||y>ny
+        s = grid["XC"].fSize
+        nFaces = length(s)
+        nFaces == 5 ? s = vcat(s, s[3]) : nothing
+        (aW, aE, aS, aN, iW, iE, iS, iN) = MeshArrays.exch_cs_sources(fIndex, s, 1)
+        RF=RelocationFunctions_cs(grid["XC"])
+        j = 0
+        x<0 ? j=aW : nothing
+        x>nx ? j=aE : nothing
+        y<0 ? j=aS : nothing
+        y>ny ? j=aN : nothing
+        (x,y)=RF[j,fIndex](x,y)
+        u=(x,y,j)
+    end
+    #
+    return u
+end
+
+"""
+    UpdateLocation_dpdo!
+
+Update location (x,y,fIndex) when out of domain. Note: initially, this
+only works for the `dpdo` grid type provided by `MeshArrays.jl`.
+"""
+function UpdateLocation_dpdo!(u::Array{Float64,1},grid::gcmgrid)
     x,y = u[1:2]
     fIndex = Int(u[3])
     #
@@ -194,16 +223,21 @@ end
 """
     VelComp!(du,u,p::Dict,tim)
 
-Interpolate velocity from gridded fields and return position increment `du`
+Interpolate velocity from gridded fields (after exchange on u0,v0)
+and return position increment `du` (i.e. `x,y,fIndex`).
 """
 function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     #compute positions in index units
     dt=(tim-p["t0"])/(p["t1"]-p["t0"])
+    g=p["u0"].grid
     #
-    UpdateLocation!(u,p["u0"].grid)
+    Rend.grid.class=="dpdo" ? UpdateLocation_dpdo!(u,g) : nothing
+    Rend.grid.class=="cs" ? UpdateLocation_cs!(u,g) : nothing
+    Rend.grid.class=="llc" ? UpdateLocation_cs!(u,g) : nothing
+
     x,y = u[1:2]
     fIndex = Int(u[3])
-    nx,ny=p["u0"].grid.fSize[fIndex]
+    nx,ny=g.fSize[fIndex]
     #debugging stuff
     if (false & (mod(x,nx)!=x)|(mod(y,ny)!=y))
         println("crossing domain edge"*"$x and $y")
