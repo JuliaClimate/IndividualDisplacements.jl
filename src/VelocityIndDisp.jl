@@ -231,9 +231,9 @@ function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     dt=(tim-p["t0"])/(p["t1"]-p["t0"])
     g=p["u0"].grid
     #
-    Rend.grid.class=="dpdo" ? UpdateLocation_dpdo!(u,g) : nothing
-    Rend.grid.class=="cs" ? UpdateLocation_cs!(u,g) : nothing
-    Rend.grid.class=="llc" ? UpdateLocation_cs!(u,g) : nothing
+    g.class=="dpdo" ? UpdateLocation_dpdo!(u,g) : nothing
+    g.class=="cs" ? UpdateLocation_cs!(u,p) : nothing
+    g.class=="llc" ? UpdateLocation_cs!(u,p) : nothing
 
     x,y = u[1:2]
     fIndex = Int(u[3])
