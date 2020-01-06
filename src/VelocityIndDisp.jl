@@ -48,7 +48,9 @@ function UpdateLocation_cs!(u::Array{Float64,1},grid::Dict)
         y<0 ? j=aS : nothing
         y>ny ? j=aN : nothing
         (x,y)=RF[j,fIndex](x,y)
-        u=(x,y,j)
+        u[1]=x
+        u[2]=y
+        u[3]=j
     end
     #
     return u
@@ -238,16 +240,18 @@ function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     x,y = u[1:2]
     fIndex = Int(u[3])
     nx,ny=g.fSize[fIndex]
-    #debugging stuff
-    if (false & (mod(x,nx)!=x)|(mod(y,ny)!=y))
-        println("crossing domain edge"*"$x and $y")
-    end
     #
     dx,dy=[x - floor(x),y - floor(y)]
     i_c,j_c = Int32.(floor.([x y])) .+ 2
     #
     i_w,i_e=[i_c i_c+1]
     j_s,j_n=[j_c j_c+1]
+    #debugging stuff
+    if false && (i_e>nx+2||j_n>ny+2)
+        println("nx=$nx")
+        println("ny=$ny")
+        println("u=$u")
+    end
     #interpolate u to position and time
     du[1]=(1.0-dx)*(1.0-dt)*p["u0"].f[fIndex][i_w,j_c]+
     dx*(1.0-dt)*p["u0"].f[fIndex][i_e,j_c]+
