@@ -125,22 +125,50 @@ size(sol_one)
 
 # Define initial condition array.
 
-# +
-fIndex=1
-nx,ny=XC.fSize[fIndex]
-ii1=0.5:2.0:nx; ii2=0.5:2.0:ny;
+if false
+        fIndex = 1
+        nx, ny = XC.fSize[fIndex]
+        ii1 = 0.5:2.0:nx
+        ii2 = 0.5:2.0:ny
 
-n1=length(ii1); n2=length(ii2);
-uInitS=Array{Float64,2}(undef,(3,n1*n2))
-for i1 in eachindex(ii1); for i2 in eachindex(ii2);
-        i=i1+(i2-1)*n1
-        uInitS[1,i]=ii1[i1]
-        uInitS[2,i]=ii2[i2]
-        uInitS[3,i]=fIndex
-end; end;
+        n1 = length(ii1)
+        n2 = length(ii2)
+        uInitS = Array{Float64,2}(undef, (3, n1 * n2))
+        for i1 in eachindex(ii1)
+                for i2 in eachindex(ii2)
+                        i = i1 + (i2 - 1) * n1
+                        uInitS[1, i] = ii1[i1]
+                        uInitS[2, i] = ii2[i2]
+                        uInitS[3, i] = fIndex
+                end
+        end
+        du = fill(0.0, size(uInitS))
+end
+
+# +
+uInitS = Array{Float64,2}(undef, 3, prod(XC.grid.ioSize))
+kk = 0
+
+for fIndex = 1:5
+        nx, ny = XC.fSize[fIndex]
+        ii1 = 0.5:2.0:nx
+        ii2 = 0.5:2.0:ny
+        n1 = length(ii1)
+        n2 = length(ii2)
+        for i1 in eachindex(ii1)
+                for i2 in eachindex(ii2)
+                        global kk += 1
+                        let kk = kk
+                                uInitS[1, kk] = ii1[i1]
+                                uInitS[2, kk] = ii2[i2]
+                                uInitS[3, kk] = fIndex
+                        end
+                end
+        end
+end
+
+uInitS=uInitS[:,1:kk]
 du=fill(0.0,size(uInitS));
-#comp_vel(du,uInitS,uvetc,0.0)
-#du
 # -
 
 # Solve for all trajectories.
@@ -179,7 +207,7 @@ lat[ii]=(1.0-dx)*(1.0-dy)*tmp[1,1]+dx*(1.0-dy)*tmp[2,1]+
 (1.0-dx)*dy*tmp[1,2]+dx*dy*tmp[2,2]
 
 tmp=view(XC[fIndex],i_c:i_c+1,j_c:j_c+1)
-minimum(tmp)<0 ? tmp[findall(tmp.>0.0)].=tmp[findall(tmp.>0.0)].-360 : nothing
+kk=findall(tmp.<maximum(tmp)-180); tmp[kk].=tmp[kk].+360.0
 lon[ii]=(1.0-dx)*(1.0-dy)*tmp[1,1]+dx*(1.0-dy)*tmp[2,1]+
 (1.0-dx)*dy*tmp[1,2]+dx*dy*tmp[2,2]
 end
@@ -194,4 +222,6 @@ show(df)
 
 #nn=minimum([5000 size(du,2)])
 #PyPlot.figure(); PlotBasic(df,nn,10.0)
-PyPlot.figure(); PlotMapProj(df,3000)
+PyPlot.figure(); PlotMapProj(df,10000)
+
+
