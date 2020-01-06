@@ -111,14 +111,14 @@ function RelocationFunctions_cs(xmpl::MeshArray)
 # g1, g2, g3, g4 : the reverse connections
 
     f1(x, y, nx, ny) = (x .- Float64(nx), y)
-    f2(x, y, nx, ny) = (Float64(ny) .- y, x .- Float64(nx))
+    f2(x, y, nx, ny) = (Float64(ny) .- y .- 1.0, x .- Float64(nx))
     f3(x, y, nx, ny) = (x, y .- Float64(ny))
-    f4(x, y, nx, ny) = (y .- Float64(ny), Float64(nx) .- x)
+    f4(x, y, nx, ny) = (y .- Float64(ny), Float64(nx) .- x .- 1.0)
 
     g1(x, y, nx, ny) = (x .+ Float64(nx), y)
-    g2(x, y, nx, ny) = (y .+ Float64(ny), Float64(nx) .- x)
+    g2(x, y, nx, ny) = (y .+ Float64(ny), Float64(nx) .- x .- 1.0)
     g3(x, y, nx, ny) = (x, y .+ Float64(ny))
-    g4(x, y, nx, ny) = (Float64(ny) .- y, x .+ Float64(nx))
+    g4(x, y, nx, ny) = (Float64(ny) .- y .- 1.0, x .+ Float64(nx))
 
 #
 
