@@ -22,13 +22,15 @@
 using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"PlotIndDisp.jl"))
+include(joinpath(dirname(pathof(MeshArrays)),"gcmfaces_nctiles.jl"))
 
 # ## 2. Read gridded variables as `MeshArray`s
 
 # Put grid variables in a dictionary.
 
 mygrid=GridSpec("LLC90"); GridVariables=GridLoad(mygrid);
-include(joinpath(dirname(pathof(MeshArrays)),"gcmfaces_nctiles.jl"))
+GridVariables=merge(GridVariables,
+    IndividualDisplacements.NeighborTileIndices_cs(GridVariables));
 
 # Read velocity fields as `MeshArray`s.
 
@@ -220,8 +222,8 @@ show(df)
 
 # - call `PlotMapProj`
 
-#nn=minimum([5000 size(du,2)])
-#PyPlot.figure(); PlotBasic(df,nn,10.0)
-PyPlot.figure(); PlotMapProj(df,10000)
+# +
+#PyPlot.figure(); PlotMapProj(df,10000)
+# -
 
 
