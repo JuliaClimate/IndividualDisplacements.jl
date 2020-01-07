@@ -35,19 +35,13 @@ function UpdateLocation_cs!(u::Array{Float64,1},grid::Dict)
     x,y = u[1:2]
     fIndex = Int(u[3])
     nx,ny=grid["XC"].fSize[fIndex]
-
     if x<0||x>nx||y<0||y>ny
-        s = grid["XC"].fSize
-        nFaces = length(s)
-        nFaces == 5 ? s = vcat(s, s[3]) : nothing
-        (aW, aE, aS, aN, iW, iE, iS, iN) = MeshArrays.exch_cs_sources(fIndex, s, 1)
-        RF=RelocationFunctions_cs(grid["XC"])
         j = 0
-        x<0 ? j=aW : nothing
-        x>nx ? j=aE : nothing
-        y<0 ? j=aS : nothing
-        y>ny ? j=aN : nothing
-        (x,y)=RF[j,fIndex](x,y)
+        x<0 ? j=grid["aW"][fIndex] : nothing
+        x>nx ? j=grid["aE"][fIndex] : nothing
+        y<0 ? j=grid["aS"][fIndex] : nothing
+        y>ny ? j=grid["aN"][fIndex] : nothing
+        (x,y)=grid["RelocFunctions"][j,fIndex](x,y)
         u[1]=x
         u[2]=y
         u[3]=j
@@ -95,6 +89,26 @@ function UpdateLocation_dpdo!(u::Array{Float64,1},grid::gcmgrid)
     end
     #
     return u
+end
+
+
+"""
+    NeighborTileIndices_cs(grid::Dict)
+
+Derive list of neighboring tile indices for a cs or llc grid + functions that
+convert indices from one tile to another. Returns a Dict to merge later.
+"""
+function NeighborTileIndices_cs(grid::Dict)
+    s = grid["XC"].fSize
+    nFaces = length(s)
+    nFaces == 5 ? s = vcat(s, s[3]) : nothing
+    aW=Array{Int,1}(undef,nFaces)
+    aE=similar(aW); aS=similar(aW); aN=similar(aW);
+    for i = 1:nFaces
+        (aW[i], aE[i], aS[i], aN[i], _, _, _, _) = MeshArrays.exch_cs_sources(i, s, 1)
+    end
+    RelocFunctions=RelocationFunctions_cs(grid["XC"])
+    return Dict("aW" => aW, "aE" => aE, "aS" => aS, "aN" => aN, "RelocFunctions" => RelocFunctions)
 end
 
 """
