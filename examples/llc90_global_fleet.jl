@@ -23,6 +23,7 @@ using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statist
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"PlotIndDisp.jl"))
 include(joinpath(dirname(pathof(MeshArrays)),"gcmfaces_nctiles.jl"))
+include(joinpath(dirname(pathof(MeshArrays)),"Plots.jl"))
 
 # ## 2. Read gridded variables as `MeshArray`s
 
@@ -46,8 +47,9 @@ show(u)
 #u=dropdims(mean(u,dims=3),dims=3)
 #v=dropdims(mean(v,dims=3),dims=3)
 
-u=u[:,1,1]
-v=v[:,1,1]
+u=u[:,20,1]
+v=v[:,20,1]
+msk=(GridVariables["hFacC"][:,20] .> 0.)
 
 u[findall(isnan.(u))]=0.0
 v[findall(isnan.(v))]=0.0
@@ -63,29 +65,19 @@ u0=u; u1=u; v0=v; v1=v;
 # Put velocity fields and time range in a dictionary.
 
 # +
-t0=0.0; t1=86400*366*2.0; dt=3600;
+t0=0.0; t1=86400*366*10.0; dt=10*86400.0;
 
-uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1, "dt" => dt) ;
+uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, 
+    "t0" => t0, "t1" => t1, "dt" => dt, "msk" => msk) ;
 # -
 
 # Merge the two dictionaries and add masks
 
-# +
 uvetc=merge(uvt,GridVariables);
-
-# _Note:_ in general case, mskW & mskS would need to be exchanged ...
-
-mskW=fill(1.0,u)
-mskS=fill(1.0,v)
-
-msk=Dict("mskW" => mskW, "mskS" => mskS)
-
-uvetc=merge(uvetc,msk);
-# -
 
 # Visualize  gridded variables
 
-heatmap(mskW[1,1].*u0[1,1],title="U at the start")
+heatmap(u0[1,1],title="U at the start")
 
 # Get lon and lat array with added columns and rows
 
@@ -93,6 +85,8 @@ XC=exchange(GridVariables["XC"])
 YC=exchange(GridVariables["YC"])
 
 # ## 3. Compute trajectories from gridded flow fields
+
+# Set `comp_vel`, an alias, to a suitable function.
 
 comp_vel=IndividualDisplacements.VelComp!
 
@@ -153,19 +147,21 @@ kk = 0
 
 for fIndex = 1:5
         nx, ny = XC.fSize[fIndex]
-        ii1 = 0.5:2.0:nx
-        ii2 = 0.5:2.0:ny
+        ii1 = 0.5:1.0:nx
+        ii2 = 0.5:1.0:ny
         n1 = length(ii1)
         n2 = length(ii2)
         for i1 in eachindex(ii1)
-                for i2 in eachindex(ii2)
+          for i2 in eachindex(ii2)
+            if msk[fIndex][Int(round(i1+0.5)),Int(round(i2+0.5))]
                         global kk += 1
                         let kk = kk
                                 uInitS[1, kk] = ii1[i1]
                                 uInitS[2, kk] = ii2[i2]
                                 uInitS[3, kk] = fIndex
                         end
-                end
+            end
+          end
         end
 end
 
@@ -176,7 +172,7 @@ du=fill(0.0,size(uInitS));
 # Solve for all trajectories.
 
 prob = ODEProblem(comp_vel,uInitS,tspan,uvetc)
-sol = solve(prob,Euler(),dt=1e6)
+sol = solve(prob,Euler(),dt=uvt["dt"])
 size(sol)
 
 # ## 4. Plot trajectories
@@ -222,8 +218,6 @@ show(df)
 
 # - call `PlotMapProj`
 
-# +
-#PyPlot.figure(); PlotMapProj(df,10000)
-# -
+PyPlot.figure(); PlotMapProj(df,10000)
 
 
