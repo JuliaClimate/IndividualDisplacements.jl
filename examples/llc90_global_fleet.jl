@@ -8,9 +8,9 @@
 #       format_version: '1.4'
 #       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Julia 1.1.0
+#     display_name: Julia 1.3.0-rc4
 #     language: julia
-#     name: julia-1.1
+#     name: julia-1.3
 # ---
 
 # # This notebook
@@ -19,17 +19,24 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statistics
+# +
+#using Pkg; Pkg.build("SpecialFunctions")
+
+# +
+using IndividualDisplacements, MeshArrays, DifferentialEquations
+using Plots, Statistics, MITgcmTools
+
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"PlotIndDisp.jl"))
-include(joinpath(dirname(pathof(MeshArrays)),"gcmfaces_nctiles.jl"))
-include(joinpath(dirname(pathof(MeshArrays)),"Plots.jl"))
+
+include(joinpath(dirname(pathof(MeshArrays)),"../examples/Plots.jl"))
+# -
 
 # ## 2. Read gridded variables as `MeshArray`s
 
 # Put grid variables in a dictionary.
 
-mygrid=GridSpec("LLC90"); GridVariables=GridLoad(mygrid);
+mygrid=GridSpec("LatLonCap","GRID_LLC90/"); GridVariables=GridLoad(mygrid);
 GridVariables=merge(GridVariables,
     IndividualDisplacements.NeighborTileIndices_cs(GridVariables));
 
@@ -67,7 +74,7 @@ u0=u; u1=u; v0=v; v1=v;
 # +
 t0=0.0; t1=86400*366*10.0; dt=10*86400.0;
 
-uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, 
+uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1,
     "t0" => t0, "t1" => t1, "dt" => dt, "msk" => msk) ;
 # -
 
@@ -205,7 +212,12 @@ lat[ii]=(1.0-dx)*(1.0-dy)*tmp[1,1]+dx*(1.0-dy)*tmp[2,1]+
 (1.0-dx)*dy*tmp[1,2]+dx*dy*tmp[2,2]
 
 tmp=view(XC[fIndex],i_c:i_c+1,j_c:j_c+1)
-kk=findall(tmp.<maximum(tmp)-180); tmp[kk].=tmp[kk].+360.0
+if (maximum(tmp)>minimum(tmp)+180)&&(lat[ii]<88)
+        tmp1=deepcopy(tmp)
+        tmp1[findall(tmp.<maximum(tmp)-180)] .+= 360.
+        tmp=tmp1
+end
+#kk=findall(tmp.<maximum(tmp)-180); tmp[kk].=tmp[kk].+360.0
 lon[ii]=(1.0-dx)*(1.0-dy)*tmp[1,1]+dx*(1.0-dy)*tmp[2,1]+
 (1.0-dx)*dy*tmp[1,2]+dx*dy*tmp[2,2]
 end
@@ -218,6 +230,4 @@ show(df)
 
 # - call `PlotMapProj`
 
-PyPlot.figure(); PlotMapProj(df,10000)
-
-
+# PyPlot.figure(); PlotMapProj(df,10000)
