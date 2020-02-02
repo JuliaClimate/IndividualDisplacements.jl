@@ -8,9 +8,9 @@
 #       format_version: '1.4'
 #       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Julia 1.1.0
+#     display_name: Julia 1.3.0-rc4
 #     language: julia
-#     name: julia-1.1
+#     name: julia-1.3
 # ---
 
 # # This notebook
@@ -19,19 +19,18 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statistics
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"PlotIndDisp.jl"))
+using IndividualDisplacements, MeshArrays, DifferentialEquations
+using DataFrames, Plots, Statistics
+p=dirname(pathof(MeshArrays)); include(joinpath(p,"../examples/Demos.jl"))
 
 # ## 2. Define gridded variables as `MeshArray`s
 
 # Put grid variables in a dictionary.
 
-GridVariables=GridOfOnes("ll",1,40)
-(Rini,Rend,DXCsm,DYCsm)=MeshArrays.demo2(GridVariables)
+GridVariables=GridOfOnes("PeriodicDomain",1,40)
+(Rini,Rend,DXCsm,DYCsm)=demo2(GridVariables)
 
 heatmap(Rend[1])
-# -
 
 # Derive velocity fields using Rend as a scalar potential (**later: streamfunction...**)
 
@@ -97,7 +96,6 @@ Plots.plot!(tmpv)
 
 # ## 5. Solve through time using `DifferentialEquations.jl`
 
-using DifferentialEquations
 tspan = (0.0,nSteps*dt)
 prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
 sol_one = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
@@ -133,5 +131,13 @@ lat=mod.(sol[2,:,:],40)
 df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:])
 size(df)
 
+# +
 nn=minimum([5000 size(du,2)])
-PyPlot.figure(); PlotBasic(df,nn,20.0)
+
+#p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"plot_pyplot.jl"))
+#PyPlot.figure(); PlotBasic(df,nn,20.0)
+
+p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"plot_makie.jl"))
+AbstractPlotting.inline!(true) #for Juno, set to false
+scene=PlotMakie(df,nn,20.0)
+#Makie.save("plot.png", scene)

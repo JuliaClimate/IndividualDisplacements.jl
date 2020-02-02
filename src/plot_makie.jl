@@ -11,8 +11,8 @@ function PlotMakie(df::DataFrame,nn::Integer,dMax::Float64=0.)
    COs=[:gray76 :yellow2 :limegreen :black]
 
    #scene=Scene(limits=FRect(0, 0, 40, 40),show_axis = false)
-   scene=Scene(limits=FRect(-185, -95, 370, 190),show_axis = false)
-   #scene=Scene(show_axis = false)
+   #scene=Scene(limits=FRect(-185, -95, 370, 190),show_axis = false)
+   scene=Scene(show_axis = false)
    for ii=1:nn
       tmp=df[df.ID .== IDs[ii], :]
       if dMax > 0.
