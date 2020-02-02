@@ -6,3 +6,6 @@ examples/*.ipynb
 examples/flt_example
 examples/run_offflt
 examples/llc90_latlon
+examples/GRID_LLC90
+examples/nctiles_climatology
+

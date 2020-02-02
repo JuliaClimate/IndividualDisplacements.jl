@@ -8,9 +8,9 @@
 #       format_version: '1.4'
 #       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Julia 1.1.0
+#     display_name: Julia 1.3.0-rc4
 #     language: julia
-#     name: julia-1.1
+#     name: julia-1.3
 # ---
 
 # # This notebook
@@ -76,6 +76,7 @@ sol[1:4]
 using Plots
 Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Solid body rotation example",
      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
+#Plots.savefig("SolidBodyRotation.png")
 
 # ## 6. check against reference result
 
