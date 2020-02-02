@@ -13,6 +13,6 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 [compat]
 DataFrames = "0.19"
 DifferentialEquations = "6.8"
-MeshArrays = "0.2"
+MeshArrays = "0.2.5"
 StatsBase = "0.32"
-julia = "^1.1"
+julia = "^1.2"
