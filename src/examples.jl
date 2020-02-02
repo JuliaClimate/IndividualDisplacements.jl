@@ -13,7 +13,7 @@ Global ocean case -- just reading from file for now.
 df=IndividualDisplacements.ex_1()
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"PlotIndDisp.jl"))
+include(joinpath(p,"plot_pyplot.jl"))
 PyPlot.figure(); PlotMapProj(df,300); gcf()
 ```
 """
@@ -33,7 +33,7 @@ extended and modified configuration of the standard MITgcm test case.
 (df,ref,sol)=IndividualDisplacements.ex_2();
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"PlotIndDisp.jl"))
+include(joinpath(p,"plot_pyplot.jl"))
 PyPlot.figure(); PlotBasic(df,300,100000.0); gcf()
 
 using Plots
