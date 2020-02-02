@@ -8,9 +8,9 @@
 #       format_version: '1.4'
 #       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Julia 1.1.0
+#     display_name: Julia 1.3.0-rc4
 #     language: julia
-#     name: julia-1.1
+#     name: julia-1.3
 # ---
 
 # # This notebook
@@ -20,16 +20,16 @@
 # ## 1. import software
 
 using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statistics
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"PlotIndDisp.jl"))
+p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"plot_pyplot.jl"))
+p=dirname(pathof(MeshArrays)); include(joinpath(p,"../examples/Demos.jl"))
 
 # ## 2. Define gridded variables as `MeshArray`s
 
 # Put grid variables in a dictionary.
 
 # +
-GridVariables=GridOfOnes("dpdo",16,20)
-(Rini,Rend,DXCsm,DYCsm)=MeshArrays.demo2(GridVariables)
+GridVariables=GridOfOnes("PeriodicDomain",16,20)
+(Rini,Rend,DXCsm,DYCsm)=demo2(GridVariables)
 
 heatmap(Rend[1])
 # -
@@ -144,3 +144,6 @@ size(df)
 
 nn=minimum([5000 size(du,2)])
 PyPlot.figure(); PlotBasic(df,nn,10.0)
+#PyPlot.savefig("PeriodicDomainRandomFlow.png")
+
+

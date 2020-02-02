@@ -43,6 +43,7 @@ function PlotMapProj(df::DataFrame,nn::Integer)
 
    # Set up Equidistant cylindrical map projection. Use low resolution coastlines.
    ccrs=pyimport("cartopy.crs")
+   #ax = plt.axes(projection=ccrs.Orthographic(central_latitude=-90.0,central_longitude=-160.0))
    ax = plt.axes(projection=ccrs.PlateCarree(central_longitude=-160.0))
    ax.coastlines(linewidth=0.3)
    ax.stock_img()

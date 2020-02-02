@@ -6,11 +6,11 @@
 #       extension: .jl
 #       format_name: light
 #       format_version: '1.4'
-#       jupytext_version: 1.2.1
+#       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Julia 1.1.0
+#     display_name: Julia 1.3.0-rc4
 #     language: julia
-#     name: julia-1.1
+#     name: julia-1.3
 # ---
 
 # # This notebook
@@ -20,8 +20,7 @@
 # ## 1. import software
 
 using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statistics
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"PlotIndDisp.jl"))
+p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"plot_pyplot.jl"))
 
 # ## 2. Read gridded variables as `MeshArray`s
 
@@ -32,7 +31,7 @@ include(joinpath(p,"PlotIndDisp.jl"))
 # +
 import IndividualDisplacements: myread
 
-mygrid=gcmgrid("flt_example/","ll",1,[(80,42)], [80 42], Float32, read, write)
+mygrid=gcmgrid("flt_example/","PeriodicDomain",1,[(80,42)], [80 42], Float32, read, write)
 
 GridVariables=Dict("XC" => myread(mygrid.path*"XC",MeshArray(mygrid,Float32)),
 "YC" => myread(mygrid.path*"YC",MeshArray(mygrid,Float32)),
