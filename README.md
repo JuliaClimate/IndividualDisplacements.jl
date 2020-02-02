@@ -17,13 +17,19 @@ Pkg.add("IndividualDisplacements")
 Pkg.test("IndividualDisplacements")
 ```
 
-### Use example
+![alt-text-1](examples/ex_2_mitgcm.png "From MITgcm")         |  ![alt-text-2](examples/ex_1_mitgcm.png "From MITgcm")
+:------------------------------:|:---------------------------------:
+![alt-text-3](examples/PeriodicDomainRandomFlow.png "Computed in Julia")  |  ![alt-text-4](examples/LatLonCap300mDepth.png "Computed in Julia")
 
-To reproduce results from the MITgcm fortran implementation:
+### Example
+
+This example reproduces an individual trajectory originally computed by the `MITgcm` fortran implementation:
 
 ```
 #import software
 using IndividualDisplacements
+p=dirname(pathof(IndividualDisplacements)); 
+cd(p*"/../examples")
 
 #download data
 if !isdir("flt_example")
@@ -33,17 +39,10 @@ end
 #run example
 (df,pl)=IndividualDisplacements.ex_2()
 
-#plot resutl
+#display result
 display(pl)
 ```
 
-![alt-text-1](examples/ex_2.png "Computed in Julia")
+![alt-text-5](examples/ex_2.png "Computed in Julia")
 
-**Example:** `MITgcm/pkg/flt` output displayed using via `IndividualDisplacements.jl`
-
-![alt-text-1](examples/ex_2_mitgcm.png "From MITgcm")
-
-**Example:** `MITgcm/pkg/flt` output displayed using via `IndividualDisplacements.jl`
-
-![alt-text-2](examples/ex_1_mitgcm.png "From MITgcm")
-
+![alt-text-6](examples/SolidBodyRotation.png "Unit test")
