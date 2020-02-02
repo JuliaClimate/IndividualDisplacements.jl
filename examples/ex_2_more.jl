@@ -8,9 +8,9 @@
 #       format_version: '1.4'
 #       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Julia 1.1.0
+#     display_name: Julia 1.3.0-rc4
 #     language: julia
-#     name: julia-1.1
+#     name: julia-1.3
 # ---
 
 # # This notebook
@@ -26,7 +26,7 @@
 
 using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"PlotIndDisp.jl"))
+include(joinpath(p,"plot_pyplot.jl"))
 
 # ## 2. reload trajectories from `MITgcm/pkg/flt` 
 

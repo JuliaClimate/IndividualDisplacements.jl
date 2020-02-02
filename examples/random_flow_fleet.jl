@@ -140,4 +140,4 @@ nn=minimum([5000 size(du,2)])
 p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"plot_makie.jl"))
 AbstractPlotting.inline!(true) #for Juno, set to false
 scene=PlotMakie(df,nn,20.0)
-#Makie.save("plot.png", scene)
+#Makie.save("PeriodicDomainRandomFlow_Makie.png", scene)

@@ -19,18 +19,9 @@
 
 # ## 1. import software
 
-# +
-#using Pkg; Pkg.build("SpecialFunctions")
-
-# +
 using IndividualDisplacements, MeshArrays, DifferentialEquations
-using Plots, Statistics, MITgcmTools
-
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"PlotIndDisp.jl"))
-
+using Plots, Statistics, MITgcmTools, DataFrames
 include(joinpath(dirname(pathof(MeshArrays)),"../examples/Plots.jl"))
-# -
 
 # ## 2. Read gridded variables as `MeshArray`s
 
@@ -230,4 +221,18 @@ show(df)
 
 # - call `PlotMapProj`
 
-# PyPlot.figure(); PlotMapProj(df,10000)
+# +
+p=dirname(pathof(IndividualDisplacements))
+
+nn=10000
+
+#include(joinpath(p,"plot_pyplot.jl"))
+#PyPlot.figure(); PlotMapProj(df,nn)
+
+include(joinpath(p,"plot_makie.jl"))
+AbstractPlotting.inline!(true) #for Juno, set to false
+scene=PlotMakie(df,nn,180.0)
+#Makie.save("LatLonCap300mDepth.png", scene)
+# -
+
+
