@@ -19,7 +19,7 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, DifferentialEquations
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
 using Plots, Statistics, MITgcmTools, DataFrames
 include(joinpath(dirname(pathof(MeshArrays)),"../examples/Plots.jl"))
 
