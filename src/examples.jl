@@ -2,7 +2,7 @@
 #using Revise, IndividualDisplacements
 #include(joinpath(dirname(pathof(IndividualDisplacements)),"examples.jl"))
 
-using MeshArrays, DifferentialEquations
+using MeshArrays, OrdinaryDiffEq
 
 """
     ex_1()
