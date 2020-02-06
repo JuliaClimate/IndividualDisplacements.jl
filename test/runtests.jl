@@ -1,5 +1,5 @@
 using Test
-using IndividualDisplacements, MeshArrays, DifferentialEquations
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
 
 @testset "MeshArrays tests:" begin
 
