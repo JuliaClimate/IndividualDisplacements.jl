@@ -19,7 +19,7 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statistics
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots, Statistics
 p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"plot_pyplot.jl"))
 
 # ## 2. Read gridded variables as `MeshArray`s

@@ -21,7 +21,7 @@
 
 # ## 1. import software and `pkg/flt` trajectories
 
-using IndividualDisplacements, MeshArrays, Plots, DifferentialEquations
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots
 
 # ## 2. Define gridded variables as `MeshArray`s
 
