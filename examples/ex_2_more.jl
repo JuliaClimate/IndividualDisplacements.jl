@@ -18,13 +18,13 @@
 # - [x] read gridded output + `float_trajectory*data` => `uvetc` dictionnary.
 # - [x] recompute `u,v` from gridded output
 # - [x] compare with `u,v` from `float_traj*data`
-# - [x] solve for float trajectory with `DifferentialEquations.jl`
+# - [x] solve for trajectory with `OrdinaryDiffEq.jl` (part of `DifferentialEquations.jl`)
 #
 # _Notes:_ For documentation see <https://gaelforget.github.io/MeshArrays.jl/stable/>, <https://docs.juliadiffeq.org/latest/solvers/ode_solve.html> and <https://en.wikipedia.org/wiki/Displacement_(vector)>
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"plot_pyplot.jl"))
 
@@ -32,7 +32,7 @@ include(joinpath(p,"plot_pyplot.jl"))
 
 dirIn="flt_example/"
 prec=Float32
-df=IndividualDisplacements.ReadDisplacements(dirIn,prec)
+df=ReadDisplacements(dirIn,prec) #function exported by IndividualDisplacements
 PyPlot.figure(); PlotBasic(df,300,100000.0)
 
 # ## 3. Read gridded variables via `MeshArrays.jl`
@@ -120,8 +120,8 @@ colorbar()
 # ## 6. Recompute displacements from gridded flow fields
 
 # +
-comp_vel=IndividualDisplacements.VelComp
-get_vel=IndividualDisplacements.VelCopy
+comp_vel=VelComp #function exported by IndividualDisplacements
+get_vel=VelCopy #function exported by IndividualDisplacements
 
 uInit=[tmp[1,:lon];tmp[1,:lat]]./uvetc["dx"]
 nSteps=Int32(tmp[end,:time]/3600)-2
@@ -180,9 +180,15 @@ Plots.plot!(refv)
 
 # ## 6. Recompute trajectories from gridded flow fields
 #
-# Solve through time using `DifferentialEquations.jl`
+# Solve through time using `OrdinaryDiffEq.jl` with 
+#
+# - `comp_vel` is the function computing `du/dt`
+# - `uInit` is the initial condition `u @ tspan[1]`
+# - `tspan` is the time interval
+# - `uvetc` are parameters for `comp_vel`
+# - `Tsit5` is the time-stepping scheme
+# - `reltol` and `abstol` are tolerance parameters
 
-using DifferentialEquations
 tspan = (0.0,nSteps*3600.0)
 #prob = ODEProblem(get_vel,uInit,tspan,tmp)
 prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
@@ -204,7 +210,6 @@ for i=1:nSteps-1
 end
 ref=ref./uvetc["dx"]
 
-using Plots
 Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
 Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,label="MITgcm Solution")
