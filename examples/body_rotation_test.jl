@@ -21,7 +21,7 @@
 
 # ## 1. import software and `pkg/flt` trajectories
 
-using IndividualDisplacements, MeshArrays, Plots, DifferentialEquations
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots
 
 # ## 2. Define gridded variables as `MeshArray`s
 
@@ -65,7 +65,6 @@ du=fill(0.0,2);
 
 # ## 4. solve through time using DifferentialEquations.jl
 
-using DifferentialEquations
 tspan = (0.0,nSteps*3600.0)
 prob = ODEProblem(IndividualDisplacements.VelComp,uInit,tspan,uvetc)
 sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
@@ -73,7 +72,6 @@ sol[1:4]
 
 # ## 5. visualize trajectory
 
-using Plots
 Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Solid body rotation example",
      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
 #Plots.savefig("SolidBodyRotation.png")
