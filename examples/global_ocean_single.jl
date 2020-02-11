@@ -19,7 +19,8 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statistics
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
+using Plots, Statistics, MAT
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"plot_pyplot.jl"))
 
@@ -41,7 +42,6 @@ GridVariables=Dict("XC" => read(mygrid.path*"XC.latlon.data",MeshArray(mygrid,Fl
 # Read velocity fields as `MeshArray`s.
 
 # +
-using MAT
 file = matopen(mygrid.path*"uv_lonlat.mat")
 u=read(file, "u")
 v=read(file, "v")
@@ -135,7 +135,6 @@ Plots.plot!(tmpv)
 
 # ## 5. Solve through time using `DifferentialEquations.jl`
 
-using DifferentialEquations
 tspan = (0.0,nSteps*3600.0)
 #prob = ODEProblem(get_vel,uInit,tspan,tmp)
 prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
