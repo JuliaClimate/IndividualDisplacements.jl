@@ -21,18 +21,15 @@ Pkg.test("IndividualDisplacements")
 
 ### Example
 
-This example reproduces an individual trajectory computed by the `MITgcm` (in fortran):
+This example reproduces an individual trajectory computed by `MITgcm` but using `Julia`:
 
 ```
-#import software
 using IndividualDisplacements
 
-#download data
 if !isdir("flt_example")
     run(`git clone https://github.com/gaelforget/flt_example`)
 end
 
-#run example
 (df,ref,sol)=IndividualDisplacements.example2()
 ```
 
