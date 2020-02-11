@@ -210,7 +210,6 @@ for i=1:nSteps-1
 end
 ref=ref./uvetc["dx"]
 
-using Plots
 Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
 Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,label="MITgcm Solution")
