@@ -1,6 +1,12 @@
 # IndividualDisplacements.jl
 
-**IndividualDisplacements.jl** computes elementary point displacements over a gridded model domain. It can also read / write them from / to file. A typical application is the simulation and analysis of materials drifting or moving over the Global Ocean (e.g. plastics or planktons) or Atmosphere (e.g. dust or chemicals). Inter-operability with popular climate model grids and [MeshArrays.jl](https://github.com/JuliaClimate/MeshArrays.jl) is an important prospect. `IndividualDisplacements.jl ` was initially designed in relation to [MITgcm](https://mitgcm.readthedocs.io/en/latest/?badge=latest), [ECCOv4](https://eccov4.readthedocs.io/en/latest/) ([Forget et al. 2015](https://doi.org/10.5194/gmd-8-3071-2015)), and [CBIOMES](https://cbiomes.readthedocs.io/en/latest/) model simulations.
+**IndividualDisplacements.jl** computes elementary point displacements over a gridded Earth domain (e.g. a climate model C-grid). A typical application is the simulation and analysis of materials moving through atmospheric flows (e.g. dust or chemicals) or oceanic flows (e.g. plastics or planktons).
+
+Inter-operability with popular climate model grids and their representation in [MeshArrays.jl](https://github.com/JuliaClimate/MeshArrays.jl) is a central element. The package can also read and plot trajectory simulation output from e.g. the [MITgcm](https://mitgcm.readthedocs.io/en/latest/?badge=latest). It was originally developed using [ECCOv4](https://eccov4.readthedocs.io/en/latest/) and [CBIOMES](https://cbiomes.readthedocs.io/en/latest/) ocean model simulations ([Forget et al. 2015](https://doi.org/10.5194/gmd-8-3071-2015)).
+
+The `VelComp!` and `VelComp` functions compute the velocity of tracked points. `tests/runtests.jl` uses solid body rotation as a benchmark (see below).
+
+<img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/SolidBodyRotation.png" width="50%">
 
 ## API Guide
 
