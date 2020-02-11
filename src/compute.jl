@@ -10,9 +10,9 @@ function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     dt=(tim-p["t0"])/(p["t1"]-p["t0"])
     g=p["u0"].grid
     #
-    g.class=="PeriodicDomain" ? UpdateLocation_dpdo!(u,g) : nothing
-    g.class=="CubeSphere" ? UpdateLocation_cs!(u,p) : nothing
-    g.class=="LatLonCap" ? UpdateLocation_cs!(u,p) : nothing
+    g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
+    g.class=="CubeSphere" ? update_location_cs!(u,p) : nothing
+    g.class=="LatLonCap" ? update_location_cs!(u,p) : nothing
 
     x,y = u[1:2]
     fIndex = Int(u[3])
