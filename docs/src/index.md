@@ -6,7 +6,35 @@ Inter-operability with popular climate model grids and their representation in [
 
 The `VelComp!` and `VelComp` functions compute the velocity of tracked points. `tests/runtests.jl` uses solid body rotation as a benchmark (see below).
 
-<img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/SolidBodyRotation.png" width="50%">
+![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/SolidBodyRotation.png)
+
+## List Of Examples
+
+Solid body rotation is used for unit testing:
+
+```
+test/runtests.jl
+examples/SolidBodyRotation.jl
+```
+
+The two examples documented under `API` + extenstions to `example2`:
+
+```
+src/examples.jl
+examples/example2fleet.jl
+examples/example2more.jl
+```
+
+An intermediate example: `examples/PeriodicChannel_fleet.jl`
+
+Two examples use `VelComp!` and `update_locations.jl`:
+
+```
+examples/PeriodicDomainRandom_fleet.jl
+examples/GlobalDomain_fleet.jl
+```
+
+![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/LatLonCap300mDepth.png)
 
 ## API Guide
 

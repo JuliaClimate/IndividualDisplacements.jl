@@ -27,7 +27,8 @@ include(joinpath(dirname(pathof(MeshArrays)),"../examples/Plots.jl"))
 
 # Put grid variables in a dictionary.
 
-mygrid=GridSpec("LatLonCap","GRID_LLC90/"); GridVariables=GridLoad(mygrid);
+mygrid=GridSpec("LatLonCap","GRID_LLC90/"); 
+GridVariables=GridLoad(mygrid);
 GridVariables=merge(GridVariables,
     IndividualDisplacements.NeighborTileIndices_cs(GridVariables));
 
@@ -117,7 +118,7 @@ sol_one = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
 sol_two = solve(prob,Euler(),dt=1e6)
 size(sol_one)
 
-# Define initial condition array.
+# Define initial condition array (**retired code**).
 
 if false
         fIndex = 1
@@ -138,6 +139,8 @@ if false
         end
         du = fill(0.0, size(uInitS))
 end
+
+# Define initial condition array
 
 # +
 uInitS = Array{Float64,2}(undef, 3, prod(XC.grid.ioSize))

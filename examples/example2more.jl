@@ -37,66 +37,15 @@ PyPlot.figure(); PlotBasic(df,300,100000.0)
 
 # ## 3. Read gridded variables via `MeshArrays.jl`
 #
-# Put grid variables in a dictionary.
-#
-# _Note:_ `myread` function deals with tiled files from `flt_example/`.
+# Put gridded variables in a dictionary.
 
-# +
-import IndividualDisplacements: myread
-
-mygrid=gcmgrid("flt_example/","ll",1,[(80,42)], [80 42], Float32, read, write)
-nr=8
-
-GridVariables=Dict("XC" => myread(mygrid.path*"XC",MeshArray(mygrid,Float32)),
-"YC" => myread(mygrid.path*"YC",MeshArray(mygrid,Float32)),
-"XG" => myread(mygrid.path*"XG",MeshArray(mygrid,Float32)),
-"YG" => myread(mygrid.path*"YG",MeshArray(mygrid,Float32)),
-"dx" => 5000.0);
-# -
-
-# Put velocity fields in in another dictionary and merge the two dictionaries.
-
-# +
-t0=0.0 #approximation / simplification
-t1=18001.0*3600.0
-
-u0=myread(mygrid.path*"U.0000000001",MeshArray(mygrid,Float32,nr))
-u1=myread(mygrid.path*"U.0000018001",MeshArray(mygrid,Float32,nr))
-v0=myread(mygrid.path*"V.0000000001",MeshArray(mygrid,Float32,nr))
-v1=myread(mygrid.path*"V.0000018001",MeshArray(mygrid,Float32,nr))
-
-kk=3 #3 to match -1406.25 in pkg/flt output
-u0=u0[:,kk]; u1=u1[:,kk];
-v0=v0[:,kk]; v1=v1[:,kk];
-
-u0=u0./GridVariables["dx"]
-u1=u1./GridVariables["dx"]
-v0=v0./GridVariables["dx"]
-v1=v1./GridVariables["dx"]
-
-uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1)
-
-uvetc=merge(uvt,GridVariables);
-# -
+uvetc=IndividualDisplacements.example2_setup()
 
 # ## 4. Visualize velocity fields
 
-# +
-mskW=myread(mygrid.path*"hFacW",MeshArray(mygrid,Float32,nr))
-mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
-mskS=myread(mygrid.path*"hFacS",MeshArray(mygrid,Float32,nr))
-mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
+heatmap(uvetc["mskW"][1,1].*uvetc["u0"][1,1],title="U at the start")
 
-msk=Dict("mskW" => mskW, "mskS" => mskS)
-
-uvetc=merge(uvetc,msk);
-# -
-
-heatmap(mskW[1,1].*u0[1,1],title="U at the start")
-
-heatmap(mskS[1,1].*v0[1,1],title="V at the start")
-
-heatmap(mskW[1,1].*u1[1,1]-u0[1,1],title="U end - U start")
+heatmap(uvetc["mskW"][1,1].*uvetc["u1"][1,1]-uvetc["u0"][1,1],title="U end - U start")
 
 # ## 5. Visualize trajectories from `MITgcm/pkg/flt`
 #
@@ -107,13 +56,15 @@ tmp[1:4,:]
 
 # Super-impose trajectory over velocity field (first for u ...)
 
-PyPlot.contourf(GridVariables["XG"].f[1], GridVariables["YC"].f[1], mskW.f[1].*u0.f[1])
+PyPlot.contourf(uvetc["XG"].f[1], uvetc["YC"].f[1], 
+    uvetc["mskW"].f[1].*uvetc["u0"].f[1])
 PyPlot.plot(tmp[:,:lon],tmp[:,:lat],color="r")
 colorbar()
 
 # Super-impose trajectory over velocity field (... then for v)
 
-PyPlot.contourf(GridVariables["XG"].f[1], GridVariables["YC"].f[1], mskS.f[1].*v0.f[1])
+PyPlot.contourf(uvetc["XG"].f[1], uvetc["YC"].f[1], 
+    uvetc["mskS"].f[1].*uvetc["v0"].f[1])
 PyPlot.plot(tmp[:,:lon],tmp[:,:lat],color="r")
 colorbar()
 

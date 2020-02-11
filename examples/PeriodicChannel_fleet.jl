@@ -19,8 +19,8 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
-using Plots, Statistics, MAT
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq 
+using Plots, Statistics, Dierckx, MAT
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"plot_pyplot.jl"))
 
@@ -29,7 +29,7 @@ include(joinpath(p,"plot_pyplot.jl"))
 # Put grid variables in a dictionary.
 
 # +
-mygrid=gcmgrid("llc90_latlon/","ll",1,[(360,178)], [360 178], Float32, read, write)
+mygrid=gcmgrid("llc90_latlon/","Periodic",1,[(360,178)], [360 178], Float32, read, write)
 
 GridVariables=Dict("XC" => read(mygrid.path*"XC.latlon.data",MeshArray(mygrid,Float32)),
 "YC" => read(mygrid.path*"YC.latlon.data",MeshArray(mygrid,Float32)),
@@ -63,7 +63,7 @@ v0=v; v1=v;
 # Put velocity fields and time range in a dictionary.
 
 # +
-t0=0.0; t1=86400*366*10.0; dt=3600;
+t0=0.0; t1=86400*366*2.0; dt=3600;
 
 u0=u0./GridVariables["DXC"]
 u1=u1./GridVariables["DXC"]
@@ -90,64 +90,60 @@ msk=Dict("mskW" => mskW, "mskS" => mskS)
 uvetc=merge(uvetc,msk);
 # -
 
-# ## 3. Visualize  gridded variables
-
-#PyPlot.contourf(GridVariables["XG"].f[1], GridVariables["YC"].f[1], mskS.f[1].*v0.f[1])
-#colorbar()
-heatmap(v0.f[1])
-#heatmap(mskS.f[1].*v0.f[1])
-#PyPlot.contour(GridVariables["XG"].f[1], GridVariables["YC"].f[1], mskS.f[1].*v0.f[1])
-
-# ## 4. Recompute displacements from gridded flow fields
-
-# Initialize individual locations and define method aliases.
-
-# +
-uInit=[180.0,40.0] #uInit=[tmp[1,:lon];tmp[1,:lat]]./uvetc["dx"]
-nSteps=Int32(uvt["t1"]/uvt["dt"]) #nSteps=Int32(tmp[end,:time]/3600)-2
-du=fill(0.0,2);
+# ## 3. Compute trajectories from gridded flow fields
 
 comp_vel=IndividualDisplacements.VelComp
 get_vel=IndividualDisplacements.VelCopy
-# -
-
-# Inspect how `comp_vel` behaves.
 
 # +
-if false 
-    comp_vel(du,uInit,uvetc,0.0); show(du)
-    tmpdu=[uvt["u0"][1][uInit[1]+1,uInit[2]+1] uvt["v0"][1][uInit[1]+1,uInit[2]+1]]; show(tmpdu)
-end
+ii1=0:5:360; ii2=20:2:150;
 
-ii=uInit[1]-3:0.1:uInit[1]+3
-jj=uInit[2]-3:0.1:uInit[2]+3
-tmpu=zeros(size(ii))
-tmpv=zeros(size(ii))
-for i in eachindex(ii)
-    comp_vel(du,[ii[i];jj[i]],uvetc,0.0)
-    tmpu[i],tmpv[i]=du
-end
-#tmp=zeros(10,1)
-#for comp_vel(du,[180.1;40.1],uvetc,0.0)
-Plots.plot(tmpu)
-Plots.plot!(tmpv)
+n1=length(ii1); n2=length(ii2);
+uInitS=Array{Float64,2}(undef,(2,n1*n2))
+for i1 in eachindex(ii1); for i2 in eachindex(ii2);
+        i=i1+(i2-1)*n1
+        uInitS[1,i]=ii1[i1]
+        uInitS[2,i]=ii2[i2]       
+end; end;
+du=fill(0.0,size(uInitS));
+comp_vel(du,uInitS,uvetc,0.0)
+du
 # -
 
-# ## 5. Solve through time using `DifferentialEquations.jl`
+tspan = (0.0,uvt["t1"]-uvt["t0"])
+prob = ODEProblem(comp_vel,uInitS,tspan,uvetc)
+sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
+size(sol)
 
-tspan = (0.0,nSteps*3600.0)
-#prob = ODEProblem(get_vel,uInit,tspan,tmp)
-prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
-sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
-sol[1:4]
+# ## 4. Plot trajectories
+#
+# - Copy `sol` to a `DataFrame`
 
-?Tsit5
+ID=collect(1:size(sol,2))*ones(1,size(sol,3))
+i=mod.(sol[1,:,:],360)
+j=mod.(sol[2,:,:],180)
+df = DataFrame(ID=Int.(ID[:]), i=i[:], j=j[:])
+size(df)
 
-#Plots.plot(sol[1,:],sol[2,:])
-sol[:,end-4:end]
+# - Map i,j position to lon,lat coordinates
 
-Plots.plot(sol[1,2:end]-sol[1,1:end-1])
-Plots.plot!(sol[2,2:end]-sol[2,1:end-1])
+# +
+x=0.0:1.0:361.0
+y=[GridVariables["XC"][1,1][1,1].-1.0 ; GridVariables["XC"][1,1][:,1] ; GridVariables["XC"][1,1][end,1].+1.0]
+spl_lon = Spline1D(x,y)
 
-Plots.plot(sol[1,:],sol[2,:])
+x=0.0:1.0:179.0
+y=[GridVariables["YC"][1,1][1,1].-1.0 ; GridVariables["YC"][1,1][1,:] ; GridVariables["YC"][1,1][1,end].+1.0]
+spl_lat = Spline1D(x,y)
+
+df.lon=spl_lon(df[:,:i])
+df.lat=spl_lat(df[:,:j])
+
+show(df)
+# -
+# - Plot trajectories
+
+PyPlot.figure(); PlotMapProj(df,3000)
+
+
 
