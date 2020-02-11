@@ -28,7 +28,7 @@ using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots
 # Put grid variables in a dictionary:
 
 # +
-mygrid=gcmgrid("flt_example/","ll",1,[(80,42)], [80 42], Float32, read, write)
+mygrid=gcmgrid("flt_example/","PeriodicChanel",1,[(80,42)], [80 42], Float32, read, write)
 nr=8
 
 XC=MeshArray(mygrid,Float32); XC[1]=vec(2500.:5000.:397500.0)*ones(1,42);
