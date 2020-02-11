@@ -4,8 +4,8 @@ greet() = print("Get ready for IndividualDisplacements!")
 
 using MeshArrays, OrdinaryDiffEq, StatsBase, DataFrames, Random
 
-include("ReadIndDisp.jl")
-include("VelocityIndDisp.jl")
+include("compute.jl")
+include("read.jl")
 include("examples.jl")
 
 export VelComp, VelComp!, VelCopy, ReadDisplacements
