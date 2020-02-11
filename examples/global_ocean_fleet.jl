@@ -29,7 +29,7 @@ include(joinpath(p,"plot_pyplot.jl"))
 # Put grid variables in a dictionary.
 
 # +
-mygrid=gcmgrid("llc90_latlon/","ll",1,[(360,178)], [360 178], Float32, read, write)
+mygrid=gcmgrid("llc90_latlon/","Periodic",1,[(360,178)], [360 178], Float32, read, write)
 
 GridVariables=Dict("XC" => read(mygrid.path*"XC.latlon.data",MeshArray(mygrid,Float32)),
 "YC" => read(mygrid.path*"YC.latlon.data",MeshArray(mygrid,Float32)),
