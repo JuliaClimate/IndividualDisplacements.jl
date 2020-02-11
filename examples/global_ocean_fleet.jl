@@ -19,8 +19,8 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, DifferentialEquations 
-using Plots, Statistics, Dierckx
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq 
+using Plots, Statistics, Dierckx, MAT
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"plot_pyplot.jl"))
 
@@ -42,7 +42,6 @@ GridVariables=Dict("XC" => read(mygrid.path*"XC.latlon.data",MeshArray(mygrid,Fl
 # Read velocity fields as `MeshArray`s.
 
 # +
-using MAT
 file = matopen(mygrid.path*"uv_lonlat.mat")
 u=read(file, "u")
 v=read(file, "v")
