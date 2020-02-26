@@ -11,8 +11,8 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-DataFrames = "0.19"
-MeshArrays = "0.2.5"
-OrdinaryDiffEq = "5.28.1"
-StatsBase = "0.32"
+DataFrames = "0.20.2"
+MeshArrays = "0.2.6"
+OrdinaryDiffEq = "5.29.0"
+StatsBase = "0.32.1"
 julia = "^1.1"
