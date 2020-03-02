@@ -1,18 +1,15 @@
-
-using Random, Makie
+using Random, Plots
 
 """
-    PlotMakie(df::DataFrame,nn::Integer)
+    PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
 
 Plot random subset of size nn trajectories.
 """
-function PlotMakie(df::DataFrame,nn::Integer,dMax::Float64=0.)
+function PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
    IDs = randperm(maximum(df.ID))
-   COs=[:gray76 :yellow2 :limegreen :black]
+   COs=["w" "y" "g" "k"]
 
-   #scene=Scene(limits=FRect(0, 0, 40, 40),show_axis = false)
-   #scene=Scene(limits=FRect(-185, -95, 370, 190),show_axis = false)
-   scene=Scene(show_axis = false)
+   plt=plot(leg=false)
    for ii=1:nn
       tmp=df[df.ID .== IDs[ii], :]
       if dMax > 0.
@@ -24,8 +21,7 @@ function PlotMakie(df::DataFrame,nn::Integer,dMax::Float64=0.)
          tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
       end
       CO=COs[mod(ii,4)+1]
-      Makie.lines!(scene,tmp[!,:lon],tmp[!,:lat],color=CO,linewidth=0.5)
+      plot!(tmp[!,:lon],tmp[!,:lat],linewidth=0.3)
    end
-
-   return scene
+   return plt
 end
