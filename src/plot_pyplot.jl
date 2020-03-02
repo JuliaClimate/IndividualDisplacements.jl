@@ -1,36 +1,5 @@
 
-#PlotIndDisp.jl
-
-using DataFrames, Random
-using PyPlot, PyCall
-
-"""
-    PlotBasic(df::DataFrame,nn::Integer)
-
-Plot random subset of size nn trajectories.
-"""
-function PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
-   IDs = randperm(maximum(df.ID))
-   COs=["w" "y" "g" "k"]
-
-   for ii=1:nn
-      tmp=df[df.ID .== IDs[ii], :]
-      if dMax > 0.
-         d=abs.(diff(tmp[!,:lon]))
-         jj=findall(d .> dMax)
-         tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
-         d=abs.(diff(tmp[!,:lat]))
-         jj=findall(d .> dMax)
-         tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
-      end
-      CO=COs[mod(ii,4)+1]
-      PyPlot.plot(tmp[!,:lon],tmp[!,:lat],color=CO,linewidth=0.3)
-   end
-
-   #to display the figure in JUNO (not needed in REPL or Jupyter):
-   #gcf()
-
-end
+using Random, PyPlot, PyCall
 
 """
     PlotMapProj(df::DataFrame,nn::Integer)
