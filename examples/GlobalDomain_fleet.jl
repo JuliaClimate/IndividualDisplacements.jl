@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ---
 # jupyter:
 #   jupytext:
@@ -8,7 +9,7 @@
 #       format_version: '1.4'
 #       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Julia 1.3.0-rc4
+#     display_name: Julia 1.3.1
 #     language: julia
 #     name: julia-1.3
 # ---
@@ -27,62 +28,15 @@ include(joinpath(dirname(pathof(MeshArrays)),"../examples/Plots.jl"))
 
 # Put grid variables in a dictionary.
 
-mygrid=GridSpec("LatLonCap","GRID_LLC90/");
-GridVariables=GridLoad(mygrid);
-GridVariables=merge(GridVariables,
-    IndividualDisplacements.NeighborTileIndices_cs(GridVariables));
-
-# Read velocity fields as `MeshArray`s.
-
-fileName="nctiles_climatology/UVELMASS/UVELMASS"
-u=Main.read_nctiles(fileName,"UVELMASS",mygrid)
-fileName="nctiles_climatology/VVELMASS/VVELMASS"
-v=Main.read_nctiles(fileName,"VVELMASS",mygrid)
-show(u)
-
-# Extract surface fields, normalize to grid units, and apply exchange.
-
-# +
-#u=dropdims(mean(u,dims=3),dims=3)
-#v=dropdims(mean(v,dims=3),dims=3)
-
-u=u[:,20,1]
-v=v[:,20,1]
-msk=(GridVariables["hFacC"][:,20] .> 0.)
-
-u[findall(isnan.(u))]=0.0
-v[findall(isnan.(v))]=0.0
-
-u=u./GridVariables["DXC"]#normalization to grid units
-v=v./GridVariables["DYC"]
-
-(u,v)=exchange(u,v,1)#add 1 point at each edge for u and v
-
-u0=u; u1=u; v0=v; v1=v;
-# -
-
-# Put velocity fields and time range in a dictionary.
-
-# +
-t0=0.0; t1=86400*366*10.0; dt=10*86400.0;
-
-uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1,
-    "t0" => t0, "t1" => t1, "dt" => dt, "msk" => msk) ;
-# -
-
-# Merge the two dictionaries and add masks
-
-uvetc=merge(uvt,GridVariables);
+γ=GridSpec("LatLonCap","GRID_LLC90/")
+Γ=GridLoad(γ)
+Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
+uvetc=read_uv_etc(20,Γ)
 
 # Visualize  gridded variables
 
-plt=heatmap(u0[1,1],title="U at the start")
+plt=heatmap(uvetc["u0"][1,1],title="U at the start")
 display(plt)
-
-# Get lon and lat array with added columns and rows
-
-XC=exchange(GridVariables["XC"])
-YC=exchange(GridVariables["YC"])
 
 # ## 3. Compute trajectories from gridded flow fields
 
@@ -119,28 +73,6 @@ prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
 sol_one = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
 sol_two = solve(prob,Euler(),dt=1e6)
 size(sol_one)
-
-# Define initial condition array (**retired code**).
-
-if false
-        fIndex = 1
-        nx, ny = XC.fSize[fIndex]
-        ii1 = 0.5:2.0:nx
-        ii2 = 0.5:2.0:ny
-
-        n1 = length(ii1)
-        n2 = length(ii2)
-        uInitS = Array{Float64,2}(undef, (3, n1 * n2))
-        for i1 in eachindex(ii1)
-                for i2 in eachindex(ii2)
-                        i = i1 + (i2 - 1) * n1
-                        uInitS[1, i] = ii1[i1]
-                        uInitS[2, i] = ii2[i2]
-                        uInitS[3, i] = fIndex
-                end
-        end
-        du = fill(0.0, size(uInitS))
-end
 
 # Define initial condition array
 
@@ -238,4 +170,3 @@ include(joinpath(p,"plot_makie.jl"))
 AbstractPlotting.inline!(true) #for Juno, set to false
 scene=PlotMakie(df,nn,180.0)
 #Makie.save("LatLonCap300mDepth.png", scene)
-# -
