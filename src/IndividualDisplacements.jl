@@ -10,10 +10,11 @@ include("examples.jl")
 include("update_locations.jl")
 include("data_wrangling.jl")
 
-⬡! = IndividualDisplacements.VelComp!
-⬡ = IndividualDisplacements.VelComp
+⬡! = VelComp!
+⬡ = VelComp
+□ = VelCopy
 
-export ⬡!, ⬡, ReadDisplacements
-export initialize_locations, read_uvetc, postprocess_ODESolution
+export ⬡!, ⬡, □, ReadDisplacements, read_uvetc
+export initialize_locations, postprocess_ODESolution
 
 end # module
