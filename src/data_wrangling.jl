@@ -5,8 +5,8 @@
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 """
-function postprocess_ODESolution(sol,uv_etc::Dict)
-    XC=uv_etc["XC"]; YC=uv_etc["YC"]
+function postprocess_ODESolution(sol,uvetc::Dict)
+    XC=uvetc["XC"]; YC=uvetc["YC"]
     ID=collect(1:size(sol,2))*ones(1,size(sol,3))
     x=sol[1,:,:]
     y=sol[2,:,:]
@@ -39,16 +39,17 @@ function postprocess_ODESolution(sol,uv_etc::Dict)
 end
 
 """
-    read_uv_etc(k::Int,γ::Dict)
+    read_uvetc(k::Int,γ::Dict,pth::String)
 
-Define `uv_etc` given the grid variables `γ` and a vertical level choice `k`
+Define `uvetc` given the grid variables `γ` and a vertical level choice `k`
+including velocities obtained from files in `pth`
 """
-function read_uv_etc(k::Int,γ::Dict)
+function read_uvetc(k::Int,γ::Dict,pth::String)
     nt=12; msk=(γ["hFacC"][:,k] .> 0.) #select depth
 
     u=0. *γ["XC"]; v=0. *γ["XC"];
     for t=1:nt
-        (U,V)=read_velocities(γ["XC"].grid,t)
+        (U,V)=read_velocities(γ["XC"].grid,t,pth)
         for i=1:size(u,1)
             u[i]=u[i] + U[i,k]
             v[i]=v[i] + V[i,k]
@@ -65,20 +66,20 @@ function read_uv_etc(k::Int,γ::Dict)
     YC=exchange(γ["YC"]) #add 1 lat point at each edge
 
     t0=0.0; t1=86400*366*10.0; dt=10*86400.0;
-    uv_etc = Dict("u0" => u, "u1" => u, "v0" => v, "v1" => v,
+    uvetc = Dict("u0" => u, "u1" => u, "v0" => v, "v1" => v,
     "t0" => t0, "t1" => t1, "dt" => dt, "msk" => msk, "XC" => XC, "YC" => YC)
-    uv_etc=merge(uv_etc,IndividualDisplacements.NeighborTileIndices_cs(γ));
+    uvetc=merge(uvetc,IndividualDisplacements.NeighborTileIndices_cs(γ));
 
-    return uv_etc
+    return uvetc
 end
 
 """
-    initialize_locations(uv_etc::Dict)
+    initialize_locations(uvetc::Dict,n_subset::Int=1)
 
-Define `uInitS` as an array of initial conditions
+Define u0 as an array of initial conditions
 """
-function initialize_locations(uv_etc::Dict,n_subset::Int=1)
-    msk=uv_etc["msk"]
+function initialize_locations(uvetc::Dict,n_subset::Int=1)
+    msk=uvetc["msk"]
     uInitS = Array{Float64,2}(undef, 3, prod(msk.grid.ioSize))
 
     kk = 0
@@ -111,12 +112,11 @@ function initialize_locations(uv_etc::Dict,n_subset::Int=1)
 end
 
 """
-    read_velocities(γ::gcmgrid,t::Int)
+    read_velocities(γ::gcmgrid,t::Int,pth::String)
 
-Read velocity components `u,v` from file for time `t`
+Read velocity components `u,v` from files in `pth`for time `t`
 """
-function read_velocities(γ::gcmgrid,t::Int)
-    pth="nctiles_climatology/"
+function read_velocities(γ::gcmgrid,t::Int,pth::String)
     u=Main.read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
     v=Main.read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
     return u,v
