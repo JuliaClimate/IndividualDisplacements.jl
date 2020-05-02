@@ -27,7 +27,7 @@ include(joinpath(dirname(pathof(MeshArrays)),"../examples/Plots.jl"))
 
 # Put grid variables in a dictionary.
 
-mygrid=GridSpec("LatLonCap","GRID_LLC90/"); 
+mygrid=GridSpec("LatLonCap","GRID_LLC90/");
 GridVariables=GridLoad(mygrid);
 GridVariables=merge(GridVariables,
     IndividualDisplacements.NeighborTileIndices_cs(GridVariables));
@@ -76,7 +76,8 @@ uvetc=merge(uvt,GridVariables);
 
 # Visualize  gridded variables
 
-heatmap(u0[1,1],title="U at the start")
+plt=heatmap(u0[1,1],title="U at the start")
+display(plt)
 
 # Get lon and lat array with added columns and rows
 
@@ -106,8 +107,9 @@ for i in eachindex(ii)
     comp_vel(du,[ii[i];jj[i];fIndex[i]],uvetc,0.0)
     tmpu[i],tmpv[i],tmpf[i]=du
 end
-Plots.plot(tmpu)
+plt=Plots.plot(tmpu)
 Plots.plot!(tmpv)
+display(plt)
 # -
 
 # Solve for trajectory in small test case.
@@ -237,5 +239,3 @@ AbstractPlotting.inline!(true) #for Juno, set to false
 scene=PlotMakie(df,nn,180.0)
 #Makie.save("LatLonCap300mDepth.png", scene)
 # -
-
-

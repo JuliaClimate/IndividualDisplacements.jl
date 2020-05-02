@@ -19,8 +19,8 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, DifferentialEquations, Plots, Statistics
-p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"plot_pyplot.jl"))
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Statistics, DataFrames
+p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"plot_plots.jl"))
 p=dirname(pathof(MeshArrays)); include(joinpath(p,"../examples/Demos.jl"))
 
 # ## 2. Define gridded variables as `MeshArray`s
@@ -28,17 +28,18 @@ p=dirname(pathof(MeshArrays)); include(joinpath(p,"../examples/Demos.jl"))
 # Put grid variables in a dictionary.
 
 # +
-GridVariables=GridOfOnes("PeriodicDomain",16,20)
-(Rini,Rend,DXCsm,DYCsm)=demo2(GridVariables)
+γ,Γ=GridOfOnes("PeriodicDomain",16,20)
+(Rini,Rend,DXCsm,DYCsm)=demo2(Γ)
 
-heatmap(Rend[1])
+plt=heatmap(Rend[1])
+display(plt)
 # -
 
 # Derive velocity fields using Rend as a scalar potential (**later: streamfunction...**)
 
-(u,v)=gradient(Rend,GridVariables)
-u=u./GridVariables["DXC"]#normalization to grid units
-v=v./GridVariables["DYC"]
+(u,v)=gradient(Rend,Γ)
+u=u./Γ["DXC"]#normalization to grid units
+v=v./Γ["DYC"]
 (u,v)=exchange(u,v,1)
 u0=-v; u1=-v; v0=u; v1=u;
 
@@ -56,7 +57,7 @@ uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t
 # Merge the two dictionaries and add masks
 
 # +
-uvetc=merge(uvt,GridVariables);
+uvetc=merge(uvt,Γ);
 
 # _Note:_ in general case, mskW & mskS would need to be exchanged ...
 
@@ -70,7 +71,8 @@ uvetc=merge(uvetc,msk);
 
 # ## 3. Visualize  gridded variables
 
-heatmap(mskW[1,1].*u0[1,1],title="U at the start")
+plt=heatmap(mskW[1,1].*u0[1,1],title="U at the start")
+display(plt)
 
 # ## 4. Recompute displacements from gridded flow fields
 
@@ -98,13 +100,12 @@ for i in eachindex(ii)
     comp_vel(du,[ii[i];jj[i];fIndex[i]],uvetc,0.0)
     tmpu[i],tmpv[i],tmpf[i]=du
 end
-Plots.plot(tmpu)
-Plots.plot!(tmpv)
+plot(tmpu)
+plot!(tmpv)
 # -
 
 # ## 5. Solve through time using `DifferentialEquations.jl`
 
-using DifferentialEquations
 tspan = (0.0,nSteps*dt)
 prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
 sol_one = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
@@ -143,7 +144,6 @@ df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:], fIndex=fIndex[:])
 size(df)
 
 nn=minimum([5000 size(du,2)])
-PyPlot.figure(); PlotBasic(df,nn,10.0)
-#PyPlot.savefig("PeriodicDomainRandomFlow.png")
-
-
+plt=PlotBasic(df,nn,10.0)
+#savefig("PeriodicDomainRandomFlow.png")
+display(plt)
