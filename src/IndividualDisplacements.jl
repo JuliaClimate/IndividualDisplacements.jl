@@ -16,9 +16,4 @@ include("data_wrangling.jl")
 export ⬡!, ⬡, ReadDisplacements
 export initialize_locations, read_uvetc, postprocess_ODESolution
 
-
-#include("plot_pyplot.jl")
-#include("plot_makie.jl")
-#export PlotBasic, PlotMapProj, PlotMakie
-
 end # module
