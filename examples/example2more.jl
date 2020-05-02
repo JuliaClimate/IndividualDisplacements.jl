@@ -24,16 +24,16 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots, DataFrames
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"plot_pyplot.jl"))
+include(joinpath(p,"plot_Plots.jl"))
 
-# ## 2. reload trajectories from `MITgcm/pkg/flt` 
+# ## 2. reload trajectories from `MITgcm/pkg/flt`
 
 dirIn="flt_example/"
 prec=Float32
 df=ReadDisplacements(dirIn,prec) #function exported by IndividualDisplacements
-PyPlot.figure(); PlotBasic(df,300,100000.0)
+plt=PlotBasic(df,300,100000.0)
 
 # ## 3. Read gridded variables via `MeshArrays.jl`
 #
@@ -43,9 +43,11 @@ uvetc=IndividualDisplacements.example2_setup()
 
 # ## 4. Visualize velocity fields
 
-heatmap(uvetc["mskW"][1,1].*uvetc["u0"][1,1],title="U at the start")
+plt=heatmap(uvetc["mskW"][1,1].*uvetc["u0"][1,1],title="U at the start")
+display(plt)
 
-heatmap(uvetc["mskW"][1,1].*uvetc["u1"][1,1]-uvetc["u0"][1,1],title="U end - U start")
+plt=heatmap(uvetc["mskW"][1,1].*uvetc["u1"][1,1]-uvetc["u0"][1,1],title="U end - U start")
+display(plt)
 
 # ## 5. Visualize trajectories from `MITgcm/pkg/flt`
 #
@@ -56,17 +58,15 @@ tmp[1:4,:]
 
 # Super-impose trajectory over velocity field (first for u ...)
 
-PyPlot.contourf(uvetc["XG"].f[1], uvetc["YC"].f[1], 
+plt=contourf(uvetc["XG"].f[1], uvetc["YC"].f[1],
     uvetc["mskW"].f[1].*uvetc["u0"].f[1])
-PyPlot.plot(tmp[:,:lon],tmp[:,:lat],color="r")
-colorbar()
+plot!(tmp[:,:lon],tmp[:,:lat],c=:red)
 
 # Super-impose trajectory over velocity field (... then for v)
 
-PyPlot.contourf(uvetc["XG"].f[1], uvetc["YC"].f[1], 
+plt=contourf(uvetc["XG"].f[1], uvetc["YC"].f[1],
     uvetc["mskS"].f[1].*uvetc["v0"].f[1])
-PyPlot.plot(tmp[:,:lon],tmp[:,:lat],color="r")
-colorbar()
+plot!(tmp[:,:lon],tmp[:,:lat],c=:red)
 
 # ## 6. Recompute displacements from gridded flow fields
 
@@ -90,10 +90,11 @@ for i=1:100
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
-Plots.plot(tmpx,tmpu)
-Plots.plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["u0"].f[1][1:10,1],marker=".")
-Plots.plot!(tmpx,tmpv)
-Plots.plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["v0"].f[1][1:10,1],marker=".")
+plt=plot(tmpx,tmpu)
+plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["u0"].f[1][1:10,1],marker=".")
+plot!(tmpx,tmpv)
+plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["v0"].f[1][1:10,1],marker=".")
+display(plt)
 
 tmpu=fill(0.0,100)
 tmpv=fill(0.0,100)
@@ -104,10 +105,11 @@ for i=1:100
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
-Plots.plot(tmpx,tmpu)
-Plots.plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["u0"].f[1][1,1:10],marker=".")
-Plots.plot!(tmpx,tmpv)
-Plots.plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["v0"].f[1][1,1:10],marker=".")
+plt=plot(tmpx,tmpu)
+plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["u0"].f[1][1,1:10],marker=".")
+plot!(tmpx,tmpv)
+plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["v0"].f[1][1,1:10],marker=".")
+display(plt)
 
 # Compare recomputed velocities with those from `pkg/flt`
 
@@ -124,14 +126,15 @@ for i=1:nSteps
     tmpv[i]=du[2]
 end
 #
-Plots.plot(tmpu)
-Plots.plot!(tmpv)
-Plots.plot!(refu)
-Plots.plot!(refv)
+plt=plot(tmpu)
+plot!(tmpv)
+plot!(refu)
+plot!(refv)
+display(plt)
 
 # ## 6. Recompute trajectories from gridded flow fields
 #
-# Solve through time using `OrdinaryDiffEq.jl` with 
+# Solve through time using `OrdinaryDiffEq.jl` with
 #
 # - `comp_vel` is the function computing `du/dt`
 # - `uInit` is the initial condition `u @ tspan[1]`
@@ -161,9 +164,8 @@ for i=1:nSteps-1
 end
 ref=ref./uvetc["dx"]
 
-Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
+plt=plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
-Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,label="MITgcm Solution")
+plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,label="MITgcm Solution")
+display(plt)
 # -
-
-

@@ -22,7 +22,7 @@
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
 using Plots, Statistics, MITgcmTools, DataFrames
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"plot_pyplot.jl"))
+include(joinpath(p,"plot_Plots.jl"))
 
 # ## 2. Read gridded variables as `MeshArray`s
 
@@ -58,7 +58,7 @@ uInitS=Array{Float64,2}(undef,(2,n1*n2))
 for i1 in eachindex(ii1); for i2 in eachindex(ii2);
         i=i1+(i2-1)*n1
         uInitS[1,i]=ii1[i1]-0.5
-        uInitS[2,i]=ii2[i2]-0.5       
+        uInitS[2,i]=ii2[i2]-0.5
 end; end;
 
 prob = ODEProblem(comp_vel,uInitS,tspan,uvetc)
@@ -77,7 +77,6 @@ lon=5000* mod.(sol[1,:,:],80)
 lat=5000* mod.(sol[2,:,:],42)
 df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:])
 
-PyPlot.figure(); PlotBasic(df,size(sol,2),100000.0)
+plt=PlotBasic(df,size(sol,2),100000.0)
+display(plt)
 # -
-
-

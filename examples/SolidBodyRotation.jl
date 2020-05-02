@@ -72,14 +72,14 @@ sol[1:4]
 
 # ## 5. visualize trajectory
 
-Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Solid body rotation example",
+plt=Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Solid body rotation example",
      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
+display(plt)
 #Plots.savefig("SolidBodyRotation.png")
+
 
 # ## 6. check against reference result
 
 sol[1,end],sol[2,end]
 isapprox(sol[1,end],117237.0./uvetc["dx"]; atol=1.)
 isapprox(sol[2,end],40448.0./uvetc["dx"]; atol=1.)
-
-
