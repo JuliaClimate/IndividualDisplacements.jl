@@ -89,14 +89,14 @@ p=dirname(pathof(IndividualDisplacements))
 
 nn=1000
 
-include(joinpath(p,"plot_plots.jl"))
+include(joinpath(p,"../examples/plot_plots.jl"))
 plt=PlotBasic(df,nn,180.)
 display(plt)
 
-#include(joinpath(p,"plot_pyplot.jl"))
+#include(joinpath(p,"../examples/plot_pyplot.jl"))
 #PyPlot.figure(); PlotMapProj(df,nn)
 
-#include(joinpath(p,"plot_makie.jl"))
+#include(joinpath(p,"../examples/plot_makie.jl"))
 #AbstractPlotting.inline!(true) #for Juno, set to false
 #scene=PlotMakie(df,nn,180.0)
 ##Makie.save("LatLonCap300mDepth.png", scene)
