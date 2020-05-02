@@ -22,7 +22,6 @@
 
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
 using Plots, Statistics, MITgcmTools, DataFrames
-include(joinpath(dirname(pathof(MeshArrays)),"../examples/Plots.jl"))
 
 # ## 2. Read gridded variables as `MeshArray`s
 
@@ -31,13 +30,11 @@ include(joinpath(dirname(pathof(MeshArrays)),"../examples/Plots.jl"))
 γ=GridSpec("LatLonCap","GRID_LLC90/")
 Γ=GridLoad(γ)
 Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
-uvetc=read_uv_etc(20,Γ)
-
-# Visualize  gridded variables
+uvetc=read_uvetc(20,Γ,"nctiles_climatology/");
 
 # ## 3. Compute trajectories from gridded flow fields
 
-# Let's illustrate the velocity interpolation scheme with a simple test.
+# Let's illustrate the velocity interpolation scheme with a simple test first.
 
 # +
 uInit=[45.0,100.0,1.0]
@@ -45,77 +42,43 @@ du=fill(0.0,3);
 
 ii=uInit[1]-3:0.1:uInit[1]+3
 jj=uInit[2]-3:0.1:uInit[2]+3
-fIndex=ones(size(jj))
+ff=ones(size(jj))
 
-tmpu=zeros(size(ii))
-tmpv=zeros(size(ii))
-tmpf=zeros(size(ii))
+s=size(ii)
+
+(u,v,f)=[zeros(s),zeros(s),zeros(s)]
 for i in eachindex(ii)
-    ⬡!(du,[ii[i];jj[i];fIndex[i]],uvetc,0.0)
-    tmpu[i],tmpv[i],tmpf[i]=du
+    ⬡!(du,[ii[i];jj[i];ff[i]],uvetc,0.0)
+    u[i],v[i],f[i]=du
 end
 
-plt=plot(tmpu)
-plot!(tmpv)
+plt=plot(u)
+plot!(v)
 display(plt)
 # -
 
 # Solve for trajectory in small test case.
 
-tspan = (0.0,uvetc["t1"]-uvetc["t0"])
-prob = ODEProblem(⬡!,uInit,tspan,uvetc)
+𝑇 = (0.0,uvetc["t1"]-uvetc["t0"])
+prob = ODEProblem(⬡!,uInit,𝑇,uvetc)
 sol_one = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
 sol_two = solve(prob,Euler(),dt=1e6)
 size(sol_one)
 
 # Define initial condition array
 
-# +
-uInitS = Array{Float64,2}(undef, 3, prod(uvetc["msk"].grid.ioSize))
-kk = 0
-
-for fIndex = 1:5
-        nx, ny = uvetc["XC"].fSize[fIndex]
-        ii1 = 0.5:1.0:nx
-        ii2 = 0.5:1.0:ny
-        n1 = length(ii1)
-        n2 = length(ii2)
-        for i1 in eachindex(ii1)
-          for i2 in eachindex(ii2)
-            if uvetc["msk"][fIndex][Int(round(i1+0.5)),Int(round(i2+0.5))]
-                        global kk += 1
-                        let kk = kk
-                                uInitS[1, kk] = ii1[i1]
-                                uInitS[2, kk] = ii2[i2]
-                                uInitS[3, kk] = fIndex
-                        end
-            end
-          end
-        end
-end
-
-uInitS=uInitS[:,1:kk]
-du=fill(0.0,size(uInitS));
-# -
+(u0,du)=initialize_locations(uvetc,10);
 
 # Solve for all trajectories.
 
-prob = ODEProblem(⬡!,uInitS,tspan,uvetc)
+prob = ODEProblem(⬡!,u0,𝑇,uvetc)
 sol = solve(prob,Euler(),dt=uvetc["dt"])
 size(sol)
 
 # ## 4. Plot trajectories
 #
-# - Copy `sol` to a `DataFrame`
 
-ID=collect(1:size(sol,2))*ones(1,size(sol,3))
-x=sol[1,:,:]
-y=sol[2,:,:]
-fIndex=sol[3,:,:]
-df = DataFrame(ID=Int.(ID[:]), x=x[:], y=y[:], fIndex=fIndex[:])
-size(df)
-
-# - Map i,j position to lon,lat coordinates
+# - Map i,j position to lon,lat coordinates and convert to DataFrame.
 
 df=postprocess_ODESolution(sol,uvetc)
 
@@ -124,7 +87,11 @@ df=postprocess_ODESolution(sol,uvetc)
 # +
 p=dirname(pathof(IndividualDisplacements))
 
-nn=10000
+nn=1000
+
+include(joinpath(p,"plot_plots.jl"))
+plt=PlotBasic(df,nn,180.)
+display(plt)
 
 #include(joinpath(p,"plot_pyplot.jl"))
 #PyPlot.figure(); PlotMapProj(df,nn)
@@ -133,3 +100,6 @@ nn=10000
 #AbstractPlotting.inline!(true) #for Juno, set to false
 #scene=PlotMakie(df,nn,180.0)
 ##Makie.save("LatLonCap300mDepth.png", scene)
+# -
+
+
