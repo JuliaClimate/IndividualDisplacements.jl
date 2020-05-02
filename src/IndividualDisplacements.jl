@@ -14,7 +14,7 @@ include("data_wrangling.jl")
 ⬡ = IndividualDisplacements.VelComp
 
 export ⬡!, ⬡, ReadDisplacements
-export initialize_locations, read_uv_etc, postprocess_ODESolution
+export initialize_locations, read_uvetc, postprocess_ODESolution
 
 
 #include("plot_pyplot.jl")
