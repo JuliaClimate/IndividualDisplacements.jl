@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ---
 # jupyter:
 #   jupytext:
@@ -8,7 +9,7 @@
 #       format_version: '1.4'
 #       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Julia 1.3.0-rc4
+#     display_name: Julia 1.3.1
 #     language: julia
 #     name: julia-1.3
 # ---
@@ -22,7 +23,7 @@
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
 using Plots, Statistics, MITgcmTools, DataFrames
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"plot_Plots.jl"))
+include(joinpath(p,"../examples/plot_Plots.jl"))
 
 # ## 2. Read gridded variables as `MeshArray`s
 
@@ -35,13 +36,8 @@ uvetc=IndividualDisplacements.example2_setup()
 
 # Define the ODE problem
 
-# +
 nSteps=2998
 tspan = (0.0,nSteps*3600.0)
-
-comp_vel=IndividualDisplacements.VelComp
-get_vel=IndividualDisplacements.VelCopy
-# -
 
 # Set up initial conditions
 #
@@ -61,7 +57,7 @@ for i1 in eachindex(ii1); for i2 in eachindex(ii2);
         uInitS[2,i]=ii2[i2]-0.5
 end; end;
 
-prob = ODEProblem(comp_vel,uInitS,tspan,uvetc)
+prob = ODEProblem(⬡,uInitS,tspan,uvetc)
 # -
 
 # Compute solution
@@ -79,4 +75,3 @@ df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:])
 
 plt=PlotBasic(df,size(sol,2),100000.0)
 display(plt)
-# -
