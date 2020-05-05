@@ -1,8 +1,10 @@
+using MAT
 
 """
     example1()
 
-Global ocean case -- just reading from file for now.
+Pre-computed global ocean case. Here we just re-read data from a file produced
+earlier, rather than computing trajectories as in the other examples.
 
 ```
 df=IndividualDisplacements.example1()
@@ -80,15 +82,15 @@ function example2_setup()
    ###### 1) Get gridded variables via MeshArrays.jl
 
 
-   mygrid=gcmgrid("flt_example/","PeriodicChanel",1,[(80,42)], [80 42], Float32, read, write)
+   γ=gcmgrid("flt_example/","PeriodicChannel",1,[(80,42)], [80 42], Float32, read, write)
    nr=8
 
    ## Put grid variables in a dictionary:
 
-   GridVariables=Dict("XC" => myread(mygrid.path*"XC",MeshArray(mygrid,Float32)),
-   "YC" => myread(mygrid.path*"YC",MeshArray(mygrid,Float32)),
-   "XG" => myread(mygrid.path*"XG",MeshArray(mygrid,Float32)),
-   "YG" => myread(mygrid.path*"YG",MeshArray(mygrid,Float32)),
+   Γ=Dict("XC" => myread(γ.path*"XC",MeshArray(γ,Float32)),
+   "YC" => myread(γ.path*"YC",MeshArray(γ,Float32)),
+   "XG" => myread(γ.path*"XG",MeshArray(γ,Float32)),
+   "YG" => myread(γ.path*"YG",MeshArray(γ,Float32)),
    "dx" => 5000.0)
 
    ## Put velocity fields in a dictionary:
@@ -96,31 +98,31 @@ function example2_setup()
    t0=0.0 #approximation / simplification
    t1=18001.0*3600.0
 
-   u0=myread(mygrid.path*"U.0000000001",MeshArray(mygrid,Float32,nr))
-   u1=myread(mygrid.path*"U.0000018001",MeshArray(mygrid,Float32,nr))
-   v0=myread(mygrid.path*"V.0000000001",MeshArray(mygrid,Float32,nr))
-   v1=myread(mygrid.path*"V.0000018001",MeshArray(mygrid,Float32,nr))
+   u0=myread(γ.path*"U.0000000001",MeshArray(γ,Float32,nr))
+   u1=myread(γ.path*"U.0000018001",MeshArray(γ,Float32,nr))
+   v0=myread(γ.path*"V.0000000001",MeshArray(γ,Float32,nr))
+   v1=myread(γ.path*"V.0000018001",MeshArray(γ,Float32,nr))
 
    kk=3 #3 to match -1406.25 in pkg/flt output
    u0=u0[:,kk]; u1=u1[:,kk];
    v0=v0[:,kk]; v1=v1[:,kk];
 
-   u0=u0./GridVariables["dx"]
-   u1=u1./GridVariables["dx"]
-   v0=v0./GridVariables["dx"]
-   v1=v1./GridVariables["dx"]
+   u0=u0./Γ["dx"]
+   u1=u1./Γ["dx"]
+   v0=v0./Γ["dx"]
+   v1=v1./Γ["dx"]
 
    ## Merge the two dictionaries:
 
    uvetc=Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1)
 
-   uvetc=merge(uvetc,GridVariables)
+   uvetc=merge(uvetc,Γ)
 
    ## Visualize velocity fields
 
-   mskW=myread(mygrid.path*"hFacW",MeshArray(mygrid,Float32,nr))
+   mskW=myread(γ.path*"hFacW",MeshArray(γ,Float32,nr))
    mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
-   mskS=myread(mygrid.path*"hFacS",MeshArray(mygrid,Float32,nr))
+   mskS=myread(γ.path*"hFacS",MeshArray(γ,Float32,nr))
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
 
    msk=Dict("mskW" => mskW, "mskS" => mskS)
@@ -156,4 +158,63 @@ function myread(filRoot::String,x::MeshArray)
    end; end;
 
    return x.grid.read(v00,x)
+end
+
+
+"""
+example3_setup()
+
+Define gridded variables and return result as Dictionary (`uvetc`).
+"""
+function example3_setup()
+
+   γ=gcmgrid("llc90_latlon/","PeriodicChannel",1,
+                  [(360,178)], [360 178], Float32, read, write)
+
+   Γ=Dict("XC" => read(γ.path*"XC.latlon.data",MeshArray(γ,Float32)),
+   "YC" => read(γ.path*"YC.latlon.data",MeshArray(γ,Float32)),
+   "XG" => read(γ.path*"XG.data",MeshArray(γ,Float32)),
+   "YG" => read(γ.path*"YG.data",MeshArray(γ,Float32)),
+   "DXC" => read(γ.path*"DXC.latlon.data",MeshArray(γ,Float32)),
+   "DYC" => read(γ.path*"DYC.latlon.data",MeshArray(γ,Float32)) );
+
+   file = matopen(γ.path*"uv_lonlat.mat")
+   u=read(file, "u")
+   v=read(file, "v")
+   close(file)
+
+   u=dropdims(mean(u,dims=3),dims=3)
+   v=dropdims(mean(v,dims=3),dims=3)
+
+   u=read(u,MeshArray(γ,Float32))
+   v=read(v,MeshArray(γ,Float32));
+
+   u[findall(isnan.(u))]=0.0
+   v[findall(isnan.(v))]=0.0
+
+   u0=u; u1=u;
+   v0=v; v1=v;
+
+   t0=0.0; t1=86400*366*2.0; dt=3600;
+
+   u0=u0./Γ["DXC"]
+   u1=u1./Γ["DXC"]
+   v0=v0./Γ["DYC"]
+   v1=v1./Γ["DYC"]
+
+   uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1, "dt" => dt) ;
+
+   uvetc=merge(uvt,Γ);
+
+   nr=50; kk=1;
+
+   mskW=read(γ.path*"hFacW.latlon.data",MeshArray(γ,Float32,nr))
+   mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
+   mskS=read(γ.path*"hFacS.latlon.data",MeshArray(γ,Float32,nr))
+   mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
+
+   msk=Dict("mskW" => mskW, "mskS" => mskS)
+
+   return merge(uvetc,msk)
+
 end
