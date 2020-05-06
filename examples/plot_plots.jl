@@ -25,3 +25,23 @@ function PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
    end
    return plt
 end
+
+"""
+    scatter_subset(df,t)
+
+```
+nf=size(u0,2)
+t=[ceil(i/nf) for i in 1:367*nf]
+df[!,:t]=2000 .+ 10/365 * t
+
+@gif for t in 2000:0.1:2016
+   scatter_subset(df,t)
+end
+```
+"""
+function scatter_subset(df,t)
+    dt=0.25
+    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
+    scatter(df_t.lon,df_t.lat,markersize=2,
+    xlims=(-180.0,180.0),ylims=(-90.0,90.0))
+end

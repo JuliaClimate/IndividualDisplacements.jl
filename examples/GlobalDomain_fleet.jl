@@ -89,9 +89,9 @@ p=dirname(pathof(IndividualDisplacements))
 
 nn=1000
 
-include(joinpath(p,"../examples/plot_plots.jl"))
-plt=PlotBasic(df,nn,180.)
-display(plt)
+#include(joinpath(p,"../examples/plot_plots.jl"))
+#plt=PlotBasic(df,nn,180.)
+#display(plt)
 
 #include(joinpath(p,"../examples/plot_pyplot.jl"))
 #PyPlot.figure(); PlotMapProj(df,nn)
@@ -101,5 +101,3 @@ display(plt)
 #scene=PlotMakie(df,nn,180.0)
 ##Makie.save("LatLonCap300mDepth.png", scene)
 # -
-
-
