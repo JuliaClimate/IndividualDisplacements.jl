@@ -89,9 +89,9 @@ p=dirname(pathof(IndividualDisplacements))
 
 nn=1000
 
-#include(joinpath(p,"../examples/plot_plots.jl"))
-#plt=PlotBasic(df,nn,180.)
-#display(plt)
+include(joinpath(p,"../examples/plot_plots.jl"))
+plt=PlotBasic(df,nn,180.)
+display(plt)
 
 #include(joinpath(p,"../examples/plot_pyplot.jl"))
 #PyPlot.figure(); PlotMapProj(df,nn)
