@@ -30,8 +30,8 @@ extended and modified configuration of the standard MITgcm test case.
 (df,ref,sol)=IndividualDisplacements.example2();
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/plot_pyplot.jl"))
-PyPlot.figure(); PlotBasic(df,300,100000.0); gcf()
+include(joinpath(p,"../examples/plot_plots.jl"))
+PlotBasic(df,300,100000.0)
 
 using Plots
 Plots.plot(sol[1,:],sol[2,:],linewidth=5,lc=:black, title="One Trajectory Example",
@@ -58,14 +58,12 @@ function example2()
    end
    ref=ref./uvetc["dx"]
    #
-   comp_vel=IndividualDisplacements.VelComp
-   get_vel=IndividualDisplacements.VelCopy
    uInit=[tmp[1,:lon];tmp[1,:lat]]./uvetc["dx"]
    du=fill(0.0,2)
    #
    tspan = (0.0,nSteps*3600.0)
-   #prob = ODEProblem(get_vel,uInit,tspan,tmp)
-   prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
+   #prob = ODEProblem(□,uInit,tspan,tmp)
+   prob = ODEProblem(⬡,uInit,tspan,uvetc)
    sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
    #
    return df,ref,sol
