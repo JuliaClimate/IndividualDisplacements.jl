@@ -33,7 +33,7 @@ include(joinpath(p,"../examples/plot_Plots.jl"))
 
 dirIn="flt_example/"
 prec=Float32
-df=ReadDisplacements(dirIn,prec) #function exported by IndividualDisplacements
+df=read_flt(dirIn,prec) #function exported by IndividualDisplacements
 plt=PlotBasic(df,300,100000.0)
 
 # ## 3. Read gridded variables via `MeshArrays.jl`
