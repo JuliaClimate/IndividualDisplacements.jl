@@ -66,7 +66,7 @@ plt=PlotBasic(df,size(sol,2),100000.0)
 display(plt)
 # -
 
-df_from_mitgcm=ReadDisplacements("flt_example/",Float32)
+df_from_mitgcm=read_flt("flt_example/",Float32)
 plt=PlotBasic(df_from_mitgcm,40,100000.0)
 display(plt)
 

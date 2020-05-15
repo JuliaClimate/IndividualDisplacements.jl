@@ -17,7 +17,7 @@ PyPlot.figure(); PlotMapProj(df,300); gcf()
 function example1()
    dirIn="run_offflt/"
    prec=Float32
-   df=ReadDisplacements(dirIn,prec)
+   df=read_flt(dirIn,prec)
 end
 
 """
@@ -42,7 +42,7 @@ pl=Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
 function example2()
    dirIn="flt_example/"
    prec=Float32
-   df=ReadDisplacements(dirIn,prec)
+   df=read_flt(dirIn,prec)
    uvetc=IndividualDisplacements.example2_setup()
    #
    tmp=df[df.ID .== 200, :]
