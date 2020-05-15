@@ -64,7 +64,7 @@ du=fill(0.0,2);
 # ## 4. solve through time using DifferentialEquations.jl
 
 tspan = (0.0,nSteps*3600.0)
-prob = ODEProblem(IndividualDisplacements.VelComp,uInit,tspan,uvetc)
+prob = ODEProblem(⬡,uInit,tspan,uvetc)
 sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 sol[1:4]
 
