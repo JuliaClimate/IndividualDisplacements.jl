@@ -87,10 +87,10 @@ function example2_setup()
 
    ## Put grid variables in a dictionary:
 
-   Γ=Dict("XC" => myread(γ.path*"XC",MeshArray(γ,Float32)),
-   "YC" => myread(γ.path*"YC",MeshArray(γ,Float32)),
-   "XG" => myread(γ.path*"XG",MeshArray(γ,Float32)),
-   "YG" => myread(γ.path*"YG",MeshArray(γ,Float32)),
+   Γ=Dict("XC" => read_mds(γ.path*"XC",MeshArray(γ,Float32)),
+   "YC" => read_mds(γ.path*"YC",MeshArray(γ,Float32)),
+   "XG" => read_mds(γ.path*"XG",MeshArray(γ,Float32)),
+   "YG" => read_mds(γ.path*"YG",MeshArray(γ,Float32)),
    "dx" => 5000.0)
 
    ## Put velocity fields in a dictionary:
@@ -98,10 +98,10 @@ function example2_setup()
    t0=0.0 #approximation / simplification
    t1=18001.0*3600.0
 
-   u0=myread(γ.path*"U.0000000001",MeshArray(γ,Float32,nr))
-   u1=myread(γ.path*"U.0000018001",MeshArray(γ,Float32,nr))
-   v0=myread(γ.path*"V.0000000001",MeshArray(γ,Float32,nr))
-   v1=myread(γ.path*"V.0000018001",MeshArray(γ,Float32,nr))
+   u0=read_mds(γ.path*"U.0000000001",MeshArray(γ,Float32,nr))
+   u1=read_mds(γ.path*"U.0000018001",MeshArray(γ,Float32,nr))
+   v0=read_mds(γ.path*"V.0000000001",MeshArray(γ,Float32,nr))
+   v1=read_mds(γ.path*"V.0000018001",MeshArray(γ,Float32,nr))
 
    kk=3 #3 to match -1406.25 in pkg/flt output
    u0=u0[:,kk]; u1=u1[:,kk];
@@ -120,44 +120,15 @@ function example2_setup()
 
    ## Visualize velocity fields
 
-   mskW=myread(γ.path*"hFacW",MeshArray(γ,Float32,nr))
+   mskW=read_mds(γ.path*"hFacW",MeshArray(γ,Float32,nr))
    mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
-   mskS=myread(γ.path*"hFacS",MeshArray(γ,Float32,nr))
+   mskS=read_mds(γ.path*"hFacS",MeshArray(γ,Float32,nr))
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
 
    msk=Dict("mskW" => mskW, "mskS" => mskS)
 
    uvetc=merge(uvetc,msk)
 
-end
-
-"""
-myread()
-
-Read a gridded variable from 2x2 tile files. This is used
-in `example2_setup()` with `flt_example/`
-"""
-function myread(filRoot::String,x::MeshArray)
-   prec=eltype(x)
-   prec==Float64 ? reclen=8 : reclen=4;
-
-   (n1,n2)=Int64.(x.grid.ioSize ./ 2);
-   fil=filRoot*".001.001.data"
-   tmp1=stat(fil);
-   n3=Int64(tmp1.size/n1/n2/reclen);
-
-   v00=x.grid.write(x)
-   for ii=1:2; for jj=1:2;
-      fid = open(filRoot*".00$ii.00$jj.data")
-      fld = Array{prec,1}(undef,(n1*n2*n3))
-      read!(fid,fld)
-      fld = hton.(fld)
-
-      n3>1 ? s=(n1,n2,n3) : s=(n1,n2)
-      v00[1+(ii-1)*n1:ii*n1,1+(jj-1)*n2:jj*n2,:]=reshape(fld,s)
-   end; end;
-
-   return x.grid.read(v00,x)
 end
 
 """

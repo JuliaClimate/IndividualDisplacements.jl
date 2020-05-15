@@ -30,7 +30,7 @@ using Plots, Statistics, MITgcmTools, DataFrames
 γ=GridSpec("LatLonCap","GRID_LLC90/")
 Γ=GridLoad(γ)
 Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
-uvetc=read_uvetc(20,Γ,"nctiles_climatology/");
+uvetc=IndividualDisplacements.read_uvetc(20,Γ,"nctiles_climatology/");
 
 # ## 3. Compute trajectories from gridded flow fields
 
@@ -100,4 +100,3 @@ display(plt)
 #AbstractPlotting.inline!(true) #for Juno, set to false
 #scene=PlotMakie(df,nn,180.0)
 ##Makie.save("LatLonCap300mDepth.png", scene)
-# -
