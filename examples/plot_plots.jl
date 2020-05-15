@@ -1,4 +1,4 @@
-using Random, Plots
+using Random, Plots, DataFrames
 
 """
     PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
