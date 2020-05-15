@@ -1,5 +1,5 @@
 
-using Random, Makie
+using Random, Makie, DataFrames
 
 """
     PlotMakie(df::DataFrame,nn::Integer)

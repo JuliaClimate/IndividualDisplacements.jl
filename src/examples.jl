@@ -10,7 +10,7 @@ earlier, rather than computing trajectories as in the other examples.
 df=IndividualDisplacements.example1()
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"plot_pyplot.jl"))
+include(joinpath(p,"../examples/plot_pyplot.jl"))
 PyPlot.figure(); PlotMapProj(df,300); gcf()
 ```
 """
@@ -30,7 +30,7 @@ extended and modified configuration of the standard MITgcm test case.
 (df,ref,sol)=IndividualDisplacements.example2();
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"plot_pyplot.jl"))
+include(joinpath(p,"../examples/plot_pyplot.jl"))
 PyPlot.figure(); PlotBasic(df,300,100000.0); gcf()
 
 using Plots
@@ -160,6 +160,48 @@ function myread(filRoot::String,x::MeshArray)
    return x.grid.read(v00,x)
 end
 
+"""
+    example3()
+
+Run simulation over real Ocean domain (-69.5°S to 56.2°N)
+
+```
+df=IndividualDisplacements.example3();
+
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/plot_pyplot.jl"))
+PyPlot.figure(); PlotMapProj(df,3000); gcf()
+
+#include(joinpath(p,"../examples/plot_Makie.jl"))
+#PlotMakie(df,3000,180.)
+```
+"""
+function example3()
+   uvetc=IndividualDisplacements.example3_setup()
+
+   ii1=0:5:360; ii2=20:2:150;
+   n1=length(ii1); n2=length(ii2);
+   u0=Array{Float64,2}(undef,(2,n1*n2))
+   for i1 in eachindex(ii1); for i2 in eachindex(ii2);
+           i=i1+(i2-1)*n1
+           u0[1,i]=ii1[i1]
+           u0[2,i]=ii2[i2]
+   end; end;
+
+   du=fill(0.0,size(u0))
+   #⬡(du,u0,uvetc,0.0)
+   𝑇 = (0.0,uvetc["t1"]-uvetc["t0"])
+   prob = ODEProblem(⬡,u0,𝑇,uvetc)
+   sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
+
+   sol[1,:,:]=mod.(sol[1,:,:],360)
+   sol[2,:,:]=mod.(sol[2,:,:],180)
+   XC=exchange(uvetc["XC"])
+   YC=exchange(uvetc["YC"])
+   df=postprocess_ODESolution(sol,XC,YC)
+
+   return df
+end
 
 """
 example3_setup()
