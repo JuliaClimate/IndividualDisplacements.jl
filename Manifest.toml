@@ -141,9 +141,9 @@ version = "0.20.2"
 
 [[DataStructures]]
 deps = ["InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "6166ecfaf2b8bbf2b68d791bc1d54501f345d314"
+git-tree-sha1 = "7d7578b00789cf16c5f68fad71868e773edd58a2"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.17.15"
+version = "0.17.16"
 
 [[DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -160,9 +160,9 @@ uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 
 [[DiffEqBase]]
 deps = ["ArrayInterface", "ChainRulesCore", "ConsoleProgressMonitor", "DataStructures", "Distributed", "DocStringExtensions", "FunctionWrappers", "IterativeSolvers", "IteratorInterfaceExtensions", "LabelledArrays", "LinearAlgebra", "Logging", "LoggingExtras", "MuladdMacro", "Parameters", "Printf", "ProgressLogging", "RecipesBase", "RecursiveArrayTools", "RecursiveFactorization", "Requires", "Roots", "SparseArrays", "StaticArrays", "Statistics", "SuiteSparse", "TableTraits", "TerminalLoggers", "TreeViews", "ZygoteRules"]
-git-tree-sha1 = "9e9b98997a0481b2e7f260e2094a3aa6dbc6361f"
+git-tree-sha1 = "5b897e954ebefdc7669d61ef65e239044c2d7cfb"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.33.0"
+version = "6.34.0"
 
 [[DiffResults]]
 deps = ["StaticArrays"]
@@ -288,9 +288,9 @@ version = "0.21.0"
 
 [[LabelledArrays]]
 deps = ["ArrayInterface", "LinearAlgebra", "MacroTools", "StaticArrays"]
-git-tree-sha1 = "8702ede2e7cfdf872fd2e5c1b5f34c618208be80"
+git-tree-sha1 = "674c830a4ac858e877906405410471f5af2a4756"
 uuid = "2ee39098-c373-598a-b85f-a56591580800"
-version = "1.2.0"
+version = "1.2.1"
 
 [[LeftChildRightSiblingTrees]]
 deps = ["AbstractTrees"]
@@ -352,9 +352,9 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[MeshArrays]]
 deps = ["CatViews", "NearestNeighbors", "Pkg", "Printf", "SparseArrays", "Statistics", "Unitful"]
-git-tree-sha1 = "9135f2981100c12b8a04d64e721556838df113bd"
+git-tree-sha1 = "b773d63b21896a38e344167d66aed797bf72b9c1"
 uuid = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
-version = "0.2.9"
+version = "0.2.10"
 
 [[Missings]]
 deps = ["DataAPI"]
