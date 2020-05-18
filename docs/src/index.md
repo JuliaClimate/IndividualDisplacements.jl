@@ -4,9 +4,12 @@
 
 Inter-operability with popular climate model grids and their representation in [MeshArrays.jl](https://github.com/JuliaClimate/MeshArrays.jl) is a central element. The package can also read and plot trajectory simulation output from e.g. the [MITgcm](https://mitgcm.readthedocs.io/en/latest/?badge=latest). It was originally developed using [ECCOv4](https://eccov4.readthedocs.io/en/latest/) and [CBIOMES](https://cbiomes.readthedocs.io/en/latest/) ocean model simulations ([Forget et al. 2015](https://doi.org/10.5194/gmd-8-3071-2015)).
 
-The `VelComp!` and `VelComp` functions compute the velocity of tracked points. `tests/runtests.jl` uses solid body rotation as a benchmark (see below).
+The `⬡` and `⬡!` functions compute the tracked point / individual / agent velocities. 
 
 ![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/SolidBodyRotation.png)
+
+`tests/runtests.jl` uses this solid body rotation case as a unit test case.
+
 
 ## List Of Examples
 
@@ -32,6 +35,14 @@ Two examples use `VelComp!` and `update_locations.jl`:
 ```
 examples/PeriodicDomainRandom_fleet.jl
 examples/GlobalDomain_fleet.jl
+```
+
+Plotting recipes using three popular plotting packages are provided in:
+
+```
+examples/plot_plots.jl		(PlotBasic)
+examples/plot_makie.jl		(PlotMakie)
+examples/plot_pyplot.jl		(PlotMapProj)
 ```
 
 ![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/LatLonCap300mDepth.png)
