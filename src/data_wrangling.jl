@@ -77,7 +77,7 @@ end
 """
     initialize_locations(uvetc::Dict,n_subset::Int=1)
 
-Define u0 as an array of initial conditions
+Define initial condition (u0,du) as a subset of grid points
 """
 function initialize_locations(uvetc::Dict,n_subset::Int=1)
     msk=uvetc["msk"]
@@ -110,6 +110,39 @@ function initialize_locations(uvetc::Dict,n_subset::Int=1)
     uInitS=uInitS[:,1:n_subset:end]
     du=du[:,1:n_subset:end]
     return uInitS,du
+end
+
+"""
+    randn_lonlat(nn=1,seed=missing)
+
+Randomly distributed longitude, latitude positions on the sphere.
+"""
+function randn_lonlat(nn=1;seed=missing)
+    !ismissing(seed) ? rng = MersenneTwister(1234) : rng = MersenneTwister()
+    tmp = randn(rng, Float64, (nn, 3))
+    tmpn = tmp ./ sqrt.(sum(tmp.^2, dims=2))
+    lon = rad2deg.(atan.(tmpn[:,2], tmpn[:,1]))
+    lat = 90.0 .- rad2deg.(acos.(tmpn[:,3]))
+    return lon, lat
+end
+
+"""
+    initialize_locations_random(Γ::Dict,n::Int=1 ; s=missing,msk=missing)
+
+Define initial condition (u0,du) using randomly distributed longitude,
+latitude positions on the sphere (randn_lonlat).
+"""
+function initialize_random_locations(Γ::Dict,n::Int=1;s=missing,msk=missing)
+    (lon, lat) = randn_lonlat(n; seed=s)
+    (f,i,j,w,j_f,j_x,j_y)=InterpolationFactors(Γ,lon,lat)
+    ii=findall((!isnan).(j_x))
+    if !ismissing(msk)
+        jj=[msk[Int(j_f[i]),1][ Int(round(j_x[i] .+ 0.5)), Int(round(j_y[i] .+ 0.5)) ] for i in ii]
+        ii=ii[findall(jj.>0.0)]
+    end
+    u0=transpose([j_x[ii] j_y[ii] j_f[ii]])
+    du=similar(u0)
+    return u0,du
 end
 
 """
