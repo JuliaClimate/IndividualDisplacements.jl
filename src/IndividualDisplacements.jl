@@ -8,11 +8,13 @@ include("compute.jl")
 include("read.jl")
 include("examples.jl")
 include("update_locations.jl")
+include("data_wrangling.jl")
 
-export VelComp!, VelComp, VelCopy, ReadDisplacements
+⬡! = VelComp!
+⬡ = VelComp
+□ = VelCopy
 
-#include("plot_pyplot.jl")
-#include("plot_makie.jl")
-#export PlotBasic, PlotMapProj, PlotMakie
+export ⬡!, ⬡, □, ReadDisplacements, read_uvetc
+export initialize_locations, postprocess_ODESolution
 
 end # module

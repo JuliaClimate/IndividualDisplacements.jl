@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ---
 # jupyter:
 #   jupytext:
@@ -8,7 +9,7 @@
 #       format_version: '1.4'
 #       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Julia 1.3.0-rc4
+#     display_name: Julia 1.3.1
 #     language: julia
 #     name: julia-1.3
 # ---
@@ -24,16 +25,16 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots, DataFrames
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"plot_pyplot.jl"))
+include(joinpath(p,"../examples/plot_Plots.jl"))
 
-# ## 2. reload trajectories from `MITgcm/pkg/flt` 
+# ## 2. reload trajectories from `MITgcm/pkg/flt`
 
 dirIn="flt_example/"
 prec=Float32
 df=ReadDisplacements(dirIn,prec) #function exported by IndividualDisplacements
-PyPlot.figure(); PlotBasic(df,300,100000.0)
+plt=PlotBasic(df,300,100000.0)
 
 # ## 3. Read gridded variables via `MeshArrays.jl`
 #
@@ -43,9 +44,11 @@ uvetc=IndividualDisplacements.example2_setup()
 
 # ## 4. Visualize velocity fields
 
-heatmap(uvetc["mskW"][1,1].*uvetc["u0"][1,1],title="U at the start")
+plt=heatmap(uvetc["mskW"][1,1].*uvetc["u0"][1,1],title="U at the start")
+display(plt)
 
-heatmap(uvetc["mskW"][1,1].*uvetc["u1"][1,1]-uvetc["u0"][1,1],title="U end - U start")
+plt=heatmap(uvetc["mskW"][1,1].*uvetc["u1"][1,1]-uvetc["u0"][1,1],title="U end - U start")
+display(plt)
 
 # ## 5. Visualize trajectories from `MITgcm/pkg/flt`
 #
@@ -56,28 +59,25 @@ tmp[1:4,:]
 
 # Super-impose trajectory over velocity field (first for u ...)
 
-PyPlot.contourf(uvetc["XG"].f[1], uvetc["YC"].f[1], 
-    uvetc["mskW"].f[1].*uvetc["u0"].f[1])
-PyPlot.plot(tmp[:,:lon],tmp[:,:lat],color="r")
-colorbar()
+x=uvetc["XG"].f[1][:,1]
+y=uvetc["YC"].f[1][1,:]
+z=transpose(uvetc["mskW"][1].*uvetc["u0"][1,1])
+plt=contourf(x,y,z,c=:delta)
+plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
 # Super-impose trajectory over velocity field (... then for v)
 
-PyPlot.contourf(uvetc["XG"].f[1], uvetc["YC"].f[1], 
-    uvetc["mskS"].f[1].*uvetc["v0"].f[1])
-PyPlot.plot(tmp[:,:lon],tmp[:,:lat],color="r")
-colorbar()
+x=uvetc["XC"].f[1][:,1]
+y=uvetc["YG"].f[1][1,:]
+z=transpose(uvetc["mskW"][1].*uvetc["v0"][1,1])
+plt=contourf(x,y,z,c=:delta)
+plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
 # ## 6. Recompute displacements from gridded flow fields
-
-# +
-comp_vel=VelComp #function exported by IndividualDisplacements
-get_vel=VelCopy #function exported by IndividualDisplacements
 
 uInit=[tmp[1,:lon];tmp[1,:lat]]./uvetc["dx"]
 nSteps=Int32(tmp[end,:time]/3600)-2
 du=fill(0.0,2);
-# -
 
 # Visualize and compare with actual grid point values -- jumps on the tangential component are expected with linear scheme:
 
@@ -86,28 +86,30 @@ tmpv=fill(0.0,100)
 tmpx=fill(0.0,100)
 for i=1:100
     tmpx[i]=500.0 *i./uvetc["dx"]
-    comp_vel(du,[tmpx[i];0.499./uvetc["dx"]],uvetc,0.0)
+    ⬡(du,[tmpx[i];0.499./uvetc["dx"]],uvetc,0.0)
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
-Plots.plot(tmpx,tmpu)
-Plots.plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["u0"].f[1][1:10,1],marker=".")
-Plots.plot!(tmpx,tmpv)
-Plots.plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["v0"].f[1][1:10,1],marker=".")
+plt=plot(tmpx,tmpu)
+plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["u0"].f[1][1:10,1],marker=:o)
+plot!(tmpx,tmpv)
+plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["v0"].f[1][1:10,1],marker=:o)
+display(plt)
 
 tmpu=fill(0.0,100)
 tmpv=fill(0.0,100)
 tmpy=fill(0.0,100)
 for i=1:100
     tmpy[i]=500.0 *i./uvetc["dx"]
-    comp_vel(du,[0.499./uvetc["dx"];tmpy[i]],uvetc,0.0)
+    ⬡(du,[0.499./uvetc["dx"];tmpy[i]],uvetc,0.0)
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
-Plots.plot(tmpx,tmpu)
-Plots.plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["u0"].f[1][1,1:10],marker=".")
-Plots.plot!(tmpx,tmpv)
-Plots.plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["v0"].f[1][1,1:10],marker=".")
+plt=plot(tmpx,tmpu)
+plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["u0"].f[1][1,1:10],marker=:o)
+plot!(tmpx,tmpv)
+plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["v0"].f[1][1,1:10],marker=:o)
+display(plt)
 
 # Compare recomputed velocities with those from `pkg/flt`
 
@@ -116,33 +118,34 @@ tmpu=fill(0.0,nSteps); tmpv=fill(0.0,nSteps);
 tmpx=fill(0.0,nSteps); tmpy=fill(0.0,nSteps);
 refu=fill(0.0,nSteps); refv=fill(0.0,nSteps);
 for i=1:nSteps
-    get_vel(du,[tmp[i,:lon],tmp[i,:lat]],tmp,tmp[i,:time])
+    □(du,[tmp[i,:lon],tmp[i,:lat]],tmp,tmp[i,:time])
     refu[i]=du[1]./uvetc["dx"]
     refv[i]=du[2]./uvetc["dx"]
-    comp_vel(du,[tmp[i,:lon],tmp[i,:lat]]./uvetc["dx"],uvetc,tmp[i,:time])
+    ⬡(du,[tmp[i,:lon],tmp[i,:lat]]./uvetc["dx"],uvetc,tmp[i,:time])
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
 #
-Plots.plot(tmpu)
-Plots.plot!(tmpv)
-Plots.plot!(refu)
-Plots.plot!(refv)
+plt=plot(tmpu)
+plot!(tmpv)
+plot!(refu)
+plot!(refv)
+display(plt)
 
 # ## 6. Recompute trajectories from gridded flow fields
 #
-# Solve through time using `OrdinaryDiffEq.jl` with 
+# Solve through time using `OrdinaryDiffEq.jl` with
 #
-# - `comp_vel` is the function computing `du/dt`
+# - `⬡` is the function computing `du/dt`
 # - `uInit` is the initial condition `u @ tspan[1]`
 # - `tspan` is the time interval
-# - `uvetc` are parameters for `comp_vel`
+# - `uvetc` are parameters for `⬡`
 # - `Tsit5` is the time-stepping scheme
 # - `reltol` and `abstol` are tolerance parameters
 
 tspan = (0.0,nSteps*3600.0)
-#prob = ODEProblem(get_vel,uInit,tspan,tmp)
-prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
+#prob = ODEProblem(□,uInit,tspan,tmp)
+prob = ODEProblem(⬡,uInit,tspan,uvetc)
 sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 sol[1:4]
 
@@ -161,9 +164,7 @@ for i=1:nSteps-1
 end
 ref=ref./uvetc["dx"]
 
-Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
+plt=plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
-Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,label="MITgcm Solution")
-# -
-
-
+plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,label="MITgcm Solution")
+display(plt)
