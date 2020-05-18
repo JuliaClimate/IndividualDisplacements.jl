@@ -25,6 +25,8 @@ using Plots, Statistics, MITgcmTools, DataFrames
 
 # ## 2. Read gridded variables as `MeshArray`s
 
+]st
+
 # Put grid variables in a dictionary.
 
 γ=GridSpec("LatLonCap","GRID_LLC90/")
@@ -67,7 +69,8 @@ size(sol_one)
 
 # Define initial condition array
 
-(u0,du)=initialize_locations(uvetc,10);
+#(u0,du)=initialize_locations(uvetc,10);
+(u0,du)=initialize_random_locations(Γ,10000; msk=Γ["hFacC"][:,1]);
 
 # Solve for all trajectories.
 
