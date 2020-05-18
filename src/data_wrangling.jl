@@ -17,14 +17,14 @@ function postprocess_ODESolution(sol,XC,YC)
     for ii=1:length(lon)
         #get location in grid index space
         x=df[ii,:x]; y=df[ii,:y]; fIndex=Int(df[ii,:fIndex])
-        dx,dy=[x - floor(x),y - floor(y)]
-        i_c,j_c = Int32.(floor.([x y])) .+ 2
+        dx,dy=[x - floor(x) .+ 0.5,y - floor(y) .+ 0.5]
+        i_c,j_c = Int32.(floor.([x y])) .+ 1
         #interpolate lon and lat to position
         tmp=view(YC[fIndex],i_c:i_c+1,j_c:j_c+1)
         lat[ii]=(1.0-dx)*(1.0-dy)*tmp[1,1]+dx*(1.0-dy)*tmp[2,1]+(1.0-dx)*dy*tmp[1,2]+dx*dy*tmp[2,2]
 
         tmp=view(XC[fIndex],i_c:i_c+1,j_c:j_c+1)
-        if (maximum(tmp)>minimum(tmp)+180)&&(lat[ii]<88)
+        if (maximum(tmp)>minimum(tmp)+180)
             tmp1=deepcopy(tmp)
             tmp1[findall(tmp.<maximum(tmp)-180)] .+= 360.
             tmp=tmp1
