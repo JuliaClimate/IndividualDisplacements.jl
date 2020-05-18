@@ -8,14 +8,12 @@
 #       format_version: '1.4'
 #       jupytext_version: 1.2.4
 #   kernelspec:
-#     display_name: Julia 1.3.0-rc4
+#     display_name: Julia 1.3.1
 #     language: julia
 #     name: julia-1.3
 # ---
 
 # # This notebook
-#
-# A simplified version of `ex2_more.jl` used in `runtests.jl` (avoids downloading binary data).
 #
 # _Notes:_ For documentation see <https://gaelforget.github.io/MeshArrays.jl/stable/>, <https://docs.juliadiffeq.org/latest/solvers/ode_solve.html> and <https://en.wikipedia.org/wiki/Displacement_(vector)>
 
@@ -28,7 +26,7 @@ using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots
 # Put grid variables in a dictionary:
 
 # +
-mygrid=gcmgrid("flt_example/","PeriodicChanel",1,[(80,42)], [80 42], Float32, read, write)
+mygrid=gcmgrid("flt_example/","PeriodicChannel",1,[(80,42)], [80 42], Float32, read, write)
 nr=8
 
 XC=MeshArray(mygrid,Float32); XC[1]=vec(2500.:5000.:397500.0)*ones(1,42);
@@ -72,14 +70,14 @@ sol[1:4]
 
 # ## 5. visualize trajectory
 
-Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Solid body rotation example",
+plt=Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Solid body rotation example",
      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
+display(plt)
 #Plots.savefig("SolidBodyRotation.png")
+
 
 # ## 6. check against reference result
 
 sol[1,end],sol[2,end]
 isapprox(sol[1,end],117237.0./uvetc["dx"]; atol=1.)
 isapprox(sol[2,end],40448.0./uvetc["dx"]; atol=1.)
-
-

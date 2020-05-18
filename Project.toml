@@ -1,10 +1,11 @@
 name = "IndividualDisplacements"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 authors = ["gaelforget <gforget@mit.edu>"]
-version = "0.1.9"
+version = "0.1.10"
 
 [deps]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+MAT = "23992714-dd62-5051-b70f-ba57cb901cac"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
