@@ -81,6 +81,7 @@ size(sol)
 # - Map i,j position to lon,lat coordinates and convert to DataFrame.
 
 df=postprocess_ODESolution(sol,uvetc)
+df[1:4,:]
 
 # - call `PlotMapProj`
 
