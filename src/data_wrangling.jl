@@ -75,11 +75,11 @@ function read_uvetc(k::Int,γ::Dict,pth::String)
 end
 
 """
-    initialize_locations(uvetc::Dict,n_subset::Int=1)
+    initialize_grid_locations(uvetc::Dict,n_subset::Int=1)
 
 Define initial condition (u0,du) as a subset of grid points
 """
-function initialize_locations(uvetc::Dict,n_subset::Int=1)
+function initialize_grid_locations(uvetc::Dict,n_subset::Int=1)
     msk=uvetc["msk"]
     uInitS = Array{Float64,2}(undef, 3, prod(msk.grid.ioSize))
 
@@ -127,7 +127,7 @@ function randn_lonlat(nn=1;seed=missing)
 end
 
 """
-    initialize_locations_random(Γ::Dict,n::Int=1 ; s=missing,msk=missing)
+    initialize_random_locations(Γ::Dict,n::Int=1 ; s=missing,msk=missing)
 
 Define initial condition (u0,du) using randomly distributed longitude,
 latitude positions on the sphere (randn_lonlat).
