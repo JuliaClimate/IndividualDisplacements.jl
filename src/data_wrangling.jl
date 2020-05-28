@@ -186,7 +186,7 @@ latitude positions on the sphere (randn_lonlat).
 function initialize_random_locations(Γ::Dict,n::Int=1;s=missing,msk=missing)
     (lon, lat) = randn_lonlat(n; seed=s)
     (f,i,j,w,j_f,j_x,j_y)=InterpolationFactors(Γ,lon,lat)
-    ii=findall((!isnan).(j_x))
+    ii=findall( ((!isnan).(j_x)).&(j_f.!==0) )
     if !ismissing(msk)
         jj=[msk[Int(j_f[i]),1][ Int(round(j_x[i] .+ 0.5)), Int(round(j_y[i] .+ 0.5)) ] for i in ii]
         ii=ii[findall(jj.>0.0)]
