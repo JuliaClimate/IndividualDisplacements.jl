@@ -75,6 +75,57 @@ function read_uvetc(k::Int,γ::Dict,pth::String)
 end
 
 """
+    read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
+
+Define `uvetc` given the grid variables `γ`, a vertical level choice `k`, the
+time `t` in `seconds` (Float64), and velocities obtained from files in `pth`.
+
+The two climatological months (`m0`,`m1`) that bracket time `t` will be
+extracted (e.g. months 12 & 1 then 1 & 2 and so on).
+
+_Note: the nitial implementation does this only approximately by setting
+every months duration to 1 year / 12 for simplicity; should be improved..._
+"""
+function read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
+    dt=86400.0*365.0/12.0
+    t<0.0 ? error("time needs to be positive") : nothing
+
+    m0=Int(floor((t+dt/2.0)/dt))
+    m1=m0+1
+    t0=m0*dt-dt/2.0
+    t1=m1*dt-dt/2.0
+
+    m0=mod(m0,12)
+    m0==0 ? m0=12 : nothing
+    m1=mod(m1,12)
+    m1==0 ? m1=12 : nothing
+
+    #println([t0/dt,t1/dt,m0,m1])
+
+    (U,V)=read_velocities(γ["XC"].grid,m0,pth)
+    u0=U[:,k]; v0=V[:,k]
+    u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
+    u0=u0./γ["DXC"]; v0=v0./γ["DYC"]; #normalize to grid units
+    (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
+
+    (U,V)=read_velocities(γ["XC"].grid,m1,pth)
+    u1=U[:,k]; v1=V[:,k]
+    u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
+    u1=u1./γ["DXC"]; v1=v1./γ["DYC"]; #normalize to grid units
+    (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
+
+    msk=(γ["hFacC"][:,k] .> 0.) #select depth
+    XC=exchange(γ["XC"]) #add 1 lon point at each edge
+    YC=exchange(γ["YC"]) #add 1 lat point at each edge
+
+    uvetc = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1,
+    "t0" => t0, "t1" => t1, "dt" => dt, "msk" => msk, "XC" => XC, "YC" => YC)
+    uvetc=merge(uvetc,IndividualDisplacements.NeighborTileIndices_cs(γ));
+
+    return uvetc
+end
+
+"""
     initialize_grid_locations(uvetc::Dict,n_subset::Int=1)
 
 Define initial condition (u0,du) as a subset of grid points
