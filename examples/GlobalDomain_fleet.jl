@@ -21,7 +21,7 @@
 # ## 1. import software
 
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
-using Statistics, MITgcmTools, DataFrames
+using Statistics, MITgcmTools, DataFrames, Random
 
 # ## 2. Read gridded variables as `MeshArray`s
 
@@ -30,6 +30,7 @@ using Statistics, MITgcmTools, DataFrames
 # +
 k=1 #choice of vertical level
 ny=10 #number of simulated years
+r_reset = 0.05 #fraction of the particles reset per month
 
 #read grid and set up connections between subdomains
 γ=GridSpec("LatLonCap","GRID_LLC90/")
@@ -78,8 +79,17 @@ size(sol_one)
 
 # Define initial condition array
 
+# +
 #(u0,du)=initialize_grid_locations(uvetc,10);
 (u0,du)=initialize_random_locations(Γ,10000; msk=Γ["hFacC"][:,1]);
+
+u0_store = deepcopy(u0)
+n_store = size(u0_store,2)
+
+#r_reset = 0.05 #fraction of the particles reset per month
+n_reset = Int(round(r_reset*n_store))
+#k_reset = rand(1:size(u0_store,2), n_reset)
+# -
 
 # Solve for all trajectories.
 
@@ -100,14 +110,22 @@ u0 = deepcopy(sol[:,:,end])
 println(size(df))
 for y=1:ny
     for m=1:12
-        uvetc=IndividualDisplacements.read_uvetc(k,t0[1],Γ,"nctiles_climatology/");
+        uvetc=IndividualDisplacements.read_uvetc(k,t0[1],Γ,"nctiles_climatology/")
         𝑇 = (uvetc["t0"],uvetc["t1"])
         prob = ODEProblem(⬡!,u0,𝑇,uvetc)
         sol = solve(prob,Euler(),dt=uvetc["dt"]/4.0)
         tmp = postprocess_ODESolution(sol[:,:,2:end],uvetc)
+
+        k_reset = rand(1:size(u0_store,2), n_reset)
+        k_new = rand(1:size(u0_store,2), n_reset)
+        t_reset = Int(size(tmp,1)/n_store)-1
+
+        tmp[k_reset.+t_reset*n_store,2:end].=NaN #reset a random subset of particles
         append!(df,tmp)
+
         t0[1]=uvetc["t1"]
         u0[:,:] = deepcopy(sol[:,:,end])
+        u0[:,k_reset].=deepcopy(u0_store[:,k_new]) #reset a random subset of particles
     end
     println(size(df))
 end
