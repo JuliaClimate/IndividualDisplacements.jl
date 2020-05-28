@@ -8,6 +8,8 @@ and return position increment `du` (i.e. `x,y,fIndex`).
 function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     #compute positions in index units
     dt=(tim-p["t0"])/(p["t1"]-p["t0"])
+    dt>1.0 ? error("dt>1.0") : nothing
+    dt<0.0 ? error("dt>0.0") : nothing
     g=p["u0"].grid
     #
     g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
