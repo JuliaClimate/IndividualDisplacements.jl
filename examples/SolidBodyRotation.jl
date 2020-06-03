@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ---
 # jupyter:
 #   jupytext:
@@ -13,71 +14,143 @@
 #     name: julia-1.3
 # ---
 
-# # This notebook
+# # Single Particle Simulation Example
 #
-# _Notes:_ For documentation see <https://gaelforget.github.io/MeshArrays.jl/stable/>, <https://docs.juliadiffeq.org/latest/solvers/ode_solve.html> and <https://en.wikipedia.org/wiki/Displacement_(vector)>
+# In this example we simulate the trajectory of a particle in an idealized representation of an ocean eddy. To start, we use solid body rotation around a central point. As an exercise left to the user, directions are provided e.g. to add a convergence / divergence term. 
+#
+# - 1. setup the software and initialize example
+# - 2. simulate trajectories & plot results
+# - 3. experiment with parameters (user)
 
-# ## 1. import software and `pkg/flt` trajectories
+# + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
+# ### For More Documentation 
+#
+# - <https://docs.juliadiffeq.org/latest> 
+# - <https://en.wikipedia.org/wiki/Displacement_(vector)>
+# - <https://juliaclimate.github.io/IndividualDisplacements.jl/dev>
+# - <https://juliaclimate.github.io/MeshArrays.jl/dev>
+#
 
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots
-
-# ## 2. Define gridded variables as `MeshArray`s
-
-# Put grid variables in a dictionary:
-
-# +
-mygrid=gcmgrid("flt_example/","PeriodicChannel",1,[(80,42)], [80 42], Float32, read, write)
-nr=8
-
-XC=MeshArray(mygrid,Float32); XC[1]=vec(2500.:5000.:397500.0)*ones(1,42);
-XG=MeshArray(mygrid,Float32); XG[1]=vec(0.:5000.:395000.0)*ones(1,42);
-YC=MeshArray(mygrid,Float32); YC[1]=ones(80,1)*transpose(vec(2500.:5000.:207500.0));
-YG=MeshArray(mygrid,Float32); YG[1]=ones(80,1)*transpose(vec(0.:5000.:205000.0));
-
-GridVariables=Dict("XC" => XC,"YC" => YC,"XG" => XG,"YG" => YG,"dx" => 5000.0);
+# + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ## 1.1 Import Software, i.e. `Julia` Packages
 # -
 
-# Put velocity fields in a dictionary:
+using OrdinaryDiffEq, Plots
+using IndividualDisplacements, MeshArrays
 
-# +
-t0=0.0 #approximation / simplification
-t1=18001.0*3600.0
-
-u0=-(YG.-YC[1][40,21])/2000000.; u1=u0
-v0=(XG.-XC[1][40,21])/2000000.; v1=v0
-
-u0=u0./GridVariables["dx"]
-u1=u1./GridVariables["dx"]
-v0=v0./GridVariables["dx"]
-v1=v1./GridVariables["dx"]
-
-uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1)
-uvetc=merge(uvt,GridVariables);
+# + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
+# ## 1.2  Gridded Domain Example
+#
+# - define `SetPeriodicDomain` function, which uses `MeshArrays.jl`
+# - call `SetPeriodicDomain` function with a chosen grid size; e.g. `np=16`
 # -
 
-# ## 3. Define initial condition and time period
+"""
+    SetupPeriodicDomain(np::Integer=16)
 
-uInit=[200000.0;0.0]./uvetc["dx"]
-nSteps=3000-2
-du=fill(0.0,2);
+Set up a periodic domain of size np x np
 
-# ## 4. solve through time using DifferentialEquations.jl
+```
+np=16 #domain size is np x np
+γ,Γ=SetPeriodicDomain(np)
+```
+"""
+function SetupPeriodicDomain(np::Integer=16)
+    γ,Γ=GridOfOnes("PeriodicDomain",1,np)
+    Γ["XC"][1]=vec(0.5:1.0:np-0.5)*ones(1,np)
+    Γ["XG"][1]=vec(0.0:1.0:np-1.0)*ones(1,np)
+    Γ["YC"][1]=ones(np,1)*transpose(vec(0.5:1.0:np-0.5))
+    Γ["YG"][1]=ones(np,1)*transpose(vec(0.0:1.0:np-1.0))
+    return γ,Γ
+end
 
-tspan = (0.0,nSteps*3600.0)
-prob = ODEProblem(⬡,uInit,tspan,uvetc)
-sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
-sol[1:4]
+# + {"slideshow": {"slide_type": "subslide"}}
+#?SetupPeriodicDomain
 
-# ## 5. visualize trajectory
+# +
+np=16
 
-plt=Plots.plot(sol[1,:],sol[2,:],linewidth=5,title="Solid body rotation example",
-     xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
-display(plt)
-#Plots.savefig("SolidBodyRotation.png")
+γ,Γ=SetupPeriodicDomain(np);
+
+# +
+#show(Γ["XC"])
+
+# + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
+# ## 1.3 Define Velocity ...
+#
+# - define time range
+# - define velocity field(s)
+# - put in a dictionary along with grid variables
+
+# +
+#time range
+t0=0.0
+t1=0.95*2*pi
+#t1=2.95*2*pi
+
+#solid-body rotation around central location
+i=Int(np/2+1)
+u=-(Γ["YG"].-Γ["YG"][1][i,i])
+v=(Γ["XG"].-Γ["XG"][1][i,i])
+
+#add some convergence to / divergence from central location
+d=0.0 
+#d=-0.02
+u=u+d*(Γ["XG"].-Γ["XG"][1][i,i])
+v=v+d*(Γ["YG"].-Γ["YG"][1][i,i])
+
+#store everything in a dictionnary
+𝑃=Dict("u0" => u, "u1" => u, "v0" => v, "v1" => v, "t0" => t0, "t1" => t1)
+𝑃=merge(𝑃,Γ);
+
+# + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ## 1.4 Define initial position and time period
+# -
+
+i=Int(round(np/2.5))
+u0=[Γ["XC"][1][i,i];Γ["YC"][1][i,i]]
+du=fill(0.0,2)
+𝑇 = (t0,t1);
+
+# + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ## 2.1 solve for particle trajectory
+#
+# - `ODEProblem` formulates the differential equation along with the time period `𝑇`, parameters `𝑃`
+# - `solve` then performs the integration over `𝑇`, starting from `u0`
+#
+# _Try `?ODEProblem` & `?solve` for additional detail_
+
+# +
+prob = ODEProblem(⬡,u0,𝑇,𝑃)
+sol = solve(prob,Tsit5(),reltol=1e-8)
+
+x,y=sol[1,:],sol[2,:]
+nt=length(x)
+
+# + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ## 2.2 visualize particle trajectory
+#
+# - define plotting function (`myplot`)
+# - generate animation using `myplot`
+#
+# _Want a single plot? try uncommenting one line at a time in the next cell below_
+
+# + {"slideshow": {"slide_type": "-"}}
+myplot(i)=plot(x[1:i],y[1:i],linewidth=2,arrow = 2,
+    title="Solid body rotation / Spiral example",leg=false,
+    xaxis="x",yaxis="y",xlims=(0,np),ylims=(0,np))
+
+#plt=myplot(nt)
+#scatter!(plt,[u0[1]],[u0[2]])
+#savefig(plt,"SolidBodyRotation.png")
 
 
-# ## 6. check against reference result
+# + {"slideshow": {"slide_type": "subslide"}}
+p=Int(ceil(nt/100))
+anim = @animate for i ∈ 1:p:nt
+    myplot(i)
+end
+gif(anim, "SolidBodyRotation.gif", fps = 15)
+# -
 
-sol[1,end],sol[2,end]
-isapprox(sol[1,end],117237.0./uvetc["dx"]; atol=1.)
-isapprox(sol[2,end],40448.0./uvetc["dx"]; atol=1.)
+
