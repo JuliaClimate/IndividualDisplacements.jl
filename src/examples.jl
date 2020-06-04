@@ -10,14 +10,14 @@ earlier, rather than computing trajectories as in the other examples.
 df=IndividualDisplacements.example1()
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"plot_pyplot.jl"))
+include(joinpath(p,"../examples/plot_pyplot.jl"))
 PyPlot.figure(); PlotMapProj(df,300); gcf()
 ```
 """
 function example1()
    dirIn="run_offflt/"
    prec=Float32
-   df=ReadDisplacements(dirIn,prec)
+   df=read_flt(dirIn,prec)
 end
 
 """
@@ -30,8 +30,8 @@ extended and modified configuration of the standard MITgcm test case.
 (df,ref,sol)=IndividualDisplacements.example2();
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"plot_pyplot.jl"))
-PyPlot.figure(); PlotBasic(df,300,100000.0); gcf()
+include(joinpath(p,"../examples/plot_plots.jl"))
+PlotBasic(df,300,100000.0)
 
 using Plots
 Plots.plot(sol[1,:],sol[2,:],linewidth=5,lc=:black, title="One Trajectory Example",
@@ -42,7 +42,7 @@ pl=Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
 function example2()
    dirIn="flt_example/"
    prec=Float32
-   df=ReadDisplacements(dirIn,prec)
+   df=read_flt(dirIn,prec)
    uvetc=IndividualDisplacements.example2_setup()
    #
    tmp=df[df.ID .== 200, :]
@@ -58,14 +58,12 @@ function example2()
    end
    ref=ref./uvetc["dx"]
    #
-   comp_vel=IndividualDisplacements.VelComp
-   get_vel=IndividualDisplacements.VelCopy
    uInit=[tmp[1,:lon];tmp[1,:lat]]./uvetc["dx"]
    du=fill(0.0,2)
    #
    tspan = (0.0,nSteps*3600.0)
-   #prob = ODEProblem(get_vel,uInit,tspan,tmp)
-   prob = ODEProblem(comp_vel,uInit,tspan,uvetc)
+   #prob = ODEProblem(□,uInit,tspan,tmp)
+   prob = ODEProblem(⬡,uInit,tspan,uvetc)
    sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
    #
    return df,ref,sol
@@ -87,10 +85,10 @@ function example2_setup()
 
    ## Put grid variables in a dictionary:
 
-   Γ=Dict("XC" => myread(γ.path*"XC",MeshArray(γ,Float32)),
-   "YC" => myread(γ.path*"YC",MeshArray(γ,Float32)),
-   "XG" => myread(γ.path*"XG",MeshArray(γ,Float32)),
-   "YG" => myread(γ.path*"YG",MeshArray(γ,Float32)),
+   Γ=Dict("XC" => read_mds(γ.path*"XC",MeshArray(γ,Float32)),
+   "YC" => read_mds(γ.path*"YC",MeshArray(γ,Float32)),
+   "XG" => read_mds(γ.path*"XG",MeshArray(γ,Float32)),
+   "YG" => read_mds(γ.path*"YG",MeshArray(γ,Float32)),
    "dx" => 5000.0)
 
    ## Put velocity fields in a dictionary:
@@ -98,10 +96,10 @@ function example2_setup()
    t0=0.0 #approximation / simplification
    t1=18001.0*3600.0
 
-   u0=myread(γ.path*"U.0000000001",MeshArray(γ,Float32,nr))
-   u1=myread(γ.path*"U.0000018001",MeshArray(γ,Float32,nr))
-   v0=myread(γ.path*"V.0000000001",MeshArray(γ,Float32,nr))
-   v1=myread(γ.path*"V.0000018001",MeshArray(γ,Float32,nr))
+   u0=read_mds(γ.path*"U.0000000001",MeshArray(γ,Float32,nr))
+   u1=read_mds(γ.path*"U.0000018001",MeshArray(γ,Float32,nr))
+   v0=read_mds(γ.path*"V.0000000001",MeshArray(γ,Float32,nr))
+   v1=read_mds(γ.path*"V.0000018001",MeshArray(γ,Float32,nr))
 
    kk=3 #3 to match -1406.25 in pkg/flt output
    u0=u0[:,kk]; u1=u1[:,kk];
@@ -120,9 +118,9 @@ function example2_setup()
 
    ## Visualize velocity fields
 
-   mskW=myread(γ.path*"hFacW",MeshArray(γ,Float32,nr))
+   mskW=read_mds(γ.path*"hFacW",MeshArray(γ,Float32,nr))
    mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
-   mskS=myread(γ.path*"hFacS",MeshArray(γ,Float32,nr))
+   mskS=read_mds(γ.path*"hFacS",MeshArray(γ,Float32,nr))
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
 
    msk=Dict("mskW" => mskW, "mskS" => mskS)
@@ -132,34 +130,47 @@ function example2_setup()
 end
 
 """
-myread()
+    example3()
 
-Read a gridded variable from 2x2 tile files. This is used
-in `example2_setup()` with `flt_example/`
+Run simulation over real Ocean domain (-69.5°S to 56.2°N)
+
+```
+df=IndividualDisplacements.example3();
+
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/plot_pyplot.jl"))
+PyPlot.figure(); PlotMapProj(df,3000); gcf()
+
+#include(joinpath(p,"../examples/plot_Makie.jl"))
+#PlotMakie(df,3000,180.)
+```
 """
-function myread(filRoot::String,x::MeshArray)
-   prec=eltype(x)
-   prec==Float64 ? reclen=8 : reclen=4;
+function example3()
+   uvetc=IndividualDisplacements.example3_setup()
 
-   (n1,n2)=Int64.(x.grid.ioSize ./ 2);
-   fil=filRoot*".001.001.data"
-   tmp1=stat(fil);
-   n3=Int64(tmp1.size/n1/n2/reclen);
-
-   v00=x.grid.write(x)
-   for ii=1:2; for jj=1:2;
-      fid = open(filRoot*".00$ii.00$jj.data")
-      fld = Array{prec,1}(undef,(n1*n2*n3))
-      read!(fid,fld)
-      fld = hton.(fld)
-
-      n3>1 ? s=(n1,n2,n3) : s=(n1,n2)
-      v00[1+(ii-1)*n1:ii*n1,1+(jj-1)*n2:jj*n2,:]=reshape(fld,s)
+   ii1=0:5:360; ii2=20:2:150;
+   n1=length(ii1); n2=length(ii2);
+   u0=Array{Float64,2}(undef,(2,n1*n2))
+   for i1 in eachindex(ii1); for i2 in eachindex(ii2);
+           i=i1+(i2-1)*n1
+           u0[1,i]=ii1[i1]
+           u0[2,i]=ii2[i2]
    end; end;
 
-   return x.grid.read(v00,x)
-end
+   du=fill(0.0,size(u0))
+   #⬡(du,u0,uvetc,0.0)
+   𝑇 = (0.0,uvetc["t1"]-uvetc["t0"])
+   prob = ODEProblem(⬡,u0,𝑇,uvetc)
+   sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
 
+   sol[1,:,:]=mod.(sol[1,:,:],360)
+   sol[2,:,:]=mod.(sol[2,:,:],180)
+   XC=exchange(uvetc["XC"])
+   YC=exchange(uvetc["YC"])
+   df=postprocess_ODESolution(sol,XC,YC)
+
+   return df
+end
 
 """
 example3_setup()
