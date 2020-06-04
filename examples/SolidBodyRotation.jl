@@ -43,8 +43,8 @@ using IndividualDisplacements, MeshArrays
 #
 # - define `SetPeriodicDomain` function, which uses `MeshArrays.jl`
 # - call `SetPeriodicDomain` function with a chosen grid size; e.g. `np=16`
-# -
 
+# + {"slideshow": {"slide_type": "skip"}}
 """
     SetupPeriodicDomain(np::Integer=16)
 
@@ -76,13 +76,13 @@ np=16
 #show(Γ["XC"])
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 1.3 Define Velocity ...
+# ## 1.3 Define Period & Velocity ...
 #
 # - define time range
 # - define velocity field(s)
-# - put in a dictionary along with grid variables
+# - store in `𝑃` (dictionary) with grid variables
 
-# +
+# + {"slideshow": {"slide_type": "skip"}}
 #time range
 t0=0.0
 t1=0.95*2*pi
@@ -107,10 +107,9 @@ v=v+d*(Γ["YG"].-Γ["YG"][1][i,i])
 # ## 1.4 Define initial position and time period
 # -
 
-i=Int(round(np/2.5))
-u0=[Γ["XC"][1][i,i];Γ["YC"][1][i,i]]
+u0=np*[1/3,1/3]
 du=fill(0.0,2)
-𝑇 = (t0,t1);
+𝑇 = (𝑃["t0"],𝑃["t1"]);
 
 # + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.1 solve for particle trajectory
@@ -118,7 +117,7 @@ du=fill(0.0,2)
 # - `ODEProblem` formulates the differential equation along with the time period `𝑇`, parameters `𝑃`
 # - `solve` then performs the integration over `𝑇`, starting from `u0`
 #
-# _Try `?ODEProblem` & `?solve` for additional detail_
+# _Try `?ODEProblem` or `?solve` for additional documentation_
 
 # +
 prob = ODEProblem(⬡,u0,𝑇,𝑃)
@@ -130,7 +129,7 @@ nt=length(x)
 # + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.2 visualize particle trajectory
 #
-# - define plotting function (`myplot`)
+# - define `myplot` convenience function
 # - generate animation using `myplot`
 #
 # _Want a single plot? try uncommenting one line at a time in the next cell below_
@@ -140,17 +139,18 @@ myplot(i)=plot(x[1:i],y[1:i],linewidth=2,arrow = 2,
     title="Solid body rotation / Spiral example",leg=false,
     xaxis="x",yaxis="y",xlims=(0,np),ylims=(0,np))
 
-#plt=myplot(nt)
-#scatter!(plt,[u0[1]],[u0[2]])
-#savefig(plt,"SolidBodyRotation.png")
-
 
 # + {"slideshow": {"slide_type": "subslide"}}
 p=Int(ceil(nt/100))
 anim = @animate for i ∈ 1:p:nt
     myplot(i)
 end
-gif(anim, "SolidBodyRotation.gif", fps = 15)
+pth=tempdir()*"/"
+gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
+# + {"slideshow": {"slide_type": "subslide"}}
+plt=myplot(nt)
+scatter!(plt,[u0[1]],[u0[2]])
+savefig(plt,pth*"SolidBodyRotation.png")
 # -
 
 
