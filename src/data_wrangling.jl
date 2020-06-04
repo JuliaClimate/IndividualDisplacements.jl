@@ -17,14 +17,14 @@ function postprocess_ODESolution(sol,XC,YC)
     for ii=1:length(lon)
         #get location in grid index space
         x=df[ii,:x]; y=df[ii,:y]; fIndex=Int(df[ii,:fIndex])
-        dx,dy=[x - floor(x),y - floor(y)]
-        i_c,j_c = Int32.(floor.([x y])) .+ 2
+        dx,dy=[x - floor(x) .+ 0.5,y - floor(y) .+ 0.5]
+        i_c,j_c = Int32.(floor.([x y])) .+ 1
         #interpolate lon and lat to position
         tmp=view(YC[fIndex],i_c:i_c+1,j_c:j_c+1)
         lat[ii]=(1.0-dx)*(1.0-dy)*tmp[1,1]+dx*(1.0-dy)*tmp[2,1]+(1.0-dx)*dy*tmp[1,2]+dx*dy*tmp[2,2]
 
         tmp=view(XC[fIndex],i_c:i_c+1,j_c:j_c+1)
-        if (maximum(tmp)>minimum(tmp)+180)&&(lat[ii]<88)
+        if (maximum(tmp)>minimum(tmp)+180)
             tmp1=deepcopy(tmp)
             tmp1[findall(tmp.<maximum(tmp)-180)] .+= 360.
             tmp=tmp1
@@ -75,11 +75,62 @@ function read_uvetc(k::Int,γ::Dict,pth::String)
 end
 
 """
-    initialize_locations(uvetc::Dict,n_subset::Int=1)
+    read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
 
-Define u0 as an array of initial conditions
+Define `uvetc` given the grid variables `γ`, a vertical level choice `k`, the
+time `t` in `seconds` (Float64), and velocities obtained from files in `pth`.
+
+The two climatological months (`m0`,`m1`) that bracket time `t` will be
+extracted (e.g. months 12 & 1 then 1 & 2 and so on).
+
+_Note: the nitial implementation does this only approximately by setting
+every months duration to 1 year / 12 for simplicity; should be improved..._
 """
-function initialize_locations(uvetc::Dict,n_subset::Int=1)
+function read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
+    dt=86400.0*365.0/12.0
+    t<0.0 ? error("time needs to be positive") : nothing
+
+    m0=Int(floor((t+dt/2.0)/dt))
+    m1=m0+1
+    t0=m0*dt-dt/2.0
+    t1=m1*dt-dt/2.0
+
+    m0=mod(m0,12)
+    m0==0 ? m0=12 : nothing
+    m1=mod(m1,12)
+    m1==0 ? m1=12 : nothing
+
+    #println([t0/dt,t1/dt,m0,m1])
+
+    (U,V)=read_velocities(γ["XC"].grid,m0,pth)
+    u0=U[:,k]; v0=V[:,k]
+    u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
+    u0=u0./γ["DXC"]; v0=v0./γ["DYC"]; #normalize to grid units
+    (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
+
+    (U,V)=read_velocities(γ["XC"].grid,m1,pth)
+    u1=U[:,k]; v1=V[:,k]
+    u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
+    u1=u1./γ["DXC"]; v1=v1./γ["DYC"]; #normalize to grid units
+    (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
+
+    msk=(γ["hFacC"][:,k] .> 0.) #select depth
+    XC=exchange(γ["XC"]) #add 1 lon point at each edge
+    YC=exchange(γ["YC"]) #add 1 lat point at each edge
+
+    uvetc = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1,
+    "t0" => t0, "t1" => t1, "dt" => dt, "msk" => msk, "XC" => XC, "YC" => YC)
+    uvetc=merge(uvetc,IndividualDisplacements.NeighborTileIndices_cs(γ));
+
+    return uvetc
+end
+
+"""
+    initialize_grid_locations(uvetc::Dict,n_subset::Int=1)
+
+Define initial condition (u0,du) as a subset of grid points
+"""
+function initialize_grid_locations(uvetc::Dict,n_subset::Int=1)
     msk=uvetc["msk"]
     uInitS = Array{Float64,2}(undef, 3, prod(msk.grid.ioSize))
 
@@ -113,6 +164,39 @@ function initialize_locations(uvetc::Dict,n_subset::Int=1)
 end
 
 """
+    randn_lonlat(nn=1,seed=missing)
+
+Randomly distributed longitude, latitude positions on the sphere.
+"""
+function randn_lonlat(nn=1;seed=missing)
+    !ismissing(seed) ? rng = MersenneTwister(1234) : rng = MersenneTwister()
+    tmp = randn(rng, Float64, (nn, 3))
+    tmpn = tmp ./ sqrt.(sum(tmp.^2, dims=2))
+    lon = rad2deg.(atan.(tmpn[:,2], tmpn[:,1]))
+    lat = 90.0 .- rad2deg.(acos.(tmpn[:,3]))
+    return lon, lat
+end
+
+"""
+    initialize_random_locations(Γ::Dict,n::Int=1 ; s=missing,msk=missing)
+
+Define initial condition (u0,du) using randomly distributed longitude,
+latitude positions on the sphere (randn_lonlat).
+"""
+function initialize_random_locations(Γ::Dict,n::Int=1;s=missing,msk=missing)
+    (lon, lat) = randn_lonlat(n; seed=s)
+    (f,i,j,w,j_f,j_x,j_y)=InterpolationFactors(Γ,lon,lat)
+    ii=findall( ((!isnan).(j_x)).&(j_f.!==0) )
+    if !ismissing(msk)
+        jj=[msk[Int(j_f[i]),1][ Int(round(j_x[i] .+ 0.5)), Int(round(j_y[i] .+ 0.5)) ] for i in ii]
+        ii=ii[findall(jj.>0.0)]
+    end
+    u0=transpose([j_x[ii] j_y[ii] j_f[ii]])
+    du=similar(u0)
+    return u0,du
+end
+
+"""
     read_velocities(γ::gcmgrid,t::Int,pth::String)
 
 Read velocity components `u,v` from files in `pth`for time `t`
@@ -121,4 +205,33 @@ function read_velocities(γ::gcmgrid,t::Int,pth::String)
     u=Main.read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
     v=Main.read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
     return u,v
+end
+
+"""
+    read_mds(filRoot::String,x::MeshArray)
+
+Read a gridded variable from 2x2 tile files. This is used
+in `example2_setup()` with `flt_example/`
+"""
+function read_mds(filRoot::String,x::MeshArray)
+   prec=eltype(x)
+   prec==Float64 ? reclen=8 : reclen=4;
+
+   (n1,n2)=Int64.(x.grid.ioSize ./ 2);
+   fil=filRoot*".001.001.data"
+   tmp1=stat(fil);
+   n3=Int64(tmp1.size/n1/n2/reclen);
+
+   v00=x.grid.write(x)
+   for ii=1:2; for jj=1:2;
+      fid = open(filRoot*".00$ii.00$jj.data")
+      fld = Array{prec,1}(undef,(n1*n2*n3))
+      read!(fid,fld)
+      fld = hton.(fld)
+
+      n3>1 ? s=(n1,n2,n3) : s=(n1,n2)
+      v00[1+(ii-1)*n1:ii*n1,1+(jj-1)*n2:jj*n2,:]=reshape(fld,s)
+   end; end;
+
+   return x.grid.read(v00,x)
 end
