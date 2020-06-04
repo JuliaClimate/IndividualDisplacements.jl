@@ -143,6 +143,7 @@ end
 anim = @animate for t in 0:2.0:maximum(df[!,:t])
    scatter_subset(df,t)
 end
-gif(anim, "RandomFlow.gif", fps = 15)
+pth=tempdir()*"/"
+gif(anim, pth*"RandomFlow.gif", fps = 15)
 # -
 
