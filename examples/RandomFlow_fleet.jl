@@ -77,42 +77,21 @@ sol = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
 size(sol)
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 2.2 Process Output For Plotting
+# ## 2.2 Process Output
 # -
 
-using DataFrames
-
-#x,y axes etc
-x=sol[1,:,:]
-y=sol[2,:,:]
-fIndex=sol[3,:,:]
-ID=collect(1:size(sol,2))*ones(1,size(sol,3))
-df = DataFrame(ID=Int.(ID[:]), x=mod.(x[:],Ref(np)), y=mod.(y[:],Ref(np)), fIndex=fIndex[:]);
-
-#time axis
-nf=size(u0,2)
-nt=size(df,1)/nf
-t=[ceil(i/nf)-1 for i in 1:nt*nf]
-df[!,:t]=(𝑃["t1"]-𝑃["t0"])/t[end].*t;
+df=postprocess_ODESolution_simple(sol,𝑃);
 
 # + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.3 Plot Results
-
-# +
-using Plots, ColorSchemes
-
-function scatter_subset(Γ,df,t,dt=5.0)
-    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
-    contourf(vec(Γ["XC"][1][:,1]),vec(Γ["YC"][1][1,:]),transpose(ϕ[1]),c = :blues,linewidth = 0.1)
-    scatter!(df_t.x,df_t.y,markersize=2.0,c=:red,
-    xlims=(0,np),ylims=(0,np),leg=:none,marker = (:circle, stroke(0)))
-end
-
-anim = @animate for t in 0:2.0:maximum(df[!,:t])
-   scatter_subset(Γ,df,t)
-end
-pth=tempdir()*"/"
-gif(anim, pth*"RandomFlow.gif", fps = 15)
-# -
-
-
+#
+# For example, to generate a simple animation:
+#
+# ```
+# include("plot_plots.jl")
+# anim = @animate for t in 0:2.0:maximum(df[!,:t])
+#    phi_and_subset(Γ,ϕ,df,t)
+# end
+# pth=tempdir()*"/"
+# gif(anim, pth*"RandomFlow.gif", fps = 15)
+# ```
