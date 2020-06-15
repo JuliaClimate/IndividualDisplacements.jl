@@ -40,6 +40,29 @@ end
 postprocess_ODESolution(sol,uvetc::Dict) = postprocess_ODESolution(sol,uvetc["XC"],uvetc["YC"])
 
 """
+    postprocess_ODESolution_simple()
+
+Copy `sol` to a `DataFrame` & map position to x,y coordinates,
+and define time axis for a simple doubly periodic domain
+"""
+function postprocess_ODESolution_simple(sol,𝑃)
+    nf=size(sol,2)
+    nt=size(sol,3)
+    nx,ny=size(𝑃["XC"][1])
+
+    x=sol[1,:,:]
+    y=sol[2,:,:]
+    fIndex=sol[3,:,:]
+    ID=collect(1:size(sol,2))*ones(1,size(sol,3))
+    df = DataFrame(ID=Int.(ID[:]), fIndex=fIndex[:],
+    x=mod.(x[:],Ref(nx)), y=mod.(y[:],Ref(ny)))
+
+    t=[ceil(i/nf)-1 for i in 1:nt*nf]
+    df[!,:t]=𝑃["t0"] .+ (𝑃["t1"]-𝑃["t0"])/t[end].*t
+    return df
+end
+
+"""
     read_uvetc(k::Int,γ::Dict,pth::String)
 
 Define `uvetc` given the grid variables `γ` and a vertical level choice `k`

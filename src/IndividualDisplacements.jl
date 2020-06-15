@@ -16,8 +16,9 @@ include("data_wrangling.jl")
 □ = VelCopy
 
 export ⬡!, ⬡, □
-export initialize_grid_locations, postprocess_ODESolution
-export initialize_random_locations, randn_lonlat
+export initialize_grid_locations, initialize_random_locations
+export randn_lonlat
+export postprocess_ODESolution, postprocess_ODESolution_simple
 export read_flt, read_uvetc, read_drifters
 
 end # module
