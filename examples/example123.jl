@@ -1,4 +1,4 @@
-using MAT
+using MAT, MeshArrays
 
 """
     example1()
