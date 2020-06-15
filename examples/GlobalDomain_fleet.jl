@@ -17,7 +17,8 @@
 # # Global Ocean Particle Simulation Example
 #
 # Particles moving with climatological monthly mean flow at selected depth level (e.g. `k=10` for 95 m) based on an ocean state estimate (ECCO v4 r2 from https://ecco-group.org).
-#
+
+# + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### For More Documentation 
 #
 # - <https://docs.juliadiffeq.org/latest> 
@@ -84,9 +85,13 @@ size(sol_one)
 
 # + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Main Computation Loop
+#
+# - initial particle positions randomly over Global Ocean
+# - initial integration from time 0 to 0.5 month
+# - update velocity fields & repeat for n years
 # -
 
-# ## 3.1 Initial Solution (1/2 month) 
+# ## 3.1 Initialization & Initial Solution  
 
 #(u0,du)=initialize_grid_locations(uvetc,10);
 (u0,du)=initialize_random_locations(Γ,20000; msk=Γ["hFacC"][:,k]);
@@ -115,7 +120,7 @@ df=postprocess_ODESolution(sol,uvetc)
 df[1:4,:]
 
 # + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 3.2 Repeat For `ny` Years x 12 Months
+# ## 3.2 Repeat `ny` Years x 12 Months
 #
 # _A fraction of the particles, randomly selected, is reset every month to maintain a relatively homogeneous coverage of the Global Ocean by the fleet of particles._
 # -
@@ -156,14 +161,14 @@ end
 #p=dirname(pathof(IndividualDisplacements))
 #nn=1000
 
-#include(joinpath(p,"../examples/plot_plots.jl"))
+#include(joinpath(p,"../examples/recipes_plots.jl"))
 #plt=PlotBasic(df,nn,180.)
 #display(plt)
 
-#include(joinpath(p,"../examples/plot_pyplot.jl"))
+#include(joinpath(p,"../examples/recipes_pyplot.jl"))
 #PyPlot.figure(); PlotMapProj(df,nn)
 
-#include(joinpath(p,"../examples/plot_makie.jl"))
+#include(joinpath(p,"../examples/recipes_makie.jl"))
 #AbstractPlotting.inline!(true) #for Juno, set to false
 #scene=PlotMakie(df,nn,180.0)
 ##Makie.save("LatLonCap300mDepth.png", scene)
@@ -196,3 +201,5 @@ if false
     scene = ProjMap(DL,colorrange=(2.,4.))
     ProjScatterMovie(scene,df,tt,"GlobalDomain_fleet_k"*"$k"*"_v1.mp4",dt=1.0,mrksz=5e3)
 end
+
+
