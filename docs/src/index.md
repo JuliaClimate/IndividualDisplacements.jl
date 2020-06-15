@@ -26,7 +26,7 @@ examples/GlobalDomain_fleet.jl
 
 ![RandomFlow](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif)
 
-![LatLonCap300mDepth](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/LatLonCap300mDepth.png)
+![LatLonCap300mDepth](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/LatLonCap300mDepth.png)
 
 Plotting recipes using three popular plotting packages:
 
