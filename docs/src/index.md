@@ -6,11 +6,6 @@ Inter-operability with common climate model grids and their representation in [M
 
 The `⬡` and `⬡!` functions compute the tracked point / individual / agent velocities. 
 
-<img src="https://github.com/gaelforget/MarineEcosystemNotebooks/raw/master/figs/SolidBodyRotation.gif" width="40%">  <img src="https://github.com/gaelforget/MarineEcosystemNotebooks/raw/master/figs/RandomFlow.gif" width="40%">
-
-`tests/runtests.jl` uses this solid body rotation case as a unit test case.
-
-
 ## List Of Examples
 
 A solid-body-rotation example is used for unit testing:
@@ -20,6 +15,8 @@ test/runtests.jl
 examples/SolidBodyRotation.jl
 ```
 
+![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
+
 Two examples using `⬡!` and `update_locations.jl`:
 
 ```
@@ -27,7 +24,9 @@ examples/RandomFlow_fleet.jl
 examples/GlobalDomain_fleet.jl
 ```
 
-<img src="https://github.com/JuliaClimate/GlobalOceanNotebooks/raw/master/OceanTransports/LatLonCap300mDepth.png" width="80%"> 
+![RandomFlow](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif)
+
+![LatLonCap300mDepth](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/LatLonCap300mDepth.png)
 
 Plotting recipes using three popular plotting packages:
 
