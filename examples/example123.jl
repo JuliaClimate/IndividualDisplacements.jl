@@ -1,4 +1,4 @@
-using MAT, MeshArrays, Statistics, OrdinaryDiffEq
+using MeshArrays, Statistics, OrdinaryDiffEq
 
 """
     example1()
@@ -135,6 +135,7 @@ end
 Run simulation over real Ocean domain (-69.5°S to 56.2°N)
 
 ```
+using MAT
 df=example3();
 
 p=dirname(pathof(IndividualDisplacements))
