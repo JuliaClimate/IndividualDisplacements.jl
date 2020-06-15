@@ -25,9 +25,10 @@
 
 # ## 1. import software
 
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, Plots, DataFrames
+using IndividualDisplacements, OrdinaryDiffEq
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/plot_Plots.jl"))
+include(joinpath(p,"../examples/recipes_plots.jl"))
+include(joinpath(p,"../examples/example123.jl"))
 
 # ## 2. reload trajectories from `MITgcm/pkg/flt`
 
@@ -40,7 +41,7 @@ plt=PlotBasic(df,300,100000.0)
 #
 # Put gridded variables in a dictionary.
 
-uvetc=IndividualDisplacements.example2_setup()
+uvetc=example2_setup()
 
 # ## 4. Visualize velocity fields
 

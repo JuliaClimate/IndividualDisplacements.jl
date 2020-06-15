@@ -6,7 +6,7 @@ Inter-operability with common climate model grids and their representation in [M
 
 The `⬡` and `⬡!` functions compute the tracked point / individual / agent velocities. 
 
-![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/SolidBodyRotation.png)
+<img src="https://github.com/gaelforget/MarineEcosystemNotebooks/raw/master/figs/SolidBodyRotation.gif" width="40%">  <img src="https://github.com/gaelforget/MarineEcosystemNotebooks/raw/master/figs/RandomFlow.gif" width="40%">
 
 `tests/runtests.jl` uses this solid body rotation case as a unit test case.
 
@@ -20,30 +20,30 @@ test/runtests.jl
 examples/SolidBodyRotation.jl
 ```
 
-Three other examples using `⬡`  are documented in the `API Guide`:
-
-```
-src/examples.jl
-examples/example2fleet.jl
-examples/example2more.jl
-```
-
 Two examples using `⬡!` and `update_locations.jl`:
 
 ```
-examples/PeriodicDomainRandom_fleet.jl
+examples/RandomFlow_fleet.jl
 examples/GlobalDomain_fleet.jl
 ```
+
+<img src="https://github.com/JuliaClimate/GlobalOceanNotebooks/raw/master/OceanTransports/LatLonCap300mDepth.png" width="80%"> 
 
 Plotting recipes using three popular plotting packages:
 
 ```
-examples/plot_plots.jl		(PlotBasic)
-examples/plot_makie.jl		(PlotMakie)
-examples/plot_pyplot.jl		(PlotMapProj)
+examples/recipes_plots.jl
+examples/recipes_makie.jl
+examples/recipes_pyplot.jl	
 ```
 
-![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/LatLonCap300mDepth.png)
+Three other examples using `⬡`  are documented in the `API Guide`:
+
+```
+examples/examples123.jl
+examples/example2fleet.jl
+examples/example2more.jl
+```
 
 ## API Guide
 
