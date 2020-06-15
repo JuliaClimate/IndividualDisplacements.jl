@@ -17,20 +17,15 @@ Pkg.add("IndividualDisplacements")
 Pkg.test("IndividualDisplacements")
 ```
 
-<img src="examples/ex_1_mitgcm.png" width="50%"> <img src="examples/LatLonCap300mDepth.png" width="40%">
+<img src="https://github.com/gaelforget/MarineEcosystemNotebooks/raw/master/figs/SolidBodyRotation.gif" width="40%">  <img src="https://github.com/gaelforget/MarineEcosystemNotebooks/raw/master/figs/RandomFlow.gif" width="40%">
 
 ### Example
 
-This example reproduces an individual trajectory computed by `MITgcm` but using `Julia`:
+The above examples are reproduced as follows:
 
 ```
 using IndividualDisplacements
-
-if !isdir("flt_example")
-    run(`git clone https://github.com/gaelforget/flt_example`)
-end
-
-(df,ref,sol)=IndividualDisplacements.example2()
+p = dirname(pathof(IndividualDisplacements))
+include(joinpath(p ,"../examples/SolidBodyRotation.jl"))
+include(joinpath(p ,"../examples/RandomFlow_fleet.jl"))
 ```
-
-![alt-text-5](examples/ex_2.png "Computed in Julia")

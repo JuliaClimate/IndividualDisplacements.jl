@@ -20,15 +20,15 @@
 
 # ## 1. Import Software
 
-using IndividualDisplacements, OrdinaryDiffEq
-using Plots, Statistics, DataFrames
+using IndividualDisplacements, OrdinaryDiffEq, Statistics
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/plot_Plots.jl"))
+include(joinpath(p,"../examples/recipes_plots.jl"))
+include(joinpath(p,"../examples/example123.jl"))
 
 # ## 2. Setup Problem
 
 # +
-uvetc=IndividualDisplacements.example2_setup()
+uvetc=example2_setup()
 
 #ii1=1:10:80; ii2=1:10:42; #->sol is (2, 40, 40065)
 #ii1=30:37; ii2=16:20; #->sol is (2, 40, 9674)

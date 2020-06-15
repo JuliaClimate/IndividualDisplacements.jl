@@ -1,4 +1,4 @@
-using MAT
+using MAT, MeshArrays, Statistics, OrdinaryDiffEq
 
 """
     example1()
@@ -7,10 +7,10 @@ Pre-computed global ocean case. Here we just re-read data from a file produced
 earlier, rather than computing trajectories as in the other examples.
 
 ```
-df=IndividualDisplacements.example1()
+df=example1()
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/plot_pyplot.jl"))
+include(joinpath(p,"../examples/recipes_pyplot.jl"))
 PyPlot.figure(); PlotMapProj(df,300); gcf()
 ```
 """
@@ -27,10 +27,10 @@ Reproducing `MITgcm/verification/flt_example/` case. This is based on an
 extended and modified configuration of the standard MITgcm test case.
 
 ```
-(df,ref,sol)=IndividualDisplacements.example2();
+(df,ref,sol)=example2();
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/plot_plots.jl"))
+include(joinpath(p,"../examples/recipes_plots.jl"))
 PlotBasic(df,300,100000.0)
 
 using Plots
@@ -43,7 +43,7 @@ function example2()
    dirIn="flt_example/"
    prec=Float32
    df=read_flt(dirIn,prec)
-   uvetc=IndividualDisplacements.example2_setup()
+   uvetc=example2_setup()
    #
    tmp=df[df.ID .== 200, :]
    nSteps=Int32(tmp[end,:time]/3600)-2
@@ -135,18 +135,18 @@ end
 Run simulation over real Ocean domain (-69.5°S to 56.2°N)
 
 ```
-df=IndividualDisplacements.example3();
+df=example3();
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/plot_pyplot.jl"))
+include(joinpath(p,"../examples/recipes_pyplot.jl"))
 PyPlot.figure(); PlotMapProj(df,3000); gcf()
 
-#include(joinpath(p,"../examples/plot_Makie.jl"))
+#include(joinpath(p,"../examples/recipes_Makie.jl"))
 #PlotMakie(df,3000,180.)
 ```
 """
 function example3()
-   uvetc=IndividualDisplacements.example3_setup()
+   uvetc=example3_setup()
 
    ii1=0:5:360; ii2=20:2:150;
    n1=length(ii1); n2=length(ii2);
