@@ -78,7 +78,7 @@ size(sol)
 # ## 2.2 Process Output
 # -
 
-df=postprocess_ODESolution_simple(sol,𝑃);
+df=postprocess_xy(sol,𝑃);
 
 # + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.3 Plot Results
