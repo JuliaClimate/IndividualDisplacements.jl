@@ -44,39 +44,13 @@ using IndividualDisplacements, MeshArrays
 # - define `SetPeriodicDomain` function, which uses `MeshArrays.jl`
 # - call `SetPeriodicDomain` function with a chosen grid size; e.g. `np=16`
 
-# + {"slideshow": {"slide_type": "skip"}}
-"""
-    SetupPeriodicDomain(np::Integer=16)
-
-Set up a periodic domain of size np x np
-
-```
-np=16 #domain size is np x np
-γ,Γ=SetPeriodicDomain(np)
-```
-"""
-function SetupPeriodicDomain(np::Integer=16)
-    γ,Γ=GridOfOnes("PeriodicDomain",1,np)
-    Γ["XC"][1]=vec(0.5:1.0:np-0.5)*ones(1,np)
-    Γ["XG"][1]=vec(0.0:1.0:np-1.0)*ones(1,np)
-    Γ["YC"][1]=ones(np,1)*transpose(vec(0.5:1.0:np-0.5))
-    Γ["YG"][1]=ones(np,1)*transpose(vec(0.0:1.0:np-1.0))
-    return γ,Γ
-end
-
-# + {"slideshow": {"slide_type": "subslide"}}
-#?SetupPeriodicDomain
-
 # +
 np=16
 
-γ,Γ=SetupPeriodicDomain(np);
-
-# +
-#show(Γ["XC"])
+Γ=setup_periodic_domain(np);
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 1.3 Define Period & Velocity ...
+# ## 1.3 Define Time Period & Velocity Field
 #
 # - define time range
 # - define velocity field(s)
@@ -95,7 +69,7 @@ v=(Γ["XG"].-Γ["XG"][1][i,i])
 
 #add some convergence to / divergence from central location
 d=0.0 
-#d=-0.02
+#d=-0.10
 u=u+d*(Γ["XG"].-Γ["XG"][1][i,i])
 v=v+d*(Γ["YG"].-Γ["YG"][1][i,i])
 
@@ -152,5 +126,4 @@ plt=myplot(nt)
 scatter!(plt,[u0[1]],[u0[2]])
 savefig(plt,pth*"SolidBodyRotation.png")
 # -
-
 
