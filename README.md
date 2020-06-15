@@ -17,7 +17,7 @@ Pkg.add("IndividualDisplacements")
 Pkg.test("IndividualDisplacements")
 ```
 
-<img src="https://github.com/gaelforget/MarineEcosystemNotebooks/raw/master/figs/SolidBodyRotation.gif" width="40%">  <img src="https://github.com/gaelforget/MarineEcosystemNotebooks/raw/master/figs/RandomFlow.gif" width="40%">
+<img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.png" width="40%">  <img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif" width="40%">
 
 ### Example
 
