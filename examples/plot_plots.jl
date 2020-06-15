@@ -1,4 +1,4 @@
-using Random, Plots, DataFrames
+using Random, Plots, DataFrames, ColorSchemes
 
 """
     PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
@@ -45,3 +45,23 @@ function scatter_subset(df,t)
     scatter(df_t.lon,df_t.lat,markersize=2,
     xlims=(-180.0,180.0),ylims=(-90.0,90.0))
 end
+
+"""
+    phi_and_subset(Γ,ϕ,df,t,dt=5.0)
+
+```
+t=maximum(df[!,:t])
+phi_and_subset(Γ,ϕ,df,t)
+```
+"""
+function phi_and_subset(Γ,ϕ,df,t=missing,dt=5.0)
+    ismissing(t) ? t=maximum(df[!,:t]) : nothing
+    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
+    contourf(vec(Γ["XC"][1][:,1]),vec(Γ["YC"][1][1,:]),
+        transpose(ϕ[1]),c = :blues,linewidth = 0.1)
+    scatter!(df_t.x,df_t.y,markersize=2.0,c=:red,
+    xlims=(0,np),ylims=(0,np),leg=:none,marker = (:circle, stroke(0)))
+end
+
+
+
