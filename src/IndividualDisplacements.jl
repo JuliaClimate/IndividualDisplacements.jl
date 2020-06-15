@@ -16,7 +16,7 @@ include("data_wrangling.jl")
 
 export ⬡!, ⬡, □
 export initialize_grid_locations, initialize_random_locations
-export randn_lonlat
+export setup_periodic_domain, randn_lonlat
 export postprocess_ODESolution, postprocess_ODESolution_simple
 export read_flt, read_mds, read_uvetc, read_drifters
 

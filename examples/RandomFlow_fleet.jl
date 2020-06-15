@@ -44,23 +44,21 @@ p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"../examples/help
 
 # Put grid variables in a dictionary.
 
-# +
-np=24
-
-Γ=SetupPeriodicDomain(np);
+np=12
+Γ=setup_periodic_domain(np);
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # Derive flow field from randomly generated ϕ streamfunction
 # -
 
-𝑃,ϕ=SetupRandomFlow(Γ);
+𝑃,ϕ=setup_random_flow(Γ);
 
 # + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.3 Initial Conditions
 
 # +
-x0=np*(0.2:0.005:0.25)
-y0=np*(0.6:0.005:0.65)
+x0=np*(0.2:0.02:0.3)
+y0=np*(0.7:0.02:0.8)
 
 x0=vec(x0)*ones(1,length(y0))
 y0=ones(size(x0,1),1)*transpose(vec(y0))
@@ -88,10 +86,13 @@ df=postprocess_ODESolution_simple(sol,𝑃);
 # For example, to generate a simple animation:
 #
 # ```
-# include("plot_plots.jl")
+# include("recipes_plots.jl")
 # anim = @animate for t in 0:2.0:maximum(df[!,:t])
 #    phi_and_subset(Γ,ϕ,df,t)
 # end
 # pth=tempdir()*"/"
 # gif(anim, pth*"RandomFlow.gif", fps = 15)
 # ```
+# -
+
+
