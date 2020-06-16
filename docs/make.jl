@@ -1,4 +1,4 @@
-using Documenter, DocumenterMarkdown
+using Documenter
 using IndividualDisplacements
 
 makedocs(
