@@ -17,7 +17,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 [compat]
 CFTime = "0.1"
 CSV = "0.6"
-DataFrames = "0.20, 0.22"
+DataFrames = "0.20, 0.22, 0.21"
 MeshArrays = "0.2.10"
 NetCDF = "0.10"
 OrdinaryDiffEq = "5.29"
