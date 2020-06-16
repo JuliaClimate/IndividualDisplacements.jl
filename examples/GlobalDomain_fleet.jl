@@ -47,7 +47,7 @@ r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
 
 #initialize u0,u1 etc
-uvetc=IndividualDisplacements.read_uvetc(k,0.0,Γ,"nctiles_climatology/");
+uvetc=read_uvetc(k,0.0,Γ,"nctiles_climatology/");
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3. Sample velocity & trajectory computations
@@ -93,8 +93,8 @@ size(sol_one)
 
 # ## 3.1 Initialization & Initial Solution  
 
-#(u0,du)=initialize_grid_locations(uvetc,10);
-(u0,du)=initialize_random_locations(Γ,20000; msk=Γ["hFacC"][:,k]);
+#(u0,du)=initialize_gridded(uvetc,10);
+(u0,du)=initialize_randn(Γ,20000; msk=Γ["hFacC"][:,k]);
 
 # + {"slideshow": {"slide_type": "skip"}}
 u0_store = deepcopy(u0)
@@ -116,7 +116,7 @@ size(sol)
 # Map `i,j` to `lon,lat` coordinates and convert to `DataFrame`
 # -
 
-df=postprocess_ODESolution(sol,uvetc)
+df=postprocess_lonlat(sol,uvetc)
 df[1:4,:]
 
 # + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -130,11 +130,11 @@ u0 = deepcopy(sol[:,:,end])
 println(size(df))
 for y=1:ny
     for m=1:12
-        uvetc=IndividualDisplacements.read_uvetc(k,t0[1],Γ,"nctiles_climatology/")
+        uvetc=read_uvetc(k,t0[1],Γ,"nctiles_climatology/")
         𝑇 = (uvetc["t0"],uvetc["t1"])
         prob = ODEProblem(⬡!,u0,𝑇,uvetc)
         sol = solve(prob,Euler(),dt=uvetc["dt"]/8.0)
-        tmp = postprocess_ODESolution(sol[:,:,2:end],uvetc)
+        tmp = postprocess_lonlat(sol[:,:,2:end],uvetc)
 
         k_reset = rand(1:size(u0_store,2), n_reset)
         k_new = rand(1:size(u0_store,2), n_reset)

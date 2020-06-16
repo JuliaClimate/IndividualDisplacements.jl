@@ -168,7 +168,7 @@ function example3()
    sol[2,:,:]=mod.(sol[2,:,:],180)
    XC=exchange(uvetc["XC"])
    YC=exchange(uvetc["YC"])
-   df=postprocess_ODESolution(sol,XC,YC)
+   df=postprocess_lonlat(sol,XC,YC)
 
    return df
 end
