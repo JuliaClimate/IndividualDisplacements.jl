@@ -29,3 +29,9 @@ p = dirname(pathof(IndividualDisplacements))
 include(joinpath(p ,"../examples/SolidBodyRotation.jl"))
 include(joinpath(p ,"../examples/RandomFlow_fleet.jl"))
 ```
+
+And the movies below are based on `examples/GlobalDomain_fleet.jl`:
+
+[![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
+
+[![simulated particle movie (300m)](https://user-images.githubusercontent.com/20276764/84767001-b89a4400-af9f-11ea-956f-2e207f892c4f.png)](https://youtu.be/M6vAUtIsIIY)
