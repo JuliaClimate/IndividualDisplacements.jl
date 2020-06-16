@@ -19,11 +19,11 @@ function setup_periodic_domain(np::Integer=16)
 end
 
 """
-    postprocess_ODESolution()
+    postprocess_lonlat()
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 """
-function postprocess_ODESolution(sol,XC,YC)
+function postprocess_lonlat(sol,XC,YC)
     ID=collect(1:size(sol,2))*ones(1,size(sol,3))
     x=sol[1,:,:]
     y=sol[2,:,:]
@@ -55,15 +55,15 @@ function postprocess_ODESolution(sol,XC,YC)
     return df
 end
 
-postprocess_ODESolution(sol,uvetc::Dict) = postprocess_ODESolution(sol,uvetc["XC"],uvetc["YC"])
+postprocess_lonlat(sol,uvetc::Dict) = postprocess_lonlat(sol,uvetc["XC"],uvetc["YC"])
 
 """
-    postprocess_ODESolution_simple()
+    postprocess_xy()
 
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_ODESolution_simple(sol,𝑃)
+function postprocess_xy(sol,𝑃)
     nf=size(sol,2)
     nt=size(sol,3)
     nx,ny=size(𝑃["XC"][1])
@@ -167,11 +167,11 @@ function read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
 end
 
 """
-    initialize_grid_locations(uvetc::Dict,n_subset::Int=1)
+    initialize_gridded(uvetc::Dict,n_subset::Int=1)
 
 Define initial condition (u0,du) as a subset of grid points
 """
-function initialize_grid_locations(uvetc::Dict,n_subset::Int=1)
+function initialize_gridded(uvetc::Dict,n_subset::Int=1)
     msk=uvetc["msk"]
     uInitS = Array{Float64,2}(undef, 3, prod(msk.grid.ioSize))
 
@@ -218,13 +218,15 @@ function randn_lonlat(nn=1;seed=missing)
     return lon, lat
 end
 
+
+
 """
-    initialize_random_locations(Γ::Dict,n::Int=1 ; s=missing,msk=missing)
+    initialize_randn(Γ::Dict,n::Int=1 ; s=missing,msk=missing)
 
 Define initial condition (u0,du) using randomly distributed longitude,
 latitude positions on the sphere (randn_lonlat).
 """
-function initialize_random_locations(Γ::Dict,n::Int=1;s=missing,msk=missing)
+function initialize_randn(Γ::Dict,n::Int=1;s=missing,msk=missing)
     (lon, lat) = randn_lonlat(n; seed=s)
     (f,i,j,w,j_f,j_x,j_y)=InterpolationFactors(Γ,lon,lat)
     ii=findall( ((!isnan).(j_x)).&(j_f.!==0) )

@@ -4,6 +4,10 @@ using IndividualDisplacements
 makedocs(
     sitename = "IndividualDisplacements",
     format = Documenter.HTML(),
+    pages = [
+		"Home" => "index.md",
+		"Examples" => "examples.md",
+		"API Guide" => "API.md"],
     modules = [IndividualDisplacements]
 )
 
