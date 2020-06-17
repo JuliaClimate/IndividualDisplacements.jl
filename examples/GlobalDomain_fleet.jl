@@ -21,10 +21,10 @@
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### For More Documentation 
 #
-# - <https://docs.juliadiffeq.org/latest> 
 # - <https://en.wikipedia.org/wiki/Displacement_(vector)>
 # - <https://juliaclimate.github.io/IndividualDisplacements.jl/dev>
 # - <https://juliaclimate.github.io/MeshArrays.jl/dev>
+# - <https://docs.juliadiffeq.org/latest> 
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 1. import software

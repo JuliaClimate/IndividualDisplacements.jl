@@ -25,11 +25,10 @@
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### For More Documentation 
 #
-# - <https://docs.juliadiffeq.org/latest> 
 # - <https://en.wikipedia.org/wiki/Displacement_(vector)>
 # - <https://juliaclimate.github.io/IndividualDisplacements.jl/dev>
 # - <https://juliaclimate.github.io/MeshArrays.jl/dev>
-#
+# - <https://docs.juliadiffeq.org/latest>
 
 # + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.1 Import Software, i.e. `Julia` Packages
@@ -47,7 +46,7 @@ using IndividualDisplacements, MeshArrays
 # +
 np=16
 
-Γ=setup_periodic_domain(np);
+Γ=simple_periodic_domain(np);
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 1.3 Define Time Period & Velocity Field

@@ -57,11 +57,9 @@ phi_and_subset(Γ,ϕ,df,t)
 function phi_and_subset(Γ,ϕ,df,t=missing,dt=5.0)
     ismissing(t) ? t=maximum(df[!,:t]) : nothing
     df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
+    nx,ny=size(ϕ[1])
     contourf(vec(Γ["XC"][1][:,1]),vec(Γ["YC"][1][1,:]),
         transpose(ϕ[1]),c = :blues,linewidth = 0.1)
     scatter!(df_t.x,df_t.y,markersize=2.0,c=:red,
-    xlims=(0,np),ylims=(0,np),leg=:none,marker = (:circle, stroke(0)))
+    xlims=(0,nx),ylims=(0,ny),leg=:none,marker = (:circle, stroke(0)))
 end
-
-
-
