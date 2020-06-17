@@ -7,20 +7,21 @@ test/runtests.jl
 examples/SolidBodyRotation.jl
 ```
 
-![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
+<img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif" width="60%">
 
 Two examples using `⬡!` and `update_locations.jl`:
 
 ```
 examples/RandomFlow_fleet.jl
-examples/GlobalDomain_fleet.jl
 ```
 
-![RandomFlow](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif)
+<img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif" width="60%">
 
-[![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
+and `examples/GlobalDomain_fleet.jl` for the real ocean:
 
-[![simulated particle movie (300m)](https://user-images.githubusercontent.com/20276764/84767001-b89a4400-af9f-11ea-956f-2e207f892c4f.png)](https://youtu.be/M6vAUtIsIIY)
+
+[<img src="https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png" width="49%">](https://youtu.be/W5DNqJG9jt0) [<img src="https://user-images.githubusercontent.com/20276764/84767001-b89a4400-af9f-11ea-956f-2e207f892c4f.png" width="49%">](https://youtu.be/M6vAUtIsIIY)
+
 
 Plotting recipes using three popular plotting packages:
 
