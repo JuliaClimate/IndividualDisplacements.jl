@@ -5,7 +5,7 @@
 Set up a random flow field over the domain specified by Γ
 
 ```
-Γ=setup_periodic_domain(12)
+Γ=simple_periodic_domain(12)
 𝑃,ϕ=setup_random_flow(Γ)
 ```
 """

@@ -1,9 +1,11 @@
 using Documenter
+#using DocumenterMarkdown
 using IndividualDisplacements
 
 makedocs(
     sitename = "IndividualDisplacements",
     format = Documenter.HTML(),
+#    format   = Markdown(),
     pages = [
 		"Home" => "index.md",
 		"Examples" => "examples.md",
