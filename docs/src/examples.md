@@ -15,7 +15,7 @@ Two examples using `⬡!` and `update_locations.jl`:
 examples/RandomFlow_fleet.jl
 ```
 
-<img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif" width="60%">
+[<img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif" width="60%">](../../examples/figs/RandomFlow.gif)
 
 and `examples/GlobalDomain_fleet.jl` for the real ocean:
 
