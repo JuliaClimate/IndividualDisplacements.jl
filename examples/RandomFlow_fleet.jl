@@ -25,10 +25,10 @@
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### For More Documentation
 #
-# - <https://docs.juliadiffeq.org/latest>
 # - <https://en.wikipedia.org/wiki/Displacement_(vector)>
 # - <https://juliaclimate.github.io/IndividualDisplacements.jl/dev>
 # - <https://juliaclimate.github.io/MeshArrays.jl/dev>
+# - <https://docs.juliadiffeq.org/latest>
 
 # + {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.1 Import Software
@@ -45,7 +45,7 @@ p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"../examples/help
 # Put grid variables in a dictionary.
 
 np=12
-Γ=setup_periodic_domain(np);
+Γ=simple_periodic_domain(np,np);
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # Derive flow field from randomly generated ϕ streamfunction
@@ -93,6 +93,3 @@ df=postprocess_xy(sol,𝑃);
 # pth=tempdir()*"/"
 # gif(anim, pth*"RandomFlow.gif", fps = 15)
 # ```
-# -
-
-
