@@ -1,6 +1,6 @@
 using Test
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
-include("test1_setup.jl")
+include("helper_functions.jl")
 
 @testset "MeshArrays tests:" begin
 
