@@ -13,7 +13,6 @@ The `⬡` and `⬡!` functions compute the tracked point / individual / agent ve
 Convenience functions to initialize a simulation and posprocess the output are provided. 
 
 ```@docs
-setup_periodic_domain
 initialize_randn
 initialize_gridded
 postprocess_lonlat
