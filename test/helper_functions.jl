@@ -1,3 +1,14 @@
+"""
+    test1_setup()
+
+Call `gcmgrid`, initialize a single point,
+rely on `⬡`, and just output `sol` at the end.
+
+```
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
+uvetc,sol=test1_setup()
+```
+"""
 function test1_setup()
 
     mygrid=gcmgrid("flt_example/","ll",1,[(80,42)], [80 42], Float32, read, write)
@@ -5,22 +16,46 @@ function test1_setup()
     XG=MeshArray(mygrid,Float32); XG[1]=vec(0.:5000.:395000.0)*ones(1,42);
     YC=MeshArray(mygrid,Float32); YC[1]=ones(80,1)*transpose(vec(2500.:5000.:207500.0));
     YG=MeshArray(mygrid,Float32); YG[1]=ones(80,1)*transpose(vec(0.:5000.:205000.0));
-    GridVariables=Dict("XC" => XC,"YC" => YC,"XG" => XG,"YG" => YG,"dx" => 5000.0);
+    Γ=Dict("XC" => XC,"YC" => YC,"XG" => XG,"YG" => YG,"dx" => 5000.0);
 
     t0=0.0; t1=18001.0*3600.0
     u0=-(YG.-YC[1][40,21])/2000000.; u1=u0
     v0=(XG.-XC[1][40,21])/2000000.; v1=v0
-
-    u0=u0./GridVariables["dx"]
-    u1=u1./GridVariables["dx"]
-    v0=v0./GridVariables["dx"]
-    v1=v1./GridVariables["dx"]
+Γ
+    u0=u0./Γ["dx"]
+    u1=u1./Γ["dx"]
+    v0=v0./Γ["dx"]
+    v1=v1./Γ["dx"]
 
     uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1)
-    return merge(uvt,GridVariables)
+    uvetc = merge(uvt,Γ)
+
+    uInit=[200000.0;0.0]./Γ["dx"]
+    nSteps=3000-2
+    du=fill(0.0,2);
+    tspan = (0.0,nSteps*3600.0)
+    prob = ODEProblem(⬡,uInit,tspan,uvetc)
+    sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+
+    return uvetc,sol
 end
 
+"""
+    test2_periodic_domain(np = 12, nq = 12)
 
+Call `simple_periodic_domain`, initialize 6x6 point cloud,
+rely on `⬡!`, and call `postprocess_xy` at the end.
+
+```
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
+df,Γ,𝑃=test2_periodic_domain()
+
+using Plots
+@gif for t in 𝑃["t0"]:1.0:𝑃["t1"]
+   scatter_subset(Γ,df,t)
+end
+```
+"""
 function test2_periodic_domain(np = 12, nq = 12)
     #domain and time parameters
     Γ = simple_periodic_domain(np, nq)
@@ -51,7 +86,7 @@ function test2_periodic_domain(np = 12, nq = 12)
     prob = ODEProblem(⬡!, u0, 𝑇, 𝑃)
     sol = solve(prob,Euler(),dt=𝑃["dt"])
 
-    return postprocess_xy(sol, 𝑃)
+    return postprocess_xy(sol, 𝑃),Γ,𝑃
 end
 
 """
