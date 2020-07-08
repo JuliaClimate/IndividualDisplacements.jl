@@ -2,18 +2,14 @@ using Test
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
 include("helper_functions.jl")
 
-@testset "MeshArrays tests:" begin
+@testset "test1" begin
+    uvetc,sol=test1_setup()
+    @test isapprox(sol[1,end],23.4474; atol=0.01)
+    @test isapprox(sol[2,end],8.0896; atol=0.01)
+end
 
-    uvetc=test1_setup()
-
-    uInit=[200000.0;0.0]./uvetc["dx"]
-    nSteps=3000-2
-    du=fill(0.0,2);
-    tspan = (0.0,nSteps*3600.0)
-    prob = ODEProblem(⬡,uInit,tspan,uvetc)
-    sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
-
-    @test isapprox(sol[1,end],117237.0./uvetc["dx"]; atol=100.)
-    @test isapprox(sol[2,end],40448.0./uvetc["dx"]; atol=100.)
-
+@testset "test2" begin
+    df,Γ,𝑃=test2_periodic_domain()
+    @test prod(isapprox.(df[end-35:6:end,:y],12*(0.4:0.04:0.6)))
+    @test prod(isapprox.(df[end-5:end,:x],12*(0.4:0.04:0.6).+4.0))
 end
