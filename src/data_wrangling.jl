@@ -200,17 +200,6 @@ function randn_lonlat(nn=1;seed=missing)
 end
 
 """
-    initialize_randn(Γ,n=1 ; s=missing,msk=missing)
-
-Define initial condition (u0,du) using randomly distributed longitude &
-latitude vectors on the sphere (via `randn_lonlat` & `initialize_lonlat`).
-"""
-function initialize_randn(Γ::Dict,n::Int=1;s=missing,msk=missing)
-    (lon, lat) = randn_lonlat(n; seed=s)
-    return initialize_lonlat(Γ,lon,lat;msk=msk)
-end
-
-"""
     initialize_lonlat(Γ,lon,lat ; msk=missing)
 
 Define initial condition (u0,du) in grid coordinates (Γ) from longitude
