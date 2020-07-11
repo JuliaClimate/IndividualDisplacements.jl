@@ -199,16 +199,24 @@ function randn_lonlat(nn=1;seed=missing)
     return lon, lat
 end
 
-
-
 """
-    initialize_randn(Γ::Dict,n::Int=1 ; s=missing,msk=missing)
+    initialize_randn(Γ,n=1 ; s=missing,msk=missing)
 
-Define initial condition (u0,du) using randomly distributed longitude,
-latitude positions on the sphere (randn_lonlat).
+Define initial condition (u0,du) using randomly distributed longitude &
+latitude vectors on the sphere (via `randn_lonlat` & `initialize_lonlat`).
 """
 function initialize_randn(Γ::Dict,n::Int=1;s=missing,msk=missing)
     (lon, lat) = randn_lonlat(n; seed=s)
+    return initialize_lonlat(Γ,lon,lat;msk=msk)
+end
+
+"""
+    initialize_lonlat(Γ,lon,lat ; msk=missing)
+
+Define initial condition (u0,du) in grid coordinates (Γ) from longitude
+& latitude vectors (lon,lat) optionally with a land mask (msk).
+"""
+function initialize_lonlat(Γ::Dict,lon::Array{Float64,1},lat::Array{Float64,1};msk=missing)
     (f,i,j,w,j_f,j_x,j_y)=InterpolationFactors(Γ,lon,lat)
     ii=findall( ((!isnan).(j_x)).&(j_f.!==0) )
     if !ismissing(msk)

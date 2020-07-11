@@ -16,6 +16,7 @@ include("data_wrangling.jl")
 
 export ⬡!, ⬡, □
 export initialize_gridded, initialize_randn, randn_lonlat
+export initialize_lonlat
 export postprocess_lonlat, postprocess_xy
 export read_flt, read_mds, read_uvetc, read_drifters
 

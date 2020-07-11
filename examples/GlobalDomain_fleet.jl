@@ -28,10 +28,14 @@
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 1. import software
-# -
 
+# +
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
-using Statistics, MITgcmTools, DataFrames, Random
+using Statistics, MITgcmTools, DataFrames
+
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/helper_functions.jl"))
+get_grid_if_needed()
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Read gridded variables as `MeshArray`s
@@ -200,6 +204,15 @@ if false
     tt=collect(2000:0.05:2000+ny)
     scene = ProjMap(DL,colorrange=(2.,4.))
     ProjScatterMovie(scene,df,tt,"GlobalDomain_fleet_k"*"$k"*"_v1.mp4",dt=1.0,mrksz=5e3)
+end
+
+if false
+    using Plots
+    t=maximum(df[!,:t])
+    #t=2001.0
+    dt=0.0001
+    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
+    scatter(df_t.lon,df_t.lat,markersize=2.0,c=:red,leg=:none,marker = (:circle, stroke(0)))
 end
 
 
