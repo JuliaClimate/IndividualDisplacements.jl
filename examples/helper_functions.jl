@@ -1,5 +1,16 @@
 
 """
+    get_grid_if_needed()
+
+Download grid and global transport example to `../examples/GRID_LLC90`
+"""
+function get_grid_if_needed()
+    if !isdir("../examples/GRID_LLC90")
+        run(`git clone https://github.com/gaelforget/GRID_LLC90 ../examples/GRID_LLC90`)
+    end
+end
+
+"""
     setup_random_flow(Γ::Dict)
 
 Set up a random flow field over the domain specified by Γ
