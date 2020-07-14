@@ -1,5 +1,6 @@
 .DS_Store
 .ipynb_checkpoints/
+Manifest.toml
 devel
 examples/.ipynb_checkpoints/
 examples/*.ipynb
