@@ -91,10 +91,10 @@ for i=1:100
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
-plt=plot(tmpx,tmpu)
-plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["u0"].f[1][1:10,1],marker=:o)
-plot!(tmpx,tmpv)
-plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["v0"].f[1][1:10,1],marker=:o)
+plt=plot(tmpx,tmpu,label="u (interp)")
+plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["u0"].f[1][1:10,1],marker=:o,label="u (C-grid)")
+plot!(tmpx,tmpv,label="v (interp)")
+plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["v0"].f[1][1:10,1],marker=:o,label="v (C-grid)")
 display(plt)
 
 tmpu=fill(0.0,100)
@@ -106,10 +106,10 @@ for i=1:100
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
-plt=plot(tmpx,tmpu)
-plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["u0"].f[1][1,1:10],marker=:o)
-plot!(tmpx,tmpv)
-plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["v0"].f[1][1,1:10],marker=:o)
+plt=plot(tmpx,tmpu,label="u (interp)")
+plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["u0"].f[1][1,1:10],marker=:o,label="u (C-grid)")
+plot!(tmpx,tmpv,label="v (interp)")
+plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["v0"].f[1][1,1:10],marker=:o,label="v (C-grid)")
 display(plt)
 
 # Compare recomputed velocities with those from `pkg/flt`
@@ -127,10 +127,10 @@ for i=1:nSteps
     tmpv[i]=du[2]
 end
 #
-plt=plot(tmpu)
-plot!(tmpv)
-plot!(refu)
-plot!(refv)
+plt=plot(tmpu,label="u")
+plot!(tmpv,label="v")
+plot!(refu,label="u (ref)")
+plot!(refv,label="v (ref)")
 display(plt)
 
 # ## 6. Recompute trajectories from gridded flow fields
