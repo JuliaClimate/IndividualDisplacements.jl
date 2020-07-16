@@ -25,9 +25,11 @@ using IndividualDisplacements, OrdinaryDiffEq
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/recipes_plots.jl"))
 include(joinpath(p,"../examples/example123.jl"))
+include(joinpath(p,"../examples/helper_functions.jl"))
 
 # ## 2. reload trajectories from `MITgcm/pkg/flt`
 
+get_flt_ex_if_needed()
 dirIn=joinpath(p,"../examples/flt_example/")
 prec=Float32
 df=read_flt(dirIn,prec) #function exported by IndividualDisplacements
