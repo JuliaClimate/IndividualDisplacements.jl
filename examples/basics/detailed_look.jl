@@ -1,27 +1,23 @@
-# -*- coding: utf-8 -*-
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,jl:light
-#     text_representation:
-#       extension: .jl
-#       format_name: light
-#       format_version: '1.4'
-#       jupytext_version: 1.2.4
-#   kernelspec:
-#     display_name: Julia 1.3.1
-#     language: julia
-#     name: julia-1.3
-# ---
-
-# # This notebook
+# # A Detailed Look ...
 #
-# - [x] read gridded output + `float_trajectory*data` => `uvetc` dictionnary.
-# - [x] recompute `u,v` from gridded output
-# - [x] compare with `u,v` from `float_traj*data`
-# - [x] solve for trajectory with `OrdinaryDiffEq.jl` (part of `DifferentialEquations.jl`)
+# ... at spatial interpolation, temporal integration, and input/output
 #
-# _Notes:_ For documentation see <https://gaelforget.github.io/MeshArrays.jl/stable/>, <https://docs.juliadiffeq.org/latest/solvers/ode_solve.html> and <https://en.wikipedia.org/wiki/Displacement_(vector)>
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/detailed_look.ipynb)
+#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/detailed_look.ipynb)
+#
+# - 1. put together `uvetc` dictionnary
+#   - read gridded velocity output (U*data, V*data)
+#   - read trajectory output (`float_traj*data`)
+# - 2. interpolate `U,V` along trajectory from gridded output
+#   - compare with `u,v` from `float_traj*data`
+# - 3. compute whole trajectory using `OrdinaryDiffEq.jl`
+#   - compare with `x(t),y(t)` from `float_traj*data`
+#
+# _Notes:_ For additional documentation see e.g.
+# [1](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
+# [2](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
+# [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
+# [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 
 # ## 1. import software
 
