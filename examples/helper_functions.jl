@@ -2,12 +2,26 @@
 """
     get_grid_if_needed()
 
-Download grid and global transport example to `../examples/GRID_LLC90`
+Download global `MITgcm` grid and transport output to `examples/GRID_LLC90`
 """
 function get_grid_if_needed()
-    if !isdir("../examples/GRID_LLC90")
-        run(`git clone https://github.com/gaelforget/GRID_LLC90 ../examples/GRID_LLC90`)
-    end
+  p=dirname(pathof(IndividualDisplacements))
+  p=joinpath(p,"../examples/GRID_LLC90")
+  r="https://github.com/gaelforget/GRID_LLC90"
+  !isdir(p) ? run(`git clone $r $p`) : nothing
+end
+
+"""
+    get_flt_ex_if_needed()
+
+Download simple grid, velocity, & trajectory output from `MITgcm/pkg/flt`
+to `examples/flt_example`
+"""
+function get_flt_ex_if_needed()
+    p=dirname(pathof(IndividualDisplacements))
+    p=joinpath(p,"../examples/flt_example")
+    r="https://github.com/gaelforget/flt_example"
+    !isdir(p) ? run(`git clone $r $p`) : nothing
 end
 
 """
