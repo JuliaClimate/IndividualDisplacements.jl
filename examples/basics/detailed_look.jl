@@ -28,7 +28,7 @@ include(joinpath(p,"../examples/example123.jl"))
 
 # ## 2. reload trajectories from `MITgcm/pkg/flt`
 
-dirIn="flt_example/"
+dirIn=joinpath(p,"../examples/flt_example/")
 prec=Float32
 df=read_flt(dirIn,prec) #function exported by IndividualDisplacements
 plt=PlotBasic(df,300,100000.0)
