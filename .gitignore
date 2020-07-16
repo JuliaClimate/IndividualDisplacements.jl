@@ -4,6 +4,8 @@ Manifest.toml
 devel
 examples/.ipynb_checkpoints/
 examples/*.ipynb
+examples/*/*.ipynb
+examples/*/*.md
 examples/flt_example
 examples/run_offflt
 examples/llc90_latlon
