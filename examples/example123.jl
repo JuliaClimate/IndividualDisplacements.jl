@@ -15,7 +15,8 @@ PyPlot.figure(); PlotMapProj(df,300); gcf()
 ```
 """
 function example1()
-   dirIn="run_offflt/"
+   p=dirname(pathof(IndividualDisplacements))
+   dirIn=joinpath(p,"../examples/run_offflt/")
    prec=Float32
    df=read_flt(dirIn,prec)
 end
@@ -40,7 +41,8 @@ pl=Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
 ```
 """
 function example2()
-   dirIn="flt_example/"
+   p=dirname(pathof(IndividualDisplacements))
+   dirIn=joinpath(p,"../examples/flt_example/")
    prec=Float32
    df=read_flt(dirIn,prec)
    uvetc=example2_setup()
@@ -79,8 +81,9 @@ function example2_setup()
 
    ###### 1) Get gridded variables via MeshArrays.jl
 
-
-   γ=gcmgrid("flt_example/","PeriodicChannel",1,[(80,42)], [80 42], Float32, read, write)
+   p=dirname(pathof(IndividualDisplacements))
+   dirIn=joinpath(p,"../examples/flt_example/")
+   γ=gcmgrid(dirIn,"PeriodicChannel",1,[(80,42)], [80 42], Float32, read, write)
    nr=8
 
    ## Put grid variables in a dictionary:
@@ -180,7 +183,10 @@ Define gridded variables and return result as Dictionary (`uvetc`).
 """
 function example3_setup()
 
-   γ=gcmgrid("llc90_latlon/","PeriodicChannel",1,
+   p=dirname(pathof(IndividualDisplacements))
+   dirIn=joinpath(p,"../examples/llc90_latlon/")
+
+   γ=gcmgrid(dirIn,"PeriodicChannel",1,
                   [(360,178)], [360 178], Float32, read, write)
 
    Γ=Dict("XC" => read(γ.path*"XC.latlon.data",MeshArray(γ,Float32)),
