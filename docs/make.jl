@@ -8,9 +8,12 @@ notebooks = joinpath(src, "notebooks")
 
 execute = true # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
+lst = ["detailed_look","particle_cloud","random_flow_field","solid_body_rotation"]
+tst1(x) = Bool(sum(isequal.(x, lst)))
+
 for (root, _, files) in walkdir(lit), file in files
     splitext(file)[2] == ".jl" || continue
-	splitext(file)[1] == "detailed_look" || continue
+	tst1(splitext(file)[1]) || continue
     ipath = joinpath(root, file)
     opath = splitdir(replace(ipath, lit=>src))[1]
     println(ipath)
