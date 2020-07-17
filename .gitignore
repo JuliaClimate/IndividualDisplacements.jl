@@ -1,11 +1,15 @@
 .DS_Store
 .ipynb_checkpoints/
+Manifest.toml
 devel
 examples/.ipynb_checkpoints/
 examples/*.ipynb
+examples/*/*.ipynb
+examples/*/*.md
 examples/flt_example
 examples/run_offflt
 examples/llc90_latlon
 examples/GRID_LLC90
 examples/nctiles_climatology
-
+docs/src/basics
+docs/src/notebooks
