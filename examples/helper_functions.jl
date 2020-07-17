@@ -1,5 +1,30 @@
 
 """
+    get_grid_if_needed()
+
+Download global `MITgcm` grid and transport output to `examples/GRID_LLC90`
+"""
+function get_grid_if_needed()
+  p=dirname(pathof(IndividualDisplacements))
+  p=joinpath(p,"../examples/GRID_LLC90")
+  r="https://github.com/gaelforget/GRID_LLC90"
+  !isdir(p) ? run(`git clone $r $p`) : nothing
+end
+
+"""
+    get_flt_ex_if_needed()
+
+Download simple grid, velocity, & trajectory output from `MITgcm/pkg/flt`
+to `examples/flt_example`
+"""
+function get_flt_ex_if_needed()
+    p=dirname(pathof(IndividualDisplacements))
+    p=joinpath(p,"../examples/flt_example")
+    r="https://github.com/gaelforget/flt_example"
+    !isdir(p) ? run(`git clone $r $p`) : nothing
+end
+
+"""
     setup_random_flow(Γ::Dict)
 
 Set up a random flow field over the domain specified by Γ

@@ -28,10 +28,14 @@
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 1. import software
-# -
 
+# +
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
-using Statistics, MITgcmTools, DataFrames, Random
+using Statistics, MITgcmTools, DataFrames
+
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/helper_functions.jl"))
+get_grid_if_needed()
 
 # + {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Read gridded variables as `MeshArray`s
@@ -93,8 +97,18 @@ size(sol_one)
 
 # ## 3.1 Initialization & Initial Solution  
 
+# +
 #(u0,du)=initialize_gridded(uvetc,10);
-(u0,du)=initialize_randn(Γ,20000; msk=Γ["hFacC"][:,k]);
+
+#(lon, lat) = randn_lonlat(20000)
+#(u0,du)=initialize_lonlat(Γ,lon,lat; msk=Γ["hFacC"][:,k]);
+
+lo0,lo1=(-160.0,-150.0)
+la0,la1=(35.0,45.0)
+n=1000
+lon=lo0 .+(lo1-lo0).*rand(n)
+lat=la0 .+(la1-la0).*rand(n)
+(u0,du)=initialize_lonlat(Γ,lon,lat; msk=Γ["hFacC"][:,k]);
 
 # + {"slideshow": {"slide_type": "skip"}}
 u0_store = deepcopy(u0)
@@ -201,5 +215,25 @@ if false
     scene = ProjMap(DL,colorrange=(2.,4.))
     ProjScatterMovie(scene,df,tt,"GlobalDomain_fleet_k"*"$k"*"_v1.mp4",dt=1.0,mrksz=5e3)
 end
+
+# +
+if false
+    using Plots
+    dt=0.0001
+    t0=minimum(df[!,:t])
+    t1=maximum(df[!,:t])
+
+    #t=2001.0
+    t=t1
+    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
+    scatter(df_t.lon,df_t.lat,markersize=1.5,c=:red,leg=:none,
+        xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:circle, stroke(0)))
+    t=t0
+    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
+    scatter!(df_t.lon,df_t.lat,markersize=0.1,c=:blue,leg=:none,
+        xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:dot, stroke(0)))
+
+end
+# -
 
 
