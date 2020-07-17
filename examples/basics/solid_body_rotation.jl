@@ -6,7 +6,7 @@
 # Simulate the trajectory of a particle in a perfectly circular flow (i.e.
 # _solid body rotation_), which may represent e.g. an ocean meso-scale eddy.
 #
-# <img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif" width="60%">
+# [![solid body rotation]("https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif")
 #
 # As an exercise left to the user, directions are provided e.g. to add a convergence / divergence term.
 # For additional documentation e.g. see :
@@ -111,4 +111,3 @@ end
 
 plt=myplot(nt)
 scatter!(plt,[u0[1]],[u0[2]])
-#savefig(plt,pth*"SolidBodyRotation.png")
