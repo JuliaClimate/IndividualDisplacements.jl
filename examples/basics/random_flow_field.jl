@@ -18,7 +18,9 @@
 
 using OrdinaryDiffEq, IndividualDisplacements, MeshArrays
 p=dirname(pathof(MeshArrays)); include(joinpath(p,"../examples/Demos.jl"))
-p=dirname(pathof(IndividualDisplacements)); include(joinpath(p,"../examples/helper_functions.jl"))
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/helper_functions.jl"))
+include(joinpath(p,"../examples/recipes_plots.jl"))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.2 Setup Problem
@@ -65,7 +67,6 @@ df=postprocess_xy(sol,𝑃);
 # For example, generate a simple animation (with `if true`):
 
 if false
-include(joinpath(p,"../examples/recipes_plots.jl"))
 anim = @animate for t in 0:2.0:maximum(df[!,:t])
    phi_and_subset(Γ,ϕ,df,t)
 end
