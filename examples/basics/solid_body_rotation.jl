@@ -1,23 +1,23 @@
 # # Single Particle Simulation
 #
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
+#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
+#
 # Simulate the trajectory of a particle in a perfectly circular flow (i.e.
 # _solid body rotation_), which may represent e.g. an ocean meso-scale eddy.
 #
+# <img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif" width="60%">
+#
 # As an exercise left to the user, directions are provided e.g. to add a convergence / divergence term.
+# For additional documentation e.g. see :
+# [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
+# [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
+# [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
+# [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 #
 # - 1. setup the software and initialize example
 # - 2. simulate trajectories & plot results
 # - 3. experiment with parameters (user)
-#
-#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
-#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
-#
-# ### For More Documentation
-# For additional documentation e.g. see :
-# [1](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
-# [2](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
-# [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
-# [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.1 Import Software
@@ -97,12 +97,14 @@ myplot(i)=plot(x[1:i],y[1:i],linewidth=2,arrow = 2,
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
 
+if false
 p=Int(ceil(nt/100))
 anim = @animate for i ∈ 1:p:nt
     myplot(i)
 end
 pth=tempdir()*"/"
 gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
+end
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:
