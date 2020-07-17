@@ -1,22 +1,14 @@
-# -*- coding: utf-8 -*-
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,jl:light
-#     text_representation:
-#       extension: .jl
-#       format_name: light
-#       format_version: '1.4'
-#       jupytext_version: 1.2.4
-#   kernelspec:
-#     display_name: Julia 1.3.1
-#     language: julia
-#     name: julia-1.3
-# ---
-
-# # This notebook
+# # Particle Cloud Simulation
 #
-# _Notes:_ For more documentation see <https://docs.juliadiffeq.org/latest/solvers/ode_solve.html> and <https://en.wikipedia.org/wiki/Displacement_(vector)>
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/particle_cloud.ipynb)
+#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/particle_cloud.ipynb)
+#
+# This notebook uses the same setup as `detailed_look.jl` / `example2()`.
+# For additional documentation e.g. see :
+# [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
+# [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
+# [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
+# [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 
 # ## 1. Import Software
 
@@ -27,7 +19,6 @@ include(joinpath(p,"../examples/example123.jl"))
 
 # ## 2. Setup Problem
 
-# +
 uvetc=example2_setup()
 
 #ii1=1:10:80; ii2=1:10:42; #->sol is (2, 40, 40065)
@@ -42,7 +33,6 @@ for i1 in eachindex(ii1); for i2 in eachindex(ii2);
         u0[1,i]=ii1[i1]-0.5
         u0[2,i]=ii2[i2]-0.5
 end; end;
-# -
 
 # ## 3. Compute Trajectories
 #
@@ -57,17 +47,12 @@ size(sol)
 
 # ## 4. Display results
 
-# +
 ID=collect(1:size(sol,2))*ones(1,size(sol,3))
 lon=5000* mod.(sol[1,:,:],80); lat=5000* mod.(sol[2,:,:],42)
 df = DataFrame(ID=Int.(ID[:]), lon=lon[:], lat=lat[:])
-
 plt=PlotBasic(df,size(sol,2),100000.0)
-display(plt)
-# -
 
-df_from_mitgcm=read_flt("flt_example/",Float32)
+# Compare with trajectory output from `MITgcm`
+
+df_from_mitgcm=read_flt(joinpath(p,"../examples/flt_example/"),Float32)
 plt=PlotBasic(df_from_mitgcm,40,100000.0)
-display(plt)
-
-

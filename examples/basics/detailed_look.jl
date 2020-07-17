@@ -1,9 +1,16 @@
-# # A Detailed Look ...
-#
-# ... at spatial interpolation, temporal integration, and input/output
+# # A Detailed Look
 #
 #md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/detailed_look.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/detailed_look.ipynb)
+#
+# A Detailed Look at spatial interpolation, temporal integration, and input/output.
+# For additional documentation e.g. see :
+# [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
+# [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
+# [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
+# [4](https://en.wikipedia.org/wiki/Displacement_(vector))
+#
+# In this example we :
 #
 # - put together `uvetc` dictionnary
 #   - read gridded velocity output (U*data, V*data)
@@ -12,12 +19,6 @@
 #   - compare with `u,v` from `float_traj*data`
 # - compute whole trajectory using `OrdinaryDiffEq.jl`
 #   - compare with `x(t),y(t)` from `float_traj*data`
-#
-# _Notes:_ For additional documentation see e.g.
-# [1](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
-# [2](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
-# [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
-# [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 
 # ## 1. Import Software
 
@@ -27,7 +28,7 @@ include(joinpath(p,"../examples/recipes_plots.jl"))
 include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"));
 
-# ## 2. Reload Trajectory Output
+# ## 2. Read Trajectory Output
 #
 # from `MITgcm/pkg/flt`
 
@@ -72,7 +73,7 @@ z=transpose(uvetc["mskW"][1].*uvetc["v0"][1,1])
 plt=contourf(x,y,z,c=:delta)
 plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
-# ## 6. Interpolate Velocities From Gridded Fields
+# ## 6. Interpolate Velocities
 
 uInit=[tmp[1,:lon];tmp[1,:lat]]./uvetc["dx"]
 nSteps=Int32(tmp[end,:time]/3600)-2
@@ -129,9 +130,8 @@ plt=plot(tmpu,label="u")
 plot!(tmpv,label="v")
 plot!(refu,label="u (ref)")
 plot!(refv,label="v (ref)")
-display(plt)
 
-# ## 6. Recompute Entire Trajectories
+# ## 6. Compute Trajectories
 #
 # Solve through time using `OrdinaryDiffEq.jl` with
 #
@@ -148,9 +148,8 @@ prob = ODEProblem(⬡,uInit,tspan,uvetc)
 sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 sol[1:4]
 
-# Compare recomputed trajectories with those from `pkg/flt`
+# Compare recomputed trajectories with originals from `MITgcm/pkg/flt`
 
-# +
 ref=transpose([tmp[1:nSteps,:lon] tmp[1:nSteps,:lat]])
 maxLon=80*5.e3
 maxLat=42*5.e3
