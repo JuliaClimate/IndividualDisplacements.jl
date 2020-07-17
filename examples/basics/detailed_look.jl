@@ -5,12 +5,12 @@
 #md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/detailed_look.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/detailed_look.ipynb)
 #
-# - 1. put together `uvetc` dictionnary
+# - put together `uvetc` dictionnary
 #   - read gridded velocity output (U*data, V*data)
 #   - read trajectory output (`float_traj*data`)
-# - 2. interpolate `U,V` along trajectory from gridded output
+# - interpolate `U,V` along trajectory from gridded output
 #   - compare with `u,v` from `float_traj*data`
-# - 3. compute whole trajectory using `OrdinaryDiffEq.jl`
+# - compute whole trajectory using `OrdinaryDiffEq.jl`
 #   - compare with `x(t),y(t)` from `float_traj*data`
 #
 # _Notes:_ For additional documentation see e.g.
@@ -19,15 +19,17 @@
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 
-# ## 1. import software
+# ## 1. Import Software
 
 using IndividualDisplacements, OrdinaryDiffEq
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/recipes_plots.jl"))
 include(joinpath(p,"../examples/example123.jl"))
-include(joinpath(p,"../examples/helper_functions.jl"))
+include(joinpath(p,"../examples/helper_functions.jl"));
 
-# ## 2. reload trajectories from `MITgcm/pkg/flt`
+# ## 2. Reload Trajectory Output
+#
+# from `MITgcm/pkg/flt`
 
 get_flt_ex_if_needed()
 dirIn=joinpath(p,"../examples/flt_example/")
@@ -35,23 +37,21 @@ prec=Float32
 df=read_flt(dirIn,prec) #function exported by IndividualDisplacements
 plt=PlotBasic(df,300,100000.0)
 
-# ## 3. Read gridded variables via `MeshArrays.jl`
+# ## 3. Read Gridded Variables
 #
-# Put gridded variables in a dictionary.
+# via `MeshArrays.jl` and into a dictionary
 
 uvetc=example2_setup()
 
-# ## 4. Visualize velocity fields
+# ## 4. Visualize Velocity Fields
 
 plt=heatmap(uvetc["mskW"][1,1].*uvetc["u0"][1,1],title="U at the start")
-display(plt)
 
 plt=heatmap(uvetc["mskW"][1,1].*uvetc["u1"][1,1]-uvetc["u0"][1,1],title="U end - U start")
-display(plt)
 
-# ## 5. Visualize trajectories from `MITgcm/pkg/flt`
+# ## 5. Visualize Trajectories
 #
-# Select one trajectory
+# (select one trajectory)
 
 tmp=df[df.ID .== 200, :]
 tmp[1:4,:]
@@ -72,7 +72,7 @@ z=transpose(uvetc["mskW"][1].*uvetc["v0"][1,1])
 plt=contourf(x,y,z,c=:delta)
 plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
-# ## 6. Recompute displacements from gridded flow fields
+# ## 6. Interpolate Velocities From Gridded Fields
 
 uInit=[tmp[1,:lon];tmp[1,:lat]]./uvetc["dx"]
 nSteps=Int32(tmp[end,:time]/3600)-2
@@ -93,7 +93,8 @@ plt=plot(tmpx,tmpu,label="u (interp)")
 plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["u0"].f[1][1:10,1],marker=:o,label="u (C-grid)")
 plot!(tmpx,tmpv,label="v (interp)")
 plot!(uvetc["XG"].f[1][1:10,1]./uvetc["dx"],uvetc["v0"].f[1][1:10,1],marker=:o,label="v (C-grid)")
-display(plt)
+
+# And similarly in the other direction
 
 tmpu=fill(0.0,100)
 tmpv=fill(0.0,100)
@@ -108,7 +109,6 @@ plt=plot(tmpx,tmpu,label="u (interp)")
 plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["u0"].f[1][1,1:10],marker=:o,label="u (C-grid)")
 plot!(tmpx,tmpv,label="v (interp)")
 plot!(uvetc["YG"].f[1][1,1:10]./uvetc["dx"],uvetc["v0"].f[1][1,1:10],marker=:o,label="v (C-grid)")
-display(plt)
 
 # Compare recomputed velocities with those from `pkg/flt`
 
@@ -131,7 +131,7 @@ plot!(refu,label="u (ref)")
 plot!(refv,label="v (ref)")
 display(plt)
 
-# ## 6. Recompute trajectories from gridded flow fields
+# ## 6. Recompute Entire Trajectories
 #
 # Solve through time using `OrdinaryDiffEq.jl` with
 #
@@ -166,4 +166,3 @@ ref=ref./uvetc["dx"]
 plt=plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
 plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,label="MITgcm Solution")
-display(plt)
