@@ -11,7 +11,7 @@
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 #
-# <img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif" width="60%">
+# [![particles in random flow]("https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif")
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.1 Import Software
