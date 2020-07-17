@@ -8,18 +8,19 @@ notebooks = joinpath(src, "notebooks")
 
 execute = true # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
-lst = ["detailed_look","particle_cloud","random_flow_field","solid_body_rotation"]
-tst1(x) = Bool(sum(isequal.(x, lst)))
+
+lst1 = ["detailed_look","particle_cloud","solid_body_rotation","random_flow_field","global_ocean_circulation"]
+lst2 = ["detailed_look","particle_cloud","solid_body_rotation","random_flow_field"]
+tst1(x) = Bool(sum(isequal.(x, lst1)))
+tst2(x) = Bool(sum(isequal.(x, lst2)))
 
 for (root, _, files) in walkdir(lit), file in files
     splitext(file)[2] == ".jl" || continue
 	tst1(splitext(file)[1]) || continue
     ipath = joinpath(root, file)
     opath = splitdir(replace(ipath, lit=>src))[1]
-    println(ipath)
-    println(opath)
     Literate.markdown(ipath, opath, documenter = execute)
-    nb && Literate.notebook(ipath, notebooks, execute = execute)
+    nb && Literate.notebook(ipath, notebooks, execute = execute*tst2(splitext(file)[1]))
 end
 
 # Documentation structure
@@ -33,6 +34,7 @@ makedocs(
 		"Home" => "index.md",
 		"Examples" => "examples.md",
 		"Basic Examples" => pages("basics"),
+		"Global Examples" => pages("worldwide"),
 		"API Guide" => "API.md"],
     modules = [IndividualDisplacements]
 )

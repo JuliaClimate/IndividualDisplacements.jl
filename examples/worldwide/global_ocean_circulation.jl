@@ -1,16 +1,17 @@
-# # Global Ocean Particle Simulation Example
+# # Global Ocean Simulation
 #
-# Particles moving with climatological monthly mean flow at selected depth level (e.g. `k=10` for 95 m) based on an ocean state estimate (ECCO v4 r2 from https://ecco-group.org).
-
 #md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
 #
-# ### For More Documentation
+# Particles moving with climatological monthly mean flow at selected depth level
+# (e.g. `k=10` for 95 m) based on an ocean state estimate (ECCO v4 r2 from https://ecco-group.org).
 # For additional documentation e.g. see :
 # [1](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 # [2](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
+#
+# [![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 1. import software
@@ -19,6 +20,7 @@ using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
 using Statistics, MITgcmTools, DataFrames
 
 p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/recipes_plots.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
 get_grid_if_needed()
 
@@ -30,12 +32,12 @@ ny=10 #number of simulated years (20 for k>20)
 r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 
 #read grid and set up connections between subdomains
-γ=GridSpec("LatLonCap","GRID_LLC90/")
+γ=GridSpec("LatLonCap",joinpath(p,"../examples/GRID_LLC90/"))
 Γ=GridLoad(γ)
 Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
 
 #initialize u0,u1 etc
-uvetc=read_uvetc(k,0.0,Γ,"nctiles_climatology/");
+uvetc=read_uvetc(k,0.0,Γ,joinpath(p,"../examples/nctiles_climatology/"));
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3. Sample velocity & trajectory computations
@@ -89,12 +91,13 @@ size(sol_one)
 
 lo0,lo1=(-160.0,-150.0)
 la0,la1=(35.0,45.0)
-n=1000
+n=100
 lon=lo0 .+(lo1-lo0).*rand(n)
 lat=la0 .+(la1-la0).*rand(n)
 (u0,du)=initialize_lonlat(Γ,lon,lat; msk=Γ["hFacC"][:,k]);
 
 #nb # %% {"slideshow": {"slide_type": "skip"}}
+
 u0_store = deepcopy(u0)
 n_store = size(u0_store,2)
 
@@ -127,7 +130,7 @@ u0 = deepcopy(sol[:,:,end])
 println(size(df))
 for y=1:ny
     for m=1:12
-        uvetc=read_uvetc(k,t0[1],Γ,"nctiles_climatology/")
+        uvetc=read_uvetc(k,t0[1],Γ,joinpath(p,"../examples/nctiles_climatology/"))
         𝑇 = (uvetc["t0"],uvetc["t1"])
         prob = ODEProblem(⬡!,u0,𝑇,uvetc)
         sol = solve(prob,Euler(),dt=uvetc["dt"]/8.0)
@@ -172,6 +175,7 @@ end
 # Or first create `lon`, `lat`, and `DL` to use in plot background:
 
 #nb # %% {"slideshow": {"slide_type": "skip"}}
+
 nf=size(u0,2)
 nt=size(df,1)/nf
 t=[ceil(i/nf)-1 for i in 1:nt*nf]
@@ -186,7 +190,7 @@ DL[findall((!isfinite).(DL))].=NaN
 DL=reshape(DL,size(lon));
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Generate movie using `GeoMakie.jl` (if `true`)
+# Generate plot or movie using `GeoMakie.jl` (if `true`)
 
 if false
     using ArgoData
@@ -197,22 +201,21 @@ if false
 end
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Generate movie using `Plots.jl` (if `true`)
+# Generate plot or movie using `Plots.jl`
 
-if false
-    using Plots
-    dt=0.0001
-    t0=minimum(df[!,:t])
-    t1=maximum(df[!,:t])
+contourf(lon[:,1],lat[1,:],transpose(DL),clims=(1.5,5),c = :ice, colorbar=false)
 
-    #t=2001.0
-    t=t1
-    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
-    scatter(df_t.lon,df_t.lat,markersize=1.5,c=:red,leg=:none,
-        xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:circle, stroke(0)))
-    t=t0
-    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
-    scatter!(df_t.lon,df_t.lat,markersize=0.1,c=:blue,leg=:none,
-        xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:dot, stroke(0)))
+dt=0.0001
+t0=minimum(df[!,:t])
+t1=maximum(df[!,:t])
+#t=2001.0
 
-end
+t=t1
+df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
+scatter!(df_t.lon,df_t.lat,markersize=3.0,c=:red,leg=:none,
+    xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:circle, stroke(0)))
+
+t=t0
+df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
+scatter!(df_t.lon,df_t.lat,markersize=3.0,c=:yellow,leg=:none,
+    xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:dot, stroke(0)))
