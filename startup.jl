@@ -16,4 +16,6 @@ get_from_dataverse("VVELMASS","nctiles_climatology/")
 
 using Pkg; Pkg.add("Documenter");
 cd(joinpath(p,"../docs/"))
-include("make.jl")
+#include("make.jl")
+println(pwd())
+println(readdir())
