@@ -28,9 +28,10 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 get_grid_if_needed()
 
 #velocity files:
-q=dirname(pathof(OceanStateEstimation))
-run(`cp $q/../examples/nctiles_climatology.csv $p/../examples/`)
 pp="$p/../examples/nctiles_climatology"
+q=dirname(pathof(OceanStateEstimation))
+qq="$q/../examples/nctiles_climatology"
+!isfile(pp*".csv") ? run(`cp $qq.csv $pp.csv`) : nothing
 !isdir(pp) ? run(`mkdir $pp`) : nothing
 !isdir(pp*"/UVELMASS") ? get_from_dataverse("UVELMASS",pp) : nothing
 !isdir(pp*"/VVELMASS") ? get_from_dataverse("VVELMASS",pp) : nothing
