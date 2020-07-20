@@ -212,10 +212,12 @@ function initialize_lonlat(Γ::Dict,lon::Array{Float64,1},lat::Array{Float64,1};
         jj=[msk[Int(j_f[i]),1][ Int(round(j_x[i] .+ 0.5)), Int(round(j_y[i] .+ 0.5)) ] for i in ii]
         ii=ii[findall(jj.>0.0)]
     end
-    u0=transpose([j_x[ii] j_y[ii] j_f[ii]])
+    u0=Array(transpose([j_x[ii] j_y[ii] j_f[ii]]))
     du=similar(u0)
     return u0,du
 end
+
+initialize_lonlat(Γ::Dict,lon::Float64,lat::Float64;msk=missing) = initialize_lonlat(Γ,[lon],[lat];msk=msk)
 
 """
     read_velocities(γ::gcmgrid,t::Int,pth::String)
