@@ -13,3 +13,7 @@ run(`cp $q/../examples/nctiles_climatology.csv $p/../examples/`)
 run(`mkdir nctiles_climatology`)
 get_from_dataverse("UVELMASS","nctiles_climatology/")
 get_from_dataverse("VVELMASS","nctiles_climatology/")
+
+using Pkg; Pkg.add("Documenter");
+cd(joinpath(p,"../docs/"))
+include("make.jl")
