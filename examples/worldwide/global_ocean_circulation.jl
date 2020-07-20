@@ -14,18 +14,33 @@
 # [![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 1. import software
+# ## 1. Get Software & Iput Files
+#
+# - packages + helper functions
+# - grid and velocity files
 
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
-using Statistics, MITgcmTools, DataFrames
+using Statistics, DataFrames, MITgcmTools, OceanStateEstimation
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/recipes_plots.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
 get_grid_if_needed()
 
+#velocity files:
+q=dirname(pathof(OceanStateEstimation))
+run(`cp $q/../examples/nctiles_climatology.csv $p/../examples/`)
+pp="$p/../examples/nctiles_climatology"
+!isdir(pp) ? run(`mkdir $pp`) : nothing
+!isdir(pp*"/UVELMASS") ? get_from_dataverse("UVELMASS",pp) : nothing
+!isdir(pp*"/VVELMASS") ? get_from_dataverse("VVELMASS",pp) : nothing
+
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 2. Read gridded variables as `MeshArray`s
+# ## 2. Set Up Parameters & Inputs
+#
+# - depth level and duration
+# - read grid variables
+# - read & normalize velocities
 
 k=10 #choice of vertical level
 ny=10 #number of simulated years (20 for k>20)
@@ -40,54 +55,38 @@ r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 uvetc=read_uvetc(k,0.0,Γ,joinpath(p,"../examples/nctiles_climatology/"));
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 3. Sample velocity & trajectory computations
+# ### Single interpolation & trajectory Test
+#
+# Interpolate Velocity (normalized)
+(u0,du)=initialize_lonlat(Γ,-160.1,35.1; msk=Γ["hFacC"][:,k]);
+⬡!(du,u0,uvetc,0.0);
+#u,v,f=du[:]
 
-#initial condition
-uInit=[45.0,100.0,1.0]
-du=fill(0.0,3);
+# Solve for trajectory
 
-#velocity computation over neighbor sample
-ii=uInit[1]-3:0.1:uInit[1]+3
-jj=uInit[2]-3:0.1:uInit[2]+3
-ff=ones(size(jj))
-
-s=size(ii)
-(u,v,f)=[zeros(s),zeros(s),zeros(s)]
-for i in eachindex(ii)
-    ⬡!(du,[ii[i];jj[i];ff[i]],uvetc,0.0)
-    u[i],v[i],f[i]=du
-end
-
-#nb # %% {"slideshow": {"slide_type": "subslide"}}
-#using plots
-#plt=plot(u)
-#plot!(v)
-#display(plt)
-
-#nb # %% {"slideshow": {"slide_type": "subslide"}}
-#Solve for single trajectory (uInit)
 𝑇 = (0.0,uvetc["t1"])
-prob = ODEProblem(⬡!,uInit,𝑇,uvetc)
-sol_one = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
-sol_two = solve(prob,Euler(),dt=1e6)
-size(sol_one)
+prob = ODEProblem(⬡!,u0,𝑇,uvetc)
+sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4);
+#sol = solve(prob,Euler(),dt=1e6)
+#size(sol)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Main Computation Loop
 #
 # - initial particle positions randomly over Global Ocean
 # - initial integration from time 0 to 0.5 month
-# - update velocity fields & repeat for n years
+# - update velocity fields & repeat for ny years
 
 # ## 3.1 Initialization & Initial Solution
 #
+# Initial Positions:
 
 #(u0,du)=initialize_gridded(uvetc,10)
 
 #(lon, lat) = randn_lonlat(20000)
 #(u0,du)=initialize_lonlat(Γ,lon,lat; msk=Γ["hFacC"][:,k])
 
-# Or
+#Or
 
 lo0,lo1=(-160.0,-150.0)
 la0,la1=(35.0,45.0)
@@ -96,32 +95,30 @@ lon=lo0 .+(lo1-lo0).*rand(n)
 lat=la0 .+(la1-la0).*rand(n)
 (u0,du)=initialize_lonlat(Γ,lon,lat; msk=Γ["hFacC"][:,k]);
 
-#nb # %% {"slideshow": {"slide_type": "skip"}}
-
+# Arrays For Storing Results
 u0_store = deepcopy(u0)
-n_store = size(u0_store,2)
+n_store = size(u0_store,2);
 
 # Fraction of the particles reset per month
 
 #r_reset = 0.05
-n_reset = Int(round(r_reset*n_store))
+n_reset = Int(round(r_reset*n_store));
 #k_reset = rand(1:size(u0_store,2), n_reset)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # Solve for all trajectories for first 1/2 month
 
 prob = ODEProblem(⬡!,u0,𝑇,uvetc)
-sol = solve(prob,Euler(),dt=uvetc["dt"]/8.0)
-size(sol)
+sol = solve(prob,Euler(),dt=uvetc["dt"]/8.0);
+#size(sol)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Map `i,j` to `lon,lat` coordinates and convert to `DataFrame`
+# Map `i,j` to `lon,lat` coordinates and convert to `DataFrames`
 
 df=postprocess_lonlat(sol,uvetc)
-df[1:4,:]
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 3.2 Repeat `ny` Years x 12 Months
+# ## 3.2 Repeat For `ny*12` Months
 #
 # _A fraction of the particles, randomly selected, is reset every month to maintain a relatively homogeneous coverage of the Global Ocean by the fleet of particles._
 
@@ -155,7 +152,7 @@ end
 #
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Try `PlotBasic`, `PlotMapProj`, or `PlotMakie`
+# Examples Using Various Plotting Packages are provided below.
 
 #p=dirname(pathof(IndividualDisplacements))
 #nn=1000
@@ -172,9 +169,7 @@ end
 ##Makie.save("LatLonCap300mDepth.png", scene)
 
 #nb # %% {"slideshow": {"slide_type": "skip"}, "cell_type": "markdown"}
-# Or first create `lon`, `lat`, and `DL` to use in plot background:
-
-#nb # %% {"slideshow": {"slide_type": "skip"}}
+# Here we create `lon`, `lat`, and `DL` (log10 of bottom depth) to use in plot background:
 
 nf=size(u0,2)
 nt=size(df,1)/nf
@@ -190,18 +185,16 @@ DL[findall((!isfinite).(DL))].=NaN
 DL=reshape(DL,size(lon));
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Generate plot or movie using `GeoMakie.jl` (if `true`)
+# Then we generate plot or movie using `GeoMakie.jl` ...
 
-if false
-    using ArgoData
-    p = include(joinpath(dirname(pathof(ArgoData)),"movies.jl"));
-    tt=collect(2000:0.05:2000+ny)
-    scene = ProjMap(DL,colorrange=(2.,4.))
-    ProjScatterMovie(scene,df,tt,"GlobalDomain_fleet_k"*"$k"*"_v1.mp4",dt=1.0,mrksz=5e3)
-end
+#using ArgoData
+#p = include(joinpath(dirname(pathof(ArgoData)),"movies.jl"));
+#tt=collect(2000:0.05:2000+ny)
+#scene = ProjMap(DL,colorrange=(2.,4.))
+#ProjScatterMovie(scene,df,tt,"GlobalDomain_fleet_k"*"$k"*"_v1.mp4",dt=1.0,mrksz=5e3)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Generate plot or movie using `Plots.jl`
+# ... or using `Plots.jl`:
 
 contourf(lon[:,1],lat[1,:],transpose(DL),clims=(1.5,5),c = :ice, colorbar=false)
 
