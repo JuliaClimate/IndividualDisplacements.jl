@@ -21,7 +21,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 CFTime = "0.1"
-CSV = "0.6"
+CSV = "0.6, 0.7"
 ColorSchemes = "3.9"
 DataFrames = "0.21"
 Literate = "2.5"
