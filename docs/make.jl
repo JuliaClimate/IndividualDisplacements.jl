@@ -32,7 +32,7 @@ makedocs(
     format = Documenter.HTML(),
     pages = [
 		"Home" => "index.md",
-		"Examples" => "examples.md",
+		"List Of Examples" => "examples.md",
 		"Basic Examples" => pages("basics"),
 		"Global Examples" => pages("worldwide"),
 		"API Guide" => "API.md"],
