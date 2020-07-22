@@ -22,3 +22,4 @@ for (root, _, files) in walkdir(lit), file in files
     Literate.markdown(ipath, opath, documenter = execute)
     nb && Literate.notebook(ipath, notebooks, execute = execute*tst2(splitext(file)[1]))
 end
+

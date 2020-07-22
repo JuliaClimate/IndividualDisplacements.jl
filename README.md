@@ -3,7 +3,9 @@
 [![Travis Build Status](https://travis-ci.org/JuliaClimate/IndividualDisplacements.jl.svg?branch=master)](https://travis-ci.org/JuliaClimate/IndividualDisplacements.jl)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaClimate.github.io/IndividualDisplacements.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev)
+
 [![DOI](https://zenodo.org/badge/208676176.svg)](https://zenodo.org/badge/latestdoi/208676176)
+[![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1)
 
 **IndividualDisplacements.jl** computes point displacements over a gridded domain. It is geared towards the analysis of Climate, Ocean, etc models (`Arakawa C-grids` are natively supported) and the simulation of material transports within the Earth System (e.g. plastics or planktons in the Ocean; dusts or chemicals in the Atmosphere). 
 
