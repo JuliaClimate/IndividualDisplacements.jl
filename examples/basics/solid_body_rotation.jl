@@ -54,18 +54,25 @@ i=Int(np/2+1)
 u=-(Γ["YG"].-Γ["YG"][1][i,i])
 v=(Γ["XG"].-Γ["XG"][1][i,i])
 
-γ=Γ["XC"].grid
-w=fill(1.0,MeshArray(γ,γ.ioPrec,nz))
-
 #add some convergence to / divergence from central location
 d=0.0
-#d=-0.10
+d=-0.01
 u=u+d*(Γ["XG"].-Γ["XG"][1][i,i])
 v=v+d*(Γ["YG"].-Γ["YG"][1][i,i])
 
+#"vertical" component w
+γ=Γ["XC"].grid
+w=fill(1.0,MeshArray(γ,γ.ioPrec,nz))
+
+#replicate u,v "vertically"
+uu=MeshArray(γ,γ.ioPrec,nz)
+[uu[k]=u[1] for k=1:nz]
+vv=MeshArray(γ,γ.ioPrec,nz)
+[vv[k]=v[1] for k=1:nz]
+
 #store everything in a dictionnary
-𝑃=Dict("u0" => u, "u1" => u, "v0" => v, "v1" => v,
-       "w0" => 0.0*w, "w1" => 0.01*w, "t0" => t0, "t1" => t1)
+𝑃=Dict("u0" => uu, "u1" => uu, "v0" => vv, "v1" => vv,
+       "w0" => 0.0*w, "w1" => -0.01*w, "t0" => t0, "t1" => t1)
 𝑃=merge(𝑃,Γ);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}

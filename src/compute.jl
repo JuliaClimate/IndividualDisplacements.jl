@@ -93,15 +93,15 @@ function VelComp(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
         #println(du)
     end
     #interpolate u to position and time
-    du[1]=(1.0-dx)*(1.0-dt)*p["u0"].f[1][i_w,j_c]+
-    dx*(1.0-dt)*p["u0"].f[1][i_e,j_c]+
-    (1.0-dx)*dt*p["u1"].f[1][i_w,j_c]+
-    dx*dt*p["u1"].f[1][i_e,j_c]
+    du[1]=(1.0-dx)*(1.0-dt)*p["u0"].f[1,k_c][i_w,j_c]+
+    dx*(1.0-dt)*p["u0"].f[1,k_c][i_e,j_c]+
+    (1.0-dx)*dt*p["u1"].f[1,k_c][i_w,j_c]+
+    dx*dt*p["u1"].f[1,k_c][i_e,j_c]
     #interpolate v to position and time
-    du[2]=(1.0-dy)*(1.0-dt)*p["v0"].f[1][i_c,j_s]+
-    dy*(1.0-dt)*p["v0"].f[1][i_c,j_n]+
-    (1.0-dy)*dt*p["v1"].f[1][i_c,j_s]+
-    dy*dt*p["v1"].f[1][i_c,j_n]
+    du[2]=(1.0-dy)*(1.0-dt)*p["v0"].f[1,k_c][i_c,j_s]+
+    dy*(1.0-dt)*p["v0"].f[1,k_c][i_c,j_n]+
+    (1.0-dy)*dt*p["v1"].f[1,k_c][i_c,j_s]+
+    dy*dt*p["v1"].f[1,k_c][i_c,j_n]
     #interpolate w to position and time
     du[3]=(1.0-dz)*(1.0-dt)*p["w0"].f[1,k_l][i_c,j_c]+
     dz*(1.0-dt)*p["w0"].f[1,k_r][i_c,j_c]+
