@@ -46,6 +46,7 @@ np=16
 t0=0.0
 t1=0.95*2*pi
 #t1=2.95*2*pi
+t1=19.95*2*pi
 
 #solid-body rotation around central location
 i=Int(np/2+1)
@@ -65,8 +66,8 @@ v=v+d*(Γ["YG"].-Γ["YG"][1][i,i])
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.4 Initial Position and Time
 
-u0=np*[1/3,1/3]
-du=fill(0.0,2)
+u0=np*[1/3,1/3,0]
+du=fill(0.0,3)
 𝑇 = (𝑃["t0"],𝑃["t1"]);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -80,7 +81,7 @@ du=fill(0.0,2)
 prob = ODEProblem(⬡,u0,𝑇,𝑃)
 sol = solve(prob,Tsit5(),reltol=1e-8)
 
-x,y=sol[1,:],sol[2,:]
+x,y,z=sol[1,:],sol[2,:],sol[3,:]
 nt=length(x)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -90,9 +91,9 @@ nt=length(x)
 # - generate animation using `myplot`
 # - single plot example using `myplot`
 
-myplot(i)=plot(x[1:i],y[1:i],linewidth=2,arrow = 2,
+myplot(i)=plot(x[1:i],y[1:i],z[1:i],linewidth=2,arrow = 2,
     title="Solid body rotation / Spiral example",leg=false,
-    xaxis="x",yaxis="y",xlims=(0,np),ylims=(0,np))
+    xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
@@ -110,4 +111,5 @@ end
 # Single plot example:
 
 plt=myplot(nt)
-scatter!(plt,[u0[1]],[u0[2]])
+scatter!(plt,[u0[1]],[u0[2]],[u0[3]])
+scatter!(plt,[x[end]],[y[end]],[z[end]])
