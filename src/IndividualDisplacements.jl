@@ -14,7 +14,7 @@ include("data_wrangling.jl")
 ⬡ = VelComp
 □ = VelCopy
 
-export ⬡!, ⬡, □
+export ⬡!, ⬡, □, duvw
 export initialize_gridded, initialize_lonlat, randn_lonlat
 export postprocess_lonlat, postprocess_xy
 export read_flt, read_mds, read_uvetc, read_drifters
