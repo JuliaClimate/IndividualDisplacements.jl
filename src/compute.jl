@@ -67,19 +67,24 @@ function VelComp(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     #compute positions in index units
     dt=(tim-p["t0"])/(p["t1"]-p["t0"])
     #
-    x,y = u[1:2]
+    x,y,z = u[1:3]
     nx,ny=p["u0"].grid.ioSize
     x,y=[mod(x,nx),mod(y,ny)]
+    #nz=missing
+    #z=mod(z,nz)
     #
-    dx,dy=[x - floor(x),y - floor(y)]
-    i_c,j_c = Int32.(floor.([x y])) .+ 1
+    dx,dy,dz=[x - floor(x),y - floor(y),z - floor(z)]
+    i_c,j_c,k_c = Int32.(floor.([x y z])) .+ 1
     i_c==0 ? i_c=nx : nothing
     j_c==0 ? j_c=ny : nothing
+    #k_c==0 ? k_c=nz : nothing
     #
     i_w,i_e=[i_c i_c+1]
     x>=nx-1 ? (i_w,i_e)=(nx,1) : nothing
     j_s,j_n=[j_c j_c+1]
     y>=ny-1 ? (j_s,j_n)=(ny,1) : nothing
+    #k_l,k_r=[k_c k_c+1]
+    #z>=nz-1 ? (k_l,k_r)=(nz,1) : nothing
     #debugging stuff
     if false
         println((x,y,i_c,j_c))
@@ -97,6 +102,12 @@ function VelComp(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     dy*(1.0-dt)*p["v0"].f[1][i_c,j_n]+
     (1.0-dy)*dt*p["v1"].f[1][i_c,j_s]+
     dy*dt*p["v1"].f[1][i_c,j_n]
+    #interpolate w to position and time
+    #du[3]=(1.0-dz)*(1.0-dt)*p["w0"].f[1][i_c,j_c,k_l]+
+    #dz*(1.0-dt)*p["w0"].f[1][i_c,j_c,k_r]+
+    #(1.0-dz)*dt*p["w1"].f[1][i_c,j_c,k_l]+
+    #dz*dt*p["w1"].f[1][i_c,j_c,k_r]
+    du[3]=cos(tim)
     #
     return du
 end
