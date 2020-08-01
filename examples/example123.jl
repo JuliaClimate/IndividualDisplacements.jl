@@ -139,18 +139,28 @@ Run simulation over real Ocean domain (-69.5°S to 56.2°N)
 
 ```
 using MAT, NetCDF
-df=example3();
+df=example3("OCCA")
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/recipes_pyplot.jl"))
-PyPlot.figure(); PlotMapProj(df,3000); gcf()
+
+include(joinpath(p,"../examples/recipes_plots.jl"))
+PlotBasic(df,1000,180.0)
+
+#include(joinpath(p,"../examples/recipes_pyplot.jl"))
+#PyPlot.figure(); PlotMapProj(df,3000); gcf()
 
 #include(joinpath(p,"../examples/recipes_Makie.jl"))
 #PlotMakie(df,3000,180.)
 ```
 """
-function example3()
-   uvetc=OCCA_setup()
+function example3(nam::String="OCCA")
+   if nam=="OCCA"
+      uvetc=OCCA_setup()
+   elseif nam=="LLC90"
+      uvetc=example3_setup()
+   else
+      error("unknown example (nam parameter value)")
+   end
 
    nx,ny=size(uvetc["XC"][1])
    ii1=0:2:nx; ii2=0:2:ny;
@@ -168,8 +178,8 @@ function example3()
    prob = ODEProblem(⬡,u0,𝑇,uvetc)
    sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
 
-   sol[1,:,:]=mod.(sol[1,:,:],360)
-   sol[2,:,:]=mod.(sol[2,:,:],180)
+   sol[1,:,:]=mod.(sol[1,:,:],nx)
+   sol[2,:,:]=mod.(sol[2,:,:],ny)
    XC=exchange(uvetc["XC"])
    YC=exchange(uvetc["YC"])
    df=postprocess_lonlat(sol,XC,YC)
@@ -204,6 +214,12 @@ function example3_setup()
 
    u=dropdims(mean(u,dims=3),dims=3)
    v=dropdims(mean(v,dims=3),dims=3)
+
+   #mask out near edge values to avoid exiting domain
+   u[:,1:2].=NaN
+   v[:,1:2].=NaN
+   u[:,end-2:end].=NaN
+   v[:,end-2:end].=NaN
 
    u=read(u,MeshArray(γ,Float32))
    v=read(v,MeshArray(γ,Float32));
@@ -267,6 +283,13 @@ function OCCA_setup()
    u[findall(u .< -1.0e10)]=0.0
    v[findall(v .< -1.0e10)]=0.0
 
+   u[1]=circshift(u[1],[-180 0])
+   v[1]=circshift(v[1],[-180 0])
+   tmpx=circshift(Γ["XC"][1],[-180 0])
+   tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
+   Γ["XC"][1]=tmpx
+   delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS"]);
+
    u0=u; u1=u;
    v0=v; v1=v;
 
@@ -278,8 +301,7 @@ function OCCA_setup()
    v1=v1./Γ["DYC"]
 
    uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1, "dt" => dt) ;
-   msk=Dict("mskW" => Γ["hFacW"][:,k], "mskS" => Γ["hFacS"][:,k])
 
-   return merge(uvt,msk,Γ)
+   return merge(uvt,Γ)
 
 end
