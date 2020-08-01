@@ -9,7 +9,8 @@ examples/*/*.md
 examples/flt_example
 examples/run_offflt
 examples/llc90_latlon
-examples/GRID_LLC90
+examples/OCCA_climatology
+examples/GRID_*
 examples/nctiles_*
 docs/src/basics
 docs/src/worldwide
