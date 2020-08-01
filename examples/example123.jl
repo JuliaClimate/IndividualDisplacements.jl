@@ -138,7 +138,7 @@ end
 Run simulation over real Ocean domain (-69.5°S to 56.2°N)
 
 ```
-using MAT
+using MAT, NetCDF
 df=example3();
 
 p=dirname(pathof(IndividualDisplacements))
@@ -150,9 +150,10 @@ PyPlot.figure(); PlotMapProj(df,3000); gcf()
 ```
 """
 function example3()
-   uvetc=example3_setup()
+   uvetc=OCCA_setup()
 
-   ii1=0:5:360; ii2=20:2:150;
+   nx,ny=size(uvetc["XC"][1])
+   ii1=0:2:nx; ii2=0:2:ny;
    n1=length(ii1); n2=length(ii2);
    u0=Array{Float64,2}(undef,(2,n1*n2))
    for i1 in eachindex(ii1); for i2 in eachindex(ii2);
@@ -234,5 +235,51 @@ function example3_setup()
    msk=Dict("mskW" => mskW, "mskS" => mskS)
 
    return merge(uvetc,msk)
+
+end
+
+
+"""
+OCCA_setup()
+
+Define gridded variables and return result as Dictionary (`uvetc`).
+"""
+function OCCA_setup()
+
+   p=dirname(pathof(IndividualDisplacements))
+   dirIn=joinpath(p,"../examples/GRID_LL360/")
+   γ=GridSpec("PeriodicChannel",dirIn)
+   Γ=GridLoad(γ)
+
+   dirIn=joinpath(p,"../examples/OCCA_climatology/")
+   k=1
+
+   fileIn=dirIn*"DDuvel.0406clim.nc"
+   u = ncread(fileIn,"u")
+   u=dropdims(mean(u,dims=4),dims=4)
+   u=read(u[:,:,k],MeshArray(γ,Float32))
+
+   fileIn=dirIn*"DDvvel.0406clim.nc"
+   v = ncread(fileIn,"v")
+   v=dropdims(mean(v,dims=4),dims=4)
+   v=read(v[:,:,k],MeshArray(γ,Float32))
+
+   u[findall(u .< -1.0e10)]=0.0
+   v[findall(v .< -1.0e10)]=0.0
+
+   u0=u; u1=u;
+   v0=v; v1=v;
+
+   t0=0.0; t1=86400*366*2.0; dt=3600;
+
+   u0=u0./Γ["DXC"]
+   u1=u1./Γ["DXC"]
+   v0=v0./Γ["DYC"]
+   v1=v1./Γ["DYC"]
+
+   uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1, "dt" => dt) ;
+   msk=Dict("mskW" => Γ["hFacW"][:,k], "mskS" => Γ["hFacS"][:,k])
+
+   return merge(uvt,msk,Γ)
 
 end
