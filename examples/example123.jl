@@ -160,7 +160,8 @@ dt=maximum(df.t)/(nt-1)
 end
 ```
 """
-function example3(nam::String="OCCA";backward_in_time::Bool=false)
+function example3(nam::String="OCCA";backward_in_time::Bool=false,
+   lon_rng=(-165.0,-145.0), lat_rng=(25.0,35.0), z_init=1.0)
    if nam=="OCCA"
       uvetc=OCCA_setup(backward_in_time)
    elseif nam=="LLC90"
@@ -171,14 +172,14 @@ function example3(nam::String="OCCA";backward_in_time::Bool=false)
 
    nx,ny=size(uvetc["XC"][1])
 
-   lo0,lo1=(-165.0,-145.0)
-   la0,la1=(25.0,35.0)
+   lo0,lo1=lon_rng
+   la0,la1=lat_rng
    #la0,la1=(45.0,55.0)
    n=1000
    lon=lo0 .+(lo1-lo0).*rand(n)
    lat=la0 .+(la1-la0).*rand(n)
    (u0,du)=initialize_lonlat(uvetc,lon,lat)
-   u0[3,:] .= 4.5
+   u0[3,:] .= z_init
 
    #duvw(du,u0,uvetc,0.0)
    𝑇 = (0.0,uvetc["t1"]-uvetc["t0"])
