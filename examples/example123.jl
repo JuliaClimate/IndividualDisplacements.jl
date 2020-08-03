@@ -172,7 +172,7 @@ function example3(nam::String="OCCA")
            u0[2,i]=ii2[i2]
    end; end;
 
-   u0=[u0 ; fill(0.5,(1,size(u0,2)))]
+   u0=[u0 ; fill(9.5,(1,size(u0,2)))]
    du=fill(0.0,size(u0))
    #duvw(du,u0,uvetc,0.0)
    𝑇 = (0.0,uvetc["t1"]-uvetc["t0"])
@@ -276,32 +276,35 @@ function OCCA_setup()
    fileIn=dirIn*"DDuvel.0406clim.nc"
    u = ncread(fileIn,"u")
    u=dropdims(mean(u,dims=4),dims=4)
+   u[findall(u .< -1.0e10)] .=0.0
    u=read(u,MeshArray(γ,Float32,n))
 
    fileIn=dirIn*"DDvvel.0406clim.nc"
    v = ncread(fileIn,"v")
    v=dropdims(mean(v,dims=4),dims=4)
+   v[findall(v .< -1.0e10)] .=0.0
    v=read(v,MeshArray(γ,Float32,n))
 
    fileIn=dirIn*"DDwvel.0406clim.nc"
    w = ncread(fileIn,"w")
    w=dropdims(mean(w,dims=4),dims=4)
-   w=read(w,MeshArray(γ,Float32,n))
-
-   u[findall(u .< -1.0e10)]=0.0
-   v[findall(v .< -1.0e10)]=0.0
-   w[findall(w .< -1.0e10)]=0.0
+   w[findall(w .< -1.0e10)] .=0.0
+   w=-cat(w,zeros(360, 160),dims=3)
+   w[:,:,1] .=0.0
+   w=read(w,MeshArray(γ,Float32,n+1))
 
    for i in eachindex(u)
       u[i]=u[i]./Γ["DXC"][1]
       v[i]=v[i]./Γ["DYC"][1]
-      #factor of 0.1 is temporary ; -1.0 would be correct...
-      w[i]=- 0.1 * w[i]./Γ["DRC"][min(i[2]+1,n)]
    end
 
    for i in eachindex(u)
       u[i]=circshift(u[i],[-180 0])
       v[i]=circshift(v[i],[-180 0])
+   end
+
+   for i in eachindex(w)
+      w[i]=w[i]./Γ["DRC"][min(i[2]+1,n)]
       w[i]=circshift(w[i],[-180 0])
    end
 
