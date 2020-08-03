@@ -151,41 +151,57 @@ PlotBasic(df,1000,90.0)
 
 #include(joinpath(p,"../examples/recipes_Makie.jl"))
 #PlotMakie(df,3000,180.)
+
+n=maximum(df.ID)
+nt=size(df,1)/n
+dt=maximum(df.t)/(nt-1)
+@gif for t in 0:nt-1
+   scatter_zcolor(df,t*dt,df.z,(0,10))
+end
 ```
 """
-function example3(nam::String="OCCA")
+function example3(nam::String="OCCA";backward_in_time::Bool=false)
    if nam=="OCCA"
-      uvetc=OCCA_setup()
+      uvetc=OCCA_setup(backward_in_time)
    elseif nam=="LLC90"
-      uvetc=example3_setup()
+      uvetc=example3_setup(backward_in_time)
    else
       error("unknown example (nam parameter value)")
    end
 
    nx,ny=size(uvetc["XC"][1])
-   ii1=0:2:nx; ii2=0:2:ny;
-   n1=length(ii1); n2=length(ii2);
-   u0=Array{Float64,2}(undef,(2,n1*n2))
-   for i1 in eachindex(ii1); for i2 in eachindex(ii2);
-           i=i1+(i2-1)*n1
-           u0[1,i]=ii1[i1]
-           u0[2,i]=ii2[i2]
-   end; end;
 
-   u0=[u0 ; fill(9.5,(1,size(u0,2)))]
-   du=fill(0.0,size(u0))
+   lo0,lo1=(-165.0,-145.0)
+   la0,la1=(25.0,35.0)
+   #la0,la1=(45.0,55.0)
+   n=1000
+   lon=lo0 .+(lo1-lo0).*rand(n)
+   lat=la0 .+(la1-la0).*rand(n)
+   (u0,du)=initialize_lonlat(uvetc,lon,lat)
+   u0[3,:] .= 4.5
+
    #duvw(du,u0,uvetc,0.0)
    𝑇 = (0.0,uvetc["t1"]-uvetc["t0"])
    prob = ODEProblem(duvw,u0,𝑇,uvetc)
-   sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
+   #sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
+   sol = solve(prob,Euler(),dt=uvetc["dt"])
 
    sol[1,:,:]=mod.(sol[1,:,:],nx)
    sol[2,:,:]=mod.(sol[2,:,:],ny)
    XC=exchange(uvetc["XC"])
    YC=exchange(uvetc["YC"])
    df=postprocess_lonlat(sol,XC,YC)
+
+   #add third coordinate
    z=sol[3,:,:]
    df.z=z[:]
+
+   #add time coordinate
+   nt=size(df,1)/n
+   df.t=uvetc["dt"]*[ceil(i/n)-1 for i in 1:nt*n]
+
+   #to plot e.g. Pacific Ocean transports, shift longitude convention?
+   df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
 
    return df
 end
@@ -195,7 +211,7 @@ example3_setup()
 
 Define gridded variables and return result as Dictionary (`uvetc`).
 """
-function example3_setup()
+function example3_setup(;backward_in_time::Bool=false)
 
    p=dirname(pathof(IndividualDisplacements))
    dirIn=joinpath(p,"../examples/llc90_latlon/")
@@ -230,10 +246,11 @@ function example3_setup()
    u[findall(isnan.(u))]=0.0
    v[findall(isnan.(v))]=0.0
 
-   u0=u; u1=u;
-   v0=v; v1=v;
+   backward_in_time ? s=-1.0 : s=1.0
+   u0=s*u; u1=s*u;
+   v0=s*v; v1=s*v;
 
-   t0=0.0; t1=86400*366*2.0; dt=3600;
+   t0=0.0; t1=86400*366*2.0; dt=10*86400.0;
 
    u0=u0./Γ["DXC"]
    u1=u1./Γ["DXC"]
@@ -263,7 +280,7 @@ OCCA_setup()
 
 Define gridded variables and return result as Dictionary (`uvetc`).
 """
-function OCCA_setup()
+function OCCA_setup(;backward_in_time::Bool=false)
 
    p=dirname(pathof(IndividualDisplacements))
    dirIn=joinpath(p,"../examples/GRID_LL360/")
@@ -313,11 +330,12 @@ function OCCA_setup()
    Γ["XC"][1]=tmpx
    delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS"]);
 
-   u0=u; u1=u;
-   v0=v; v1=v;
-   w0=w; w1=w;
+   backward_in_time ? s=-1.0 : s=1.0
+   u0=s*u; u1=s*u;
+   v0=s*v; v1=s*v;
+   w0=s*w; w1=s*w;
 
-   t0=0.0; t1=86400*366*2.0; dt=3600;
+   t0=0.0; t1=86400*366*2.0; dt=dt=10*86400.0;
 
    uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1,
               "w0" => w0, "w1" => w1, "t0" => t0, "t1" => t1, "dt" => dt) ;
