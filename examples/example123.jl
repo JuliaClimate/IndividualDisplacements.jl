@@ -144,7 +144,7 @@ df=example3("OCCA")
 p=dirname(pathof(IndividualDisplacements))
 
 include(joinpath(p,"../examples/recipes_plots.jl"))
-PlotBasic(df,1000,180.0)
+PlotBasic(df,1000,90.0)
 
 #include(joinpath(p,"../examples/recipes_pyplot.jl"))
 #PyPlot.figure(); PlotMapProj(df,3000); gcf()
@@ -172,10 +172,11 @@ function example3(nam::String="OCCA")
            u0[2,i]=ii2[i2]
    end; end;
 
+   u0=[u0 ; fill(0.5,(1,size(u0,2)))]
    du=fill(0.0,size(u0))
-   #⬡(du,u0,uvetc,0.0)
+   #duvw(du,u0,uvetc,0.0)
    𝑇 = (0.0,uvetc["t1"]-uvetc["t0"])
-   prob = ODEProblem(⬡,u0,𝑇,uvetc)
+   prob = ODEProblem(duvw,u0,𝑇,uvetc)
    sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
 
    sol[1,:,:]=mod.(sol[1,:,:],nx)
@@ -183,6 +184,8 @@ function example3(nam::String="OCCA")
    XC=exchange(uvetc["XC"])
    YC=exchange(uvetc["YC"])
    df=postprocess_lonlat(sol,XC,YC)
+   z=sol[3,:,:]
+   df.z=z[:]
 
    return df
 end
@@ -268,23 +271,40 @@ function OCCA_setup()
    Γ=GridLoad(γ)
 
    dirIn=joinpath(p,"../examples/OCCA_climatology/")
-   k=1
+   n=length(Γ["RC"])
 
    fileIn=dirIn*"DDuvel.0406clim.nc"
    u = ncread(fileIn,"u")
    u=dropdims(mean(u,dims=4),dims=4)
-   u=read(u[:,:,k],MeshArray(γ,Float32))
+   u=read(u,MeshArray(γ,Float32,n))
 
    fileIn=dirIn*"DDvvel.0406clim.nc"
    v = ncread(fileIn,"v")
    v=dropdims(mean(v,dims=4),dims=4)
-   v=read(v[:,:,k],MeshArray(γ,Float32))
+   v=read(v,MeshArray(γ,Float32,n))
+
+   fileIn=dirIn*"DDwvel.0406clim.nc"
+   w = ncread(fileIn,"w")
+   w=dropdims(mean(w,dims=4),dims=4)
+   w=read(w,MeshArray(γ,Float32,n))
 
    u[findall(u .< -1.0e10)]=0.0
    v[findall(v .< -1.0e10)]=0.0
+   w[findall(w .< -1.0e10)]=0.0
 
-   u[1]=circshift(u[1],[-180 0])
-   v[1]=circshift(v[1],[-180 0])
+   for i in eachindex(u)
+      u[i]=u[i]./Γ["DXC"][1]
+      v[i]=v[i]./Γ["DYC"][1]
+      #factor of 0.1 is temporary ; -1.0 would be correct...
+      w[i]=- 0.1 * w[i]./Γ["DRC"][min(i[2]+1,n)]
+   end
+
+   for i in eachindex(u)
+      u[i]=circshift(u[i],[-180 0])
+      v[i]=circshift(v[i],[-180 0])
+      w[i]=circshift(w[i],[-180 0])
+   end
+
    tmpx=circshift(Γ["XC"][1],[-180 0])
    tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
    Γ["XC"][1]=tmpx
@@ -292,15 +312,12 @@ function OCCA_setup()
 
    u0=u; u1=u;
    v0=v; v1=v;
+   w0=w; w1=w;
 
    t0=0.0; t1=86400*366*2.0; dt=3600;
 
-   u0=u0./Γ["DXC"]
-   u1=u1./Γ["DXC"]
-   v0=v0./Γ["DYC"]
-   v1=v1./Γ["DYC"]
-
-   uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1, "dt" => dt) ;
+   uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1,
+              "w0" => w0, "w1" => w1, "t0" => t0, "t1" => t1, "dt" => dt) ;
 
    return merge(uvt,Γ)
 
