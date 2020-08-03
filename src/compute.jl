@@ -109,9 +109,9 @@ end
 
 function duvw(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
     for i=1:size(u,2)
-        tmpdu=du[1:2,i]
-        duvw(tmpdu,u[1:2,i],p,tim)
-        du[1:2,i]=tmpdu
+        tmpdu=du[1:3,i]
+        duvw(tmpdu,u[1:3,i],p,tim)
+        du[1:3,i]=tmpdu
     end
     return du
 end
