@@ -22,6 +22,7 @@ function PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
       end
       CO=COs[mod(ii,4)+1]
       plot!(tmp[!,:lon],tmp[!,:lat],linewidth=0.3)
+      #plot!(tmp[!,:lon],tmp[!,:lat],tmp[!,:z],linewidth=0.3)
    end
    return plt
 end
@@ -44,6 +45,23 @@ function scatter_subset(df,t)
     df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
     scatter(df_t.lon,df_t.lat,markersize=2,
     xlims=(-180.0,180.0),ylims=(-90.0,90.0))
+end
+
+"""
+    scatter_zcolor(df,t,zc,zcr,plt=plot())
+
+```
+t=maximum(df[!,:t])
+scatter_zcolor(df,t,df.z,(2,7))
+```
+"""
+function scatter_zcolor(df,t,zc,zcr,plt=plot())
+    dt=0.25
+    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
+    zc_t = zc[ (df.t.>t-dt).&(df.t.<=t)]
+    #fig=deepcopy(plt)
+    scatter(df_t.lon,df_t.lat,markersize=4,markerstrokewidth=0.1,
+    zcolor = zc_t,clims=zcr,xlims=(120.0,260.0),ylims=(0.0,60.0))
 end
 
 """
