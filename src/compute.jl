@@ -71,7 +71,7 @@ function duvw(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     x,y,z = u[1:3]
     nx,ny=p["u0"].grid.ioSize
     x,y=[mod(x,nx),mod(y,ny)]
-    nz=size(p["w0"],2)
+    nz=size(p["u0"],2)
     z=mod(z,nz)
     #
     dx,dy,dz=[x - floor(x),y - floor(y),z - floor(z)]
@@ -102,7 +102,6 @@ function duvw(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     dz*(1.0-dt)*p["w0"].f[1,k_r][i_c,j_c]+
     (1.0-dz)*dt*p["w1"].f[1,k_l][i_c,j_c]+
     dz*dt*p["w1"].f[1,k_r][i_c,j_c]
-    #du[3]=cos(tim)
     #
     return du
 end
