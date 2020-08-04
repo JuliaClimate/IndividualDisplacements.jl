@@ -133,12 +133,15 @@ function example2_setup()
 end
 
 """
-    example3()
+    example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
+       lon_rng=(-165.0,-145.0), lat_rng=(25.0,35.0))
 
-Run simulation over real Ocean domain (-69.5°S to 56.2°N)
+Run particle trajectory simulation over near-global ocean domain (79.5°S to
+79.5°N in OCCA, or 69.5°S to 56.2°N in the regular-grid part of LLC90) and
+return the result as a `DataFrame` that can be manipulated or plotted later.
 
 ```
-using MAT, NetCDF
+using IndividualDisplacements, MAT, NetCDF
 df=example3("OCCA")
 
 p=dirname(pathof(IndividualDisplacements))
@@ -160,12 +163,12 @@ dt=maximum(df.t)/(nt-1)
 end
 ```
 """
-function example3(nam::String="OCCA";backward_in_time::Bool=false,
-   lon_rng=(-165.0,-145.0), lat_rng=(25.0,35.0), z_init=1.0)
+function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
+   lon_rng=(-165.0,-145.0), lat_rng=(25.0,35.0))
    if nam=="OCCA"
-      uvetc=OCCA_setup(backward_in_time)
+      uvetc=OCCA_setup(backward_in_time=bck)
    elseif nam=="LLC90"
-      uvetc=example3_setup(backward_in_time)
+      uvetc=example3_setup(backward_in_time=bck)
    else
       error("unknown example (nam parameter value)")
    end
@@ -175,7 +178,7 @@ function example3(nam::String="OCCA";backward_in_time::Bool=false,
    lo0,lo1=lon_rng
    la0,la1=lat_rng
    #la0,la1=(45.0,55.0)
-   n=1000
+   n=5000
    lon=lo0 .+(lo1-lo0).*rand(n)
    lat=la0 .+(la1-la0).*rand(n)
    (u0,du)=initialize_lonlat(uvetc,lon,lat)
@@ -208,7 +211,32 @@ function example3(nam::String="OCCA";backward_in_time::Bool=false,
 end
 
 """
-example3_setup()
+    example3(lon_rng,lat_rng,z_init,backward_in_time)
+
+Run particle trajectory simulation over near-global ocean domain (79.5°S to
+79.5°N in OCCA) and return the result as a `gif` animation using `scatter_zcolor`
+and `Plots.jl`
+
+```
+using IndividualDisplacements, NetCDF, Plots
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/recipes_plots.jl"))
+
+example3((-165.0,-155.0),(5.0,15.0),5.5,true)
+```
+"""
+function example3(lon_rng,lat_rng,z_init,bck)
+   df=example3("OCCA",bck=bck, z_init=z_init,lon_rng=lon_rng,lat_rng=lat_rng)
+   n=maximum(df.ID)
+   nt=size(df,1)/n
+   dt=maximum(df.t)/(nt-1)
+   return @gif for t in 0:nt-1
+        scatter_zcolor(df,t*dt,df.z,(0,10))
+   end
+end
+
+"""
+    example3_setup(;backward_in_time::Bool=false)
 
 Define gridded variables and return result as Dictionary (`uvetc`).
 """
@@ -275,9 +303,8 @@ function example3_setup(;backward_in_time::Bool=false)
 
 end
 
-
 """
-OCCA_setup()
+    OCCA_setup(;backward_in_time::Bool=false)
 
 Define gridded variables and return result as Dictionary (`uvetc`).
 """
