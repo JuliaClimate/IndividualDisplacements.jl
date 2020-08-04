@@ -61,7 +61,7 @@ function scatter_zcolor(df,t,zc,zcr,plt=plot())
     zc_t = zc[ (df.t.>t-dt).&(df.t.<=t)]
     #fig=deepcopy(plt)
     scatter(df_t.lon,df_t.lat,markersize=4,markerstrokewidth=0.1,
-    zcolor = zc_t,clims=zcr,xlims=(120.0,260.0),ylims=(0.0,60.0))
+    zcolor = zc_t,clims=zcr,xlims=(120.0,260.0),ylims=(-20.0,60.0))
 end
 
 """
