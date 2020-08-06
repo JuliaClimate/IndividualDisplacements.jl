@@ -10,11 +10,11 @@ include("read.jl")
 include("update_locations.jl")
 include("data_wrangling.jl")
 
-⬡! = VelComp!
-⬡ = VelComp
-□ = VelCopy
+⬡! = dxy_dt!
+⬡ = dxy_dt
+□ = dxy_dt_replay
 
-export ⬡!, ⬡, □, duvw
+export ⬡!, ⬡, □, dxyz_dt
 export initialize_gridded, initialize_lonlat, randn_lonlat
 export postprocess_lonlat, postprocess_xy
 export read_flt, read_mds, read_uvetc, read_drifters
