@@ -177,18 +177,18 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
 
    lo0,lo1=lon_rng
    la0,la1=lat_rng
-   #la0,la1=(45.0,55.0)
-   n=5000
+   n=1000
    lon=lo0 .+(lo1-lo0).*rand(n)
    lat=la0 .+(la1-la0).*rand(n)
    (u0,du)=initialize_lonlat(uvetc,lon,lat)
    u0[3,:] .= z_init
 
-   #duvw(du,u0,uvetc,0.0)
+   #dxyz_dt(du,u0,uvetc,0.0)
    𝑇 = (0.0,uvetc["t1"]-uvetc["t0"])
-   prob = ODEProblem(duvw,u0,𝑇,uvetc)
+   prob = ODEProblem(dxyz_dt,u0,𝑇,uvetc)
    #sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
-   sol = solve(prob,Euler(),dt=uvetc["dt"])
+   sol = solve(prob,RK4(),dt=uvetc["dt"])
+   #sol = solve(prob,Euler(),dt=uvetc["dt"])
 
    sol[1,:,:]=mod.(sol[1,:,:],nx)
    sol[2,:,:]=mod.(sol[2,:,:],ny)

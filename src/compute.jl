@@ -1,11 +1,11 @@
 
 """
-    VelComp!(du,u,p::Dict,tim)
+    dxy_dt!(du,u,p::Dict,tim)
 
-Interpolate velocity from gridded fields (after exchange on u0,v0)
-and return position increment `du` (i.e. `x,y,fIndex`).
+Interpolate velocity from gridded fields (2D; with halos) to position `u`
+(`x,y,fIndex`) to compute the derivative of position v time  `du_dt`.
 """
-function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
+function dxy_dt!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     #compute positions in index units
     dt=(tim-p["t0"])/(p["t1"]-p["t0"])
     dt>1.0 ? error("dt>1.0") : nothing
@@ -25,12 +25,6 @@ function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     #
     i_w,i_e=[i_c i_c+1]
     j_s,j_n=[j_c j_c+1]
-    #debugging stuff
-    if false && (i_e>nx+2||j_n>ny+2)
-        println("nx=$nx")
-        println("ny=$ny")
-        println("u=$u")
-    end
     #interpolate u to position and time
     du[1]=(1.0-dx)*(1.0-dt)*p["u0"].f[fIndex][i_w,j_c]+
     dx*(1.0-dt)*p["u0"].f[fIndex][i_e,j_c]+
@@ -47,11 +41,11 @@ function VelComp!(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     return du
 end
 
-function VelComp!(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
+function dxy_dt!(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
     for i=1:size(u,2)
         tmpdu=du[1:3,i]
         tmpu=u[1:3,i]
-        VelComp!(tmpdu,tmpu,p,tim)
+        dxy_dt!(tmpdu,tmpu,p,tim)
         du[1:3,i]=tmpdu
         u[1:3,i]=tmpu
     end
@@ -59,12 +53,12 @@ function VelComp!(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
 end
 
 """
-    duvw(du,u,p::Dict,tim)
+    dxyz_dt(du,u,p::Dict,tim)
 
-Interpolate velocity from gridded fields and return total
-derivative of position in three dimensions `du[1:3]`
+Interpolate velocity from gridded fields (3D; NO halos) to position `u`
+(`x,y,z`) to compute the derivative of position v time  `du_dt`.
 """
-function duvw(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
+function dxyz_dt(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     #compute positions in index units
     dt=(tim-p["t0"])/(p["t1"]-p["t0"])
     #
@@ -106,22 +100,22 @@ function duvw(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     return du
 end
 
-function duvw(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
+function dxyz_dt(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
     for i=1:size(u,2)
         tmpdu=du[1:3,i]
-        duvw(tmpdu,u[1:3,i],p,tim)
+        dxyz_dt(tmpdu,u[1:3,i],p,tim)
         du[1:3,i]=tmpdu
     end
     return du
 end
 
 """
-    VelComp(du,u,p::Dict,tim)
+    dxy_dt(du,u,p::Dict,tim)
 
-Interpolate velocity from gridded fields and return total
-derivative of position in two dimensions `du[1:2]`
+Interpolate velocity from gridded fields (2D; NO) to position `u`
+(`x,y`) to compute the derivative of position v time  `du_dt`.
 """
-function VelComp(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
+function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     #compute positions in index units
     dt=(tim-p["t0"])/(p["t1"]-p["t0"])
     #
@@ -159,10 +153,10 @@ function VelComp(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     return du
 end
 
-function VelComp(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
+function dxy_dt(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
     for i=1:size(u,2)
         tmpdu=du[1:2,i]
-        VelComp(tmpdu,u[1:2,i],p,tim)
+        dxy_dt(tmpdu,u[1:2,i],p,tim)
         du[1:2,i]=tmpdu
     end
     return du
