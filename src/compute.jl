@@ -1,4 +1,3 @@
-
 """
     dxy_dt!(du,u,p::Dict,tim)
 
@@ -132,13 +131,6 @@ function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     x>=nx-1 ? (i_w,i_e)=(nx,1) : nothing
     j_s,j_n=[j_c j_c+1]
     y>=ny-1 ? (j_s,j_n)=(ny,1) : nothing
-    #debugging stuff
-    if false
-        println((x,y,i_c,j_c))
-        println((i_w,i_e,j_s,j_n))
-        println((dx,dy,dt))
-        #println(du)
-    end
     #interpolate u to position and time
     du[1]=(1.0-dx)*(1.0-dt)*p["u0"].f[1][i_w,j_c]+
     dx*(1.0-dt)*p["u0"].f[1][i_e,j_c]+
