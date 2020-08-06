@@ -51,7 +51,7 @@ function postprocess_xy(sol,𝑃)
 
     x=sol[1,:,:]
     y=sol[2,:,:]
-    size(uvetc["XC"],1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
+    size(𝑃["XC"],1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
     ID=collect(1:size(sol,2))*ones(1,size(sol,3))
     df = DataFrame(ID=Int.(ID[:]), fIndex=fIndex[:],
     x=mod.(x[:],Ref(nx)), y=mod.(y[:],Ref(ny)))
