@@ -2,21 +2,6 @@
 using CyclicArrays
 using UnPack
 
-function dxy_dt_CyclicArray(du::Array{Float64,2},u::Array{Float64,2},p::NamedTuple,tim)
-    np=size(du,2)
-    xi,yi=(u[1,:],u[2,:])
-    @unpack xg,yg,u,v = p
-
-    #xi=floor.(xg[1,Int.(sign.(xi).*floor.(abs.(xi)))])+rem.(xi,1)
-    #yi=floor.(yg[Int.(sign.(yi).*floor.(abs.(yi))),1])+rem.(yi,1)
-
-    i=Int.(floor.(xg[1,Int.(floor.(xi))]))
-    j=Int.(floor.(yg[Int.(floor.(yi)),1]))
-    du[1,:]=[p.u[i[ii],j[ii]] for ii in 1:np]
-    du[2,:]=[p.v[i[ii],j[ii]] for ii in 1:np]
-    return du
-end
-
 function cyclicarray_example()
     𝑃=cyclicarray_setup()
 

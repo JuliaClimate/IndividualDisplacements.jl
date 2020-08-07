@@ -111,7 +111,7 @@ end
 """
     dxy_dt(du,u,p::Dict,tim)
 
-Interpolate velocity from gridded fields (2D; NO) to position `u`
+Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 (`x,y`) to compute the derivative of position v time  `du_dt`.
 """
 function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
@@ -151,5 +151,29 @@ function dxy_dt(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
         dxy_dt(tmpdu,u[1:2,i],p,tim)
         du[1:2,i]=tmpdu
     end
+    return du
+end
+
+"""
+    dxy_dt_CyclicArray(du,u,p::NamedTuple,tim)
+
+Nearest neighbor (?) velocity from gridded fields (2D; NO halos but
+not needed when CyclicArrays is used to extend valid indice ranges).
+
+_notes:_ spatial interpolation & temporal interpolation are lacking
+"""
+function dxy_dt_CyclicArray(du::Array{Float64,2},u::Array{Float64,2},p::NamedTuple,tim)
+    np=size(du,2)
+    xi,yi=(u[1,:],u[2,:])
+    @unpack xg,yg,u,v = p
+
+    #not needed:
+    #xi=floor.(xg[1,Int.(sign.(xi).*floor.(abs.(xi)))])+rem.(xi,1)
+    #yi=floor.(yg[Int.(sign.(yi).*floor.(abs.(yi))),1])+rem.(yi,1)
+
+    i=Int.(floor.(xg[1,Int.(floor.(xi))]))
+    j=Int.(floor.(yg[Int.(floor.(yi)),1]))
+    du[1,:]=[p.u[i[ii],j[ii]] for ii in 1:np]
+    du[2,:]=[p.v[i[ii],j[ii]] for ii in 1:np]
     return du
 end
