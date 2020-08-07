@@ -37,6 +37,7 @@ function postprocess_lonlat(sol,XC,YC)
 end
 
 postprocess_lonlat(sol,uvetc::Dict) = postprocess_lonlat(sol,uvetc["XC"],uvetc["YC"])
+postprocess_lonlat(sol,uvetc::NamedTuple) = postprocess_lonlat(sol,uvetc.XC,uvetc.YC)
 
 """
     postprocess_xy()
@@ -44,7 +45,7 @@ postprocess_lonlat(sol,uvetc::Dict) = postprocess_lonlat(sol,uvetc["XC"],uvetc["
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_xy(sol,𝑃)
+function postprocess_xy(sol,𝑃::Dict)
     nf=size(sol,2)
     nt=size(sol,3)
     nx,ny=size(𝑃["XC"][1])
