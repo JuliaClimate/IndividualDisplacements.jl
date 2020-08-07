@@ -118,7 +118,7 @@ tmpu=fill(0.0,nSteps); tmpv=fill(0.0,nSteps);
 tmpx=fill(0.0,nSteps); tmpy=fill(0.0,nSteps);
 refu=fill(0.0,nSteps); refv=fill(0.0,nSteps);
 for i=1:nSteps
-    □(du,[tmp[i,:lon],tmp[i,:lat]],tmp,tmp[i,:time])
+    dxy_dt_replay(du,[tmp[i,:lon],tmp[i,:lat]],tmp,tmp[i,:time])
     refu[i]=du[1]./uvetc["dx"]
     refv[i]=du[2]./uvetc["dx"]
     ⬡(du,[tmp[i,:lon],tmp[i,:lat]]./uvetc["dx"],uvetc,tmp[i,:time])
