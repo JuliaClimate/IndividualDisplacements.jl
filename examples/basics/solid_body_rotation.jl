@@ -90,7 +90,7 @@ du=fill(0.0,3)
 #
 # _For additional documentation, try `?ODEProblem` or `?solve`_
 
-prob = ODEProblem(duvw,u0,𝑇,𝑃)
+prob = ODEProblem(dxyz_dt,u0,𝑇,𝑃)
 sol = solve(prob,Tsit5(),reltol=1e-8)
 
 x,y,z=sol[1,:],sol[2,:],sol[3,:]
