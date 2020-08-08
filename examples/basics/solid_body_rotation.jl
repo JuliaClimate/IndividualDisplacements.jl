@@ -71,16 +71,14 @@ vv=MeshArray(γ,γ.ioPrec,nz)
 [vv[k]=v[1] for k=1:nz]
 
 #store everything in a dictionnary
-𝑃=Dict("u0" => uu, "u1" => uu, "v0" => vv, "v1" => vv,
-       "w0" => 0.0*w, "w1" => -0.01*w, "t0" => t0, "t1" => t1)
-𝑃=merge(𝑃,Γ);
+𝑃=(u0=uu, u1=uu, v0=vv, v1=vv,w0=0.0*w, w1=-0.01*w, t0=t0, t1=t1)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.4 Initial Position and Time
 
 u0=[np*1/3,np*1/3,nz*1/3]
 du=fill(0.0,3)
-𝑇 = (𝑃["t0"],𝑃["t1"]);
+𝑇 = (𝑃.t0,𝑃.t1);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.1 Solve For Particle Trajectory
