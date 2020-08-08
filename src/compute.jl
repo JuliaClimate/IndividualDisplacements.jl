@@ -1,5 +1,5 @@
 """
-    dxy_dt!(du,u,p::Dict,tim)
+    dxy_dt!(du,u,p::NamedTuple,tim)
 
 Interpolate velocity from gridded fields (2D; with halos) to position `u`
 (`x,y,fIndex`) to compute the derivative of position v time  `du_dt`.
@@ -52,19 +52,19 @@ function dxy_dt!(du::Array{Float64,2},u::Array{Float64,2},𝑃::NamedTuple,tim)
 end
 
 """
-    dxyz_dt(du,u,p::Dict,tim)
+    dxyz_dt(du,u,𝑃::NamedTuple,tim)
 
 Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 (`x,y,z`) to compute the derivative of position v time  `du_dt`.
 """
-function dxyz_dt(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
+function dxyz_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     #compute positions in index units
-    dt=(tim-p["t0"])/(p["t1"]-p["t0"])
+    dt=(tim-𝑃.t0)/(𝑃.t1-𝑃.t0)
     #
     x,y,z = u[1:3]
-    nx,ny=p["u0"].grid.ioSize
+    nx,ny=𝑃.u0.grid.ioSize
     x,y=[mod(x,nx),mod(y,ny)]
-    nz=size(p["u0"],2)
+    nz=size(𝑃.u0,2)
     z=mod(z,nz)
     #
     dx,dy,dz=[x - floor(x),y - floor(y),z - floor(z)]
@@ -81,45 +81,45 @@ function dxyz_dt(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     #z>=nz-1 ? (k_l,k_r)=(nz,1) : nothing
 
     #interpolate u to position and time
-    du[1]=(1.0-dx)*(1.0-dt)*p["u0"].f[1,k_c][i_w,j_c]+
-    dx*(1.0-dt)*p["u0"].f[1,k_c][i_e,j_c]+
-    (1.0-dx)*dt*p["u1"].f[1,k_c][i_w,j_c]+
-    dx*dt*p["u1"].f[1,k_c][i_e,j_c]
+    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0.f[1,k_c][i_w,j_c]+
+    dx*(1.0-dt)*𝑃.u0.f[1,k_c][i_e,j_c]+
+    (1.0-dx)*dt*𝑃.u1.f[1,k_c][i_w,j_c]+
+    dx*dt*𝑃.u1.f[1,k_c][i_e,j_c]
     #interpolate v to position and time
-    du[2]=(1.0-dy)*(1.0-dt)*p["v0"].f[1,k_c][i_c,j_s]+
-    dy*(1.0-dt)*p["v0"].f[1,k_c][i_c,j_n]+
-    (1.0-dy)*dt*p["v1"].f[1,k_c][i_c,j_s]+
-    dy*dt*p["v1"].f[1,k_c][i_c,j_n]
+    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0.f[1,k_c][i_c,j_s]+
+    dy*(1.0-dt)*𝑃.v0.f[1,k_c][i_c,j_n]+
+    (1.0-dy)*dt*𝑃.v1.f[1,k_c][i_c,j_s]+
+    dy*dt*𝑃.v1.f[1,k_c][i_c,j_n]
     #interpolate w to position and time
-    du[3]=(1.0-dz)*(1.0-dt)*p["w0"].f[1,k_l][i_c,j_c]+
-    dz*(1.0-dt)*p["w0"].f[1,k_r][i_c,j_c]+
-    (1.0-dz)*dt*p["w1"].f[1,k_l][i_c,j_c]+
-    dz*dt*p["w1"].f[1,k_r][i_c,j_c]
+    du[3]=(1.0-dz)*(1.0-dt)*𝑃.w0.f[1,k_l][i_c,j_c]+
+    dz*(1.0-dt)*𝑃.w0.f[1,k_r][i_c,j_c]+
+    (1.0-dz)*dt*𝑃.w1.f[1,k_l][i_c,j_c]+
+    dz*dt*𝑃.w1.f[1,k_r][i_c,j_c]
     #
     return du
 end
 
-function dxyz_dt(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
+function dxyz_dt(du::Array{Float64,2},u::Array{Float64,2},𝑃::NamedTuple,tim)
     for i=1:size(u,2)
         tmpdu=du[1:3,i]
-        dxyz_dt(tmpdu,u[1:3,i],p,tim)
+        dxyz_dt(tmpdu,u[1:3,i],𝑃,tim)
         du[1:3,i]=tmpdu
     end
     return du
 end
 
 """
-    dxy_dt(du,u,p::Dict,tim)
+    dxy_dt(du,u,𝑃::NamedTuple,tim)
 
 Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 (`x,y`) to compute the derivative of position v time  `du_dt`.
 """
-function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
+function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     #compute positions in index units
-    dt=(tim-p["t0"])/(p["t1"]-p["t0"])
+    dt=(tim-𝑃.t0)/(𝑃.t1-𝑃.t0)
     #
     x,y = u[1:2]
-    nx,ny=p["u0"].grid.ioSize
+    nx,ny=𝑃.u0.grid.ioSize
     x,y=[mod(x,nx),mod(y,ny)]
     #
     dx,dy=[x - floor(x),y - floor(y)]
@@ -132,15 +132,15 @@ function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},p::Dict,tim)
     j_s,j_n=[j_c j_c+1]
     y>=ny-1 ? (j_s,j_n)=(ny,1) : nothing
     #interpolate u to position and time
-    du[1]=(1.0-dx)*(1.0-dt)*p["u0"].f[1][i_w,j_c]+
-    dx*(1.0-dt)*p["u0"].f[1][i_e,j_c]+
-    (1.0-dx)*dt*p["u1"].f[1][i_w,j_c]+
-    dx*dt*p["u1"].f[1][i_e,j_c]
+    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0.f[1][i_w,j_c]+
+    dx*(1.0-dt)*𝑃.u0.f[1][i_e,j_c]+
+    (1.0-dx)*dt*𝑃.u1.f[1][i_w,j_c]+
+    dx*dt*𝑃.u1.f[1][i_e,j_c]
     #interpolate v to position and time
-    du[2]=(1.0-dy)*(1.0-dt)*p["v0"].f[1][i_c,j_s]+
-    dy*(1.0-dt)*p["v0"].f[1][i_c,j_n]+
-    (1.0-dy)*dt*p["v1"].f[1][i_c,j_s]+
-    dy*dt*p["v1"].f[1][i_c,j_n]
+    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0.f[1][i_c,j_s]+
+    dy*(1.0-dt)*𝑃.v0.f[1][i_c,j_n]+
+    (1.0-dy)*dt*𝑃.v1.f[1][i_c,j_s]+
+    dy*dt*𝑃.v1.f[1][i_c,j_n]
     #
     return du
 end
@@ -185,3 +185,5 @@ Attempt to convert from Dict to NamedTuple
 dict_to_nt(tmp::Dict) = tmp=(; zip(Symbol.(keys(tmp)), values(tmp))...)
 
 dxy_dt!(du,u,𝑃::Dict,tim) = dxy_dt!(du,u,dict_to_nt(𝑃),tim)
+dxy_dt(du,u,𝑃::Dict,tim) = dxy_dt(du,u,dict_to_nt(𝑃),tim)
+dxyz_dt(du,u,𝑃::Dict,tim) = dxyz_dt(du,u,dict_to_nt(𝑃),tim)

@@ -9,7 +9,7 @@ include("helper_functions.jl")
 end
 
 @testset "test2" begin
-    df,Γ,𝑃=test2_periodic_domain()
+    df,𝑃=test2_periodic_domain()
     @test prod(isapprox.(df[end-35:6:end,:y],12*(0.4:0.04:0.6)))
     @test prod(isapprox.(df[end-5:end,:x],12*(0.4:0.04:0.6).+4.0))
 end
