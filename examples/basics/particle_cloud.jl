@@ -19,7 +19,7 @@ include(joinpath(p,"../examples/example123.jl"))
 
 # ## 2. Setup Problem
 
-uvetc=example2_setup()
+𝑃,Γ=example2_setup()
 
 #ii1=1:10:80; ii2=1:10:42; #->sol is (2, 40, 40065)
 #ii1=30:37; ii2=16:20; #->sol is (2, 40, 9674)
@@ -40,7 +40,7 @@ end; end;
 # - Solve the ODE problem to compute trajectories.
 
 𝑇 = (0.0,2998.0*3600.0)
-prob = ODEProblem(⬡,u0,𝑇,uvetc)
+prob = ODEProblem(⬡,u0,𝑇,𝑃)
 
 sol = solve(prob,Tsit5(),reltol=1e-6,abstol=1e-6)
 size(sol)

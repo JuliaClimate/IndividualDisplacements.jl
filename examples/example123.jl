@@ -1,4 +1,4 @@
-using MeshArrays, Statistics, OrdinaryDiffEq
+using MeshArrays, Statistics, OrdinaryDiffEq, Plots, IndividualDisplacements
 
 """
     example1()
@@ -45,7 +45,7 @@ function example2()
    dirIn=joinpath(p,"../examples/flt_example/")
    prec=Float32
    df=read_flt(dirIn,prec)
-   uvetc=example2_setup()
+   𝑃,Γ=example2_setup()
    #
    tmp=df[df.ID .== 200, :]
    nSteps=Int32(tmp[end,:time]/3600)-2
@@ -58,14 +58,14 @@ function example2()
        ref[2,i+1]-ref[2,i]>maxLat/2 ? ref[2,i+1:end]-=fill(maxLat,(nSteps-i)) : nothing
        ref[2,i+1]-ref[2,i]<-maxLat/2 ? ref[2,i+1:end]+=fill(maxLat,(nSteps-i)) : nothing
    end
-   ref=ref./uvetc["dx"]
+   ref=ref./𝑃.dx
    #
-   uInit=[tmp[1,:lon];tmp[1,:lat]]./uvetc["dx"]
+   uInit=[tmp[1,:lon];tmp[1,:lat]]./𝑃.dx
    du=fill(0.0,2)
    #
    tspan = (0.0,nSteps*3600.0)
    #prob = ODEProblem(dxy_dt_replay,uInit,tspan,tmp)
-   prob = ODEProblem(⬡,uInit,tspan,uvetc)
+   prob = ODEProblem(⬡,uInit,tspan,𝑃)
    sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
    #
    return df,ref,sol
@@ -113,23 +113,17 @@ function example2_setup()
    v0=v0./Γ["dx"]
    v1=v1./Γ["dx"]
 
-   ## Merge the two dictionaries:
-
-   uvetc=Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1)
-
-   uvetc=merge(uvetc,Γ)
-
    ## Visualize velocity fields
 
    mskW=read_mds(γ.path*"hFacW",MeshArray(γ,Float32,nr))
    mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
    mskS=read_mds(γ.path*"hFacS",MeshArray(γ,Float32,nr))
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
+   Γ=merge(Γ,Dict("mskW" => mskW, "mskS" => mskS))
 
-   msk=Dict("mskW" => mskW, "mskS" => mskS)
-
-   uvetc=merge(uvetc,msk)
-
+   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, dx=Γ["dx"],
+        t0=t0, t1=t1, XC=Γ["XC"], YC=Γ["YC"])
+   return 𝑃,Γ
 end
 
 """
@@ -166,34 +160,34 @@ end
 function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
    lon_rng=(-165.0,-145.0), lat_rng=(25.0,35.0))
    if nam=="OCCA"
-      uvetc=OCCA_setup(backward_in_time=bck)
+      𝑃,Γ=OCCA_setup(backward_in_time=bck)
    elseif nam=="LLC90"
-      uvetc=example3_setup(backward_in_time=bck)
+      𝑃,Γ=example3_setup(backward_in_time=bck)
    else
       error("unknown example (nam parameter value)")
    end
 
-   nx,ny=size(uvetc["XC"][1])
+   nx,ny=size(𝑃.XC[1])
 
    lo0,lo1=lon_rng
    la0,la1=lat_rng
    n=1000
    lon=lo0 .+(lo1-lo0).*rand(n)
    lat=la0 .+(la1-la0).*rand(n)
-   (u0,du)=initialize_lonlat(uvetc,lon,lat)
+   (u0,du)=initialize_lonlat(Γ,lon,lat)
    u0[3,:] .= z_init
 
-   #dxyz_dt(du,u0,uvetc,0.0)
-   𝑇 = (0.0,uvetc["t1"]-uvetc["t0"])
-   prob = ODEProblem(dxyz_dt,u0,𝑇,uvetc)
+   #dxyz_dt(du,u0,𝑃,0.0)
+   𝑇 = (0.0,𝑃.t1-𝑃.t0)
+   prob = ODEProblem(dxyz_dt,u0,𝑇,𝑃)
    #sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
-   sol = solve(prob,RK4(),dt=uvetc["dt"])
-   #sol = solve(prob,Euler(),dt=uvetc["dt"])
+   sol = solve(prob,RK4(),dt=𝑃.dt)
+   #sol = solve(prob,Euler(),dt=𝑃.dt)
 
    sol[1,:,:]=mod.(sol[1,:,:],nx)
    sol[2,:,:]=mod.(sol[2,:,:],ny)
-   XC=exchange(uvetc["XC"])
-   YC=exchange(uvetc["YC"])
+   XC=exchange(𝑃.XC)
+   YC=exchange(𝑃.YC)
    df=postprocess_lonlat(sol,XC,YC)
 
    #add third coordinate
@@ -202,7 +196,7 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
 
    #add time coordinate
    nt=size(df,1)/n
-   df.t=uvetc["dt"]*[ceil(i/n)-1 for i in 1:nt*n]
+   df.t=𝑃.dt*[ceil(i/n)-1 for i in 1:nt*n]
 
    #to plot e.g. Pacific Ocean transports, shift longitude convention?
    df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
@@ -286,20 +280,18 @@ function example3_setup(;backward_in_time::Bool=false)
    v0=v0./Γ["DYC"]
    v1=v1./Γ["DYC"]
 
-   uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1, "dt" => dt) ;
-
-   uvetc=merge(uvt,Γ);
-
    nr=50; kk=1;
 
    mskW=read(γ.path*"hFacW.latlon.data",MeshArray(γ,Float32,nr))
    mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
    mskS=read(γ.path*"hFacS.latlon.data",MeshArray(γ,Float32,nr))
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
-
    msk=Dict("mskW" => mskW, "mskS" => mskS)
 
-   return merge(uvetc,msk)
+   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1,
+        t0=t0, t1=t1, dt=dt, XC=Γ["XC"], YC=Γ["YC"]) ;
+
+   return 𝑃,Γ
 
 end
 
@@ -365,9 +357,9 @@ function OCCA_setup(;backward_in_time::Bool=false)
 
    t0=0.0; t1=86400*366*2.0; dt=dt=10*86400.0;
 
-   uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1,
-              "w0" => w0, "w1" => w1, "t0" => t0, "t1" => t1, "dt" => dt) ;
+   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, w0=w0, w1=w1,
+        t0=t0, t1=t1, dt=dt, XC=Γ["XC"], YC=Γ["YC"]) ;
 
-   return merge(uvt,Γ)
+   return 𝑃,Γ
 
 end
