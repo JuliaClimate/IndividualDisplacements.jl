@@ -36,8 +36,8 @@ function postprocess_lonlat(sol,XC,YC)
     return df
 end
 
-postprocess_lonlat(sol,uvetc::Dict) = postprocess_lonlat(sol,uvetc["XC"],uvetc["YC"])
-postprocess_lonlat(sol,uvetc::NamedTuple) = postprocess_lonlat(sol,uvetc.XC,uvetc.YC)
+postprocess_lonlat(sol,𝑃::Dict) = postprocess_lonlat(sol,𝑃["XC"],𝑃["YC"])
+postprocess_lonlat(sol,𝑃::NamedTuple) = postprocess_lonlat(sol,𝑃.XC,𝑃.YC)
 
 """
     postprocess_xy()
@@ -65,17 +65,19 @@ end
 postprocess_xy(sol,𝑃::Dict) = postprocess_xy(sol,dict_to_nt(𝑃))
 
 """
-    read_uvetc(k::Int,γ::Dict,pth::String)
+    read_uvetc(k::Int,Γ::Dict,pth::String)
 
-Define `uvetc` given the grid variables `γ` and a vertical level choice `k`
+Define `uvetc` given the grid variables `Γ` and a vertical level choice `k`
 including velocities obtained from files in `pth`
 """
-function read_uvetc(k::Int,γ::Dict,pth::String)
-    nt=12; msk=(γ["hFacC"][:,k] .> 0.) #select depth
+function read_uvetc(k::Int,Γ::Dict,pth::String)
+    𝑃 = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
+    Γ = dict_to_nt( Γ )
+    nt=12; msk=(Γ.hFacC[:,k] .> 0.) #select depth
 
-    u=0. *γ["XC"]; v=0. *γ["XC"];
+    u=0. ./Γ.DXC; v=0. ./Γ.DYC;
     for t=1:nt
-        (U,V)=read_velocities(γ["XC"].grid,t,pth)
+        (U,V)=read_velocities(Γ.XC.grid,t,pth)
         for i=1:size(u,1)
             u[i]=u[i] + U[i,k]
             v[i]=v[i] + V[i,k]
@@ -85,24 +87,22 @@ function read_uvetc(k::Int,γ::Dict,pth::String)
     v=v ./ nt #time average
 
     u[findall(isnan.(u))]=0.0; v[findall(isnan.(v))]=0.0 #mask with 0s rather than NaNs
-    u=u./γ["DXC"]; v=v./γ["DYC"]; #normalize to grid units
+    u=u./Γ.DXC; v=v./Γ.DYC; #normalize to grid units
 
     (u,v)=exchange(u,v,1) #add 1 point at each edge for u and v
-    XC=exchange(γ["XC"]) #add 1 lon point at each edge
-    YC=exchange(γ["YC"]) #add 1 lat point at each edge
+    XC=exchange(Γ.XC) #add 1 lon point at each edge
+    YC=exchange(Γ.YC) #add 1 lat point at each edge
 
     t0=0.0; t1=86400*366*10.0; dt=10*86400.0;
-    uvetc = Dict("u0" => u, "u1" => u, "v0" => v, "v1" => v,
-    "t0" => t0, "t1" => t1, "dt" => dt, "msk" => msk, "XC" => XC, "YC" => YC)
-    uvetc=merge(uvetc,IndividualDisplacements.NeighborTileIndices_cs(γ));
+    tmp = (u0=u, u1=u, v0=v, v1=v, t0=t0, t1=t1, dt=dt, msk=msk, XC=XC, YC=YC)
 
-    return uvetc
+    return merge(𝑃,tmp)
 end
 
 """
-    read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
+    read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
 
-Define `uvetc` given the grid variables `γ`, a vertical level choice `k`, the
+Define `uvetc` given the grid variables `Γ`, a vertical level choice `k`, the
 time `t` in `seconds` (Float64), and velocities obtained from files in `pth`.
 
 The two climatological months (`m0`,`m1`) that bracket time `t` will be
@@ -111,7 +111,9 @@ extracted (e.g. months 12 & 1 then 1 & 2 and so on).
 _Note: the nitial implementation does this only approximately by setting
 every months duration to 1 year / 12 for simplicity; should be improved..._
 """
-function read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
+function read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
+    𝑃 = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
+    Γ = dict_to_nt( Γ )
     dt=86400.0*365.0/12.0
     t<0.0 ? error("time needs to be positive") : nothing
 
@@ -127,36 +129,34 @@ function read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
 
     #println([t0/dt,t1/dt,m0,m1])
 
-    (U,V)=read_velocities(γ["XC"].grid,m0,pth)
+    (U,V)=read_velocities(Γ.XC.grid,m0,pth)
     u0=U[:,k]; v0=V[:,k]
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
-    u0=u0./γ["DXC"]; v0=v0./γ["DYC"]; #normalize to grid units
+    u0=u0./Γ.DXC; v0=v0./Γ.DYC; #normalize to grid units
     (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
 
-    (U,V)=read_velocities(γ["XC"].grid,m1,pth)
+    (U,V)=read_velocities(Γ.XC.grid,m1,pth)
     u1=U[:,k]; v1=V[:,k]
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
-    u1=u1./γ["DXC"]; v1=v1./γ["DYC"]; #normalize to grid units
+    u1=u1./Γ.DXC; v1=v1./Γ.DYC; #normalize to grid units
     (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
 
-    msk=(γ["hFacC"][:,k] .> 0.) #select depth
-    XC=exchange(γ["XC"]) #add 1 lon point at each edge
-    YC=exchange(γ["YC"]) #add 1 lat point at each edge
+    msk=(Γ.hFacC[:,k] .> 0.) #select depth
+    XC=exchange(Γ.XC) #add 1 lon point at each edge
+    YC=exchange(Γ.YC) #add 1 lat point at each edge
 
-    uvetc = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1,
-    "t0" => t0, "t1" => t1, "dt" => dt, "msk" => msk, "XC" => XC, "YC" => YC)
-    uvetc=merge(uvetc,IndividualDisplacements.NeighborTileIndices_cs(γ));
+    tmp = (u0=u0, u1=u1, v0=v0, v1=v1, t0=t0, t1=t1, dt=dt, msk=msk, XC=XC, YC=YC)
 
-    return uvetc
+    return merge(𝑃,tmp)
 end
 
 """
-    initialize_gridded(uvetc::Dict,n_subset::Int=1)
+    initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
 
 Define initial condition (u0,du) as a subset of grid points
 """
-function initialize_gridded(uvetc::Dict,n_subset::Int=1)
-    msk=uvetc["msk"]
+function initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
+    msk=𝑃.msk
     uInitS = Array{Float64,2}(undef, 3, prod(msk.grid.ioSize))
 
     kk = 0

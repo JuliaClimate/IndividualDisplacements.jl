@@ -54,21 +54,20 @@ r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
 
 #initialize u0,u1 etc
-uvetc=read_uvetc(k,0.0,Γ,joinpath(p,"../examples/nctiles_climatology/"));
-uvetc=IndividualDisplacements.dict_to_nt(uvetc);
+𝑃=read_uvetc(k,0.0,Γ,joinpath(p,"../examples/nctiles_climatology/"));
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### Single interpolation & trajectory Test
 #
 # Interpolate Velocity (normalized)
 (u0,du)=initialize_lonlat(Γ,-160.1,35.1; msk=Γ["hFacC"][:,k]);
-⬡!(du,u0,uvetc,0.0);
+⬡!(du,u0,𝑃,0.0);
 #u,v,f=du[:]
 
 # Solve for trajectory
 
-𝑇 = (0.0,uvetc.t1)
-prob = ODEProblem(⬡!,u0,𝑇,uvetc)
+𝑇 = (0.0,𝑃.t1)
+prob = ODEProblem(⬡!,u0,𝑇,𝑃)
 sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4);
 #sol = solve(prob,Euler(),dt=1e6)
 #size(sol)
@@ -84,7 +83,7 @@ sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4);
 #
 # Initial Positions:
 
-#(u0,du)=initialize_gridded(uvetc,10)
+#(u0,du)=initialize_gridded(𝑃,10)
 
 #(lon, lat) = randn_lonlat(20000)
 #(u0,du)=initialize_lonlat(Γ,lon,lat; msk=Γ["hFacC"][:,k])
@@ -111,31 +110,30 @@ n_reset = Int(round(r_reset*n_store));
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # Solve for all trajectories for first 1/2 month
 
-prob = ODEProblem(⬡!,u0,𝑇,uvetc)
-sol = solve(prob,Euler(),dt=uvetc.dt/8.0);
+prob = ODEProblem(⬡!,u0,𝑇,𝑃)
+sol = solve(prob,Euler(),dt=𝑃.dt/8.0);
 #size(sol)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # Map `i,j` to `lon,lat` coordinates and convert to `DataFrames`
 
-df=postprocess_lonlat(sol,uvetc)
+df=postprocess_lonlat(sol,𝑃);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.2 Repeat For `ny*12` Months
 #
 # _A fraction of the particles, randomly selected, is reset every month to maintain a relatively homogeneous coverage of the Global Ocean by the fleet of particles._
 
-t0=[uvetc.t1]
+t0=[𝑃.t1]
 u0 = deepcopy(sol[:,:,end])
 println(size(df))
 for y=1:ny
     for m=1:12
-        uvetc=read_uvetc(k,t0[1],Γ,joinpath(p,"../examples/nctiles_climatology/"))
-        uvetc=IndividualDisplacements.dict_to_nt(uvetc);
-        𝑇 = (uvetc.t0,uvetc.t1)
-        prob = ODEProblem(⬡!,u0,𝑇,uvetc)
-        sol = solve(prob,Euler(),dt=uvetc.dt/8.0)
-        tmp = postprocess_lonlat(sol[:,:,2:end],uvetc)
+        𝑃=read_uvetc(k,t0[1],Γ,joinpath(p,"../examples/nctiles_climatology/"))
+        𝑇 = (𝑃.t0,𝑃.t1)
+        prob = ODEProblem(⬡!,u0,𝑇,𝑃)
+        sol = solve(prob,Euler(),dt=𝑃.dt/8.0)
+        tmp = postprocess_lonlat(sol[:,:,2:end],𝑃)
 
         k_reset = rand(1:size(u0_store,2), n_reset)
         k_new = rand(1:size(u0_store,2), n_reset)
@@ -144,7 +142,7 @@ for y=1:ny
         tmp[k_reset.+t_reset*n_store,2:end].=NaN #reset a random subset of particles
         append!(df,tmp)
 
-        t0[1]=uvetc.t1
+        t0[1]=𝑃.t1
         u0[:,:] = deepcopy(sol[:,:,end])
         u0[:,k_reset].=deepcopy(u0_store[:,k_new]) #reset a random subset of particles
     end
@@ -178,7 +176,7 @@ end
 nf=size(u0,2)
 nt=size(df,1)/nf
 t=[ceil(i/nf)-1 for i in 1:nt*nf]
-df[!,:t]=2000 .+ uvetc.dt/4/86400/365 * t
+df[!,:t]=2000 .+ 𝑃.dt/4/86400/365 * t
 
 lon=[i for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
 lat=[j for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]

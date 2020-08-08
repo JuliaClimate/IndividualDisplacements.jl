@@ -145,10 +145,10 @@ function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     return du
 end
 
-function dxy_dt(du::Array{Float64,2},u::Array{Float64,2},p::Dict,tim)
+function dxy_dt(du::Array{Float64,2},u::Array{Float64,2},𝑃::NamedTuple,tim)
     for i=1:size(u,2)
         tmpdu=du[1:2,i]
-        dxy_dt(tmpdu,u[1:2,i],p,tim)
+        dxy_dt(tmpdu,u[1:2,i],𝑃,tim)
         du[1:2,i]=tmpdu
     end
     return du
