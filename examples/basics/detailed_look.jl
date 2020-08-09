@@ -3,22 +3,22 @@
 #md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/detailed_look.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/detailed_look.ipynb)
 #
-# A Detailed Look at spatial interpolation, temporal integration, and input/output.
+# A Detailed Look at spatial interpolation, integration through time, and I/O.
 # For additional documentation e.g. see :
 # [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
 # [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 #
-# In this example we :
+# Here we illustrate:
 #
-# - put together `uvetc` dictionnary
-#   - read gridded velocity output (U*data, V*data)
-#   - read trajectory output (`float_traj*data`)
-# - interpolate `U,V` along trajectory from gridded output
-#   - compare with `u,v` from `float_traj*data`
-# - compute whole trajectory using `OrdinaryDiffEq.jl`
-#   - compare with `x(t),y(t)` from `float_traj*data`
+# - reading velocities from file.
+#   - gridded velocity output (U*data, V*data)
+#   - pre-computed trajectory output (`float_traj*data`)
+# - interpolating `U,V` from gridded output to individual locations
+#   - compared with `u,v` from `float_traj*data`
+# - computing trajectories (location v time) using `OrdinaryDiffEq.jl`
+#   - compared with `x(t),y(t)` from `float_traj*data`
 
 # ## 1. Import Software
 
@@ -40,9 +40,9 @@ plt=PlotBasic(df,300,100000.0)
 
 # ## 3. Read Gridded Variables
 #
-# via `MeshArrays.jl` and into a dictionary
+# using `MeshArrays.jl` and e.g. a NamedTyple
 
-𝑃,Γ=example2_setup()
+𝑃,Γ=example2_setup();
 
 # ## 4. Visualize Velocity Fields
 

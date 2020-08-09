@@ -3,7 +3,8 @@
 #md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/particle_cloud.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/particle_cloud.ipynb)
 #
-# This notebook uses the same setup as `detailed_look.jl` / `example2()`.
+# Using the same setup as `detailed_look.jl` or `example2()`, here we simulate
+# a point cloud getting advected by the flow field. 
 # For additional documentation e.g. see :
 # [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
 # [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
