@@ -1,4 +1,4 @@
-using MeshArrays, Statistics, OrdinaryDiffEq, Plots, IndividualDisplacements
+using MeshArrays, Statistics, OrdinaryDiffEq, Plots, NetCDF, IndividualDisplacements
 
 """
     example1()

@@ -1,8 +1,9 @@
 
 """
-    postprocess_lonlat()
+    postprocess_lonlat(sol,XC,YC)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
+using "exchanged" XC, YC via `add_lonlat!`
 """
 function postprocess_lonlat(sol,XC,YC)
     ID=collect(1:size(sol,2))*ones(1,size(sol,3))
@@ -10,34 +11,42 @@ function postprocess_lonlat(sol,XC,YC)
     y=sol[2,:,:]
     XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
     df = DataFrame(ID=Int.(ID[:]), x=x[:], y=y[:], fIndex=fIndex[:])
-
-    lon=Array{Float64,1}(undef,size(df,1)); lat=similar(lon)
-
-    for ii=1:length(lon)
-        #get location in grid index space
-        x=df[ii,:x]; y=df[ii,:y]; fIndex=Int(df[ii,:fIndex])
-        dx,dy=[x - floor(x) .+ 0.5,y - floor(y) .+ 0.5]
-        i_c,j_c = Int32.(floor.([x y])) .+ 1
-        #interpolate lon and lat to position
-        tmp=view(YC[fIndex],i_c:i_c+1,j_c:j_c+1)
-        lat[ii]=(1.0-dx)*(1.0-dy)*tmp[1,1]+dx*(1.0-dy)*tmp[2,1]+(1.0-dx)*dy*tmp[1,2]+dx*dy*tmp[2,2]
-
-        tmp=view(XC[fIndex],i_c:i_c+1,j_c:j_c+1)
-        if (maximum(tmp)>minimum(tmp)+180)
-            tmp1=deepcopy(tmp)
-            tmp1[findall(tmp.<maximum(tmp)-180)] .+= 360.
-            tmp=tmp1
-        end
-        #kk=findall(tmp.<maximum(tmp)-180); tmp[kk].=tmp[kk].+360.0
-        lon[ii]=(1.0-dx)*(1.0-dy)*tmp[1,1]+dx*(1.0-dy)*tmp[2,1]+(1.0-dx)*dy*tmp[1,2]+dx*dy*tmp[2,2]
-    end
-
-    df.lon=lon; df.lat=lat; #show(df[end-3:end,:])
+    add_lonlat!(df,XC,YC)
     return df
 end
 
 postprocess_lonlat(sol,𝑃::Dict) = postprocess_lonlat(sol,𝑃["XC"],𝑃["YC"])
 postprocess_lonlat(sol,𝑃::NamedTuple) = postprocess_lonlat(sol,𝑃.XC,𝑃.YC)
+
+"""
+    add_lonlat!(df::DataFrame,XC,YC)
+
+Add lon & lat to dataframe using "exchanged" XC, YC
+"""
+function add_lonlat!(df::DataFrame,XC,YC)
+    x=df[!,:x];
+    y=df[!,:y];
+    f=Int.(df[!,:fIndex]);
+    dx,dy=(x - floor.(x) .+ 0.5,y - floor.(y) .+ 0.5);
+    i_c = Int32.(floor.(x)) .+ 1;
+    j_c = Int32.(floor.(y)) .+ 1;
+
+    lon=zeros(length(x),4)
+    [lon[k,:]=XC[f[k]][i_c[k]:i_c[k]+1,j_c[k]:j_c[k]+1][:] for k in 1:length(i_c)]
+    lat=zeros(length(x),4)
+    [lat[k,:]=YC[f[k]][i_c[k]:i_c[k]+1,j_c[k]:j_c[k]+1][:] for k in 1:length(i_c)]
+
+    k=findall(vec(maximum(lon,dims=2)-minimum(lon,dims=2)) .> 180.0)
+    tmp=view(lon,k,:)
+    tmp[findall(tmp.<0.0)]=tmp[findall(tmp.<0.0)] .+ 360.0
+
+    df.lon=(1.0 .-dx).*(1.0 .-dy).*lon[:,1]+dx.*(1.0 .-dy).*lon[:,2] +
+         (1.0 .-dx).*dy.*lon[:,3]+dx.*dy.*lon[:,4]
+    df.lat=(1.0 .-dx).*(1.0 .-dy).*lat[:,1]+dx.*(1.0 .-dy).*lat[:,2] +
+         (1.0 .-dx).*dy.*lat[:,3]+dx.*dy.*lat[:,4]
+
+    return df
+end
 
 """
     postprocess_xy()
