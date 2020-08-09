@@ -5,6 +5,7 @@
 #
 # Simulate the trajectory of a particle in a perfectly circular flow (i.e.
 # _solid body rotation_), which may represent e.g. an ocean meso-scale eddy.
+# _Addendum: _ a homogeneous sinking / floating term was later added.
 #
 # ![solid body rotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
 #
@@ -15,9 +16,9 @@
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 #
-# - 1. setup the software and initialize example
-# - 2. simulate trajectories & plot results
-# - 3. experiment with parameters (user)
+# - setup the software and initialize example
+# - simulate trajectories & plot results
+# - experiment with parameters (user)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.1 Import Software
@@ -29,19 +30,15 @@ using IndividualDisplacements, MeshArrays
 # ## 1.2  Gridded Domain
 #
 # - define `SetPeriodicDomain` function, which uses `MeshArrays.jl`
-# - call `SetPeriodicDomain` function with a chosen grid size; e.g. `np=16`
+# - call `SetPeriodicDomain` function with a chosen grid size; e.g. `np=16` in
+#   the horizontal directions and `nz=4` in the vertical.
 
-np=16
-nz=4
-
+np,nz=16,4
 Γ=simple_periodic_domain(np);
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 1.3 Time & Velocity Fields
 #
-# - define time range
-# - define velocity field(s)
-# - store in `𝑃` (dictionary) with grid variables
 
 #time range
 t0=0.0
@@ -70,8 +67,8 @@ uu=MeshArray(γ,γ.ioPrec,nz)
 vv=MeshArray(γ,γ.ioPrec,nz)
 [vv[k]=v[1] for k=1:nz]
 
-#store everything in a dictionnary
-𝑃=(u0=uu, u1=uu, v0=vv, v1=vv,w0=0.0*w, w1=-0.01*w, t0=t0, t1=t1)
+#store everything in a data structure
+𝑃=(u0=uu, u1=uu, v0=vv, v1=vv,w0=0.0*w, w1=-0.01*w, t0=t0, t1=t1);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.4 Initial Position and Time
@@ -108,14 +105,12 @@ myplot(i)=plot(x[1:i],y[1:i],z[1:i],linewidth=2,arrow = 2,
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
 
-if false
 p=Int(ceil(nt/100))
 anim = @animate for i ∈ 1:p:nt
     myplot(i)
 end
 pth=tempdir()*"/"
 gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
-end
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:
