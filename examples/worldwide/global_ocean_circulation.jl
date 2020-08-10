@@ -66,8 +66,7 @@ r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 
 # Solve for trajectory
 
-𝑇 = (0.0,𝑃.t1)
-prob = ODEProblem(⬡!,u0,𝑇,𝑃)
+prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
 sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4);
 #sol = solve(prob,Euler(),dt=1e6)
 #size(sol)
@@ -110,7 +109,7 @@ n_reset = Int(round(r_reset*n_store));
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # Solve for all trajectories for first 1/2 month
 
-prob = ODEProblem(⬡!,u0,𝑇,𝑃)
+prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
 sol = solve(prob,Euler(),dt=𝑃.dt/8.0);
 #size(sol)
 
@@ -118,33 +117,38 @@ sol = solve(prob,Euler(),dt=𝑃.dt/8.0);
 # Map `i,j` to `lon,lat` coordinates and convert to `DataFrames`
 
 df=postprocess_lonlat(sol,𝑃);
+println(size(df))
+
+#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
+# Define iteration function
+
+function iter!(df,𝑃,u0)
+    #need an inplace version to update 𝑃 contents?
+    update_uvetc!(k,𝑃.𝑇[2],𝑃)
+    prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
+    sol = solve(prob,Euler(),dt=𝑃.dt/8.0)
+    tmp = postprocess_lonlat(sol[:,:,2:end],𝑃)
+
+    k_reset = rand(1:size(u0_store,2), n_reset)
+    k_new = rand(1:size(u0_store,2), n_reset)
+    t_reset = Int(size(tmp,1)/n_store)-1
+
+    tmp[k_reset.+t_reset*n_store,2:end].=NaN #reset a random subset of particles
+    append!(df,tmp)
+
+    u0[:,:] = deepcopy(sol[:,:,end])
+    u0[:,k_reset].=deepcopy(u0_store[:,k_new]) #reset a random subset of particles
+end
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.2 Repeat For `ny*12` Months
 #
 # _A fraction of the particles, randomly selected, is reset every month to maintain a relatively homogeneous coverage of the Global Ocean by the fleet of particles._
 
-t0=[𝑃.t1]
 u0 = deepcopy(sol[:,:,end])
-println(size(df))
 for y=1:ny
     for m=1:12
-        𝑃=read_uvetc(k,t0[1],Γ,joinpath(p,"../examples/nctiles_climatology/"))
-        𝑇 = (𝑃.t0,𝑃.t1)
-        prob = ODEProblem(⬡!,u0,𝑇,𝑃)
-        sol = solve(prob,Euler(),dt=𝑃.dt/8.0)
-        tmp = postprocess_lonlat(sol[:,:,2:end],𝑃)
-
-        k_reset = rand(1:size(u0_store,2), n_reset)
-        k_new = rand(1:size(u0_store,2), n_reset)
-        t_reset = Int(size(tmp,1)/n_store)-1
-
-        tmp[k_reset.+t_reset*n_store,2:end].=NaN #reset a random subset of particles
-        append!(df,tmp)
-
-        t0[1]=𝑃.t1
-        u0[:,:] = deepcopy(sol[:,:,end])
-        u0[:,k_reset].=deepcopy(u0_store[:,k_new]) #reset a random subset of particles
+        iter!(df,𝑃,u0)
     end
     println(size(df))
 end
