@@ -62,9 +62,8 @@ function dxyz_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
     x,y,z = u[1:3]
-    nx,ny=𝑃.u0.grid.ioSize
+    nx,ny,nz = 𝑃.ioSize
     x,y=[mod(x,nx),mod(y,ny)]
-    nz=size(𝑃.u0,2)
     z=mod(z,nz)
     #
     dx,dy,dz=[x - floor(x),y - floor(y),z - floor(z)]
@@ -119,7 +118,7 @@ function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
     x,y = u[1:2]
-    nx,ny=𝑃.u0.grid.ioSize
+    nx,ny=𝑃.ioSize
     x,y=[mod(x,nx),mod(y,ny)]
     #
     dx,dy=[x - floor(x),y - floor(y)]

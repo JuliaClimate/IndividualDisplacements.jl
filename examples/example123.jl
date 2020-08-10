@@ -122,7 +122,7 @@ function example2_setup()
    Γ=merge(Γ,Dict("mskW" => mskW, "mskS" => mskS))
 
    𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, dx=Γ["dx"],
-        𝑇=[t0,t1], XC=Γ["XC"], YC=Γ["YC"])
+        𝑇=[t0,t1], XC=Γ["XC"], YC=Γ["YC"], ioSize=(80,42))
    return 𝑃,Γ
 end
 
@@ -149,8 +149,8 @@ PlotBasic(df,1000,90.0)
 #include(joinpath(p,"../examples/recipes_Makie.jl"))
 #PlotMakie(df,3000,180.)
 
-n=maximum(df.ID)
-nt=size(df,1)/n
+nf=maximum(df.ID)
+nt=size(df,1)/nf
 dt=maximum(df.t)/(nt-1)
 @gif for t in 0:nt-1
    scatter_zcolor(df,t*dt,df.z,(0,10))
@@ -167,35 +167,34 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
       error("unknown example (nam parameter value)")
    end
 
-   nx,ny=size(𝑃.XC[1])
+   nx,ny=𝑃.ioSize[1:2]
 
    lo0,lo1=lon_rng
    la0,la1=lat_rng
-   n=1000
-   lon=lo0 .+(lo1-lo0).*rand(n)
-   lat=la0 .+(la1-la0).*rand(n)
+   nf=1000
+   lon=lo0 .+(lo1-lo0).*rand(nf)
+   lat=la0 .+(la1-la0).*rand(nf)
    (u0,du)=initialize_lonlat(Γ,lon,lat)
    u0[3,:] .= z_init
 
    #dxyz_dt(du,u0,𝑃,0.0)
    prob = ODEProblem(dxyz_dt,u0,𝑃.𝑇,𝑃)
    #sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
-   sol = solve(prob,RK4(),dt=𝑃.dt)
-   #sol = solve(prob,Euler(),dt=𝑃.dt)
+   #sol = solve(prob,RK4(),reltol=1e-4,abstol=1e-4)
+   sol = solve(prob,Euler(),dt=10*86400.0)
 
    sol[1,:,:]=mod.(sol[1,:,:],nx)
    sol[2,:,:]=mod.(sol[2,:,:],ny)
-   XC=exchange(𝑃.XC)
-   YC=exchange(𝑃.YC)
-   df=postprocess_lonlat(sol,XC,YC)
+   df=postprocess_lonlat(sol,𝑃)
 
    #add third coordinate
    z=sol[3,:,:]
    df.z=z[:]
 
    #add time coordinate
-   nt=size(df,1)/n
-   df.t=𝑃.dt*[ceil(i/n)-1 for i in 1:nt*n]
+   #nt=size(df,1)/nf
+   #t=[ceil(i/nf)-1 for i in 1:nt*nf]
+   #df.t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t
 
    #to plot e.g. Pacific Ocean transports, shift longitude convention?
    df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
@@ -220,8 +219,8 @@ example3((-165.0,-155.0),(5.0,15.0),5.5,true)
 """
 function example3(lon_rng,lat_rng,z_init,bck)
    df=example3("OCCA",bck=bck, z_init=z_init,lon_rng=lon_rng,lat_rng=lat_rng)
-   n=maximum(df.ID)
-   nt=size(df,1)/n
+   nf=maximum(df.ID)
+   nt=size(df,1)/nf
    dt=maximum(df.t)/(nt-1)
    return @gif for t in 0:nt-1
         scatter_zcolor(df,t*dt,df.z,(0,10))
@@ -272,7 +271,7 @@ function example3_setup(;backward_in_time::Bool=false)
    u0=s*u; u1=s*u;
    v0=s*v; v1=s*v;
 
-   t0=0.0; t1=86400*366*2.0; dt=10*86400.0;
+   t0=0.0; t1=86400*366*2.0;
 
    u0=u0./Γ["DXC"]
    u1=u1./Γ["DXC"]
@@ -287,8 +286,8 @@ function example3_setup(;backward_in_time::Bool=false)
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
    msk=Dict("mskW" => mskW, "mskS" => mskS)
 
-   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1,
-        𝑇=[t0,t1], dt=dt, XC=Γ["XC"], YC=Γ["YC"]) ;
+   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, 𝑇=[t0,t1], ioSize=(360,178),
+        XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]))
 
    return 𝑃,Γ
 
@@ -354,10 +353,10 @@ function OCCA_setup(;backward_in_time::Bool=false)
    v0=s*v; v1=s*v;
    w0=s*w; w1=s*w;
 
-   t0=0.0; t1=86400*366*2.0; dt=dt=10*86400.0;
+   t0=0.0; t1=86400*366*2.0;
 
-   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, w0=w0, w1=w1,
-        𝑇=[t0,t1], dt=dt, XC=Γ["XC"], YC=Γ["YC"]) ;
+   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, w0=w0, w1=w1, 𝑇=[t0,t1],
+   XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), ioSize=(360,160,50))
 
    return 𝑃,Γ
 
