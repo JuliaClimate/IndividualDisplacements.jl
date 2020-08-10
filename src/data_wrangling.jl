@@ -67,7 +67,7 @@ function postprocess_xy(sol,𝑃::NamedTuple)
     x=mod.(x[:],Ref(nx)), y=mod.(y[:],Ref(ny)))
 
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    df[!,:t]=𝑃.t0 .+ (𝑃.t1-𝑃.t0)/t[end].*t
+    df[!,:t]=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t
     return df
 end
 
@@ -117,14 +117,37 @@ time `t` in `seconds` (Float64), and velocities obtained from files in `pth`.
 The two climatological months (`m0`,`m1`) that bracket time `t` will be
 extracted (e.g. months 12 & 1 then 1 & 2 and so on).
 
-_Note: the nitial implementation does this only approximately by setting
+_Note: the initial implementation does this only approximately by setting
 every months duration to 1 year / 12 for simplicity; should be improved..._
 """
 function read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
-    𝑃 = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
-    Γ = dict_to_nt( Γ )
+    XC=exchange(Γ["XC"]) #add 1 lon point at each edge
+    YC=exchange(Γ["YC"]) #add 1 lat point at each edge
+    iDXC=1. ./Γ["DXC"]
+    iDYC=1. ./Γ["DYC"]
+    γ=Γ["XC"].grid
     dt=86400.0*365.0/12.0
-    t<0.0 ? error("time needs to be positive") : nothing
+
+    𝑃 = (u0=MeshArray(γ,Float32), u1=MeshArray(γ,Float32),
+         v0=MeshArray(γ,Float32), v1=MeshArray(γ,Float32),
+         𝑇=[0.0,dt], dt=dt, pth=pth,
+         XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC)
+
+    tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
+    𝑃 = merge(𝑃 , tmp)
+
+    update_uvetc!(k,t,𝑃)
+    return 𝑃
+end
+
+"""
+    update_uvetc!(k::Int,t::Float64,𝑃::NamedTuple)
+
+_Note: the initial implementation does this only approximately by setting
+every months duration to 1 year / 12 for simplicity; should be improved..._
+"""
+function update_uvetc!(k::Int,t::Float64,𝑃::NamedTuple)
+    dt=𝑃.dt
 
     m0=Int(floor((t+dt/2.0)/dt))
     m1=m0+1
@@ -136,28 +159,26 @@ function read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
     m1=mod(m1,12)
     m1==0 ? m1=12 : nothing
 
-    #println([t0/dt,t1/dt,m0,m1])
-
-    (U,V)=read_velocities(Γ.XC.grid,m0,pth)
+    (U,V)=read_velocities(𝑃.u0.grid,m0,𝑃.pth)
     u0=U[:,k]; v0=V[:,k]
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
-    u0=u0./Γ.DXC; v0=v0./Γ.DYC; #normalize to grid units
+    u0=u0.*𝑃.iDXC; v0=v0.*𝑃.iDYC; #normalize to grid units
     (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
 
-    (U,V)=read_velocities(Γ.XC.grid,m1,pth)
+    (U,V)=read_velocities(𝑃.u0.grid,m1,𝑃.pth)
     u1=U[:,k]; v1=V[:,k]
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
-    u1=u1./Γ.DXC; v1=v1./Γ.DYC; #normalize to grid units
+    u1=u1.*𝑃.iDXC; v1=v1.*𝑃.iDYC; #normalize to grid units
     (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
 
-    msk=(Γ.hFacC[:,k] .> 0.) #select depth
-    XC=exchange(Γ.XC) #add 1 lon point at each edge
-    YC=exchange(Γ.YC) #add 1 lat point at each edge
+    𝑃.u0[:]=u0[:]
+    𝑃.u1[:]=u1[:]
+    𝑃.v0[:]=v0[:]
+    𝑃.v1[:]=v1[:]
+    𝑃.𝑇[:]=[t0,t1]
 
-    tmp = (u0=u0, u1=u1, v0=v0, v1=v1, t0=t0, t1=t1, dt=dt, msk=msk, XC=XC, YC=YC)
-
-    return merge(𝑃,tmp)
 end
+
 
 """
     initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)

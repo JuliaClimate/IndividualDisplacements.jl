@@ -6,7 +6,7 @@ Interpolate velocity from gridded fields (2D; with halos) to position `u`
 """
 function dxy_dt!(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     #compute positions in index units
-    dt=(tim-𝑃.t0)/(𝑃.t1-𝑃.t0)
+    dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     dt>1.0 ? error("dt>1.0") : nothing
     dt<0.0 ? error("dt>0.0") : nothing
     g=𝑃.u0.grid
@@ -59,7 +59,7 @@ Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 """
 function dxyz_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     #compute positions in index units
-    dt=(tim-𝑃.t0)/(𝑃.t1-𝑃.t0)
+    dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
     x,y,z = u[1:3]
     nx,ny=𝑃.u0.grid.ioSize
@@ -116,7 +116,7 @@ Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 """
 function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     #compute positions in index units
-    dt=(tim-𝑃.t0)/(𝑃.t1-𝑃.t0)
+    dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
     x,y = u[1:2]
     nx,ny=𝑃.u0.grid.ioSize

@@ -51,8 +51,7 @@ u0=transpose([x0[:] y0[:] ones(size(x0[:]))]);
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.1 Compute Trajectories
 
-𝑇 = (𝑃.t0,𝑃.t1)
-prob = ODEProblem(⬡!,u0,𝑇,𝑃)
+prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
 sol = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
 size(sol)
 
