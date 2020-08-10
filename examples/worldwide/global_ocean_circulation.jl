@@ -110,7 +110,7 @@ n_reset = Int(round(r_reset*n_store));
 # Solve for all trajectories for first 1/2 month
 
 prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
-sol = solve(prob,Euler(),dt=𝑃.dt/8.0);
+sol = solve(prob,Euler(),dt=10*86400.0);
 #size(sol)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
@@ -126,7 +126,7 @@ function iter!(df,𝑃,u0)
     #need an inplace version to update 𝑃 contents?
     update_uvetc!(k,𝑃.𝑇[2],𝑃)
     prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
-    sol = solve(prob,Euler(),dt=𝑃.dt/8.0)
+    sol = solve(prob,Euler(),dt=10*86400.0)
     tmp = postprocess_lonlat(sol[:,:,2:end],𝑃)
 
     k_reset = rand(1:size(u0_store,2), n_reset)
@@ -177,11 +177,6 @@ end
 #nb # %% {"slideshow": {"slide_type": "skip"}, "cell_type": "markdown"}
 # Here we create `lon`, `lat`, and `DL` (log10 of bottom depth) to use in plot background:
 
-nf=size(u0,2)
-nt=size(df,1)/nf
-t=[ceil(i/nf)-1 for i in 1:nt*nf]
-df[!,:t]=2000 .+ 𝑃.dt/4/86400/365 * t
-
 lon=[i for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
 lat=[j for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
 (f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
@@ -205,9 +200,8 @@ DL=reshape(DL,size(lon));
 contourf(lon[:,1],lat[1,:],transpose(DL),clims=(1.5,5),c = :ice, colorbar=false)
 
 dt=0.0001
-t0=minimum(df[!,:t])
-t1=maximum(df[!,:t])
-#t=2001.0
+t0=0.0
+t1=𝑃.𝑇[2]
 
 t=t1
 df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]

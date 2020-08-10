@@ -1,22 +1,25 @@
 
 """
-    postprocess_lonlat(sol,XC,YC)
+    postprocess_lonlat(sol,𝑃::NamedTuple)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
-using "exchanged" XC, YC via `add_lonlat!`
+using "exchanged" 𝑃.XC, 𝑃.YC via `add_lonlat!`
 """
-function postprocess_lonlat(sol,XC,YC)
+function postprocess_lonlat(sol,𝑃::NamedTuple)
     ID=collect(1:size(sol,2))*ones(1,size(sol,3))
     x=sol[1,:,:]
     y=sol[2,:,:]
-    XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
-    df = DataFrame(ID=Int.(ID[:]), x=x[:], y=y[:], fIndex=fIndex[:])
-    add_lonlat!(df,XC,YC)
+    𝑃.XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
+
+    nf=size(sol,2)
+    nt=size(sol,3)
+    t=[ceil(i/nf)-1 for i in 1:nt*nf]
+    t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t
+
+    df = DataFrame(ID=Int.(ID[:]), x=x[:], y=y[:], fIndex=fIndex[:], t=t[:])
+    add_lonlat!(df,𝑃.XC,𝑃.YC)
     return df
 end
-
-postprocess_lonlat(sol,𝑃::Dict) = postprocess_lonlat(sol,𝑃["XC"],𝑃["YC"])
-postprocess_lonlat(sol,𝑃::NamedTuple) = postprocess_lonlat(sol,𝑃.XC,𝑃.YC)
 
 """
     add_lonlat!(df::DataFrame,XC,YC)
@@ -57,21 +60,19 @@ and define time axis for a simple doubly periodic domain
 function postprocess_xy(sol,𝑃::NamedTuple)
     nf=size(sol,2)
     nt=size(sol,3)
-    nx,ny=size(𝑃.XC[1])
+    nx,ny=𝑃.ioSize[1:2]
 
     x=sol[1,:,:]
     y=sol[2,:,:]
-    size(𝑃.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
-    ID=collect(1:size(sol,2))*ones(1,size(sol,3))
-    df = DataFrame(ID=Int.(ID[:]), fIndex=fIndex[:],
-    x=mod.(x[:],Ref(nx)), y=mod.(y[:],Ref(ny)))
-
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    df[!,:t]=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t
+    #size(𝑃.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
+    ID=collect(1:size(sol,2))*ones(1,size(sol,3))
+
+    df = DataFrame(ID=Int.(ID[:]), t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t,
+                   x=mod.(x[:],Ref(nx)), y=mod.(y[:],Ref(ny)))
+
     return df
 end
-
-postprocess_xy(sol,𝑃::Dict) = postprocess_xy(sol,dict_to_nt(𝑃))
 
 """
     read_uvetc(k::Int,Γ::Dict,pth::String)
@@ -130,13 +131,14 @@ function read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
 
     𝑃 = (u0=MeshArray(γ,Float32), u1=MeshArray(γ,Float32),
          v0=MeshArray(γ,Float32), v1=MeshArray(γ,Float32),
-         𝑇=[0.0,dt], dt=dt, pth=pth,
-         XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC)
+         𝑇=[0.0,dt], pth=pth, XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC)
 
     tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
     𝑃 = merge(𝑃 , tmp)
 
-    update_uvetc!(k,t,𝑃)
+    update_uvetc!(k,0.0,𝑃)
+    𝑃.𝑇[1]=0.0
+    𝑃.𝑇[2]=dt/2.0
     return 𝑃
 end
 
@@ -147,7 +149,7 @@ _Note: the initial implementation does this only approximately by setting
 every months duration to 1 year / 12 for simplicity; should be improved..._
 """
 function update_uvetc!(k::Int,t::Float64,𝑃::NamedTuple)
-    dt=𝑃.dt
+    dt=𝑃.𝑇[2]-𝑃.𝑇[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
     m1=m0+1

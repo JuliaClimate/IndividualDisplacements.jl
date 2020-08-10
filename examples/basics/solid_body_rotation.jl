@@ -68,7 +68,7 @@ vv=MeshArray(γ,γ.ioPrec,nz)
 [vv[k]=v[1] for k=1:nz]
 
 #store everything in a data structure
-𝑃=(u0=uu, u1=uu, v0=vv, v1=vv,w0=0.0*w, w1=-0.01*w, 𝑇=[t0,t1]);
+𝑃=(u0=uu, u1=uu, v0=vv, v1=vv,w0=0.0*w, w1=-0.01*w, 𝑇=[t0,t1], ioSize=(np,np,nz));
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.4 Initial Position and Time
