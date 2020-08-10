@@ -122,7 +122,7 @@ function example2_setup()
    Γ=merge(Γ,Dict("mskW" => mskW, "mskS" => mskS))
 
    𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, dx=Γ["dx"],
-        t0=t0, t1=t1, XC=Γ["XC"], YC=Γ["YC"])
+        𝑇=[t0,t1], XC=Γ["XC"], YC=Γ["YC"])
    return 𝑃,Γ
 end
 
@@ -178,8 +178,7 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
    u0[3,:] .= z_init
 
    #dxyz_dt(du,u0,𝑃,0.0)
-   𝑇 = (0.0,𝑃.t1-𝑃.t0)
-   prob = ODEProblem(dxyz_dt,u0,𝑇,𝑃)
+   prob = ODEProblem(dxyz_dt,u0,𝑃.𝑇,𝑃)
    #sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
    sol = solve(prob,RK4(),dt=𝑃.dt)
    #sol = solve(prob,Euler(),dt=𝑃.dt)
@@ -289,7 +288,7 @@ function example3_setup(;backward_in_time::Bool=false)
    msk=Dict("mskW" => mskW, "mskS" => mskS)
 
    𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1,
-        t0=t0, t1=t1, dt=dt, XC=Γ["XC"], YC=Γ["YC"]) ;
+        𝑇=[t0,t1], dt=dt, XC=Γ["XC"], YC=Γ["YC"]) ;
 
    return 𝑃,Γ
 
@@ -358,7 +357,7 @@ function OCCA_setup(;backward_in_time::Bool=false)
    t0=0.0; t1=86400*366*2.0; dt=dt=10*86400.0;
 
    𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, w0=w0, w1=w1,
-        t0=t0, t1=t1, dt=dt, XC=Γ["XC"], YC=Γ["YC"]) ;
+        𝑇=[t0,t1], dt=dt, XC=Γ["XC"], YC=Γ["YC"]) ;
 
    return 𝑃,Γ
 

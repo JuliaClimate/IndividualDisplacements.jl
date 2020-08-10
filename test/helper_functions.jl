@@ -24,13 +24,10 @@ function test1_setup()
     u0=u./dx; u1=u./dx
     v0=v./dx; v1=v./dx
 
-    𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, t0=t0, t1=t1, XC=XC, YC=YC)
-
-    uInit=[200000.0;0.0]./dx
-    nSteps=3000-2
+    𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, 𝑇=[t0,t1], XC=XC, YC=YC)
+    u0=[200000.0;0.0]./dx
     du=fill(0.0,2);
-    tspan = (0.0,nSteps*3600.0)
-    prob = ODEProblem(⬡,uInit,tspan,𝑃)
+    prob = ODEProblem(⬡,u0,[0.0,2998*3600.0],𝑃)
     sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 
     return 𝑃,sol
@@ -60,8 +57,7 @@ function test2_periodic_domain(np = 12, nq = 12)
     u = 0.1 ./ Γ.DXC
     v = 0.3 ./ Γ.DYC
     (u, v) = exchange(u, v, 1)
-    𝑃 = (u0=u, u1=u, v0=v, v1=v, t0=0.0, t1=400.0,
-         dt=0.1, XC=Γ.XC, YC=Γ.YC)
+    𝑃 = (u0=u, u1=u, v0=v, v1=v, 𝑇=[0.0,400.0], dt=0.1, XC=Γ.XC, YC=Γ.YC)
 
     #initial conditions
     x0 = np * (0.4:0.04:0.6)
@@ -71,8 +67,7 @@ function test2_periodic_domain(np = 12, nq = 12)
     u0 = transpose([x0[:] y0[:] ones(size(x0[:]))])
 
     #solve for trajectories
-    𝑇 = (𝑃.t0, 𝑃.t1)
-    prob = ODEProblem(⬡!, u0, 𝑇, 𝑃)
+    prob = ODEProblem(⬡!, u0, 𝑃.𝑇, 𝑃)
     sol = solve(prob,Euler(),dt=𝑃.dt)
 
     return postprocess_xy(sol, 𝑃),𝑃

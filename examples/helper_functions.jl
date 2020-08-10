@@ -46,7 +46,7 @@ function setup_random_flow(Γ::Dict)
   v0=u; v1=u;
 
   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, dt=0.1,
-       t0=0.0, t1=400.0, XC=Γ["XC"], YC=Γ["YC"])
+       𝑇=[0.0,400.0], XC=Γ["XC"], YC=Γ["YC"])
   return 𝑃,ϕ
 
 end
