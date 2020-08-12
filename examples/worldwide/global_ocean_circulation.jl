@@ -89,12 +89,17 @@ sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4);
 
 #Or
 
-lo0,lo1=(-160.0,-150.0)
-la0,la1=(35.0,45.0)
-n=100
-lon=lo0 .+(lo1-lo0).*rand(n)
-lat=la0 .+(la1-la0).*rand(n)
-(u0,du)=initialize_lonlat(Γ,lon,lat; msk=Γ["hFacC"][:,k]);
+if false
+    lo0, lo1 = (-160.0, -150.0)
+    la0, la1 = (35.0, 45.0)
+    n = 100
+    lon = lo0 .+ (lo1 - lo0) .* rand(n)
+    lat = la0 .+ (la1 - la0) .* rand(n)
+    (u0, du) = initialize_lonlat(Γ, lon, lat; msk = Γ["hFacC"][:, k])
+else
+    (lon, lat) = randn_lonlat(100000)
+    (u0, du) = initialize_lonlat(Γ, lon, lat; msk = Γ["hFacC"][:, k])
+end
 
 # Arrays For Storing Results
 u0_store = deepcopy(u0)
@@ -110,7 +115,7 @@ n_reset = Int(round(r_reset*n_store));
 # Solve for all trajectories for first 1/2 month
 
 prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
-sol = solve(prob,Euler(),dt=10*86400.0);
+sol = solve(prob,Euler(),dt=5*86400.0);
 #size(sol)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
@@ -126,15 +131,17 @@ function iter!(df,𝑃,u0)
     #need an inplace version to update 𝑃 contents?
     update_uvetc!(k,𝑃.𝑇[2],𝑃)
     prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
-    sol = solve(prob,Euler(),dt=10*86400.0)
-    tmp = postprocess_lonlat(sol[:,:,2:end],𝑃)
+    sol = solve(prob,Euler(),dt=5*86400.0)
+    tmp = postprocess_lonlat(sol,𝑃)
 
     k_reset = rand(1:size(u0_store,2), n_reset)
     k_new = rand(1:size(u0_store,2), n_reset)
     t_reset = Int(size(tmp,1)/n_store)-1
 
     tmp[k_reset.+t_reset*n_store,2:end].=NaN #reset a random subset of particles
-    append!(df,tmp)
+    nt=size(sol,3)
+    nf=size(sol,2)
+    append!(df,tmp[nf+1:end,:])
 
     u0[:,:] = deepcopy(sol[:,:,end])
     u0[:,k_reset].=deepcopy(u0_store[:,k_new]) #reset a random subset of particles
@@ -146,10 +153,14 @@ end
 # _A fraction of the particles, randomly selected, is reset every month to maintain a relatively homogeneous coverage of the Global Ocean by the fleet of particles._
 
 u0 = deepcopy(sol[:,:,end])
+dt=86400.0*365.0/12.0
+𝑃.𝑇[1]=-dt/2.0
+𝑃.𝑇[2]=dt/2.0
 for y=1:ny
     for m=1:12
         iter!(df,𝑃,u0)
     end
+    println(𝑃.𝑇)
     println(size(df))
 end
 
@@ -188,15 +199,19 @@ DL=reshape(DL,size(lon));
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # Then we generate plot or movie using `GeoMakie.jl` ...
 
+if false
 #using ArgoData
 #p = include(joinpath(dirname(pathof(ArgoData)),"movies.jl"));
-#tt=collect(2000:0.05:2000+ny)
-#scene = ProjMap(DL,colorrange=(2.,4.))
-#ProjScatterMovie(scene,df,tt,"GlobalDomain_fleet_k"*"$k"*"_v1.mp4",dt=1.0,mrksz=5e3)
+df.y=2000 .+ df.t ./86400/365
+yy=collect(2000:0.05:2000+ny)
+scene = ProjMap(DL,colorrange=(2.,4.))
+ProjScatterMovie(scene,df,yy,"GlobalDomain_fleet_k"*"$k"*"_v1.mp4",dt=1.0,mrksz=5e3)
+end
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ... or using `Plots.jl`:
 
+if false
 contourf(lon[:,1],lat[1,:],transpose(DL),clims=(1.5,5),c = :ice, colorbar=false)
 
 dt=0.0001
@@ -205,10 +220,11 @@ t1=𝑃.𝑇[2]
 
 t=t1
 df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
-scatter!(df_t.lon,df_t.lat,markersize=3.0,c=:red,leg=:none,
+scatter!(df_t.lon,df_t.lat,markersize=1.5,c=:red,leg=:none,
     xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:circle, stroke(0)))
 
 t=t0
 df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
-scatter!(df_t.lon,df_t.lat,markersize=3.0,c=:yellow,leg=:none,
+scatter!(df_t.lon,df_t.lat,markersize=1.5,c=:yellow,leg=:none,
     xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:dot, stroke(0)))
+end
