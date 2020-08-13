@@ -16,5 +16,32 @@ export initialize_gridded, initialize_lonlat, randn_lonlat
 export postprocess_lonlat, add_lonlat!, postprocess_xy
 export read_flt, read_mds, read_drifters
 export read_uvetc, update_uvetc!
+export Individuals
+
+day=86400.0
+mon=365/12*day
+solver_default(prob) = solve(prob,Euler(),dt=2*day)
+𝑃_default = ( 𝑇 = [0.0,0.5*mon] , u0=[] , u1=[] , v0=[] , v1=[] )
+tr_default = DataFrame( ID=[], x=[], y=[], t = [], lon=[], lat=[], fid=[])
+
+"""
+    struct Individuals{T}
+
+Contains: xy, id, tr, etc
+```
+i=Individuals{Float32}(xy=zeros(3,2),id=1:2)
+```
+"""
+Base.@kwdef struct Individuals{T}
+   xy  ::Array{T,2} = Array{T,2}(undef, Tuple(Int.(zeros(1,2))))
+   id  ::Array{Int,1} = Array{Int,1}(undef, 0)
+   tr  ::DataFrame = tr_default
+   ⎔  ::Function = dxy_dt
+   ⎔! ::Function = dxy_dt!
+   □   ::Function = solver_default
+   𝑃   ::NamedTuple = 𝑃_default
+   𝐷   ::NamedTuple = NamedTuple()
+   𝑀  ::NamedTuple = NamedTuple()
+end
 
 end # module

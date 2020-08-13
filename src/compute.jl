@@ -154,7 +154,7 @@ function dxy_dt(du::Array{Float64,2},u::Array{Float64,2},𝑃::NamedTuple,tim)
 end
 
 """
-    dxy_dt_CyclicArray(du,u,p::NamedTuple,tim)
+    dxy_dt_CyclicArray(du,u,𝑃::NamedTuple,tim)
 
 Nearest neighbor (?) velocity from gridded fields (2D; NO halos but
 not needed when CyclicArrays is used to extend valid indice ranges).
