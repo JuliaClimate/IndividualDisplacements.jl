@@ -5,8 +5,10 @@
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 using "exchanged" 𝑃.XC, 𝑃.YC via `add_lonlat!`
 """
-function postprocess_lonlat(sol,𝑃::NamedTuple)
-    ID=collect(1:size(sol,2))*ones(1,size(sol,3))
+function postprocess_lonlat(sol,𝑃::NamedTuple,id=missing)
+    ismissing(id) ? id=collect(1:size(sol,2)) : nothing
+    𝐼=id*ones(1,size(sol,3))
+
     x=sol[1,:,:]
     y=sol[2,:,:]
     𝑃.XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
@@ -16,7 +18,7 @@ function postprocess_lonlat(sol,𝑃::NamedTuple)
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
     t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t
 
-    df = DataFrame(ID=Int.(ID[:]), x=x[:], y=y[:], fIndex=fIndex[:], t=t[:])
+    df = DataFrame(ID=Int.(𝐼[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
     add_lonlat!(df,𝑃.XC,𝑃.YC)
     return df
 end
@@ -29,7 +31,7 @@ Add lon & lat to dataframe using "exchanged" XC, YC
 function add_lonlat!(df::DataFrame,XC,YC)
     x=df[!,:x];
     y=df[!,:y];
-    f=Int.(df[!,:fIndex]);
+    f=Int.(df[!,:fid]);
     dx,dy=(x - floor.(x) .+ 0.5,y - floor.(y) .+ 0.5);
     i_c = Int32.(floor.(x)) .+ 1;
     j_c = Int32.(floor.(y)) .+ 1;
@@ -137,8 +139,6 @@ function read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
     𝑃 = merge(𝑃 , tmp)
 
     update_uvetc!(k,0.0,𝑃)
-    𝑃.𝑇[1]=0.0
-    𝑃.𝑇[2]=dt/2.0
     return 𝑃
 end
 
@@ -192,7 +192,7 @@ function initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
     uInitS = Array{Float64,2}(undef, 3, prod(msk.grid.ioSize))
 
     kk = 0
-    for fIndex = 1:5
+    for fIndex = 1:length(msk.fSize)
         nx, ny = msk.fSize[fIndex]
         ii1 = 0.5:1.0:nx
         ii2 = 0.5:1.0:ny

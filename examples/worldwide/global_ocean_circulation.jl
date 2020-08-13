@@ -66,7 +66,7 @@ r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 
 # Solve for trajectory
 
-prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
+prob = ODEProblem(⬡!,u0,(0.0,𝑃.𝑇[2]),𝑃)
 sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4);
 #sol = solve(prob,Euler(),dt=1e6)
 #size(sol)
@@ -92,77 +92,83 @@ sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4);
 if false
     lo0, lo1 = (-160.0, -150.0)
     la0, la1 = (35.0, 45.0)
-    n = 100
-    lon = lo0 .+ (lo1 - lo0) .* rand(n)
-    lat = la0 .+ (la1 - la0) .* rand(n)
-    (u0, du) = initialize_lonlat(Γ, lon, lat; msk = Γ["hFacC"][:, k])
+    np = 100
+    lon = lo0 .+ (lo1 - lo0) .* rand(np)
+    lat = la0 .+ (la1 - la0) .* rand(np)
+    (u0, _) = initialize_lonlat(Γ, lon, lat; msk = Γ["hFacC"][:, k])
+    id=collect(1:np)
 else
-    (lon, lat) = randn_lonlat(100000)
-    (u0, du) = initialize_lonlat(Γ, lon, lat; msk = Γ["hFacC"][:, k])
+    np=100000
+    (lon, lat) = randn_lonlat(2*np)
+    (u0, _) = initialize_lonlat(Γ, lon, lat; msk = Γ["hFacC"][:, k])
+    u0=u0[:,1:np]
 end
 
-# Arrays For Storing Results
-u0_store = deepcopy(u0)
-n_store = size(u0_store,2);
+id=collect(1:np)
+
+#is du needed below?
+du=missing
 
 # Fraction of the particles reset per month
-
-#r_reset = 0.05
-n_reset = Int(round(r_reset*n_store));
-#k_reset = rand(1:size(u0_store,2), n_reset)
+n_reset = Int(round(r_reset*np));
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # Solve for all trajectories for first 1/2 month
 
-prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
-sol = solve(prob,Euler(),dt=5*86400.0);
+prob = ODEProblem(⬡!,u0,(0.0,𝑃.𝑇[2]),𝑃)
+sol = solve(prob,Euler(),dt=2*86400.0);
 #size(sol)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # Map `i,j` to `lon,lat` coordinates and convert to `DataFrames`
 
-df=postprocess_lonlat(sol,𝑃);
+df=postprocess_lonlat(sol,𝑃,id);
 println(size(df))
 
+#update initial condition
+u0[:,:] = deepcopy(sol[:,:,end])
+
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Define iteration function
-
-function iter!(df,𝑃,u0)
-    #need an inplace version to update 𝑃 contents?
-    update_uvetc!(k,𝑃.𝑇[2],𝑃)
-    prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
-    sol = solve(prob,Euler(),dt=5*86400.0)
-    tmp = postprocess_lonlat(sol,𝑃)
-
-    k_reset = rand(1:size(u0_store,2), n_reset)
-    k_new = rand(1:size(u0_store,2), n_reset)
-    t_reset = Int(size(tmp,1)/n_store)-1
-
-    tmp[k_reset.+t_reset*n_store,2:end].=NaN #reset a random subset of particles
-    nt=size(sol,3)
-    nf=size(sol,2)
-    append!(df,tmp[nf+1:end,:])
-
-    u0[:,:] = deepcopy(sol[:,:,end])
-    u0[:,k_reset].=deepcopy(u0_store[:,k_new]) #reset a random subset of particles
-end
-
-#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 3.2 Repeat For `ny*12` Months
+# ## 3.2 Define iteration function
 #
 # _A fraction of the particles, randomly selected, is reset every month to maintain a relatively homogeneous coverage of the Global Ocean by the fleet of particles._
 
-u0 = deepcopy(sol[:,:,end])
-dt=86400.0*365.0/12.0
-𝑃.𝑇[1]=-dt/2.0
-𝑃.𝑇[2]=dt/2.0
-for y=1:ny
-    for m=1:12
-        iter!(df,𝑃,u0)
-    end
-    println(𝑃.𝑇)
-    println(size(df))
+function iter!(df,𝑃,u0,id)
+    update_uvetc!(k,𝑃.𝑇[2],𝑃)
+
+    #reset a random subset of particles
+    (lon, lat) = randn_lonlat(2*n_reset)
+    (v0, _) = initialize_lonlat(Γ, lon, lat; msk = Γ["hFacC"][:, k])
+    k_reset = rand(1:np, n_reset)
+    u0[:,k_reset].=v0[:,1:n_reset]
+    id[k_reset]=collect(1:n_reset) .+ maximum(df.ID)
+
+    prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
+    sol = solve(prob,Euler(),dt=2*86400.0)
+    tmp = postprocess_lonlat(sol,𝑃,id)
+    append!(df,tmp[np+1:end,:])
+
+    #update initial condition
+    u0[:,:] = deepcopy(sol[:,:,end])
+
+    #debbuging stuff:
+    #println(𝑃.𝑇)
+    #println(size(df))
 end
+
+#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ## 3.3 Iterate For `ny*12` Months
+#
+
+[iter!(df,𝑃,u0,id) for y=1:ny, m=1:12]
+
+#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ## 3.4 Compute summary statistics
+#
+
+gdf = groupby(df, :ID)
+tmp=combine(gdf,nrow,:lat => mean)
+show(tmp)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Plot trajectories
