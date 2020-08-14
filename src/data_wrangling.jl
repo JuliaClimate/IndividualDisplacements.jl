@@ -132,10 +132,11 @@ function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
     γ=Γ["XC"].grid
     mon=86400.0*365.0/12.0
 
-    𝑃 = (u0=MeshArray(γ,Float32), u1=MeshArray(γ,Float32),
-         v0=MeshArray(γ,Float32), v1=MeshArray(γ,Float32),
+    𝑃 = (u0=MeshArray(γ,Float64), u1=MeshArray(γ,Float64),
+         v0=MeshArray(γ,Float64), v1=MeshArray(γ,Float64),
          𝑇=[-mon/2,mon/2], 🔄 = update_𝑃!, pth=pth,
-         XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC)
+         XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC,
+         k=k, msk=Γ["hFacC"][:, k])
 
     tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
     𝑃 = merge(𝑃 , tmp)
