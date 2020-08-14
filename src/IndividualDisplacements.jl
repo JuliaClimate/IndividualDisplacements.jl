@@ -14,14 +14,13 @@ include("data_wrangling.jl")
 export ⬡!, ⬡, dxyz_dt, dxy_dt_CyclicArray, dxy_dt_replay
 export initialize_gridded, initialize_lonlat, randn_lonlat
 export postprocess_lonlat, add_lonlat!, postprocess_xy
-export read_flt, read_mds, read_drifters
-export read_uvetc, update_uvetc!
-export Individuals
+export read_flt, read_mds, read_drifters, read_uvetc
+export Individuals, set_up_𝑃, update_𝑃!
 
 day=86400.0
 mon=365/12*day
 solver_default(prob) = solve(prob,Euler(),dt=2*day)
-𝑃_default = ( 𝑇 = [-0.5*mon,0.5*mon] , 🔄 = update_uvetc!,  
+𝑃_default = ( 𝑇 = [-0.5*mon,0.5*mon] , 🔄 = update_𝑃!,
               u0=[] , u1=[] , v0=[] , v1=[] )
 tr_default = DataFrame( ID=[], x=[], y=[], t = [], lon=[], lat=[], fid=[])
 
