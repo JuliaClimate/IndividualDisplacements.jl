@@ -129,16 +129,17 @@ function read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
     iDXC=1. ./Γ["DXC"]
     iDYC=1. ./Γ["DYC"]
     γ=Γ["XC"].grid
-    dt=86400.0*365.0/12.0
+    mon=86400.0*365.0/12.0
 
     𝑃 = (u0=MeshArray(γ,Float32), u1=MeshArray(γ,Float32),
          v0=MeshArray(γ,Float32), v1=MeshArray(γ,Float32),
-         𝑇=[0.0,dt], pth=pth, XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC)
+         𝑇=[-mon/2,mon/2], 🔄 = update_uvetc!, pth=pth,
+         XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC)
 
     tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
     𝑃 = merge(𝑃 , tmp)
 
-    update_uvetc!(k,0.0,𝑃)
+    𝑃.🔄(k,0.0,𝑃)
     return 𝑃
 end
 

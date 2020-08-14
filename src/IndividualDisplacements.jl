@@ -21,7 +21,8 @@ export Individuals
 day=86400.0
 mon=365/12*day
 solver_default(prob) = solve(prob,Euler(),dt=2*day)
-𝑃_default = ( 𝑇 = [0.0,0.5*mon] , u0=[] , u1=[] , v0=[] , v1=[] )
+𝑃_default = ( 𝑇 = [-0.5*mon,0.5*mon] , 🔄 = update_uvetc!,  
+              u0=[] , u1=[] , v0=[] , v1=[] )
 tr_default = DataFrame( ID=[], x=[], y=[], t = [], lon=[], lat=[], fid=[])
 
 """
