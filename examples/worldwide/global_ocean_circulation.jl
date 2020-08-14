@@ -56,20 +56,9 @@ r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 #initialize u0,u1 etc
 𝑃=set_up_𝑃(k,0.0,Γ,joinpath(p,"../examples/nctiles_climatology/"));
 
-#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ### Single interpolation & trajectory Test
-#
-# Interpolate Velocity (normalized)
-(u0,du)=initialize_lonlat(Γ,-160.1,35.1; msk=Γ["hFacC"][:,k]);
-⬡!(du,u0,𝑃,0.0);
-#u,v,f=du[:]
-
-# Solve for trajectory
-
-prob = ODEProblem(⬡!,u0,(0.0,𝑃.𝑇[2]),𝑃)
-sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4);
-#sol = solve(prob,Euler(),dt=1e6)
-#size(sol)
+#add parameters for use in reset!
+tmp=(frac=r_reset, Γ=Γ)
+𝑃=merge(𝑃,tmp)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Main Computation Loop
@@ -78,16 +67,8 @@ sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4);
 # - initial integration from time 0 to 0.5 month
 # - update velocity fields & repeat for ny years
 
-# ## 3.1 Initialization & Initial Solution
+# ## 3.1 Initialize Individuals & Solution
 #
-# Initial Positions:
-
-#(u0,du)=initialize_gridded(𝑃,10)
-
-#(lon, lat) = randn_lonlat(20000)
-#(u0,du)=initialize_lonlat(Γ,lon,lat; msk=Γ["hFacC"][:,k])
-
-#Or
 
 println("Initialization started ...")
 
@@ -106,93 +87,30 @@ else
     u0=u0[:,1:np]
 end
 
-id=collect(1:np)
-
-# Fraction of the particles reset per month
-n_reset = Int(round(r_reset*np));
+𝐼 = Individuals{Float64}(xy=deepcopy(u0), id=collect(1:np), 𝑃=deepcopy(𝑃))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Solve for all trajectories for first 1/2 month
+# Solve for displacements over first 1/2 month
 
-prob = ODEProblem(⬡!,u0,(0.0,𝑃.𝑇[2]),𝑃)
-sol = solve(prob,Euler(),dt=2*86400.0);
-#size(sol)
-
-#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Map `i,j` to `lon,lat` coordinates and convert to `DataFrames`
-
-df=postprocess_lonlat(sol,𝑃,id);
-println(size(df))
-
-#update initial condition
-u0[:,:] = deepcopy(sol[:,:,end])
+start!(𝐼)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.2 Define iteration function
 #
 # _A fraction of the particles, randomly selected, is reset every month to maintain a relatively homogeneous coverage of the Global Ocean by the fleet of particles._
 
-function iter!(df,𝑃,u0,id)
-    𝑃.🔄(k,𝑃.𝑇[2],𝑃)
+#𝐼 = Individuals{Float64}(xy=deepcopy(u0), id=deepcopy(id), 𝑃=deepcopy(𝑃), tr=deepcopy(df))
 
-    #reset a random subset of particles
-    (lon, lat) = randn_lonlat(2*n_reset)
-    (v0, _) = initialize_lonlat(Γ, lon, lat; msk = Γ["hFacC"][:, k])
-    k_reset = rand(1:np, n_reset)
-    u0[:,k_reset].=v0[:,1:n_reset]
-    id[k_reset]=collect(1:n_reset) .+ maximum(df.ID)
-
-    prob = ODEProblem(⬡!,u0,𝑃.𝑇,𝑃)
-    sol = solve(prob,Euler(),dt=2*86400.0)
-    tmp = postprocess_lonlat(sol,𝑃,id)
-    append!(df,tmp[np+1:end,:])
-
-    #update initial condition
-    u0[:,:] = deepcopy(sol[:,:,end])
-
-    #debbuging stuff:
-    #println(𝑃.𝑇)
-    #println(size(df))
+function step!(𝐼::Individuals)
+    reset!(𝐼)
+    displace!(𝐼)
 end
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.3 Iterate For `ny*12` Months
 #
 
-𝐼 = Individuals{Float64}(xy=deepcopy(u0), id=deepcopy(id), 𝑃=deepcopy(𝑃), tr=deepcopy(df))
-
 println("Main loop started ...")
-#[iter!(df,𝑃,u0,id) for y=1:ny, m=1:12]
-
-function displace!(𝐼::Individuals)
-    𝐼.𝑃.🔄(k,𝐼.𝑃.𝑇[2],𝐼.𝑃)
-
-    prob = ODEProblem(𝐼.⎔!,𝐼.xy,𝐼.𝑃.𝑇,𝐼.𝑃)
-    sol = 𝐼.□(prob)
-
-    tmp = postprocess_lonlat(sol,𝐼.𝑃,𝐼.id)
-    append!(𝐼.tr,tmp[np+1:end,:])
-
-    #update initial condition
-    𝐼.xy[:,:] = deepcopy(sol[:,:,end])
-end
-
-function reset!(𝐼::Individuals)
-    #note: r_reset, k, and Γ
-    np=length(𝐼.id)
-    n_reset = Int(round(r_reset*np))
-    (lon, lat) = randn_lonlat(2*n_reset)
-    (v0, _) = initialize_lonlat(Γ, lon, lat; msk = Γ["hFacC"][:, k])
-    k_reset = rand(1:np, n_reset)
-    𝐼.xy[:,k_reset].=v0[:,1:n_reset]
-    isempty(𝐼.tr.ID) ? m=maximum(𝐼.id) : m=max(maximum(𝐼.tr.ID),maximum(𝐼.id))
-    𝐼.id[k_reset]=collect(1:n_reset) .+ m
-end
-
-function step!(𝐼::Individuals)
-    reset!(𝐼)
-    displace!(𝐼)
-end
 
 [step!(𝐼) for y=1:ny, m=1:12]
 
@@ -200,8 +118,9 @@ end
 # ## 3.4 Compute summary statistics
 #
 
+df = 𝐼.tr
 gdf = groupby(𝐼.tr, :ID)
-tmp=combine(gdf,nrow,:lat => mean)
+tmp = combine(gdf,nrow,:lat => mean)
 show(tmp)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
