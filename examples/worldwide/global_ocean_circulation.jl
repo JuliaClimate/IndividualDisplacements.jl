@@ -45,7 +45,7 @@ qq="$q/../examples/nctiles_climatology"
 # - read & normalize velocities
 
 k=10 #choice of vertical level
-ny=10 #number of simulated years (20 for k>20)
+ny=2 #number of simulated years (20 for k>20)
 r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 
 #read grid and set up connections between subdomains
@@ -134,7 +134,7 @@ u0[:,:] = deepcopy(sol[:,:,end])
 # _A fraction of the particles, randomly selected, is reset every month to maintain a relatively homogeneous coverage of the Global Ocean by the fleet of particles._
 
 function iter!(df,𝑃,u0,id)
-    update_uvetc!(k,𝑃.𝑇[2],𝑃)
+    𝑃.🔄(k,𝑃.𝑇[2],𝑃)
 
     #reset a random subset of particles
     (lon, lat) = randn_lonlat(2*n_reset)
