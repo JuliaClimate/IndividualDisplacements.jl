@@ -1,6 +1,25 @@
 
 ## API Guide
 
+See `examples/worldwide/global_ocean_circulation.jl` for an example:
+
+```@docs
+start!
+displace!
+reset!
+```
+
+### Data Structures
+
+The main data type used is `Individuals` which contains arrays and a dataframe to store the output diagnostics.
+
+```@autodocs
+Modules = [IndividualDisplacements]
+Order   = [:type]
+```
+
+### Velocity Interpolation
+
 The `⬡` and `⬡!` functions compute the tracked point / individual / agent velocities. 
 
 ```@docs
@@ -26,11 +45,4 @@ Trajectory simulated by the MITgcm or observed by the global drifter program can
 ```@docs
 read_flt
 read_drifters
-```
-
-### Types
-
-```@autodocs
-Modules = [IndividualDisplacements]
-Order   = [:type]
 ```
