@@ -112,18 +112,19 @@ function read_uvetc(k::Int,Γ::Dict,pth::String)
 end
 
 """
-    read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
+    set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
 
-Define `uvetc` given the grid variables `Γ`, a vertical level choice `k`, the
-time `t` in `seconds` (Float64), and velocities obtained from files in `pth`.
+Define the `𝑃` _parameter_ tuple given grid variables `Γ`, vertical level
+choice `k`, time `t` in `seconds`, and velocity fields obtained from
+files in `pth`.
 
-The two climatological months (`m0`,`m1`) that bracket time `t` will be
-extracted (e.g. months 12 & 1 then 1 & 2 and so on).
+The two climatological months (`m0`,`m1`) that bracket time `t` are
+read to memory (e.g. months 12 & 1 then 1 & 2 and so on).
 
-_Note: the initial implementation does this only approximately by setting
-every months duration to 1 year / 12 for simplicity; should be improved..._
+_Note: the initial implementation approximates every month duration
+to 365 days / 12 months for simplicity._
 """
-function read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
+function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
     XC=exchange(Γ["XC"]) #add 1 lon point at each edge
     YC=exchange(Γ["YC"]) #add 1 lat point at each edge
     iDXC=1. ./Γ["DXC"]
@@ -133,7 +134,7 @@ function read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
 
     𝑃 = (u0=MeshArray(γ,Float32), u1=MeshArray(γ,Float32),
          v0=MeshArray(γ,Float32), v1=MeshArray(γ,Float32),
-         𝑇=[-mon/2,mon/2], 🔄 = update_uvetc!, pth=pth,
+         𝑇=[-mon/2,mon/2], 🔄 = update_𝑃!, pth=pth,
          XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC)
 
     tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
@@ -144,12 +145,12 @@ function read_uvetc(k::Int,t::Float64,Γ::Dict,pth::String)
 end
 
 """
-    update_uvetc!(k::Int,t::Float64,𝑃::NamedTuple)
+    update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
 
-_Note: the initial implementation does this only approximately by setting
-every months duration to 1 year / 12 for simplicity; should be improved..._
+Update velocity and time arrays inside 𝑃 (e.g. 𝑃.u0[:], etc, and 𝑃.𝑇[:])
+based on the chosen vertical level `k` and time `t` (in `seconds`).
 """
-function update_uvetc!(k::Int,t::Float64,𝑃::NamedTuple)
+function update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
     dt=𝑃.𝑇[2]-𝑃.𝑇[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
