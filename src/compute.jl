@@ -186,3 +186,17 @@ dict_to_nt(tmp::Dict) = tmp=(; zip(Symbol.(keys(tmp)), values(tmp))...)
 dxy_dt!(du,u,𝑃::Dict,tim) = dxy_dt!(du,u,dict_to_nt(𝑃),tim)
 dxy_dt(du,u,𝑃::Dict,tim) = dxy_dt(du,u,dict_to_nt(𝑃),tim)
 dxyz_dt(du,u,𝑃::Dict,tim) = dxyz_dt(du,u,dict_to_nt(𝑃),tim)
+
+"""
+    dxy_dt_replay(du,u,p::DataFrame,t)
+
+Interpolate velocity from MITgcm float_trajectories output and return
+position increment `du`.
+"""
+function dxy_dt_replay(du,u,p::DataFrame,t)
+    tt=t/3600.0
+    tt0=Int32(floor(tt))
+    w=tt-tt0
+    du[1]=(1.0-w)*p[tt0+1,:uVel]+w*p[tt0+2,:uVel]
+    du[2]=(1.0-w)*p[tt0+1,:vVel]+w*p[tt0+2,:vVel]
+end

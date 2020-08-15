@@ -22,7 +22,7 @@
 
 # ## 1. Import Software
 
-using IndividualDisplacements, OrdinaryDiffEq
+using IndividualDisplacements, OrdinaryDiffEq, DataFrames, MITgcmTools
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/recipes_plots.jl"))
 include(joinpath(p,"../examples/example123.jl"))
