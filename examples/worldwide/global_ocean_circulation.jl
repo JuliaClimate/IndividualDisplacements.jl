@@ -23,46 +23,42 @@
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
 using Statistics, DataFrames, MITgcmTools, OceanStateEstimation
 
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/helper_functions.jl"))
-get_grid_if_needed()
-get_velocity_if_needed()
+include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
+get_grid_if_needed(); get_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Set Up Parameters & Inputs
 #
-# - depth level and duration
-# - read grid variables
-# - read & normalize velocities
+# - select vertical level & duration in years
+# - read grid variables & velocities
+# - normalize velocities
 
-𝑃=setup_global_ocean(10);
+𝑃=setup_global_ocean(k=1,ny=2);
+
+keys(𝑃)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Main Computation Loop
 #
-# - initial particle positions randomly over Global Ocean
-# - initial integration from time 0 to 0.5 month
-# - update velocity fields & repeat for ny years
-
-# ## 3.1 Initialize Individuals & Solution
+# ### 3.1 Initialize Individuals & Solution
 #
+# - initial particle positions randomly over Global Ocean
 
-u0=init_global_randn(10000,𝑃)
-np=size(u0,2)
-𝐼 = Individuals{Float64}(xy=deepcopy(u0), id=collect(1:np), 𝑃=deepcopy(𝑃))
+xy=init_global_randn(10000,𝑃); id=collect(1:size(xy,2))
+𝐼 = Individuals{Float64}(xy=xy, id=id, 𝑃=𝑃)
+
 fieldnames(typeof(𝐼))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Solve for displacements over first 1/2 month
+# - initial integration from time 0 to 0.5 month
 
 start!(𝐼)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 3.2 Define iteration function
+# ### 3.2 Iteration function example
 #
-# _A fraction of the particles, randomly selected, is reset every month to maintain a relatively homogeneous coverage of the Global Ocean by the fleet of particles._
-
-#𝐼 = Individuals{Float64}(xy=deepcopy(u0), id=deepcopy(id), 𝑃=deepcopy(𝑃), tr=deepcopy(df))
+# - `reset!(𝐼)` randomly selects a fraction (defined in `setup_global_ocean()`) of the particles and resets their positions before each integration period. This can maintain homogeneous coverage of the Global Ocean by particles.
+# - `displace!(𝐼)` then solves for the individual trajectories over one month, after updating velocity fields (𝐼.u0 etc) if needed, and adds diagnostics to the DataFrame used to record / trace variables along the trajectory (𝐼.tr).
 
 function step!(𝐼::Individuals)
     reset!(𝐼)
@@ -73,8 +69,6 @@ end
 # ## 3.3 Iterate For `ny*12` Months
 #
 
-println("Main loop started ...")
-
 [step!(𝐼) for y=1:2, m=1:12]
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -82,43 +76,24 @@ println("Main loop started ...")
 #
 
 gdf = groupby(𝐼.tr, :ID)
-tmp = combine(gdf,nrow,:lat => mean)
-show(tmp)
+show(combine(gdf,nrow,:lat => mean))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Plot trajectories / individual positions
 #
-
-include(joinpath(p,"../examples/recipes_plots.jl"))
-nn=min(length(𝐼.id),100)
-plt=PlotBasic(𝐼.tr,nn,180.)
-
-#nb # %% {"slideshow": {"slide_type": "skip"}, "cell_type": "markdown"}
-# Here we create `lon`, `lat`, and `DL` (log10 of bottom depth) to use in plot background:
-
-lon=[i for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
-lat=[j for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
-(f,i,j,w,_,_,_)=InterpolationFactors(𝐼.𝑃.Γ,vec(lon),vec(lat))
-
-DL=log10.(Interpolate(𝐼.𝑃.Γ["Depth"],f,i,j,w))
-DL[findall((!isfinite).(DL))].=NaN
-DL=reshape(DL,size(lon));
+# ```
+# using Plots
+# p=plot(;xlims=(-180,180),ylims=(-90,90),legend=:none)
+# p!(x,y)=scatter!(p,x,y,markersize=1.1,markerstrokewidth=0)
+# [p!(gdf[i].lon,gdf[i].lat) for i in rand(collect(1:length(gdf)),10)]
+# display(p)
+# ```
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Then we generate plot or movie using e.g. `Plots.jl`:
-
-contourf(lon[:,1],lat[1,:],transpose(DL),clims=(1.5,5),c = :ice, colorbar=false)
-
-dt=0.0001
-t0=0.0
-t1=𝑃.𝑇[2]
-
-t=t1
-df = 𝐼.tr[ (𝐼.tr.t.>t-dt).&(𝐼.tr.t.<=t) , :]
-scatter!(df.lon,df.lat,markersize=1.5,c=:red,leg=:none,
-    xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:circle, stroke(0)))
-
-t=t0
-df = 𝐼.tr[ (𝐼.tr.t.>t-dt).&(𝐼.tr.t.<=t) , :]
-scatter!(df.lon,df.lat,markersize=1.5,c=:yellow,leg=:none,
-    xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:dot, stroke(0)))
+# Or select a background map (e.g. `lon`, `lat`, and `DL=log10(bottom depth)`)
+# and a recipe to superimpose initial and final locations. Try:
+#
+# ```
+# include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/recipes_plots.jl"))
+# a_plot(𝐼)
+# ```

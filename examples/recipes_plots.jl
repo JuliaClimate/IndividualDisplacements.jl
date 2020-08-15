@@ -81,3 +81,38 @@ function phi_and_subset(Γ,ϕ,df,t=missing,dt=5.0)
     scatter!(df_t.x,df_t.y,markersize=2.0,c=:red,
     xlims=(0,nx),ylims=(0,ny),leg=:none,marker = (:circle, stroke(0)))
 end
+
+"""
+    DL()
+
+Compute Ocean depth logarithm.
+"""
+function DL()
+    lon=[i for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
+    lat=[j for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
+    (f,i,j,w,_,_,_)=InterpolationFactors(𝐼.𝑃.Γ,vec(lon),vec(lat))
+    DL=log10.(Interpolate(𝐼.𝑃.Γ["Depth"],f,i,j,w))
+    DL[findall((!isfinite).(DL))].=NaN
+    DL=transpose(reshape(DL,size(lon)));
+    return lon[:,1],lat[1,:],DL
+end
+
+"""
+    a_plot(𝐼::Individuals)
+
+Plot initial and final positions, superimposed on a map of ocean depth log.
+"""
+function a_plot(𝐼::Individuals)
+    plt=contourf(DL(),clims=(1.5,5),c = :ice, colorbar=false)
+
+    t=𝑃.𝑇[2]
+    df = 𝐼.tr[ (𝐼.tr.t.>t-1.0).&(𝐼.tr.t.<=t) , :]
+    scatter!(df.lon,df.lat,markersize=1.5,c=:red,leg=:none,
+    xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:circle, stroke(0)))
+
+    t=0.0
+    df = 𝐼.tr[ (𝐼.tr.t.>t-1.0).&(𝐼.tr.t.<=t) , :]
+    scatter!(df.lon,df.lat,markersize=1.5,c=:yellow,leg=:none,
+    xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:dot, stroke(0)))
+    return plt
+end
