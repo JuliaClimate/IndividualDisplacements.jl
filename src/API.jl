@@ -26,6 +26,11 @@ Base.@kwdef struct Individuals{T}
    𝑀  ::NamedTuple = NamedTuple()
 end
 
+"""
+    start!(𝐼::Individuals)
+
+Set up ODE problem over `(0.0,𝐼.𝑃.𝑇[2])`, solve, postprocess, & update `𝐼.xy[:,:]`
+"""
 function start!(𝐼::Individuals)
     prob = ODEProblem(𝐼.⎔!,𝐼.xy,(0.0,𝐼.𝑃.𝑇[2]),𝐼.𝑃)
     sol = 𝐼.□(prob)
@@ -36,6 +41,11 @@ function start!(𝐼::Individuals)
     𝐼.xy[:,:] = deepcopy(sol[:,:,end])
 end
 
+"""
+    displace!(𝐼::Individuals)
+
+Update 𝐼.𝑃, set up ODE problem over 𝐼.𝑃.𝑇, solve, postprocess, & update `𝐼.xy[:,:]`
+"""
 function displace!(𝐼::Individuals)
     𝐼.𝑃.🔄(𝐼.𝑃.k,𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]),𝐼.𝑃)
 
@@ -50,6 +60,11 @@ function displace!(𝐼::Individuals)
     𝐼.xy[:,:] = deepcopy(sol[:,:,end])
 end
 
+"""
+    reset!(𝐼::Individuals)
+
+Randomly select a fraction (𝐼.𝑃.frac) of the particles and reset their positions.
+"""
 function reset!(𝐼::Individuals)
     np=length(𝐼.id)
     n_reset = Int(round(𝐼.𝑃.frac*np))

@@ -64,21 +64,22 @@ function setup_random_flow(Γ::Dict)
 end
 
 """
-    setup_global_ocean(k::Int)
+    setup_global_ocean(;k=10,ny=2)
 
 Set up Global Ocean particle simulation in 2D with seasonally varying flow field.
 
 ```
-𝑃=setup_global_ocean(10);
+𝑃=setup_global_ocean(k=1,ny=2);
 ```
 """
-function setup_global_ocean(k::Int)
+function setup_global_ocean(;k=1,ny=2)
 
   #k=10 #choice of vertical level
-  ny=2 #number of simulated years (20 for k>20)
+  #ny=2 #number of simulated years (20 for k>20)
   r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 
   #read grid and set up connections between subdomains
+  p=dirname(pathof(IndividualDisplacements))
   γ=GridSpec("LatLonCap",joinpath(p,"../examples/GRID_LLC90/"))
   Γ=GridLoad(γ)
   Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
