@@ -263,8 +263,8 @@ initialize_lonlat(Γ::Dict,lon::Float64,lat::Float64;msk=missing) = initialize_l
 Read velocity components `u,v` from files in `pth`for time `t`
 """
 function read_velocities(γ::gcmgrid,t::Int,pth::String)
-    u=Main.read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
-    v=Main.read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
+    u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
+    v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
     return u,v
 end
 
