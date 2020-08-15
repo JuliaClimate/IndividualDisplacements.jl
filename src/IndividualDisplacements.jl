@@ -1,7 +1,7 @@
 module IndividualDisplacements
 
 using MeshArrays, OrdinaryDiffEq, StatsBase, DataFrames, Random
-using NetCDF, Dates, CFTime, CSV, UnPack, CyclicArrays
+using NetCDF, Dates, CFTime, CSV, UnPack, CyclicArrays, MITgcmTools
 
 include("compute.jl")
 include("read.jl")
