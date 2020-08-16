@@ -135,13 +135,14 @@ Run particle trajectory simulation over near-global ocean domain (79.5°S to
 return the result as a `DataFrame` that can be manipulated or plotted later.
 
 ```
-using IndividualDisplacements, MAT, NetCDF
-df=example3("OCCA")
-
+using IndividualDisplacements, MAT, NetCDF, DataFrames, Plots
 p=dirname(pathof(IndividualDisplacements))
 
+𝐼=example3("OCCA");
+df=𝐼.tr
+
 include(joinpath(p,"../examples/recipes_plots.jl"))
-PlotBasic(df,1000,90.0)
+PlotBasic(df,100,90.0)
 
 #include(joinpath(p,"../examples/recipes_pyplot.jl"))
 #PyPlot.figure(); PlotMapProj(df,3000); gcf()
@@ -168,38 +169,39 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
    end
 
    nx,ny=𝑃.ioSize[1:2]
-
    lo0,lo1=lon_rng
    la0,la1=lat_rng
-   nf=1000
+
+   nf=100
    lon=lo0 .+(lo1-lo0).*rand(nf)
    lat=la0 .+(la1-la0).*rand(nf)
-   (u0,du)=initialize_lonlat(Γ,lon,lat)
-   u0[3,:] .= z_init
+   (xy,_)=initialize_lonlat(Γ,lon,lat)
+   xy[3,:] .= z_init
+   id=collect(1:size(xy,2))
 
-   #dxyz_dt(du,u0,𝑃,0.0)
-   prob = ODEProblem(dxyz_dt,u0,𝑃.𝑇,𝑃)
-   #sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
-   #sol = solve(prob,RK4(),reltol=1e-4,abstol=1e-4)
-   sol = solve(prob,Euler(),dt=10*86400.0)
+   function solv(prob)
+      sol=solve(prob,Euler(),dt=10*86400.0)
+      sol[1,:,:]=mod.(sol[1,:,:],nx)
+      sol[2,:,:]=mod.(sol[2,:,:],ny)
+      return sol
+   end
 
-   sol[1,:,:]=mod.(sol[1,:,:],nx)
-   sol[2,:,:]=mod.(sol[2,:,:],ny)
-   df=postprocess_lonlat(sol,𝑃)
+   tr = DataFrame( ID=[], x=[], y=[], t = [], lon=[], lat=[], z=[], fid=[])
 
-   #add third coordinate
-   z=sol[3,:,:]
-   df.z=z[:]
+   function postproc(sol,𝑃::NamedTuple,id=missing)
+      df=postprocess_lonlat(sol,𝑃,id)
+      #add third coordinate
+      z=sol[3,:,:]
+      df.z=z[:]
+      #to plot e.g. Pacific Ocean transports, shift longitude convention?
+      df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
+      return df
+   end
 
-   #add time coordinate
-   #nt=size(df,1)/nf
-   #t=[ceil(i/nf)-1 for i in 1:nt*nf]
-   #df.t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t
+   𝐼 = Individuals{Float64}(xy=xy, id=id, 𝑃=𝑃, ⎔! = dxyz_dt, □ = solv, ▽ = postproc, tr = tr)
+   start!(𝐼)
 
-   #to plot e.g. Pacific Ocean transports, shift longitude convention?
-   df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
-
-   return df
+   return 𝐼
 end
 
 """
