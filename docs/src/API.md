@@ -40,9 +40,8 @@ postprocess_xy
 
 ### Read Output From File 
 
-Trajectory simulated by the MITgcm or observed by the global drifter program can be read from file.
+Trajectory simulated by the MITgcm or observed by the global drifter program can be read from file using, respectively `MITgcmTools.read_flt` or  `read_drifters`.
 
 ```@docs
-read_flt
 read_drifters
 ```
