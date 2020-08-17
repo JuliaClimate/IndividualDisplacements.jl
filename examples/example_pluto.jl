@@ -75,7 +75,7 @@ begin
 	  z=sol[3,:,:]
 	  df.z=z[:]
 	  #to plot e.g. Pacific Ocean transports, shift longitude convention?
-	  df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
+	  #df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
 	  return df
 	end
 	
@@ -89,16 +89,26 @@ begin
 		⎔! = dxyz_dt, □ = solv, ▽ = postproc)
 	
 	start!(𝐼)
+end
+
+# ╔═╡ 7d52252e-e006-11ea-2632-df2af831b52f
+begin
+	x=vec(𝐼.𝑃.Γ["XC"][1][:,1])
+	y=vec(𝐼.𝑃.Γ["YC"][1][1,:])
+	z=transpose(log10.(𝐼.𝑃.Γ["Depth"][1]))
+	#plt=contourf([x;x .+ 360],y,[z z],clims=(-.5,4.),c = :ice, 
+	plt=contourf(x,y,z,clims=(-.5,4.),c = :ice, 
+		colorbar=false, xlims=(-180.0,180.0),ylims=(-90.0,90.0))
 	✓
 end
 
 # ╔═╡ a13d6ea6-dff1-11ea-0713-cb235e28cf79
 begin	
 df = 𝐼.tr[ findall(𝐼.tr.t .== minimum(𝐼.tr.t)) , :]
-scatter(df.lon,df.lat,markersize=2.0,c=:blue,leg=:none,
-        marker = (:dot, stroke(0)), xlims=(0.0,360.0),ylims=(-90.0,90.0))
+scatter!(plt,df.lon,df.lat,markersize=2.0,c=:gold,leg=:none,
+        marker = (:dot, stroke(0)))
 df = 𝐼.tr[ findall(𝐼.tr.t .== maximum(𝐼.tr.t)) , :]
-scatter!(df.lon,df.lat,markersize=2.0,c=:red,leg=:none,
+scatter!(plt,df.lon,df.lat,markersize=2.0,c=:red,leg=:none,
         marker = (:dot, stroke(0)))
 end
 
@@ -109,6 +119,7 @@ end
 # ╠═d79a0800-dffa-11ea-1751-9de46bd95c3c
 # ╠═3039d8a0-dffb-11ea-33a2-03f957d4efff
 # ╟─e25eee9e-dfee-11ea-2a4c-3946ccb63876
+# ╟─a13d6ea6-dff1-11ea-0713-cb235e28cf79
 # ╟─f75fae30-dfee-11ea-18ef-259321acfa2f
 # ╟─9ffe84c0-dff0-11ea-2726-8924892df73a
-# ╟─a13d6ea6-dff1-11ea-0713-cb235e28cf79
+# ╟─7d52252e-e006-11ea-2632-df2af831b52f

@@ -348,7 +348,13 @@ function OCCA_setup(;backward_in_time::Bool=false)
    tmpx=circshift(Γ["XC"][1],[-180 0])
    tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
    Γ["XC"][1]=tmpx
-   delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS"]);
+
+   tmpx=circshift(Γ["XG"][1],[-180 0])
+   tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
+   Γ["XG"][1]=tmpx
+   Γ["Depth"][1]=circshift(Γ["Depth"][1],[-180 0])
+
+   delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS","DXG","DYG","RAC","RAZ","RAS"]);
 
    backward_in_time ? s=-1.0 : s=1.0
    u0=s*u; u1=s*u;
