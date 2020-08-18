@@ -28,47 +28,57 @@ Reproducing `MITgcm/verification/flt_example/` case. This is based on an
 extended and modified configuration of the standard MITgcm test case.
 
 ```
-(df,ref,sol)=example2();
+(𝐼,df,ref)=example2();
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/recipes_plots.jl"))
 PlotBasic(df,300,100000.0)
 
 using Plots
-Plots.plot(sol[1,:],sol[2,:],linewidth=5,lc=:black, title="One Trajectory Example",
+Plots.plot(𝐼.tr.x,𝐼.tr.y,linewidth=5,lc=:black, title="One Trajectory Example",
 xaxis="x",yaxis="y",label="Julia Solution") # legend=false
 pl=Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
 ```
 """
 function example2()
-   p=dirname(pathof(IndividualDisplacements))
-   dirIn=joinpath(p,"../examples/flt_example/")
-   prec=Float32
-   df=read_flt(dirIn,prec)
    𝑃,Γ=example2_setup()
-   #
-   tmp=df[df.ID .== 200, :]
-   nSteps=Int32(tmp[end,:time]/3600)-2
-   ref=transpose([tmp[1:nSteps,:lon] tmp[1:nSteps,:lat]])
-   maxLon=80*5.e3
-   maxLat=42*5.e3
-   for i=1:nSteps-1
-       ref[1,i+1]-ref[1,i]>maxLon/2 ? ref[1,i+1:end]-=fill(maxLon,(nSteps-i)) : nothing
-       ref[1,i+1]-ref[1,i]<-maxLon/2 ? ref[1,i+1:end]+=fill(maxLon,(nSteps-i)) : nothing
-       ref[2,i+1]-ref[2,i]>maxLat/2 ? ref[2,i+1:end]-=fill(maxLat,(nSteps-i)) : nothing
-       ref[2,i+1]-ref[2,i]<-maxLat/2 ? ref[2,i+1:end]+=fill(maxLat,(nSteps-i)) : nothing
-   end
-   ref=ref./𝑃.dx
-   #
-   uInit=[tmp[1,:lon];tmp[1,:lat]]./𝑃.dx
-   du=fill(0.0,2)
-   #
-   tspan = (0.0,nSteps*3600.0)
-   #prob = ODEProblem(dxy_dt_replay,uInit,tspan,tmp)
-   prob = ODEProblem(⬡,uInit,tspan,𝑃)
-   sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
-   #
-   return df,ref,sol
+   (xy,df,ref,nSteps)=example2_xy(𝑃)
+
+   𝑃.𝑇[:] = [0.0,nSteps*3600.0]
+   solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+   tr = DataFrame( ID=[], x=[], y=[], t = [])
+
+   𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔! = ⬡, □ = solv, ▽ = postprocess_xy, tr = tr)
+   start!(𝐼)
+
+   return 𝐼, df,ref
+end
+
+"""
+example2_xy()
+
+Read MITgcm/pkg/flt output
+"""
+function example2_xy(𝑃)
+p=dirname(pathof(IndividualDisplacements))
+dirIn=joinpath(p,"../examples/flt_example/")
+prec=Float32
+df=read_flt(dirIn,prec)
+#
+tmp=df[df.ID .== 200, :]
+nSteps=Int32(tmp[end,:time]/3600)-2
+ref=transpose([tmp[1:nSteps,:lon] tmp[1:nSteps,:lat]])
+maxLon=80*5.e3
+maxLat=42*5.e3
+for i=1:nSteps-1
+    ref[1,i+1]-ref[1,i]>maxLon/2 ? ref[1,i+1:end]-=fill(maxLon,(nSteps-i)) : nothing
+    ref[1,i+1]-ref[1,i]<-maxLon/2 ? ref[1,i+1:end]+=fill(maxLon,(nSteps-i)) : nothing
+    ref[2,i+1]-ref[2,i]>maxLat/2 ? ref[2,i+1:end]-=fill(maxLat,(nSteps-i)) : nothing
+    ref[2,i+1]-ref[2,i]<-maxLat/2 ? ref[2,i+1:end]+=fill(maxLat,(nSteps-i)) : nothing
+end
+ref=ref./𝑃.dx
+xy=[tmp[1,:lon];tmp[1,:lat]]./𝑃.dx
+return xy,df,ref,nSteps
 end
 
 """
