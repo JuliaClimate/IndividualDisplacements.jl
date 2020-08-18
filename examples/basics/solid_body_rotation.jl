@@ -76,7 +76,7 @@ function postproc(sol,𝑃::NamedTuple,id=missing)
     return df
  end
 
-𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔! = dxyz_dt, □ = solv, ▽ = postproc, tr = tr)
+𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔ = dxyz_dt, □ = solv, ▽ = postproc, tr = tr)
 start!(𝐼)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}

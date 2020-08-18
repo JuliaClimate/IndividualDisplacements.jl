@@ -31,7 +31,7 @@ xy=transpose([x y])
 solv(prob) = solve(prob,Tsit5(),reltol=1e-6,abstol=1e-6)
 tr = DataFrame( ID=[], x=[], y=[], t = [])
 
-𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔! = ⬡, □ = solv, ▽ = postprocess_xy, tr = tr);
+𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔ = dxy_dt, □ = solv, ▽ = postprocess_xy, tr = tr);
 
 # ## 3. Compute Trajectories
 

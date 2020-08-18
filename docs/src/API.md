@@ -20,11 +20,14 @@ Order   = [:type]
 
 ### Velocity Interpolation
 
-The `⬡` and `⬡!` functions compute the tracked point / individual / agent velocities. 
+The `dxy_dt`, `dxy_dt!`, `dxyz_dt`, etc functions compute the tracked individual velocity. 
 
 ```@docs
-⬡!
-⬡
+dxy_dt
+dxy_dt!
+dxyz_dt
+dxy_dt_replay
+dxy_dt_CyclicArray
 ```
 
 ### Setup And Postprocessing 
