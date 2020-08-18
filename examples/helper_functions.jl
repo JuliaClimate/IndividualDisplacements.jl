@@ -95,6 +95,151 @@ function setup_global_ocean(;k=1,ny=2)
 
 end
 
+##
+
+"""
+    example3_setup(;backward_in_time::Bool=false)
+
+Define gridded variables and return result as Dictionary (`uvetc`).
+"""
+function example3_setup(;backward_in_time::Bool=false)
+
+   p=dirname(pathof(IndividualDisplacements))
+   dirIn=joinpath(p,"../examples/llc90_latlon/")
+
+   γ=gcmgrid(dirIn,"PeriodicChannel",1,
+                  [(360,178)], [360 178], Float32, read, write)
+
+   Γ=Dict("XC" => read(γ.path*"XC.latlon.data",MeshArray(γ,Float32)),
+   "YC" => read(γ.path*"YC.latlon.data",MeshArray(γ,Float32)),
+   "XG" => read(γ.path*"XG.data",MeshArray(γ,Float32)),
+   "YG" => read(γ.path*"YG.data",MeshArray(γ,Float32)),
+   "DXC" => read(γ.path*"DXC.latlon.data",MeshArray(γ,Float32)),
+   "DYC" => read(γ.path*"DYC.latlon.data",MeshArray(γ,Float32)) );
+
+   file = matopen(γ.path*"uv_lonlat.mat")
+   u=read(file, "u")
+   v=read(file, "v")
+   close(file)
+
+   u=dropdims(mean(u,dims=3),dims=3)
+   v=dropdims(mean(v,dims=3),dims=3)
+
+   #mask out near edge values to avoid exiting domain
+   u[:,1:2].=NaN
+   v[:,1:2].=NaN
+   u[:,end-2:end].=NaN
+   v[:,end-2:end].=NaN
+
+   u=read(u,MeshArray(γ,Float32))
+   v=read(v,MeshArray(γ,Float32));
+
+   u[findall(isnan.(u))]=0.0
+   v[findall(isnan.(v))]=0.0
+
+   backward_in_time ? s=-1.0 : s=1.0
+   u0=s*u; u1=s*u;
+   v0=s*v; v1=s*v;
+
+   t0=0.0; t1=86400*366*2.0;
+
+   u0=u0./Γ["DXC"]
+   u1=u1./Γ["DXC"]
+   v0=v0./Γ["DYC"]
+   v1=v1./Γ["DYC"]
+
+   #nr=50; kk=1;
+
+   #mskW=read(γ.path*"hFacW.latlon.data",MeshArray(γ,Float32,nr))
+   #mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
+   #mskS=read(γ.path*"hFacS.latlon.data",MeshArray(γ,Float32,nr))
+   #mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
+   #msk=Dict("mskW" => mskW, "mskS" => mskS)
+
+   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, 𝑇=[t0,t1], ioSize=(360,178),
+        XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]))
+
+   return 𝑃,Γ
+
+end
+
+"""
+    OCCA_setup(;backward_in_time::Bool=false)
+
+Define gridded variables and return result as Dictionary (`uvetc`).
+"""
+function OCCA_setup(;backward_in_time::Bool=false)
+
+   p=dirname(pathof(IndividualDisplacements))
+   dirIn=joinpath(p,"../examples/GRID_LL360/")
+   γ=GridSpec("PeriodicChannel",dirIn)
+   Γ=GridLoad(γ)
+
+   dirIn=joinpath(p,"../examples/OCCA_climatology/")
+   n=length(Γ["RC"])
+
+   fileIn=dirIn*"DDuvel.0406clim.nc"
+   u = ncread(fileIn,"u")
+   u=dropdims(mean(u,dims=4),dims=4)
+   u[findall(u .< -1.0e10)] .=0.0
+   u=read(u,MeshArray(γ,Float32,n))
+
+   fileIn=dirIn*"DDvvel.0406clim.nc"
+   v = ncread(fileIn,"v")
+   v=dropdims(mean(v,dims=4),dims=4)
+   v[findall(v .< -1.0e10)] .=0.0
+   v=read(v,MeshArray(γ,Float32,n))
+
+   fileIn=dirIn*"DDwvel.0406clim.nc"
+   w = ncread(fileIn,"w")
+   w=dropdims(mean(w,dims=4),dims=4)
+   w[findall(w .< -1.0e10)] .=0.0
+   w=-cat(w,zeros(360, 160),dims=3)
+   w[:,:,1] .=0.0
+   w=read(w,MeshArray(γ,Float32,n+1))
+
+   for i in eachindex(u)
+      u[i]=u[i]./Γ["DXC"][1]
+      v[i]=v[i]./Γ["DYC"][1]
+   end
+
+   for i in eachindex(u)
+      u[i]=circshift(u[i],[-180 0])
+      v[i]=circshift(v[i],[-180 0])
+   end
+
+   for i in eachindex(w)
+      w[i]=w[i]./Γ["DRC"][min(i[2]+1,n)]
+      w[i]=circshift(w[i],[-180 0])
+   end
+
+   tmpx=circshift(Γ["XC"][1],[-180 0])
+   tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
+   Γ["XC"][1]=tmpx
+
+   tmpx=circshift(Γ["XG"][1],[-180 0])
+   tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
+   Γ["XG"][1]=tmpx
+   Γ["Depth"][1]=circshift(Γ["Depth"][1],[-180 0])
+
+   delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS","DXG","DYG","RAC","RAZ","RAS"]);
+
+   backward_in_time ? s=-1.0 : s=1.0
+   u0=s*u; u1=s*u;
+   v0=s*v; v1=s*v;
+   w0=s*w; w1=s*w;
+
+   t0=0.0; t1=86400*366*2.0;
+
+   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, w0=w0, w1=w1, 𝑇=[t0,t1],
+   XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), ioSize=(360,160,50))
+
+   return 𝑃,Γ
+
+end
+
+##
+
 function init_global_range(lons::Tuple = (-160.0, -150.0),lats::Tuple = (35.0, 45.0))
     lo0, lo1 = lons #(-160.0, -150.0)
     la0, la1 = lats #(35.0, 45.0)
