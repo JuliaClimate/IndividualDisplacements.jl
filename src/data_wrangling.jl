@@ -76,6 +76,8 @@ function postprocess_xy(sol,𝑃::NamedTuple)
     return df
 end
 
+postprocess_xy(sol,𝑃,id) = postprocess_xy(sol,𝑃)
+
 """
     read_uvetc(k::Int,Γ::Dict,pth::String)
 
