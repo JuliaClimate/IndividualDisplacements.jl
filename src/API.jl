@@ -20,7 +20,6 @@ Base.@kwdef struct Individuals{T}
    id  ::Array{Int,1} = Array{Int,1}(undef, 0)
    tr  ::DataFrame = tr_default
    ⎔  ::Function = dxy_dt
-   ⎔! ::Function = dxy_dt!
    □   ::Function = solver_default
    ▽   ::Function = postprocess_default
    𝑃   ::NamedTuple = 𝑃_default
@@ -34,7 +33,7 @@ end
 Set up ODE problem over `(0.0,𝐼.𝑃.𝑇[2])`, solve, postprocess, & update `𝐼.xy[:,:]`
 """
 function start!(𝐼::Individuals)
-    prob = ODEProblem(𝐼.⎔!,𝐼.xy,(0.0,𝐼.𝑃.𝑇[2]),𝐼.𝑃)
+    prob = ODEProblem(𝐼.⎔,𝐼.xy,(0.0,𝐼.𝑃.𝑇[2]),𝐼.𝑃)
     sol = 𝐼.□(prob)
     tmp = 𝐼.▽(sol,𝐼.𝑃,𝐼.id)
     append!(𝐼.tr,tmp)
@@ -48,7 +47,7 @@ Update 𝐼.𝑃, set up ODE problem over 𝐼.𝑃.𝑇, solve, postprocess, & 
 """
 function displace!(𝐼::Individuals)
     𝐼.𝑃.🔄(𝐼.𝑃.k,𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]),𝐼.𝑃)
-    prob = ODEProblem(𝐼.⎔!,𝐼.xy,𝐼.𝑃.𝑇,𝐼.𝑃)
+    prob = ODEProblem(𝐼.⎔,𝐼.xy,𝐼.𝑃.𝑇,𝐼.𝑃)
     sol = 𝐼.□(prob)
     tmp = 𝐼.▽(sol,𝐼.𝑃,𝐼.id)
     np=length(𝐼.id)
