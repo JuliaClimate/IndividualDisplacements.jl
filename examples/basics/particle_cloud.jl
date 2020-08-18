@@ -16,7 +16,7 @@
 using IndividualDisplacements, OrdinaryDiffEq, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/recipes_plots.jl"))
-include(joinpath(p,"../examples/example123.jl"))
+include(joinpath(p,"../examples/example123.jl"));
 
 # ## 2. Setup Problem
 
@@ -31,7 +31,7 @@ xy=transpose([x y])
 solv(prob) = solve(prob,Tsit5(),reltol=1e-6,abstol=1e-6)
 tr = DataFrame( ID=[], x=[], y=[], t = [])
 
-𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔! = ⬡, □ = solv, ▽ = postprocess_xy, tr = tr)
+𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔! = ⬡, □ = solv, ▽ = postprocess_xy, tr = tr);
 
 # ## 3. Compute Trajectories
 
