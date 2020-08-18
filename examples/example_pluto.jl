@@ -86,7 +86,7 @@ end
 begin
 	𝐼 = Individuals{Float64}(
 		xy=xy, id=id, 𝑃=𝑃, tr = tr, 
-		⎔! = dxyz_dt, □ = solv, ▽ = postproc)
+		⎔ = dxyz_dt, □ = solv, ▽ = postproc)
 	
 	start!(𝐼)
 end

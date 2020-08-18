@@ -48,7 +48,7 @@ function example2()
    solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
    tr = DataFrame( ID=[], x=[], y=[], t = [])
 
-   𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔! = ⬡, □ = solv, ▽ = postprocess_xy, tr = tr)
+   𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔ = dxy_dt, □ = solv, ▽ = postprocess_xy, tr = tr)
    start!(𝐼)
 
    return 𝐼, df,ref
@@ -174,10 +174,10 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
    lon_rng=(-165.0,-145.0), lat_rng=(25.0,35.0))
    if nam=="OCCA"
       𝑃,Γ=OCCA_setup(backward_in_time=bck)
-      interp=dxyz_dt
+      ⎔ =dxyz_dt
    elseif nam=="LLC90"
       𝑃,Γ=example3_setup(backward_in_time=bck)
-      interp=IndividualDisplacements.dxy_dt
+      ⎔ =IndividualDisplacements.dxy_dt
    else
       error("unknown example (nam parameter value)")
    end
@@ -212,7 +212,7 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
       return df
    end
 
-   𝐼 = Individuals{Float64}(xy=xy, id=id, 𝑃=𝑃, ⎔! = interp , □ = solv, ▽ = postproc, tr = tr)
+   𝐼 = Individuals{Float64}(xy=xy, id=id, 𝑃=𝑃, ⎔ = ⎔ , □ = solv, ▽ = postproc, tr = tr)
    start!(𝐼)
 
    return 𝐼
