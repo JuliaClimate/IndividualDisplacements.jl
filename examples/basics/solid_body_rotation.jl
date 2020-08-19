@@ -76,7 +76,7 @@ function postproc(sol,𝑃::NamedTuple,id=missing)
     return df
  end
 
-𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔ = dxyz_dt, □ = solv, ▽ = postproc, tr = tr)
+𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
 start!(𝐼)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -86,7 +86,7 @@ start!(𝐼)
 # - generate animation using `myplot`
 # - single plot example using `myplot`
 
-x,y,z=𝐼.tr.x,𝐼.tr.y,𝐼.tr.z
+x,y,z=𝐼.🔴.x,𝐼.🔴.y,𝐼.🔴.z
 
 myplot(i)=plot(x[1:i],y[1:i],z[1:i],linewidth=2,arrow = 2,
     title="Solid body rotation / Spiral example",leg=false,

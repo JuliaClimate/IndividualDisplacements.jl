@@ -106,12 +106,12 @@ function a_plot(𝐼::Individuals)
     plt=contourf(DL(),clims=(1.5,5),c = :ice, colorbar=false)
 
     t=𝑃.𝑇[2]
-    df = 𝐼.tr[ (𝐼.tr.t.>t-1.0).&(𝐼.tr.t.<=t) , :]
+    df = 𝐼.🔴[ (𝐼.🔴.t.>t-1.0).&(𝐼.🔴.t.<=t) , :]
     scatter!(df.lon,df.lat,markersize=1.5,c=:red,leg=:none,
     xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:circle, stroke(0)))
 
     t=0.0
-    df = 𝐼.tr[ (𝐼.tr.t.>t-1.0).&(𝐼.tr.t.<=t) , :]
+    df = 𝐼.🔴[ (𝐼.🔴.t.>t-1.0).&(𝐼.🔴.t.<=t) , :]
     scatter!(df.lon,df.lat,markersize=1.5,c=:yellow,leg=:none,
     xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:dot, stroke(0)))
     return plt

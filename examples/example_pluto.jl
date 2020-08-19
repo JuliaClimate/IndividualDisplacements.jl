@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.6
+# v0.11.7
 
 using Markdown
 using InteractiveUtils
@@ -19,6 +19,7 @@ begin
 
 	p=dirname(pathof(IndividualDisplacements))
     include(joinpath(p,"../examples/example123.jl"))
+    include(joinpath(p,"../examples/helper_functions.jl"))
     include(joinpath(p,"../examples/recipes_plots.jl"))
 	𝑃,Γ=OCCA_setup()	
 	tmp=(Γ = Γ, m = "OCCA")
@@ -84,9 +85,8 @@ end
 
 # ╔═╡ 9ffe84c0-dff0-11ea-2726-8924892df73a
 begin
-	𝐼 = Individuals{Float64}(
-		xy=xy, id=id, 𝑃=𝑃, tr = tr, 
-		⎔ = dxyz_dt, □ = solv, ▽ = postproc)
+
+        𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
 	
 	start!(𝐼)
 end
@@ -104,10 +104,10 @@ end
 
 # ╔═╡ a13d6ea6-dff1-11ea-0713-cb235e28cf79
 begin	
-df = 𝐼.tr[ findall(𝐼.tr.t .== minimum(𝐼.tr.t)) , :]
+df = 𝐼.🔴[ findall(𝐼.🔴.t .== minimum(𝐼.🔴.t)) , :]
 scatter!(plt,df.lon,df.lat,markersize=2.0,c=:gold,leg=:none,
         marker = (:dot, stroke(0)))
-df = 𝐼.tr[ findall(𝐼.tr.t .== maximum(𝐼.tr.t)) , :]
+df = 𝐼.🔴[ findall(𝐼.🔴.t .== maximum(𝐼.🔴.t)) , :]
 scatter!(plt,df.lon,df.lat,markersize=2.0,c=:red,leg=:none,
         marker = (:dot, stroke(0)))
 end
