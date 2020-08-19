@@ -31,7 +31,7 @@ xy=transpose([x y])
 solv(prob) = solve(prob,Tsit5(),reltol=1e-6,abstol=1e-6)
 tr = DataFrame( ID=[], x=[], y=[], t = [])
 
-𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔ = dxy_dt, □ = solv, ▽ = postprocess_xy, tr = tr);
+𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, ⎔ = dxy_dt, ∫ = solv, ⟁ = postprocess_xy, 𝑃=𝑃)
 
 # ## 3. Compute Trajectories
 
@@ -39,9 +39,9 @@ start!(𝐼)
 
 # ## 4. Display results
 
-𝐼.tr.lon=5000*𝐼.tr.x
-𝐼.tr.lat=5000*𝐼.tr.y
-plt=PlotBasic(𝐼.tr,size(xy,2),100000.0)
+𝐼.🔴.lon=5000*𝐼.🔴.x
+𝐼.🔴.lat=5000*𝐼.🔴.y
+plt=PlotBasic(𝐼.🔴,size(xy,2),100000.0)
 
 # Compare with trajectory output from `MITgcm`
 

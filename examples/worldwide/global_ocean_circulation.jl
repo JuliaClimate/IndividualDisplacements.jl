@@ -45,7 +45,7 @@ keys(𝑃)
 # - initial particle positions randomly over Global Ocean
 
 xy=init_global_randn(10000,𝑃); id=collect(1:size(xy,2))
-𝐼 = Individuals{Float64}(xy=xy, id=id, 𝑃=𝑃, ⎔=dxy_dt!)
+𝐼 = Individuals{Float64}(📌=xy[:,:], 🆔=id, ⎔ = dxy_dt!, 𝑃=𝑃)
 
 fieldnames(typeof(𝐼))
 
@@ -75,7 +75,7 @@ end
 # ## 3.4 Compute summary statistics
 #
 
-gdf = groupby(𝐼.tr, :ID)
+gdf = groupby(𝐼.🔴, :ID)
 show(combine(gdf,nrow,:lat => mean))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
