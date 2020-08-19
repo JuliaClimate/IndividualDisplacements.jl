@@ -35,7 +35,7 @@ include(joinpath(p,"../examples/recipes_plots.jl"))
 PlotBasic(df,300,100000.0)
 
 using Plots
-Plots.plot(𝐼.tr.x,𝐼.tr.y,linewidth=5,lc=:black, title="One Trajectory Example",
+Plots.plot(𝐼.🔴.x,𝐼.🔴.y,linewidth=5,lc=:black, title="One Trajectory Example",
 xaxis="x",yaxis="y",label="Julia Solution") # legend=false
 pl=Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
 ```
@@ -48,7 +48,7 @@ function example2()
    solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
    tr = DataFrame( ID=[], x=[], y=[], t = [])
 
-   𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔ = dxy_dt, □ = solv, ▽ = postprocess_xy, tr = tr)
+   𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, ⎔ = dxy_dt, ∫ = solv, ⟁ = postprocess_xy, 𝑃=𝑃)
    start!(𝐼)
 
    return 𝐼, df,ref
@@ -151,7 +151,7 @@ include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
 
 𝐼=example3("OCCA");
-df=𝐼.tr
+df=𝐼.🔴
 
 include(joinpath(p,"../examples/recipes_plots.jl"))
 PlotBasic(df,100,90.0)
@@ -212,7 +212,7 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
       return df
    end
 
-   𝐼 = Individuals{Float64}(xy=xy, id=id, 𝑃=𝑃, ⎔ = ⎔ , □ = solv, ▽ = postproc, tr = tr)
+   𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, ⎔ = dxy_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
    start!(𝐼)
 
    return 𝐼
@@ -235,7 +235,7 @@ example3((-165.0,-155.0),(5.0,15.0),5.5,true)
 """
 function example3(lon_rng,lat_rng,z_init,bck)
    𝐼=example3("OCCA",bck=bck, z_init=z_init,lon_rng=lon_rng,lat_rng=lat_rng)
-   df=𝐼.tr
+   df=𝐼.🔴
    nf=maximum(df.ID)
    nt=size(df,1)/nf
    dt=maximum(df.t)/(nt-1)
