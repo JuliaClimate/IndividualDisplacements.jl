@@ -61,7 +61,9 @@ start!(𝐼)
 # - `displace!(𝐼)` then solves for the individual trajectories over one month, after updating velocity fields (𝐼.u0 etc) if needed, and adds diagnostics to the DataFrame used to record / trace variables along the trajectory (𝐼.tr).
 
 function step!(𝐼::Individuals)
-    reset!(𝐼)
+    t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
+    𝐼.𝑃.🔄(𝐼.𝑃,t_ϵ)
+    reset_lonlat!(𝐼)
     displace!(𝐼)
 end
 
