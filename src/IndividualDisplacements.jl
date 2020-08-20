@@ -14,6 +14,6 @@ export initialize_gridded, initialize_lonlat, randn_lonlat
 export postprocess_lonlat, add_lonlat!, postprocess_xy
 export read_flt, read_mds, read_drifters, read_uvetc
 export Individuals, set_up_𝑃, update_𝑃!
-export start!, displace!, reset!
+export start!, displace!, reset_lonlat!
 
 end # module
