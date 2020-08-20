@@ -32,6 +32,7 @@ using IndividualDisplacements, MeshArrays
 # - call `SetPeriodicDomain` function with a chosen grid size; e.g. `np=16`
 
 np=16
+nz=4
 
 Γ=simple_periodic_domain(np);
 
@@ -46,6 +47,7 @@ np=16
 t0=0.0
 t1=0.95*2*pi
 #t1=2.95*2*pi
+t1=19.95*2*pi
 
 #solid-body rotation around central location
 i=Int(np/2+1)
@@ -54,19 +56,30 @@ v=(Γ["XG"].-Γ["XG"][1][i,i])
 
 #add some convergence to / divergence from central location
 d=0.0
-#d=-0.10
+d=-0.01
 u=u+d*(Γ["XG"].-Γ["XG"][1][i,i])
 v=v+d*(Γ["YG"].-Γ["YG"][1][i,i])
 
+#"vertical" component w
+γ=Γ["XC"].grid
+w=fill(1.0,MeshArray(γ,γ.ioPrec,nz))
+
+#replicate u,v "vertically"
+uu=MeshArray(γ,γ.ioPrec,nz)
+[uu[k]=u[1] for k=1:nz]
+vv=MeshArray(γ,γ.ioPrec,nz)
+[vv[k]=v[1] for k=1:nz]
+
 #store everything in a dictionnary
-𝑃=Dict("u0" => u, "u1" => u, "v0" => v, "v1" => v, "t0" => t0, "t1" => t1)
+𝑃=Dict("u0" => uu, "u1" => uu, "v0" => vv, "v1" => vv,
+       "w0" => 0.0*w, "w1" => -0.01*w, "t0" => t0, "t1" => t1)
 𝑃=merge(𝑃,Γ);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.4 Initial Position and Time
 
-u0=np*[1/3,1/3]
-du=fill(0.0,2)
+u0=[np*1/3,np*1/3,nz*1/3]
+du=fill(0.0,3)
 𝑇 = (𝑃["t0"],𝑃["t1"]);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -77,10 +90,10 @@ du=fill(0.0,2)
 #
 # _For additional documentation, try `?ODEProblem` or `?solve`_
 
-prob = ODEProblem(⬡,u0,𝑇,𝑃)
+prob = ODEProblem(dxyz_dt,u0,𝑇,𝑃)
 sol = solve(prob,Tsit5(),reltol=1e-8)
 
-x,y=sol[1,:],sol[2,:]
+x,y,z=sol[1,:],sol[2,:],sol[3,:]
 nt=length(x)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -90,9 +103,9 @@ nt=length(x)
 # - generate animation using `myplot`
 # - single plot example using `myplot`
 
-myplot(i)=plot(x[1:i],y[1:i],linewidth=2,arrow = 2,
+myplot(i)=plot(x[1:i],y[1:i],z[1:i],linewidth=2,arrow = 2,
     title="Solid body rotation / Spiral example",leg=false,
-    xaxis="x",yaxis="y",xlims=(0,np),ylims=(0,np))
+    xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
@@ -110,4 +123,5 @@ end
 # Single plot example:
 
 plt=myplot(nt)
-scatter!(plt,[u0[1]],[u0[2]])
+scatter!(plt,[u0[1]],[u0[2]],[u0[3]])
+scatter!(plt,[x[end]],[y[end]],[z[end]])
