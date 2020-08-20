@@ -33,9 +33,11 @@ end
 Set up ODE problem over `(0.0,𝐼.𝑃.𝑇[2])`, solve, postprocess, & update `𝐼.📌[:,:]`
 """
 function start!(𝐼::Individuals)
-    prob = ODEProblem(𝐼.⎔,𝐼.📌,(0.0,𝐼.𝑃.𝑇[2]),𝐼.𝑃)
+    𝑇=(0.0,𝐼.𝑃.𝑇[2])
+    prob = ODEProblem(𝐼.⎔,𝐼.📌, 𝑇 ,𝐼.𝑃)
     sol = 𝐼.∫(prob)
-    tmp = 𝐼.⟁(sol,𝐼.𝑃,𝐼.🆔)
+    tmp = 𝐼.⟁(sol,𝐼.𝑃, id=𝐼.🆔, 𝑇=𝑇)
+    #tmp.t=0.0 .+ 𝐼.𝑃.𝑇[2] / diff(𝐼.𝑃.𝑇)[1] * tmp.t
     append!(𝐼.🔴,tmp)
     𝐼.📌[:,:] = deepcopy(sol[:,:,end])
 end
@@ -43,24 +45,23 @@ end
 """
     displace!(𝐼::Individuals)
 
-Update 𝐼.𝑃, set up ODE problem over 𝐼.𝑃.𝑇, solve, postprocess, & update `𝐼.📌[:,:]`
+Set up ODE problem over 𝐼.𝑃.𝑇, solve, postprocess, & update `𝐼.📌[:,:]`
 """
 function displace!(𝐼::Individuals)
-    𝐼.𝑃.🔄(𝐼.𝑃.k,𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]),𝐼.𝑃)
     prob = ODEProblem(𝐼.⎔,𝐼.📌,𝐼.𝑃.𝑇,𝐼.𝑃)
     sol = 𝐼.∫(prob)
-    tmp = 𝐼.⟁(sol,𝐼.𝑃,𝐼.🆔)
+    tmp = 𝐼.⟁(sol,𝐼.𝑃,id=𝐼.🆔)
     np=length(𝐼.🆔)
     append!(𝐼.🔴,tmp[np+1:end,:])
     𝐼.📌[:,:] = deepcopy(sol[:,:,end])
 end
 
 """
-    reset!(𝐼::Individuals)
+    reset_lonlat!(𝐼::Individuals)
 
 Randomly select a fraction (𝐼.𝑃.frac) of the particles and reset their positions.
 """
-function reset!(𝐼::Individuals)
+function reset_lonlat!(𝐼::Individuals)
     np=length(𝐼.🆔)
     n_reset = Int(round(𝐼.𝑃.frac*np))
     (lon, lat) = randn_lonlat(2*n_reset)

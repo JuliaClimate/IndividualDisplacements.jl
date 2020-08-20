@@ -1,14 +1,15 @@
 
 """
-    postprocess_lonlat(sol,𝑃::NamedTuple)
+    postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 using "exchanged" 𝑃.XC, 𝑃.YC via `add_lonlat!`
 """
-function postprocess_lonlat(sol,𝑃::NamedTuple,id=missing)
+function postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
-    𝐼=id*ones(1,size(sol,3))
+    ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
+    id=id*ones(1,size(sol,3))
     x=sol[1,:,:]
     y=sol[2,:,:]
     𝑃.XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
@@ -16,9 +17,9 @@ function postprocess_lonlat(sol,𝑃::NamedTuple,id=missing)
     nf=size(sol,2)
     nt=size(sol,3)
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t
+    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
-    df = DataFrame(ID=Int.(𝐼[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
+    df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
     add_lonlat!(df,𝑃.XC,𝑃.YC)
     return df
 end
@@ -143,17 +144,20 @@ function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
     tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
     𝑃 = merge(𝑃 , tmp)
 
-    𝑃.🔄(k,0.0,𝑃)
+    𝑃.🔄(𝑃,0.0)
     return 𝑃
 end
 
 """
-    update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
+    update_𝑃!(𝑃::NamedTuple,t::Float64)
 
-Update velocity and time arrays inside 𝑃 (e.g. 𝑃.u0[:], etc, and 𝑃.𝑇[:])
-based on the chosen vertical level `k` and time `t` (in `seconds`).
+Update input data (velocity arrays) and time period (array) inside 𝑃 (𝑃.u0[:], etc, and 𝑃.𝑇[:])
+based on the chosen time `t` (in `seconds`). 
+
+_Note: for now, it is assumed that (1) input 𝑃.𝑇 is used to infer `dt` between consecutive velocity fields,
+(2) periodicity of 12 monthly records, (3) vertical 𝑃.k is selected -- but this could easily be generalized._ 
 """
-function update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
+function update_𝑃!(𝑃::NamedTuple,t::Float64)
     dt=𝑃.𝑇[2]-𝑃.𝑇[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
@@ -167,13 +171,13 @@ function update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
     m1==0 ? m1=12 : nothing
 
     (U,V)=read_velocities(𝑃.u0.grid,m0,𝑃.pth)
-    u0=U[:,k]; v0=V[:,k]
+    u0=U[:,𝑃.k]; v0=V[:,𝑃.k]
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
     u0=u0.*𝑃.iDXC; v0=v0.*𝑃.iDYC; #normalize to grid units
     (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
 
     (U,V)=read_velocities(𝑃.u0.grid,m1,𝑃.pth)
-    u1=U[:,k]; v1=V[:,k]
+    u1=U[:,𝑃.k]; v1=V[:,𝑃.k]
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
     u1=u1.*𝑃.iDXC; v1=v1.*𝑃.iDYC; #normalize to grid units
     (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
