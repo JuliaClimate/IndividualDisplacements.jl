@@ -1,20 +1,17 @@
 module IndividualDisplacements
 
-greet() = print("Get ready for IndividualDisplacements!")
-
 using MeshArrays, OrdinaryDiffEq, StatsBase, DataFrames, Random
-using NetCDF, Dates, CFTime, CSV
+using NetCDF, Dates, CFTime, CSV, UnPack, CyclicArrays
 
 include("compute.jl")
 include("read.jl")
 include("update_locations.jl")
 include("data_wrangling.jl")
 
-⬡! = VelComp!
-⬡ = VelComp
-□ = VelCopy
+⬡! = dxy_dt!
+⬡ = dxy_dt
 
-export ⬡!, ⬡, □
+export ⬡!, ⬡, dxyz_dt, dxy_dt_CyclicArray, dxy_dt_replay
 export initialize_gridded, initialize_lonlat, randn_lonlat
 export postprocess_lonlat, postprocess_xy
 export read_flt, read_mds, read_uvetc, read_drifters
