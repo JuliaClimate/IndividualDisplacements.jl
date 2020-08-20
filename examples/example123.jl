@@ -202,8 +202,8 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
 
    tr = DataFrame( ID=[], x=[], y=[], t = [], lon=[], lat=[], z=[], fid=[])
 
-   function postproc(sol,𝑃::NamedTuple,id=missing)
-      df=postprocess_lonlat(sol,𝑃,id)
+   function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
+      df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
       #add third coordinate
       z=sol[3,:,:]
       df.z=z[:]
