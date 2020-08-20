@@ -70,8 +70,8 @@ begin
 	
 	tr = DataFrame( ID=[], x=[], y=[], t = [], lon=[], lat=[], z=[], fid=[])
 	
-	function postproc(sol,𝑃::NamedTuple,id=missing)
-	  df=postprocess_lonlat(sol,𝑃,id)
+	function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
+	  df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
 	  #add third coordinate
 	  z=sol[3,:,:]
 	  df.z=z[:]
@@ -85,9 +85,7 @@ end
 
 # ╔═╡ 9ffe84c0-dff0-11ea-2726-8924892df73a
 begin
-
-        𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
-	
+    𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
 	start!(𝐼)
 end
 

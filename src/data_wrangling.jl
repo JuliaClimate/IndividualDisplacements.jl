@@ -60,24 +60,23 @@ end
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_xy(sol,𝑃::NamedTuple)
+function postprocess_xy(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+    ismissing(id) ? id=collect(1:size(sol,2)) : nothing
+    ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
+
     nf=size(sol,2)
     nt=size(sol,3)
     nx,ny=𝑃.ioSize[1:2]
 
-    x=sol[1,:,:]
-    y=sol[2,:,:]
+    id=id*ones(1,size(sol,3))
+    x=mod.(sol[1,:,:],Ref(nx))
+    y=mod.(sol[2,:,:],Ref(ny))
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
     #size(𝑃.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
-    ID=collect(1:size(sol,2))*ones(1,size(sol,3))
+    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
-    df = DataFrame(ID=Int.(ID[:]), t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t,
-                   x=mod.(x[:],Ref(nx)), y=mod.(y[:],Ref(ny)))
-
-    return df
+    return DataFrame(ID=Int.(id[:]), t=t[:], x=x[:], y=y[:])
 end
-
-postprocess_xy(sol,𝑃,id) = postprocess_xy(sol,𝑃)
 
 """
     read_uvetc(k::Int,Γ::Dict,pth::String)
