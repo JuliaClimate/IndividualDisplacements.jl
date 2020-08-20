@@ -1,11 +1,11 @@
 
 """
-    VelCopy(du,u,p::DataFrame,t)
+    dxy_dt_replay(du,u,p::DataFrame,t)
 
 Interpolate velocity from MITgcm float_trajectories output and return
 position increment `du`.
 """
-function VelCopy(du,u,p::DataFrame,t)
+function dxy_dt_replay(du,u,p::DataFrame,t)
     tt=t/3600.0
     tt0=Int32(floor(tt))
     w=tt-tt0

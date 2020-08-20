@@ -118,7 +118,7 @@ tmpu=fill(0.0,nSteps); tmpv=fill(0.0,nSteps);
 tmpx=fill(0.0,nSteps); tmpy=fill(0.0,nSteps);
 refu=fill(0.0,nSteps); refv=fill(0.0,nSteps);
 for i=1:nSteps
-    □(du,[tmp[i,:lon],tmp[i,:lat]],tmp,tmp[i,:time])
+    dxy_dt_replay(du,[tmp[i,:lon],tmp[i,:lat]],tmp,tmp[i,:time])
     refu[i]=du[1]./uvetc["dx"]
     refv[i]=du[2]./uvetc["dx"]
     ⬡(du,[tmp[i,:lon],tmp[i,:lat]]./uvetc["dx"],uvetc,tmp[i,:time])
@@ -143,7 +143,7 @@ plot!(refv,label="v (ref)")
 # - `reltol` and `abstol` are tolerance parameters
 
 tspan = (0.0,nSteps*3600.0)
-#prob = ODEProblem(□,uInit,tspan,tmp)
+#prob = ODEProblem(dxy_dt_replay,uInit,tspan,tmp)
 prob = ODEProblem(⬡,uInit,tspan,uvetc)
 sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 sol[1:4]

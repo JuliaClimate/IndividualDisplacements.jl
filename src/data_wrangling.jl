@@ -8,7 +8,7 @@ function postprocess_lonlat(sol,XC,YC)
     ID=collect(1:size(sol,2))*ones(1,size(sol,3))
     x=sol[1,:,:]
     y=sol[2,:,:]
-    size(sol,1)==3 ? fIndex=sol[3,:,:] : fIndex=ones(size(x))
+    XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
     df = DataFrame(ID=Int.(ID[:]), x=x[:], y=y[:], fIndex=fIndex[:])
 
     lon=Array{Float64,1}(undef,size(df,1)); lat=similar(lon)
@@ -51,7 +51,7 @@ function postprocess_xy(sol,𝑃)
 
     x=sol[1,:,:]
     y=sol[2,:,:]
-    fIndex=sol[3,:,:]
+    size(𝑃["XC"],1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
     ID=collect(1:size(sol,2))*ones(1,size(sol,3))
     df = DataFrame(ID=Int.(ID[:]), fIndex=fIndex[:],
     x=mod.(x[:],Ref(nx)), y=mod.(y[:],Ref(ny)))
