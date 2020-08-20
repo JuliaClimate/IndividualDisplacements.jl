@@ -68,15 +68,16 @@ xy=[np*1/3,np*1/3,nz*1/3]
 
 tr = DataFrame( ID=[], x=[], y=[], z=[], t = [])
 solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
-function postproc(sol,𝑃::NamedTuple,id=missing)
-    df=postprocess_xy(sol,𝑃,id)
+function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
+    df=postprocess_xy(sol,𝑃,id=id,𝑇=𝑇)
     #add third coordinate
     z=sol[3,:,:]
     df.z=z[:]
     return df
  end
 
-𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
+𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
+                         ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
 start!(𝐼)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
