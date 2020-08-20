@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Global Ocean Simulation · IndividualDisplacements</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">IndividualDisplacements</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../examples/">List Of Examples</a></li><li><span class="tocitem">Basic Examples</span><ul><li><a class="tocitem" href="../../basics/detailed_look/">A Detailed Look</a></li><li><a class="tocitem" href="../../basics/particle_cloud/">Particle Cloud Simulation</a></li><li><a class="tocitem" href="../../basics/random_flow_field/">Random Flow Simulation</a></li><li><a class="tocitem" href="../../basics/solid_body_rotation/">Single Particle Simulation</a></li></ul></li><li><span class="tocitem">Global Examples</span><ul><li class="is-active"><a class="tocitem" href>Global Ocean Simulation</a><ul class="internal"><li><a class="tocitem" href="#.-Get-Software-and-Iput-Files"><span>1. Get Software &amp; Iput Files</span></a></li><li><a class="tocitem" href="#.-Set-Up-Parameters-and-Inputs"><span>2. Set Up Parameters &amp; Inputs</span></a></li><li><a class="tocitem" href="#.-Main-Computation-Loop"><span>3. Main Computation Loop</span></a></li><li><a class="tocitem" href="#.1-Initialization-and-Initial-Solution"><span>3.1 Initialization &amp; Initial Solution</span></a></li><li><a class="tocitem" href="#.2-Repeat-For-ny*12-Months"><span>3.2 Repeat For <code>ny*12</code> Months</span></a></li><li><a class="tocitem" href="#.-Plot-trajectories"><span>4. Plot trajectories</span></a></li></ul></li></ul></li><li><a class="tocitem" href="../../API/">API Guide</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Global Examples</a></li><li class="is-active"><a href>Global Ocean Simulation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Global Ocean Simulation</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/worldwide/global_ocean_circulation.jl" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Global-Ocean-Simulation"><a class="docs-heading-anchor" href="#Global-Ocean-Simulation">Global Ocean Simulation</a><a id="Global-Ocean-Simulation-1"></a><a class="docs-heading-anchor-permalink" href="#Global-Ocean-Simulation" title="Permalink"></a></h1><p><a href="https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/global_ocean_circulation.ipynb"><img src="https://mybinder.org/badge_logo.svg" alt/></a> <a href="https://nbviewer.jupyter.org/github/JuliaClimate/IndividualDisplacements.jl/blob/gh-pages/v0.1.15/notebooks/global_ocean_circulation.ipynb"><img src="https://img.shields.io/badge/show-nbviewer-579ACA.svg" alt/></a></p><p>Particles moving with climatological monthly mean flow at selected depth level (e.g. <code>k=10</code> for 95 m) based on an ocean state estimate (ECCO v4 r2 from https://ecco-group.org). For additional documentation e.g. see : <a href="https://JuliaClimate.github.io/MeshArrays.jl/dev/">1</a>, <a href="https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/">2</a>, <a href="https://docs.juliadiffeq.org/latest/solvers/ode_solve.html">3</a>, <a href="https://en.wikipedia.org/wiki/Displacement_(vector)">4</a></p><p><a href="https://youtu.be/W5DNqJG9jt0"><img src="https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png" alt="simulated particle movie (5m)"/></a></p><h2 id=".-Get-Software-and-Iput-Files"><a class="docs-heading-anchor" href="#.-Get-Software-and-Iput-Files">1. Get Software &amp; Iput Files</a><a id=".-Get-Software-and-Iput-Files-1"></a><a class="docs-heading-anchor-permalink" href="#.-Get-Software-and-Iput-Files" title="Permalink"></a></h2><ul><li>packages + helper functions</li><li>grid and velocity files</li></ul><pre><code class="language-">using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
+using Statistics, DataFrames, MITgcmTools, OceanStateEstimation
+
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,&quot;../examples/recipes_plots.jl&quot;))
+include(joinpath(p,&quot;../examples/helper_functions.jl&quot;))
+get_grid_if_needed()
+
+#velocity files:
+pp=&quot;$p/../examples/nctiles_climatology&quot;
+q=dirname(pathof(OceanStateEstimation))
+qq=&quot;$q/../examples/nctiles_climatology&quot;
+!isfile(pp*&quot;.csv&quot;) ? run(`cp $qq.csv $pp.csv`) : nothing
+!isdir(pp) ? run(`mkdir $pp`) : nothing
+!isdir(pp*&quot;/UVELMASS&quot;) ? get_from_dataverse(&quot;UVELMASS&quot;,pp) : nothing
+!isdir(pp*&quot;/VVELMASS&quot;) ? get_from_dataverse(&quot;VVELMASS&quot;,pp) : nothing</code></pre><h2 id=".-Set-Up-Parameters-and-Inputs"><a class="docs-heading-anchor" href="#.-Set-Up-Parameters-and-Inputs">2. Set Up Parameters &amp; Inputs</a><a id=".-Set-Up-Parameters-and-Inputs-1"></a><a class="docs-heading-anchor-permalink" href="#.-Set-Up-Parameters-and-Inputs" title="Permalink"></a></h2><ul><li>depth level and duration</li><li>read grid variables</li><li>read &amp; normalize velocities</li></ul><pre><code class="language-">k=10 #choice of vertical level
+ny=10 #number of simulated years (20 for k&gt;20)
+r_reset = 0.01 #fraction of the particles reset per month (0.05 for k&lt;=10)
+
+#read grid and set up connections between subdomains
+γ=GridSpec(&quot;LatLonCap&quot;,joinpath(p,&quot;../examples/GRID_LLC90/&quot;))
+Γ=GridLoad(γ)
+Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
+
+#initialize u0,u1 etc
+uvetc=read_uvetc(k,0.0,Γ,joinpath(p,&quot;../examples/nctiles_climatology/&quot;));
+nothing #hide</code></pre><h3 id="Single-interpolation-and-trajectory-Test"><a class="docs-heading-anchor" href="#Single-interpolation-and-trajectory-Test">Single interpolation &amp; trajectory Test</a><a id="Single-interpolation-and-trajectory-Test-1"></a><a class="docs-heading-anchor-permalink" href="#Single-interpolation-and-trajectory-Test" title="Permalink"></a></h3><p>Interpolate Velocity (normalized)</p><pre><code class="language-">(u0,du)=initialize_lonlat(Γ,-160.1,35.1; msk=Γ[&quot;hFacC&quot;][:,k]);
+⬡!(du,u0,uvetc,0.0);
+#u,v,f=du[:]</code></pre><p>Solve for trajectory</p><pre><code class="language-">𝑇 = (0.0,uvetc[&quot;t1&quot;])
+prob = ODEProblem(⬡!,u0,𝑇,uvetc)
+sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4);
+#sol = solve(prob,Euler(),dt=1e6)
+#size(sol)</code></pre><h2 id=".-Main-Computation-Loop"><a class="docs-heading-anchor" href="#.-Main-Computation-Loop">3. Main Computation Loop</a><a id=".-Main-Computation-Loop-1"></a><a class="docs-heading-anchor-permalink" href="#.-Main-Computation-Loop" title="Permalink"></a></h2><ul><li>initial particle positions randomly over Global Ocean</li><li>initial integration from time 0 to 0.5 month</li><li>update velocity fields &amp; repeat for ny years</li></ul><h2 id=".1-Initialization-and-Initial-Solution"><a class="docs-heading-anchor" href="#.1-Initialization-and-Initial-Solution">3.1 Initialization &amp; Initial Solution</a><a id=".1-Initialization-and-Initial-Solution-1"></a><a class="docs-heading-anchor-permalink" href="#.1-Initialization-and-Initial-Solution" title="Permalink"></a></h2><p>Initial Positions:</p><pre><code class="language-">#(u0,du)=initialize_gridded(uvetc,10)
+
+#(lon, lat) = randn_lonlat(20000)
+#(u0,du)=initialize_lonlat(Γ,lon,lat; msk=Γ[&quot;hFacC&quot;][:,k])
+
+#Or
+
+lo0,lo1=(-160.0,-150.0)
+la0,la1=(35.0,45.0)
+n=100
+lon=lo0 .+(lo1-lo0).*rand(n)
+lat=la0 .+(la1-la0).*rand(n)
+(u0,du)=initialize_lonlat(Γ,lon,lat; msk=Γ[&quot;hFacC&quot;][:,k]);
+nothing #hide</code></pre><p>Arrays For Storing Results</p><pre><code class="language-">u0_store = deepcopy(u0)
+n_store = size(u0_store,2);
+nothing #hide</code></pre><p>Fraction of the particles reset per month</p><pre><code class="language-">#r_reset = 0.05
+n_reset = Int(round(r_reset*n_store));
+#k_reset = rand(1:size(u0_store,2), n_reset)</code></pre><p>Solve for all trajectories for first 1/2 month</p><pre><code class="language-">prob = ODEProblem(⬡!,u0,𝑇,uvetc)
+sol = solve(prob,Euler(),dt=uvetc[&quot;dt&quot;]/8.0);
+#size(sol)</code></pre><p>Map <code>i,j</code> to <code>lon,lat</code> coordinates and convert to <code>DataFrames</code></p><pre><code class="language-">df=postprocess_lonlat(sol,uvetc)</code></pre><h2 id=".2-Repeat-For-ny*12-Months"><a class="docs-heading-anchor" href="#.2-Repeat-For-ny*12-Months">3.2 Repeat For <code>ny*12</code> Months</a><a id=".2-Repeat-For-ny*12-Months-1"></a><a class="docs-heading-anchor-permalink" href="#.2-Repeat-For-ny*12-Months" title="Permalink"></a></h2><p><em>A fraction of the particles, randomly selected, is reset every month to maintain a relatively homogeneous coverage of the Global Ocean by the fleet of particles.</em></p><pre><code class="language-">t0=[uvetc[&quot;t1&quot;]]
+u0 = deepcopy(sol[:,:,end])
+println(size(df))
+for y=1:ny
+    for m=1:12
+        uvetc=read_uvetc(k,t0[1],Γ,joinpath(p,&quot;../examples/nctiles_climatology/&quot;))
+        𝑇 = (uvetc[&quot;t0&quot;],uvetc[&quot;t1&quot;])
+        prob = ODEProblem(⬡!,u0,𝑇,uvetc)
+        sol = solve(prob,Euler(),dt=uvetc[&quot;dt&quot;]/8.0)
+        tmp = postprocess_lonlat(sol[:,:,2:end],uvetc)
+
+        k_reset = rand(1:size(u0_store,2), n_reset)
+        k_new = rand(1:size(u0_store,2), n_reset)
+        t_reset = Int(size(tmp,1)/n_store)-1
+
+        tmp[k_reset.+t_reset*n_store,2:end].=NaN #reset a random subset of particles
+        append!(df,tmp)
+
+        t0[1]=uvetc[&quot;t1&quot;]
+        u0[:,:] = deepcopy(sol[:,:,end])
+        u0[:,k_reset].=deepcopy(u0_store[:,k_new]) #reset a random subset of particles
+    end
+    println(size(df))
+end</code></pre><h2 id=".-Plot-trajectories"><a class="docs-heading-anchor" href="#.-Plot-trajectories">4. Plot trajectories</a><a id=".-Plot-trajectories-1"></a><a class="docs-heading-anchor-permalink" href="#.-Plot-trajectories" title="Permalink"></a></h2><p>Examples Using Various Plotting Packages are provided below.</p><pre><code class="language-julia">#p=dirname(pathof(IndividualDisplacements))
+#nn=1000
+
+#include(joinpath(p,&quot;../examples/recipes_plots.jl&quot;))
+#plt=PlotBasic(df,nn,180.)
+
+#include(joinpath(p,&quot;../examples/recipes_pyplot.jl&quot;))
+#PyPlot.figure(); PlotMapProj(df,nn)
+
+#include(joinpath(p,&quot;../examples/recipes_makie.jl&quot;))
+#AbstractPlotting.inline!(true) #for Juno, set to false
+#scene=PlotMakie(df,nn,180.0)
+##Makie.save(&quot;LatLonCap300mDepth.png&quot;, scene)</code></pre><p>Here we create <code>lon</code>, <code>lat</code>, and <code>DL</code> (log10 of bottom depth) to use in plot background:</p><pre><code class="language-">nf=size(u0,2)
+nt=size(df,1)/nf
+t=[ceil(i/nf)-1 for i in 1:nt*nf]
+df[!,:t]=2000 .+ uvetc[&quot;dt&quot;]/4/86400/365 * t
+
+lon=[i for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
+lat=[j for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
+(f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
+
+DL=log10.(Interpolate(Γ[&quot;Depth&quot;],f,i,j,w))
+DL[findall((!isfinite).(DL))].=NaN
+DL=reshape(DL,size(lon));
+nothing #hide</code></pre><p>Then we generate plot or movie using <code>GeoMakie.jl</code> ...</p><pre><code class="language-julia">#using ArgoData
+#p = include(joinpath(dirname(pathof(ArgoData)),&quot;movies.jl&quot;));
+#tt=collect(2000:0.05:2000+ny)
+#scene = ProjMap(DL,colorrange=(2.,4.))
+#ProjScatterMovie(scene,df,tt,&quot;GlobalDomain_fleet_k&quot;*&quot;$k&quot;*&quot;_v1.mp4&quot;,dt=1.0,mrksz=5e3)</code></pre><p>... or using <code>Plots.jl</code>:</p><pre><code class="language-">contourf(lon[:,1],lat[1,:],transpose(DL),clims=(1.5,5),c = :ice, colorbar=false)
+
+dt=0.0001
+t0=minimum(df[!,:t])
+t1=maximum(df[!,:t])
+#t=2001.0
+
+t=t1
+df_t = df[ (df.t.&gt;t-dt).&amp;(df.t.&lt;=t) , :]
+scatter!(df_t.lon,df_t.lat,markersize=3.0,c=:red,leg=:none,
+    xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:circle, stroke(0)))
+
+t=t0
+df_t = df[ (df.t.&gt;t-dt).&amp;(df.t.&lt;=t) , :]
+scatter!(df_t.lon,df_t.lat,markersize=3.0,c=:yellow,leg=:none,
+    xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:dot, stroke(0)))</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../basics/solid_body_rotation/">« Single Particle Simulation</a><a class="docs-footer-nextpage" href="../../API/">API Guide »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 20 August 2020 02:31">Thursday 20 August 2020</span>. Using Julia version 1.2.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
