@@ -10,9 +10,14 @@ postprocess_default = postprocess_lonlat
 """
     struct Individuals{T}
 
-Contains: 📌 (position), 🔴 (recording), 🆔 (ID), etc
+- Data:           📌 (position), 🔴 (record), 🆔 (ID)
+- Functions:      ⎔ (velocity), ∫ (time integration), ⟁ (postprocessing)
+- NamedTuples:    𝑃 (parameters), 𝐷 (diagnostics), 𝑀 (metadata)
+
+Keyword constructor -- for example:
+
 ```
-i=Individuals{Float32}(📌=zeros(3,2),🆔=1:2)
+𝐼=Individuals{Float64}(📌=zeros(3,2),🆔=1:2,🔴=DataFrame( ID=[], x=[], y=[], z=[], t = []))
 ```
 """
 Base.@kwdef struct Individuals{T}
@@ -34,7 +39,10 @@ end
 """
     ∫!(𝐼::Individuals,𝑇::Tuple)
 
-Continuously displace individuals (∫! of ⎔), starting from 📌, over time period 𝑇. Then postprocess with ⟁, record data into 🔴, & update 📌
+Displace individuals continuously over time period 𝑇 starting from position 📌. This is typically achived by 
+computing the cumulative integral of velocity experienced by the individuals (∫ ⎔dt).
+
+To finish `∫!` can postprocess with ⟁, records results into 🔴, & updates 📌
 """
 function ∫!(𝐼::Individuals,𝑇::Tuple)
     @unpack ⎔,📌,𝑃, ⟁, 🆔, 🔴, ∫ = 𝐼
@@ -48,35 +56,6 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     append!(🔴,tmp[np+1:end,:])
 
     📌[:,:] = deepcopy(sol[:,:,end])
-end
-
-"""
-    start!(𝐼::Individuals)
-
-Set up ODE problem over `(0.0,𝐼.𝑃.𝑇[2])`, solve, postprocess, & update `𝐼.📌[:,:]`
-"""
-function start!(𝐼::Individuals)
-    𝑇=(0.0,𝐼.𝑃.𝑇[2])
-    prob = ODEProblem(𝐼.⎔,𝐼.📌, 𝑇 ,𝐼.𝑃)
-    sol = 𝐼.∫(prob)
-    tmp = 𝐼.⟁(sol,𝐼.𝑃, id=𝐼.🆔, 𝑇=𝑇)
-    #tmp.t=0.0 .+ 𝐼.𝑃.𝑇[2] / diff(𝐼.𝑃.𝑇)[1] * tmp.t
-    append!(𝐼.🔴,tmp)
-    𝐼.📌[:,:] = deepcopy(sol[:,:,end])
-end
-
-"""
-    displace!(𝐼::Individuals)
-
-Set up ODE problem over 𝐼.𝑃.𝑇, solve, postprocess, & update `𝐼.📌[:,:]`
-"""
-function displace!(𝐼::Individuals)
-    prob = ODEProblem(𝐼.⎔,𝐼.📌,𝐼.𝑃.𝑇,𝐼.𝑃)
-    sol = 𝐼.∫(prob)
-    tmp = 𝐼.⟁(sol,𝐼.𝑃,id=𝐼.🆔)
-    np=length(𝐼.🆔)
-    append!(𝐼.🔴,tmp[np+1:end,:])
-    𝐼.📌[:,:] = deepcopy(sol[:,:,end])
 end
 
 """
