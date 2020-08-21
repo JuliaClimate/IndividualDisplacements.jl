@@ -3,29 +3,15 @@
 """
     read_drifters(pth,lst;chnk=Inf,rng=(missing,missing))
 
-Read near-surface drifter data (https://doi.org/10.1002/2016JC011716) from the
-Global Drifter Program (https://doi.org/10.25921/7ntx-z961) into a DataFrame
+Read near-surface [drifter data](https://doi.org/10.1002/2016JC011716) from the
+[Global Drifter Program](https://doi.org/10.25921/7ntx-z961) into a DataFrame.
 
 Note: need to use NetCDF.jl as NCDatasets.jl errors when TIME = Inf
-
 ```
-pth="Drifter_hourly_v013/"
-lst=["driftertrajGPS_1.03.nc","driftertrajWMLE_1.02_block1.nc","driftertrajWMLE_1.02_block2.nc",
-   "driftertrajWMLE_1.02_block3.nc","driftertrajWMLE_1.02_block4.nc","driftertrajWMLE_1.02_block5.nc",
-   "driftertrajWMLE_1.02_block6.nc","driftertrajWMLE_1.03_block7.nc"]
-
-#df=read_drifters( pth*lst[end],chnk=1000,rng=(2014.1,2014.2) )
-
-df = DataFrame(lon=[], lat=[], t=[], ID=[])
-for fil in lst
-   println(fil)
-   append!(df,read_drifters( pth*fil,chnk=10000,rng=(2005.0,2020.0) ))
-   println(size(df))
-end
-
+pth,list=drifter_files()
+df=read_drifters( pth*lst[end],chnk=1000,rng=(2014.1,2014.2) )
 #sort!(df, [:t, :lat])
 #CSV.write(pth*"Drifter_hourly_2005_2019.csv", df)
-#unID=unique(df[!,:ID])
 ```
 """
 function read_drifters(fil::String;chnk=Inf,rng=(missing,missing))
@@ -59,3 +45,34 @@ function read_drifters(fil::String;chnk=Inf,rng=(missing,missing))
 
    return df
 end
+
+"""
+    read_drifters( pth, lst )
+
+Read near-surface [drifter data](https://doi.org/10.1002/2016JC011716) from the
+[Global Drifter Program](https://doi.org/10.25921/7ntx-z961) into a DataFrame.
+
+Note: need to use NetCDF.jl as NCDatasets.jl errors when TIME = Inf
+
+```
+pth,list=drifter_files()
+df=read_drifters( pth, lst)
+```
+"""
+function read_drifters( pth, lst )
+   df = DataFrame(lon=[], lat=[], t=[], ID=[])
+   for fil in lst
+      println(fil)
+      append!(df,read_drifters( pth*fil,chnk=10000,rng=(2005.0,2020.0) ))
+      #println(size(df))
+   end
+   return df
+end
+   
+function drifter_files()
+   pth="Drifter_hourly_v013/"
+   lst=["driftertrajGPS_1.03.nc","driftertrajWMLE_1.02_block1.nc","driftertrajWMLE_1.02_block2.nc",
+      "driftertrajWMLE_1.02_block3.nc","driftertrajWMLE_1.02_block4.nc","driftertrajWMLE_1.02_block5.nc",
+      "driftertrajWMLE_1.02_block6.nc","driftertrajWMLE_1.03_block7.nc"]
+   return pth,list
+end   
