@@ -3,38 +3,35 @@
 #md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/solid_body_rotation.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
 #
-# Simulate the trajectory of a particle in a perfectly circular flow (i.e.
-# _solid body rotation_), which may represent e.g. an ocean meso-scale eddy.
-# _Addendum: _ a homogeneous sinking / floating term was later added.
+# Simulate the trajectory of an individual point, first in a perfectly circular flow (a.k.a. solid body rotation). Then add a convergent term to obtain a spiraling trajectory, and a constant vertical velocity for the third dimension. These simple flow configurations can be thought of as idealized models e.g. ocean meso-scale eddies.
 #
-# ![solid body rotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
-#
-# As an exercise left to the user, directions are provided e.g. to add a convergence / divergence term.
 # For additional documentation e.g. see :
 # [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
 # [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 #
-# - setup the software and initialize example
-# - simulate trajectories & plot results
-# - experiment with parameters (user)
+# ![solid body rotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 1.1 Import Software
+# # 1 Problem Configuration
+#
+# Here we set up software, grid, flow fields, initial conditions.
+#
+# ### 1.1 Import Software
 
 using OrdinaryDiffEq, Plots, DataFrames
 using IndividualDisplacements, MeshArrays
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 1.2  Gridded Domain
+# ### 1.2  Gridded Domain
 
 np,nz=16,4 #horizontal and vertical domain size
 Γ=simple_periodic_domain(np)
 γ=Γ["XC"].grid;
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 1.3 Velocity Fields
+# ### 1.3 Velocity Fields
 
 #Solid-body rotation around central location ...
 i=Int(np/2+1)
@@ -53,21 +50,26 @@ vv=MeshArray(γ,γ.ioPrec,nz)
 [vv[k]=v[1] for k=1:nz]
 
 #Vertical velocity component w
-w=fill(1.0,MeshArray(γ,γ.ioPrec,nz))
-
-#store parameters in a NamedTuple
-𝑃=(u0=uu, u1=uu, v0=vv, v1=vv,w0=0.0*w, w1=-0.01*w, 𝑇=[0,19.95*2*pi], ioSize=(np,np,nz));
+w=fill(1.0,MeshArray(γ,γ.ioPrec,nz));
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 1.4 Initial Position
+# ### 1.4 Initial Positions
 
-xy=[np*1/3,np*1/3,nz*1/3]
+📌=[np*1/3,np*1/3,nz*1/3]
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 2.1 Solve For Particle Trajectory
+# ## 2 Trajectory Simulations
+#
+# Here we turn our problem configuration in a struct (`Individuals`) which contains the initial positions, flow fields, and all that will be necesssary to compute trajectories over time (`∫!(𝐼,𝑇)`).
+#
+# ### 2.1 Setup Individuals
+#
+
+𝑃=(u0=uu, u1=uu, v0=vv, v1=vv,w0=0.0*w, w1=-0.01*w, 𝑇=[0,19.95*2*pi], ioSize=(np,np,nz))
 
 tr = DataFrame( ID=[], x=[], y=[], z=[], t = [])
 solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
+
 function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
     df=postprocess_xy(sol,𝑃,id=id,𝑇=𝑇)
     #add third coordinate
@@ -76,28 +78,32 @@ function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
     return df
  end
 
-𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
-                         🚄 = dxyz_dt, ∫ = solv, 🔧 = postproc, 𝑃=𝑃)
+𝐼 = Individuals{Float64}(📌=📌[:,:], 🔴=tr, 🆔=collect(1:size(📌,2)),
+                         🚄 = dxyz_dt, ∫ = solv, 🔧 = postproc, 𝑃=𝑃);
+
+#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ### 2.2 Compute Trajectories
+#
+# The `∫!` function call below returns the final positions & updates `𝐼.📌` accordingly. It also records properties observed along the trajectory in `𝐼.🔴`
+
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 2.2 Visualize Particle Trajectory
+# ### 2.3 Visualize Trajectories
 #
 # - define `myplot` convenience function
 # - generate animation using `myplot`
 # - single plot example using `myplot`
 
-x,y,z=𝐼.🔴.x,𝐼.🔴.y,𝐼.🔴.z
-
-myplot(i)=plot(x[1:i],y[1:i],z[1:i],linewidth=2,arrow = 2,
+myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
     title="Solid body rotation / Spiral example",leg=false,
-    xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np))
+    xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
 
-nt=length(x)
+nt=length(𝐼.🔴.x)
 p=Int(ceil(nt/100))
 anim = @animate for i ∈ 1:p:nt
     myplot(i)
@@ -109,5 +115,6 @@ gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
 # Single plot example:
 
 plt=myplot(nt)
-scatter!(plt,[xy[1]],[xy[2]],[xy[3]])
-scatter!(plt,[x[end]],[y[end]],[z[end]])
+scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
+#scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
+scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])

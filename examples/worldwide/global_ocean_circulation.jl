@@ -4,9 +4,9 @@
 #md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/global_ocean_circulation.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/global_ocean_circulation.ipynb)
 #
-# Particles moving with climatological monthly mean flow at selected depth level
-# (e.g. `k=10` for 95 m) based on an ocean state estimate (ECCO v4 r2 from https://ecco-group.org).
-# For additional documentation e.g. see :
+# Advect particles with climatological monthly mean flow at selected depth level
+# (e.g. `k=10` for 95 m) from a global ocean state estimate ([ECCO v4 r2](https://eccov4.readthedocs.io/en/latest/) ; see also <https://ecco-group.org>)
+# which is here repeated for `ny` years. For additional documentation e.g. see :
 # [1](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 # [2](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
