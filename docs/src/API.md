@@ -1,15 +1,17 @@
 
 ## API Guide
 
-See `examples/worldwide/global_ocean_circulation.jl` for an example:
+See `examples/worldwide/global_ocean_circulation.jl` for a typical example.
+
+### Main Function 
+
+`∫!` displaces individuals 𝐼 continuously over time period `𝑇`:
 
 ```@docs
-start!
-displace!
-reset!
+∫!
 ```
 
-### Data Structures
+### Data Structure
 
 The main data type used is `Individuals` which contains arrays and a dataframe to store the output diagnostics.
 

@@ -36,7 +36,8 @@ tr = DataFrame( ID=[], x=[], y=[], t = [])
 
 # ## 3. Compute Trajectories
 
-start!(𝐼)
+𝑇=(0.0,𝐼.𝑃.𝑇[2])
+∫!(𝐼,𝑇)
 
 # ## 4. Display results
 
