@@ -78,7 +78,8 @@ function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
 
 𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
                          ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
-start!(𝐼)
+𝑇=(0.0,𝐼.𝑃.𝑇[2])
+∫!(𝐼,𝑇)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.2 Visualize Particle Trajectory

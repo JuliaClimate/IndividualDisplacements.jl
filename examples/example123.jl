@@ -49,7 +49,8 @@ function example2()
    tr = DataFrame( ID=[], x=[], y=[], t = [])
 
    𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, ⎔ = dxy_dt, ∫ = solv, ⟁ = postprocess_xy, 𝑃=𝑃)
-   start!(𝐼)
+   𝑇=(0.0,𝐼.𝑃.𝑇[2])
+   ∫!(𝐼,𝑇)
 
    return 𝐼, df,ref
 end
@@ -212,8 +213,9 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
       return df
    end
 
-   𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, ⎔ = dxy_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
-   start!(𝐼)
+   𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
+   𝑇=(0.0,𝐼.𝑃.𝑇[2])
+   ∫!(𝐼,𝑇)
 
    return 𝐼
 end

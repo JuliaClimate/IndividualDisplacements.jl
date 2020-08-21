@@ -52,19 +52,22 @@ fieldnames(typeof(𝐼))
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # - initial integration from time 0 to 0.5 month
 
-start!(𝐼)
+𝑇=(0.0,𝐼.𝑃.𝑇[2])
+∫!(𝐼,𝑇)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### 3.2 Iteration function example
 #
-# - `reset!(𝐼)` randomly selects a fraction (defined in `setup_global_ocean()`) of the particles and resets their positions before each integration period. This can maintain homogeneous coverage of the Global Ocean by particles.
-# - `displace!(𝐼)` then solves for the individual trajectories over one month, after updating velocity fields (𝐼.u0 etc) if needed, and adds diagnostics to the DataFrame used to record / trace variables along the trajectory (𝐼.tr).
+# - `𝐼.𝑃.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
+# - `reset_lonlat!(𝐼)` randomly selects a fraction (defined in `setup_global_ocean()`) of the particles and resets their positions before each integration period. This can maintain homogeneous coverage of the Global Ocean by particles.
+# - `∫!(𝐼,𝑇)` then solves for the individual trajectories over one month, after updating velocity fields (𝐼.u0 etc) if needed, and adds diagnostics to the DataFrame used to record / trace variables along the trajectory (𝐼.tr).
 
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐼.𝑃.🔄(𝐼.𝑃,t_ϵ)
     reset_lonlat!(𝐼)
-    displace!(𝐼)
+    𝑇=Tuple(𝐼.𝑃.𝑇)
+    ∫!(𝐼,𝑇)
 end
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}

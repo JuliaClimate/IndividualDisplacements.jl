@@ -56,7 +56,8 @@ solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
 𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
                          ⎔ = dxy_dt!, ∫ = solv, ⟁ = postprocess_xy, 𝑃=𝑃)
 
-start!(𝐼)
+𝑇=(0.0,𝐼.𝑃.𝑇[2])
+∫!(𝐼,𝑇)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.2 Plot Results

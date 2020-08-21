@@ -27,6 +27,29 @@ Base.@kwdef struct Individuals{T}
    𝑀  ::NamedTuple = NamedTuple() #\itM<tab>
 end
 
+#alternative symbol choices?
+#⏩  ::Function = dxy_dt #\:fast_forward:<tab>
+#🔧  ::Function = postprocess_default #\:wrench:<tab>
+
+"""
+    ∫!(𝐼::Individuals,𝑇::Tuple)
+
+Continuously displace individuals (∫! of ⎔), starting from 📌, over time period 𝑇. Then postprocess with ⟁, record data into 🔴, & update 📌
+"""
+function ∫!(𝐼::Individuals,𝑇::Tuple)
+    @unpack ⎔,📌,𝑃, ⟁, 🆔, 🔴, ∫ = 𝐼
+
+    prob = ODEProblem(⎔,📌, 𝑇 ,𝑃)
+    sol = ∫(prob)
+
+    tmp = ⟁(sol,𝑃, id=🆔, 𝑇=𝑇)
+
+    isempty(🔴) ? np =0 : np=length(🆔)
+    append!(🔴,tmp[np+1:end,:])
+
+    📌[:,:] = deepcopy(sol[:,:,end])
+end
+
 """
     start!(𝐼::Individuals)
 
