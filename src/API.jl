@@ -11,7 +11,7 @@ postprocess_default = postprocess_lonlat
     struct Individuals{T}
 
 - Data:           📌 (position), 🔴 (record), 🆔 (ID)
-- Functions:      ⎔ (velocity), ∫ (time integration), ⟁ (postprocessing)
+- Functions:      🚄 (velocity), ∫ (time integration), 🔧 (postprocessing)
 - NamedTuples:    𝑃 (parameters), 𝐷 (diagnostics), 𝑀 (metadata)
 
 Keyword constructor -- for example:
@@ -24,33 +24,29 @@ Base.@kwdef struct Individuals{T}
     📌  ::Array{T,2} = Array{T,2}(undef, Tuple(Int.(zeros(1,2)))) #\:pushpin:<tab>
    🔴  ::DataFrame = rec_default #\:red_circle:<tab>
    🆔  ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
-   ⎔   ::Function = dxy_dt #\hexagon<tab>
+   🚄  ::Function = dxy_dt #\bullettrain_side<tab>
    ∫   ::Function = solver_default #\int<tab>
-   ⟁   ::Function = postprocess_default #\whiteinwhitetriangle<tab>
+   🔧  ::Function = postprocess_default #\wrench<tab>
    𝑃   ::NamedTuple = 𝑃_default #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
    𝑀  ::NamedTuple = NamedTuple() #\itM<tab>
 end
 
-#alternative symbol choices?
-#⏩  ::Function = dxy_dt #\:fast_forward:<tab>
-#🔧  ::Function = postprocess_default #\:wrench:<tab>
-
 """
     ∫!(𝐼::Individuals,𝑇::Tuple)
 
 Displace individuals continuously over time period 𝑇 starting from position 📌. This is typically achived by 
-computing the cumulative integral of velocity experienced by the individuals (∫ ⎔dt).
+computing the cumulative integral of velocity experienced by the individuals (∫ 🚄 dt).
 
-To finish `∫!` can postprocess with ⟁, records results into 🔴, & updates 📌
+To finish `∫!` can postprocess with 🔧, records results into 🔴, & updates 📌
 """
 function ∫!(𝐼::Individuals,𝑇::Tuple)
-    @unpack ⎔,📌,𝑃, ⟁, 🆔, 🔴, ∫ = 𝐼
+    @unpack 🚄,📌,𝑃, 🔧, 🆔, 🔴, ∫ = 𝐼
 
-    prob = ODEProblem(⎔,📌, 𝑇 ,𝑃)
+    prob = ODEProblem(🚄,📌, 𝑇 ,𝑃)
     sol = ∫(prob)
 
-    tmp = ⟁(sol,𝑃, id=🆔, 𝑇=𝑇)
+    tmp = 🔧(sol,𝑃, id=🆔, 𝑇=𝑇)
 
     isempty(🔴) ? np =0 : np=length(🆔)
     append!(🔴,tmp[np+1:end,:])

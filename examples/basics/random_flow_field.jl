@@ -54,7 +54,7 @@ xy=transpose([x0[:] y0[:] ones(size(x0[:]))]);
 tr = DataFrame( ID=[], x=[], y=[], t = [])
 solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
 𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
-                         ⎔ = dxy_dt!, ∫ = solv, ⟁ = postprocess_xy, 𝑃=𝑃)
+                         🚄 = dxy_dt!, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
 
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)

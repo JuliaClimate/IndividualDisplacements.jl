@@ -77,7 +77,7 @@ function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
  end
 
 𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
-                         ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
+                         🚄 = dxyz_dt, ∫ = solv, 🔧 = postproc, 𝑃=𝑃)
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
