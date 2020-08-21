@@ -1,13 +1,13 @@
 
 ## API Guide
 
-The typical workflow:
+The typical workflow is:
 
 - set up `Individuals`
 - displace them via `∫!`
-- post-procerss & repeat
+- post-process and / or repeat
 
-is illustrated e.g. `examples/worldwide/global_ocean_circulation.jl`.
+(e.g. see `global_ocean_circulation.jl`)
 
 ### Core Functionalities
 
