@@ -49,7 +49,7 @@ end
 """
     read_drifters( pth, lst )
 
-Read near-surface [drifter data](https://doi.org/10.1002/2016JC011716) from the
+Read near-surface [hourly drifter data](https://doi.org/10.1002/2016JC011716) from the
 [Global Drifter Program](https://doi.org/10.25921/7ntx-z961) into a DataFrame.
 
 Note: need to use NetCDF.jl as NCDatasets.jl errors when TIME = Inf

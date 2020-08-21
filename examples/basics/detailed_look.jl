@@ -3,14 +3,13 @@
 #md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/detailed_look.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/detailed_look.ipynb)
 #
-# A Detailed Look at spatial interpolation, integration through time, and I/O.
-# For additional documentation e.g. see :
+# A more detailed Look at spatial interpolation, integration through time, and I/O. 
+# For additional documentation e.g. see
 # [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
 # [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
-# [4](https://en.wikipedia.org/wiki/Displacement_(vector))
-#
-# Here we illustrate:
+# [4](https://en.wikipedia.org/wiki/Displacement_(vector)). 
+# Here we illustrate a few things in more detail:
 #
 # - reading velocities from file.
 #   - gridded velocity output (U*data, V*data)
