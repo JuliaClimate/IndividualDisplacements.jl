@@ -85,7 +85,7 @@ end
 
 # ╔═╡ 9ffe84c0-dff0-11ea-2726-8924892df73a
 begin
-   𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
+   𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, 🚄 = dxyz_dt, ∫ = solv, 🔧 = postproc, 𝑃=𝑃)
    𝑇=(0.0,𝐼.𝑃.𝑇[2])
    ∫!(𝐼,𝑇)
 end

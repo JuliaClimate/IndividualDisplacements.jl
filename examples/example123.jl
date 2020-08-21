@@ -48,7 +48,7 @@ function example2()
    solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
    tr = DataFrame( ID=[], x=[], y=[], t = [])
 
-   𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, ⎔ = dxy_dt, ∫ = solv, ⟁ = postprocess_xy, 𝑃=𝑃)
+   𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🚄 = dxy_dt, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
    𝑇=(0.0,𝐼.𝑃.𝑇[2])
    ∫!(𝐼,𝑇)
 
@@ -175,10 +175,10 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
    lon_rng=(-165.0,-145.0), lat_rng=(25.0,35.0))
    if nam=="OCCA"
       𝑃,Γ=OCCA_setup(backward_in_time=bck)
-      ⎔ =dxyz_dt
-   elseif nam=="LLC90"
+      🚄 =dxyz_dt
+   elseif nam=="LLnoC90"
       𝑃,Γ=example3_setup(backward_in_time=bck)
-      ⎔ =IndividualDisplacements.dxy_dt
+      🚄 =dxy_dt
    else
       error("unknown example (nam parameter value)")
    end
@@ -194,7 +194,7 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
    xy[3,:] .= z_init
    id=collect(1:size(xy,2))
 
-   function solv(prob)
+   function ∫(prob)
       sol=solve(prob,Euler(),dt=10*86400.0)
       sol[1,:,:]=mod.(sol[1,:,:],nx)
       sol[2,:,:]=mod.(sol[2,:,:],ny)
@@ -203,7 +203,7 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
 
    tr = DataFrame( ID=[], x=[], y=[], t = [], lon=[], lat=[], z=[], fid=[])
 
-   function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
+   function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
       df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
       #add third coordinate
       z=sol[3,:,:]
@@ -213,7 +213,7 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
       return df
    end
 
-   𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, ⎔ = dxyz_dt, ∫ = solv, ⟁ = postproc, 𝑃=𝑃)
+   𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, 🚄 = 🚄, ∫ = ∫, 🔧 = 🔧, 𝑃=𝑃)
    𝑇=(0.0,𝐼.𝑃.𝑇[2])
    ∫!(𝐼,𝑇)
 
