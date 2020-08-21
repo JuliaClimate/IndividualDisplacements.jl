@@ -1,26 +1,38 @@
 
 ## API Guide
 
-See `examples/worldwide/global_ocean_circulation.jl` for a typical example.
+The typical workflow:
 
-### Main Function 
+- set up `Individuals`
+- displace them via `∫!`
+- post-procerss & repeat
 
-`∫!` displaces individuals 𝐼 continuously over time period `𝑇`:
+is illustrated e.g. `examples/worldwide/global_ocean_circulation.jl`.
+
+### Core Functionalities
+
+`∫!(𝐼,𝑇)` displaces individuals 𝐼 continuously over time period `𝑇`:
 
 ```@docs
 ∫!
 ```
 
-### Data Structure
+### Data Structures
 
-The main data type used is `Individuals` which contains arrays and a dataframe to store the output diagnostics.
+The `Individuals` struct contains velocity fields (arrays), etc, and a record of properties diagnozed along the way.
 
 ```@autodocs
 Modules = [IndividualDisplacements]
 Order   = [:type]
 ```
 
-### Velocity Interpolation
+### Toolbox
+
+- Velocity functions, interpolating from gridded fields, for different array types.
+- Preprocessing and postprocessing methods.
+- I/O routines to read / write results from / to file.
+
+#### Velocity Interpolation
 
 The `dxy_dt`, `dxy_dt!`, `dxyz_dt`, etc functions compute the tracked individual velocity. 
 
@@ -32,7 +44,7 @@ dxy_dt_replay
 dxy_dt_CyclicArray
 ```
 
-### Setup And Postprocessing 
+#### Setup And Postprocessing 
 
 Convenience functions to initialize a simulation and posprocess the output are provided. 
 
@@ -43,7 +55,7 @@ postprocess_lonlat
 postprocess_xy
 ```
 
-### Read Output From File 
+#### Read Output From File 
 
 Trajectory simulated by the MITgcm or observed by the global drifter program can be read from file using, respectively `MITgcmTools.read_flt` or  `read_drifters`.
 
