@@ -1,4 +1,4 @@
-using MeshArrays, Statistics, OrdinaryDiffEq, IndividualDisplacements
+using IndividualDisplacements, MeshArrays, MITgcmTools, OrdinaryDiffEq, Statistics
 
 """
     example1()
