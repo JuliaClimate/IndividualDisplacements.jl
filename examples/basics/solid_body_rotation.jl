@@ -1,4 +1,4 @@
-# # Single Particle Simulation
+# # Single Particle
 #
 #md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/solid_body_rotation.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
@@ -109,7 +109,7 @@ anim = @animate for i ∈ 1:p:nt
     myplot(i)
 end
 pth=tempdir()*"/"
-gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
+#gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:
