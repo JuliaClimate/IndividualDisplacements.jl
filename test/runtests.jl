@@ -1,4 +1,4 @@
-using Test
+using Test, Documenter
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
 include("helper_functions.jl")
 
@@ -12,4 +12,8 @@ end
     df,𝑃=test2_periodic_domain()
     @test prod(isapprox.(df[end-35:6:end,:y],12*(0.4:0.04:0.6)))
     @test prod(isapprox.(df[end-5:end,:x],12*(0.4:0.04:0.6).+4.0))
+end
+
+@testset "doctests" begin
+    doctest(IndividualDisplacements; manual = false)
 end

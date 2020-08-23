@@ -4,6 +4,18 @@ An idealized flow example, based on solid body rotation, also useful for unit te
 
 ![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
 
+```jldoctest
+using IndividualDisplacements
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/basics/solid_body_rotation.jl"))
+ref=[7.767441577479032 9.513402495574852 0.7065855989421701]
+prod(isapprox.(𝐼.📌',ref))
+
+# output
+
+true
+```
+
 ## `random_flow_field.jl`
 
 A random flow field is generated on a doubly periodic grid, and used to advect a cloud of points. This illustrates defining a grid from scracth, and then simulating many trajectories at once.
@@ -23,3 +35,9 @@ Two examples which reproduce trajectories computed by an earlier implementation 
 ## Plotting Recipes 
 
 Examples using three popular plotting packages (see `recipes_plots.jl`, `recipes_makie.jl`, `recipes_pyplot.jl`) are provided in the various notebooks.
+
+## Tool Boxes
+
+- Velocity functions, interpolating from gridded fields, for different array types.
+- Preprocessing and postprocessing methods.
+- I/O routines to read / write results from / to file.
