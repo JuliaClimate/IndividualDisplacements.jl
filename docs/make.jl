@@ -1,5 +1,5 @@
 using Documenter, Literate
-using IndividualDisplacements
+using IndividualDisplacements, MITgcmTools, OceanStateEstimation
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")
@@ -9,8 +9,8 @@ notebooks = joinpath(src, "notebooks")
 execute = true # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
 
-lst1 = ["detailed_look","particle_cloud","solid_body_rotation","random_flow_field","global_ocean_circulation"]
-lst2 = ["detailed_look","particle_cloud","solid_body_rotation","random_flow_field"]
+lst1 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","detailed_look","particle_cloud"]
+lst2 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","detailed_look","particle_cloud"]
 tst1(x) = Bool(sum(isequal.(x, lst1)))
 tst2(x) = Bool(sum(isequal.(x, lst2)))
 
@@ -27,15 +27,22 @@ end
 ismd(f) = splitext(f)[2] == ".md"
 pages(folder) = [joinpath(folder, f) for f in readdir(joinpath(src, folder)) if ismd(f)]
 
+p=pages("basics"); np=length(p)
+i=findall((!occursin).("detailed_look",p)); i=[i;setdiff(1:np,i)]; p=p[i]
+i=findall((occursin).("solid_body_rotation",p)); i=[i;setdiff(1:np,i)]; p=p[i]
+p_BE=p
+
+
 makedocs(
     sitename = "IndividualDisplacements",
     format = Documenter.HTML(),
     pages = [
-		"Home" => "index.md",
-		"List Of Examples" => "examples.md",
-		"Basic Examples" => pages("basics"),
-		"Global Examples" => pages("worldwide"),
-		"API Guide" => "API.md"],
+		"Introduction" => "index.md",
+                "API" => "workflow.md",
+		"Examples" => "examples.md",
+		"Real Ocean" => pages("worldwide"),
+                "Other Examples" => p_BE,
+		"Tool Boxes" => "API.md"],
     modules = [IndividualDisplacements]
 )
 
