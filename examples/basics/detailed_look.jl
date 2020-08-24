@@ -34,7 +34,7 @@ include(joinpath(p,"../examples/helper_functions.jl"));
 get_flt_ex_if_needed()
 dirIn=joinpath(p,"../examples/flt_example/")
 prec=Float32
-df=read_flt(dirIn,prec) #function exported by IndividualDisplacements
+df=read_flt(dirIn,prec)
 plt=PlotBasic(df,300,100000.0)
 
 # ## 3. Read Gridded Variables
