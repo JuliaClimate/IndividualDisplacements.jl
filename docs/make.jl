@@ -1,5 +1,5 @@
 using Documenter, Literate
-using IndividualDisplacements, MITgcmTools, OceanStateEstimation
+using IndividualDisplacements
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")

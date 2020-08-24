@@ -81,7 +81,7 @@ end
 #
 
 gdf = groupby(𝐼.🔴, :ID)
-show(combine(gdf,nrow,:lat => mean))
+#show(combine(gdf,nrow,:lat => mean))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Plot trajectories / individual positions
