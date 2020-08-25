@@ -46,8 +46,8 @@ function example2()
 
    𝑃.𝑇[:] = [0.0,nSteps*3600.0]
    solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
-   tr = DataFrame( ID=[], x=[], y=[], t = [])
-
+   tr = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :x, :y, :t])
+   
    𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🚄 = dxy_dt, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
    𝑇=(0.0,𝐼.𝑃.𝑇[2])
    ∫!(𝐼,𝑇)
@@ -201,7 +201,7 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
       return sol
    end
 
-   tr = DataFrame( ID=[], x=[], y=[], t = [], lon=[], lat=[], z=[], fid=[])
+   tr = DataFrame([fill(Int, 2) ; fill(Float64, 6)], [:ID, :fid, :x, :y, :z, :t, :lon, :lat])
 
    function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
       df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)

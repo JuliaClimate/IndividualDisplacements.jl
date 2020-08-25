@@ -34,13 +34,13 @@ function read_drifters(fil::String;chnk=Inf,rng=(missing,missing))
    la=la[ii]
    ID=ID[ii]
 
-   df = DataFrame(lon=[], lat=[], t=[], ID=[])
+   df = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :lon, :lat, :t])
    !isinf(chnk) ? nn=Int(ceil(length(ii)/chnk)) : nn=1
    for jj=1:nn
       #println([jj nn])
       !isinf(chnk) ? i=(jj-1)*chnk.+(1:chnk) : i=(1:length(ii))
       i=i[findall(i.<length(ii))]
-      append!(df,DataFrame(lon=lo[i], lat=la[i], t=t[i], ID=ID[i]))
+      append!(df,DataFrame(lon=lo[i], lat=la[i], t=t[i], ID=Int.(ID[i])))
    end
 
    return df
@@ -60,7 +60,7 @@ df=read_drifters( pth, lst)
 ```
 """
 function read_drifters( pth, lst )
-   df = DataFrame(lon=[], lat=[], t=[], ID=[])
+   df = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :lon, :lat, :t])
    for fil in lst
       println(fil)
       append!(df,read_drifters( pth*fil,chnk=10000,rng=(2005.0,2020.0) ))
