@@ -4,7 +4,7 @@ mon=365/12*day
 solver_default(prob) = solve(prob,Euler(),dt=2*day)
 𝑃_default = ( 𝑇 = [-0.5*mon,0.5*mon] , 🔄 = update_𝑃!,
               u0=[] , u1=[] , v0=[] , v1=[] )
-rec_default = DataFrame( ID=[], x=[], y=[], t = [], lon=[], lat=[], fid=[])
+rec_default = DataFrame(fill(Float64, 7),[:ID, :x, :y, :t, :lon, :lat, :fid])
 postprocess_default = postprocess_lonlat
 
 """
