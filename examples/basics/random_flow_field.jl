@@ -51,7 +51,7 @@ xy=transpose([x0[:] y0[:] ones(size(x0[:]))]);
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.1 Compute Trajectories
 
-tr = DataFrame( ID=[], x=[], y=[], t = [])
+tr = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :x, :y, :t])
 solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
 𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
                          🚄 = dxy_dt!, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)

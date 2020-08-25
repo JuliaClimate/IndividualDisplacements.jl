@@ -67,7 +67,7 @@ w=fill(1.0,MeshArray(γ,γ.ioPrec,nz));
 
 𝑃=(u0=uu, u1=uu, v0=vv, v1=vv,w0=0.0*w, w1=-0.01*w, 𝑇=[0,19.95*2*pi], ioSize=(np,np,nz))
 
-tr = DataFrame( ID=[], x=[], y=[], z=[], t = [])
+tr = DataFrame([fill(Int, 1) ; fill(Float64, 4)], [:ID, :x, :y, :z, :t])
 solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
 
 function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
