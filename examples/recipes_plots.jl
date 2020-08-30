@@ -48,20 +48,45 @@ function scatter_subset(df,t)
 end
 
 """
-    scatter_zcolor(df,t,zc,zcr,plt=plot())
+    scatter_zcolor(df,t,zc; plt=plot(),cam=(0, 90))
 
 ```
 t=maximum(df[!,:t])
-scatter_zcolor(df,t,df.z,(2,7))
+scatter_zcolor(df,t,df.z)
 ```
 """
-function scatter_zcolor(df,t,zc,zcr,plt=plot())
-    dt=0.25
+function scatter_zcolor(df,t,zc; plt=plot(),cam=(0, 90), dt=1.0)
+    lo=extrema(df.lon); lo=round.(lo).+(-5.0,5.0)
+    la=extrema(df.lat); la=round.(la).+(-5.0,5.0)
+    de=extrema(zc); de=round.(de).+(-5.0,5.0)
+
     df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
     zc_t = Float64.(zc[ (df.t.>t-dt).&(df.t.<=t)])
+
     #fig=deepcopy(plt)
-    scatter(df_t.lon,df_t.lat,markersize=4,markerstrokewidth=0.1,
-    zcolor = zc_t,clims=zcr,xlims=(120.0,260.0),ylims=(-20.0,60.0))
+    scatter(df_t.lon,df_t.lat,zc_t,zcolor = zc_t,
+    markersize=2,markerstrokewidth=0.1,camera = cam,
+    xlims=lo,ylims=la,zlims=de,clims=de)
+end
+
+"""
+    scatter_movie(𝐼; cam=(0, 90))
+
+Animation using `scatter_zcolor()
+```
+𝐼,Γ=example3("OCCA", lon_rng=(-165.0,-155.0),lat_rng=(25.0,35.0), z_init=5.5,)
+scatter_movie(𝐼,cam=(70, 70))
+```
+"""
+function scatter_movie(𝐼; cam=(0, 90))
+   df=𝐼.🔴
+   nf=maximum(df.ID)
+   nt=min(size(df,1)/nf,100)
+   dt=maximum(df.t)/(nt-1)
+   #println("nt="*"$nt"*"dt="*"$dt")
+   return @gif for t in 0:nt-1
+        scatter_zcolor(df,t*dt,df.z;cam=cam,dt=dt)
+   end
 end
 
 """
@@ -98,11 +123,11 @@ function DL()
 end
 
 """
-    a_plot(𝐼::Individuals)
+    plot_end_points(𝐼::Individuals)
 
 Plot initial and final positions, superimposed on a map of ocean depth log.
 """
-function a_plot(𝐼::Individuals)
+function plot_end_points(𝐼::Individuals)
     plt=contourf(DL(),clims=(1.5,5),c = :ice, colorbar=false)
 
     t=𝑃.𝑇[2]

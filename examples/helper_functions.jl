@@ -232,7 +232,9 @@ function OCCA_setup(;backward_in_time::Bool=false)
    t0=0.0; t1=86400*366*2.0;
 
    𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, w0=w0, w1=w1, 𝑇=[t0,t1],
-   XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), ioSize=(360,160,50))
+   XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), 
+   RF=Γ["RF"], RC=Γ["RC"],
+   ioSize=(360,160,50))
 
    return 𝑃,Γ
 
