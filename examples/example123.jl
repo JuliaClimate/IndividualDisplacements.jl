@@ -152,29 +152,19 @@ include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
 
 𝐼,Γ=example3("OCCA")
-lon,lat,DepthLog=Float64.(Γ["XC"][1]),
-           Float64.(Γ["YC"][1]),
-           Float64.(log10.(Γ["Depth"][1]))
 
-include(joinpath(p,"../examples/recipes_plots.jl"))
-PlotBasic(𝐼.🔴,100,90.0)
+#include(joinpath(p,"../examples/recipes_plots.jl"))
+#PlotBasic(𝐼.🔴,100,90.0)
 
 #include(joinpath(p,"../examples/recipes_pyplot.jl"))
 #PyPlot.figure(); PlotMapProj(𝐼.🔴,3000); gcf()
 
 #include(joinpath(p,"../examples/recipes_Makie.jl"))
 #PlotMakie(𝐼.🔴,3000,180.)
-
-using ArgoData; p=dirname(pathof(ArgoData))
-include(p*"/movies.jl")
-𝐼.🔴.y=2000 .+ 𝐼.🔴.t ./86400/365; tt=collect(2000:0.1:2003); 
-source = LonLat(); dest = WinkelTripel();
-scene = ProjMap(DL,colorrange=(3.,4.))
-ProjScatterMovie(scene,𝐼.🔴,tt,"tmp.mp4")
 ```
 """
-function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
-   lon_rng=(-165.0,-145.0), lat_rng=(25.0,35.0))
+function example3(nam::String="OCCA" ; bck::Bool=false, 
+   z_init=4.5,lon_rng=(-160.0,-150.0), lat_rng=(30.0,40.0))
    if nam=="OCCA"
       𝑃,Γ=OCCA_setup(backward_in_time=bck)
       🚄 =dxyz_dt
@@ -189,7 +179,7 @@ function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
    lo0,lo1=lon_rng
    la0,la1=lat_rng
 
-   nf=1000
+   nf=10000
    lon=lo0 .+(lo1-lo0).*rand(nf)
    lat=la0 .+(la1-la0).*rand(nf)
    (xy,_)=initialize_lonlat(Γ,lon,lat)
