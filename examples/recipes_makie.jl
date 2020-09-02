@@ -45,6 +45,7 @@ DepthLog[(!isfinite).(DepthLog)].=minimum(DepthLog[isfinite.(DepthLog)])
 lon[findall(lon.<20)] .+= 360.0;
 
 𝐼.🔴.year=𝐼.🔴.t ./86400/365; 
+🔴_by_t = groupby(𝐼.🔴, :t);
 
 scene = MakieMap(DepthLog,colorrange=(3.,4.))
 MakieScatterMovie(scene,𝐼.🔴,0:0.05:2,"tmp.mp4")
@@ -57,7 +58,7 @@ function MakieScatterMovie(scene::Scene,df,tt,fil::String)
 
    np,nmax=length(🔴_by_t[end][:lon]),100000
    xs,ys,zs=fill(NaN,nmax),fill(NaN,nmax),fill(NaN,nmax)
-   xmul,ymul=2,6
+   zmul=1/5
    
    ye=[🔴_by_t[i][1,:year] for i in 1:length(🔴_by_t)]
    tt,dt=collect(tt),0.25
@@ -71,13 +72,13 @@ function MakieScatterMovie(scene::Scene,df,tt,fil::String)
        #xs[xs.>180.0] .-= 360.0
        xs[xs.<20.0] .+= 360.0
        #
-       threeD[1] = xmul*xs
-       threeD[2] = ymul*ys
-       threeD[3] = zs
-       threeD[:color] = zs
+       threeD[1] = xs
+       threeD[2] = ys
+       threeD[3] = zmul*zs
+       threeD[:color] = zmul*zs
        #
-       twoD[1] = xmul*xs
-       twoD[2] = ymul*ys
+       twoD[1] = xs
+       twoD[2] = ys
    end
 
    return scene
@@ -89,13 +90,13 @@ end
 Add a scatter plot of e.g. x,y,z
 
 ```
-scene = MakieMap(OceanDepth,colorrange=(0.,6000.))
-_, threeD, twoD = MakieScatter(scene,df)
+scene = MakieMap(DepthLog,colorrange=(3.,4.))
+_, threeD, twoD = MakieScatter(scene,🔴_by_t[end])
 ```
 """
 function MakieScatter(scene::Scene,df)
 
-    xmul,ymul=2,6
+    zmul=1/5
     nmax=100000
  
     xs=fill(NaN,nmax)
@@ -109,11 +110,11 @@ function MakieScatter(scene::Scene,df)
     zs[1:nt] = deepcopy(df[!, :z])
     z0=0*zs .- 200.0
   
-    Makie.scatter!(scene, xmul*xs, ymul*ys, zs, markersize = 2.0, 
+    Makie.scatter!(scene, xs, ys, zmul*zs, markersize = 2.0, 
     show_axis = false, color=zs)[end]
     threeD = scene[end]
  
-    Makie.scatter!(scene, xmul*xs, ymul*ys, z0, markersize = 1.0, 
+    Makie.scatter!(scene, xs, ys, zmul*z0, markersize = 1.0, 
     show_axis = false, color=:black)[end]
     twoD = scene[end]
 
@@ -130,25 +131,25 @@ scene = MakieMap(OceanDepth,colorrange=(0.,6000.))
 ```
 """
 function MakieMap(col;colorrange=AbstractPlotting.Automatic())
-    xmul,ymul=2,6
-    xs = xmul*[x for y in lat[1,91:130], x in lon[121:230,1]]
-    ys = ymul*[y for y in lat[1,91:130], x in lon[121:230,1]]
-    cs = col[121:230,91:130]
+    zmul=1/5
+    xs = [x for y in lat[1,91:130], x in lon[121:230,1]]
+    ys = [y for y in lat[1,91:130], x in lon[121:230,1]]
+    cs = zmul*col[121:230,91:130]
 
-#    xs = xmul*[x for y in lat[1,:], x in lon[:,1]]
-#    ys = ymul*[y for y in lat[1,:], x in lon[:,1]]
+#    xs = [x for y in lat[1,:], x in lon[:,1]]
+#    ys = [y for y in lat[1,:], x in lon[:,1]]
 #    cs = col[:,:]
 
-    lim=FRect3D([minimum(xs) minimum(ys) -200.0],
-                [maximum(xs)-minimum(xs) maximum(ys)-minimum(ys) 200.0])
+    lim=FRect3D([minimum(xs) minimum(ys) -200.0*zmul],
+                [maximum(xs)-minimum(xs) maximum(ys)-minimum(ys) 200.0*zmul])
 
     scene = Makie.contour(vec(xs[1,:]), vec(ys[:,1]), cs, levels = 15, linewidth = 2, 
-    transformation = (:xy, -200.0), color=:black, limits=lim)#,show_axis = false)
+    transformation = (:xy, -200.0*zmul), color=:black, limits=lim)#,show_axis = false)
 
     scene.center = false # prevent scene from recentering on display
-    update_cam!(scene, Vec3f0(maximum(xs)+350,mean(ys),50.0), 
-                       Vec3f0(minimum(xs)-50,mean(ys),-200.0))
-    xlabel!("lon x $xmul"); ylabel!("lat x $ymul"); zlabel!("depth")
+    update_cam!(scene, Vec3f0(maximum(xs)+60,mean(ys),-20.0*zmul), 
+                       Vec3f0(minimum(xs),mean(ys),-220.0*zmul))
+    xlabel!("lon"); ylabel!("lat"); zlabel!("$zmul x depth")
 
     return scene
 end
