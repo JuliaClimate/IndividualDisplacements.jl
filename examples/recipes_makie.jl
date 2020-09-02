@@ -41,10 +41,13 @@ Animate positions, according to time vector tt, and save movie to mp4 file.
 lon,lat=Float64.(Γ["XC"][1]),Float64.(Γ["YC"][1])
 DepthLog=Float64.(log10.(Γ["Depth"][1]))
 DepthLog[(!isfinite).(DepthLog)].=minimum(DepthLog[isfinite.(DepthLog)])
+(lon,lat,DepthLog)=circshift.((lon,lat,DepthLog),Ref((-200,0)));
+lon[findall(lon.<20)] .+= 360.0;
+
 𝐼.🔴.year=𝐼.🔴.t ./86400/365; 
 
 scene = MakieMap(DepthLog,colorrange=(3.,4.))
-MakieScatterMovie(scene,𝐼.🔴,0:0.1:2,"tmp.mp4")
+MakieScatterMovie(scene,𝐼.🔴,0:0.05:2,"tmp.mp4")
 ```
 """
 function MakieScatterMovie(scene::Scene,df,tt,fil::String)
@@ -54,7 +57,7 @@ function MakieScatterMovie(scene::Scene,df,tt,fil::String)
 
    np,nmax=length(🔴_by_t[end][:lon]),100000
    xs,ys,zs=fill(NaN,nmax),fill(NaN,nmax),fill(NaN,nmax)
-   xmul,ymul=2,4
+   xmul,ymul=2,6
    
    ye=[🔴_by_t[i][1,:year] for i in 1:length(🔴_by_t)]
    tt,dt=collect(tt),0.25
@@ -65,7 +68,8 @@ function MakieScatterMovie(scene::Scene,df,tt,fil::String)
        [xs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:lon] for j in jj]
        [ys[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:lat] for j in jj]
        [zs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:z] for j in jj]
-       xs[xs.>180.0] .-= 360.0
+       #xs[xs.>180.0] .-= 360.0
+       xs[xs.<20.0] .+= 360.0
        #
        threeD[1] = xmul*xs
        threeD[2] = ymul*ys
@@ -91,7 +95,7 @@ _, threeD, twoD = MakieScatter(scene,df)
 """
 function MakieScatter(scene::Scene,df)
 
-    xmul,ymul=2,4
+    xmul,ymul=2,6
     nmax=100000
  
     xs=fill(NaN,nmax)
@@ -99,7 +103,8 @@ function MakieScatter(scene::Scene,df)
     zs=fill(NaN,nmax)
     nt=length(df[!, :lon])
     xs[1:nt] = deepcopy(df[!, :lon])
-    xs[xs.>180.0]=xs[xs.>180.0] .-360.0
+    #xs[xs.>180.0] .-= 360.0
+    xs[xs.<20.0] .+= 360.0
     ys[1:nt] = deepcopy(df[!, :lat])
     zs[1:nt] = deepcopy(df[!, :z])
     z0=0*zs .- 200.0
@@ -125,12 +130,15 @@ scene = MakieMap(OceanDepth,colorrange=(0.,6000.))
 ```
 """
 function MakieMap(col;colorrange=AbstractPlotting.Automatic())
-    xmul,ymul=2,4
-    xs = xmul*[x for y in lat[1,80:140], x in lon[1:70,1]]
-    ys = ymul*[y for y in lat[1,80:140], x in lon[1:70,1]]
-    cs = col[1:70,80:140]
+    xmul,ymul=2,6
+    xs = xmul*[x for y in lat[1,91:130], x in lon[121:230,1]]
+    ys = ymul*[y for y in lat[1,91:130], x in lon[121:230,1]]
+    cs = col[121:230,91:130]
 
-    #lim=FRect(-180.0, -90.0, 360.0, 180.0)
+#    xs = xmul*[x for y in lat[1,:], x in lon[:,1]]
+#    ys = ymul*[y for y in lat[1,:], x in lon[:,1]]
+#    cs = col[:,:]
+
     lim=FRect3D([minimum(xs) minimum(ys) -200.0],
                 [maximum(xs)-minimum(xs) maximum(ys)-minimum(ys) 200.0])
 
@@ -138,8 +146,9 @@ function MakieMap(col;colorrange=AbstractPlotting.Automatic())
     transformation = (:xy, -200.0), color=:black, limits=lim)#,show_axis = false)
 
     scene.center = false # prevent scene from recentering on display
-    update_cam!(scene, Vec3f0(maximum(xs)+200,mean(ys),80.0), 
-                       Vec3f0(minimum(xs)-100,mean(ys),-200.0))
-                       
+    update_cam!(scene, Vec3f0(maximum(xs)+350,mean(ys),50.0), 
+                       Vec3f0(minimum(xs)-50,mean(ys),-200.0))
+    xlabel!("lon x $xmul"); ylabel!("lat x $ymul"); zlabel!("depth")
+
     return scene
 end
