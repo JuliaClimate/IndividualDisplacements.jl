@@ -33,57 +33,39 @@ end
 """
 MakieScatterMovie(scene,df,tt,fil::String)
 
-Plot positions at time tt[t] in a movie
+Animate positions, according to time vector tt, and save movie to mp4 file.
 
 ```
-𝐼,Γ=example3("OCCA")
+𝐼,Γ=example3("OCCA");
 
 lon,lat=Float64.(Γ["XC"][1]),Float64.(Γ["YC"][1])
 DepthLog=Float64.(log10.(Γ["Depth"][1]))
 DepthLog[(!isfinite).(DepthLog)].=minimum(DepthLog[isfinite.(DepthLog)])
-𝐼.🔴.year=2000 .+ 𝐼.🔴.t ./86400/365; 
+𝐼.🔴.year=𝐼.🔴.t ./86400/365; 
 
 scene = MakieMap(DepthLog,colorrange=(3.,4.))
-MakieScatterMovie(scene,𝐼.🔴,2000:0.1:2002,"tmp.mp4")
+MakieScatterMovie(scene,𝐼.🔴,0:0.1:2,"tmp.mp4")
 ```
 """
 function MakieScatterMovie(scene::Scene,df,tt,fil::String)
 
+   🔴_by_t = groupby(𝐼.🔴, :t)
+   _, threeD, twoD = MakieScatter(scene,🔴_by_t[end])
+
+   np,nmax=length(🔴_by_t[end][:lon]),100000
+   xs,ys,zs=fill(NaN,nmax),fill(NaN,nmax),fill(NaN,nmax)
    xmul,ymul=2,4
-   nmax=100000
-
-   tt=collect(tt)
-   dt=0.25
-   df_t(i) = df[ (df.year.>tt[i]-dt).&(df.year.<=tt[i]) , :]
-
-   xs=fill(NaN,nmax)
-   ys=fill(NaN,nmax)
-   zs=fill(NaN,nmax)
-   nt=length(df_t(1)[!, :lon])
-   xs[1:nt] = deepcopy(df_t(1)[!, :lon])
-   xs[xs.>180.0]=xs[xs.>180.0] .-360.0
-   ys[1:nt] = deepcopy(df_t(1)[!, :lat])
-   zs[1:nt] = deepcopy(df_t(1)[!, :z])
-   z0=0*zs .- 200.0
- 
-   Makie.scatter!(scene, xmul*xs, ymul*ys, zs, markersize = 2.0, 
-   show_axis = false, color=zs)[end]
-   threeD = scene[end]
-
-   Makie.scatter!(scene, xmul*xs, ymul*ys, z0, markersize = 1.0, 
-   show_axis = false, color=:black)[end]
-   twoD = scene[end]
+   
+   ye=[🔴_by_t[i][1,:year] for i in 1:length(🔴_by_t)]
+   tt,dt=collect(tt),0.25
 
    scene
    record(scene, fil, 1:length(tt); framerate=12) do i
-       xs=fill(NaN,nmax)
-       ys=fill(NaN,nmax)
-       zs=fill(NaN,nmax)
-       nt=length(df_t(i)[!, :lon])
-       xs[1:nt] = deepcopy(df_t(i)[!, :lon])
-       xs[xs.>180.0]=xs[xs.>180.0] .-360.0
-       ys[1:nt] = deepcopy(df_t(i)[!, :lat])
-       zs[1:nt] = deepcopy(df_t(i)[!, :z])
+       jj = findall( (ye.>tt[i]-dt).&(ye.<=tt[i]) )
+       [xs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:lon] for j in jj]
+       [ys[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:lat] for j in jj]
+       [zs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:z] for j in jj]
+       xs[xs.>180.0] .-= 360.0
        #
        threeD[1] = xmul*xs
        threeD[2] = ymul*ys
@@ -98,9 +80,45 @@ function MakieScatterMovie(scene::Scene,df,tt,fil::String)
 end
 
 """
-    MakieMap(c;colorrange=AbstractPlotting.Automatic())
+    MakieScatter(scene::Scene,df)
 
-Map a gridded 2D array, `col`, using Makie
+Add a scatter plot of e.g. x,y,z
+
+```
+scene = MakieMap(OceanDepth,colorrange=(0.,6000.))
+_, threeD, twoD = MakieScatter(scene,df)
+```
+"""
+function MakieScatter(scene::Scene,df)
+
+    xmul,ymul=2,4
+    nmax=100000
+ 
+    xs=fill(NaN,nmax)
+    ys=fill(NaN,nmax)
+    zs=fill(NaN,nmax)
+    nt=length(df[!, :lon])
+    xs[1:nt] = deepcopy(df[!, :lon])
+    xs[xs.>180.0]=xs[xs.>180.0] .-360.0
+    ys[1:nt] = deepcopy(df[!, :lat])
+    zs[1:nt] = deepcopy(df[!, :z])
+    z0=0*zs .- 200.0
+  
+    Makie.scatter!(scene, xmul*xs, ymul*ys, zs, markersize = 2.0, 
+    show_axis = false, color=zs)[end]
+    threeD = scene[end]
+ 
+    Makie.scatter!(scene, xmul*xs, ymul*ys, z0, markersize = 1.0, 
+    show_axis = false, color=:black)[end]
+    twoD = scene[end]
+
+    return scene, threeD, twoD
+end
+
+"""
+    MakieMap(col;colorrange=AbstractPlotting.Automatic())
+
+Contour plot of a gridded 2D array, `col`, projected onto e.g. 200m depth plane.
 
 ```
 scene = MakieMap(OceanDepth,colorrange=(0.,6000.))

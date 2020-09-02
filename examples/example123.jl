@@ -151,7 +151,7 @@ p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
 
-𝐼,Γ=example3("OCCA")
+𝐼,Γ=example3("OCCA");
 
 #include(joinpath(p,"../examples/recipes_plots.jl"))
 #PlotBasic(𝐼.🔴,100,90.0)
