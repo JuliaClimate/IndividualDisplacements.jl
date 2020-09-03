@@ -13,7 +13,7 @@
 #
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 1. Get Software
+# ## 1. Load Software
 #
 
 using IndividualDisplacements, NetCDF, DataFrames
@@ -22,17 +22,17 @@ include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 2. Set Up Problem
+# ## 2. Problem Setup
 #
 
 """
-    example3(nam::String="OCCA" ; bck=false, nf=10000,
+    set_up_individuals_etc(nam::String="OCCA" ; bck=false, nf=10000,
     z_init=4.5,lon_rng=(-160.0,-150.0), lat_rng=(30.0,40.0))
 
-Compute `nf` particle trajectories over near-global ocean domain and output 
-result as a `DataFrame`, 🔴`, which can be manipulated or plotted later.
+Set up to compute `nf` particle trajectories over near-global ocean domain and 
+output result as a `DataFrame`, 🔴`, which is easily manipulated or plotted later.
 """
-function example3(nam::String="OCCA" ; bck=false, nf=10000,
+function set_up_individuals_etc(nam::String="OCCA" ; bck=false, nf=10000,
    z_init=4.5,lon_rng=(-160.0,-150.0), lat_rng=(30.0,40.0))
    if nam=="OCCA"
       𝑃,Γ=OCCA_setup(backward_in_time=bck)
@@ -81,20 +81,21 @@ function example3(nam::String="OCCA" ; bck=false, nf=10000,
    end
 
    𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, 🚄 = 🚄, ∫ = ∫, 🔧 = 🔧, 𝑃=𝑃)
-   𝑇=(0.0,𝐼.𝑃.𝑇[2])
-   ∫!(𝐼,𝑇)
-
    return 𝐼,Γ
 end
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 2. Solve Problem / Compute Results
+# ## 2. Displace Individuals
 #
 
-𝐼,Γ=example3("OCCA",nf=1000);
+𝐼,_=set_up_individuals_etc("OCCA",nf=1000);
+
+𝑇=(0.0,𝐼.𝑃.𝑇[2])
+
+∫!(𝐼,𝑇)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 3. Plot Results
+# ## 3. Plot Trajectories
 #
 # Either using `Plots.jl`:
 
