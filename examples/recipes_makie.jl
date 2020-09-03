@@ -44,6 +44,9 @@ DepthLog[(!isfinite).(DepthLog)].=minimum(DepthLog[isfinite.(DepthLog)])
 (lon,lat,DepthLog)=circshift.((lon,lat,DepthLog),Ref((-200,0)));
 lon[findall(lon.<20)] .+= 360.0;
 
+θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
+[θ[1,k][:,:]=circshift(θ[1,k][:,:],(-200,0)) for k=1:50]
+
 𝐼.🔴.year=𝐼.🔴.t ./86400/365; 
 🔴_by_t = groupby(𝐼.🔴, :t);
 
@@ -132,9 +135,9 @@ scene = MakieMap(OceanDepth,colorrange=(0.,6000.))
 """
 function MakieMap(col;colorrange=AbstractPlotting.Automatic())
     zmul=1/5
-    xs = [x for y in lat[1,91:130], x in lon[121:230,1]]
-    ys = [y for y in lat[1,91:130], x in lon[121:230,1]]
-    cs = zmul*col[121:230,91:130]
+    xs = [x for y in lat[1,91:130], x in lon[131:230,1]]
+    ys = [y for y in lat[1,91:130], x in lon[131:230,1]]
+    cs = zmul*col[131:230,91:130]
 
 #    xs = [x for y in lat[1,:], x in lon[:,1]]
 #    ys = [y for y in lat[1,:], x in lon[:,1]]
@@ -145,6 +148,17 @@ function MakieMap(col;colorrange=AbstractPlotting.Automatic())
 
     scene = Makie.contour(vec(xs[1,:]), vec(ys[:,1]), cs, levels = 15, linewidth = 2, 
     transformation = (:xy, -200.0*zmul), color=:black, limits=lim)#,show_axis = false)
+
+    nk=maximum(findall(Γ["RC"].>-200))
+    tmp1=fill(NaN,(160,nk));
+    [tmp1[:,k].=vec(θ[k][131,:]) for k=1:nk];
+    Makie.contour!(scene,vec(lat[1,91:130]),vec(Γ["RC"][1:nk])*zmul,tmp1[91:130,:],
+    levels=20, transformation = (:yz, lon[131,1]), color=:black)
+
+    tmp1=fill(NaN,(360,nk));
+    [tmp1[:,k].=vec(θ[k][:,91]) for k=1:nk];
+    Makie.contour!(scene,vec(lon[131:230,1]),vec(Γ["RC"][1:nk])*zmul,tmp1[131:230,:],
+    levels=20, transformation = (:xz, lat[1,91]), color=:black)
 
     scene.center = false # prevent scene from recentering on display
     update_cam!(scene, Vec3f0(maximum(xs)+60,mean(ys),-20.0*zmul), 
