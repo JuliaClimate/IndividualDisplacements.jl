@@ -198,6 +198,18 @@ function OCCA_setup(;backward_in_time::Bool=false)
    w[:,:,1] .=0.0
    w=read(w,MeshArray(γ,Float32,n+1))
 
+   fileIn=dirIn*"DDtheta.0406clim.nc"
+   θ = ncread(fileIn,"theta")
+   θ=dropdims(mean(θ,dims=4),dims=4)
+   θ[findall(θ .< -1.0e10)] .=NaN
+   θ=read(θ,MeshArray(γ,Float32,n))
+
+   fileIn=dirIn*"DDsalt.0406clim.nc"
+   𝑆 = ncread(fileIn,"salt")
+   𝑆=dropdims(mean(𝑆,dims=4),dims=4)
+   𝑆[findall(𝑆 .< -1.0e10)] .=NaN
+   𝑆=read(𝑆,MeshArray(γ,Float32,n))
+
    for i in eachindex(u)
       u[i]=u[i]./Γ["DXC"][1]
       v[i]=v[i]./Γ["DYC"][1]
@@ -206,6 +218,8 @@ function OCCA_setup(;backward_in_time::Bool=false)
    for i in eachindex(u)
       u[i]=circshift(u[i],[-180 0])
       v[i]=circshift(v[i],[-180 0])
+      θ[i]=circshift(θ[i],[-180 0])
+      𝑆[i]=circshift(𝑆[i],[-180 0])
    end
 
    for i in eachindex(w)
@@ -231,7 +245,7 @@ function OCCA_setup(;backward_in_time::Bool=false)
 
    t0=0.0; t1=86400*366*2.0;
 
-   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, w0=w0, w1=w1, 𝑇=[t0,t1],
+   𝑃 = (θ0=θ, θ1=θ, 𝑆0=𝑆, 𝑆1=𝑆, u0=u0, u1=u1, v0=v0, v1=v1, w0=w0, w1=w1, 𝑇=[t0,t1],
    XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), 
    RF=Γ["RF"], RC=Γ["RC"],
    ioSize=(360,160,50))
@@ -257,4 +271,29 @@ function init_global_randn(np ::Int , 𝑃::NamedTuple)
     (lon, lat) = randn_lonlat(2*np)
     (u0, _) = initialize_lonlat(𝑃.Γ, lon, lat; msk = 𝑃.msk)
     u0[:,1:np]
+end
+
+##
+
+"""
+    isosurface(θ,T,z)
+
+```
+isosurface(𝐼.𝑃.θ0,15,Γ["RC"])
+```    
+"""
+function isosurface(θ,T,z)
+    d=NaN*similar(θ[:,1])
+    nr=size(θ,2)
+    for j=1:size(d,1)
+        for k=1:nr-1
+            i=findall(isnan.(d[j]).&(θ[j,k].>T).&(θ[j,k+1].<=T))
+            a=(θ[j,k][i] .- T)./(θ[j,k][i] .- θ[j,k+1][i])
+            d[j][i]=(1 .- a).*Γ["RC"][k] + a.*Γ["RC"][k+1]
+            i=findall(isnan.(d[j]).&(θ[j,k].<=T).&(θ[j,k+1].>T))
+            a=(θ[j,k+1][i] .- T)./(θ[j,k+1][i] .- θ[j,k][i])
+            d[j][i]=(1 .- a).*Γ["RC"][k+1] + a.*Γ["RC"][k]
+        end
+    end
+    return d
 end
