@@ -39,9 +39,7 @@ Animate positions, according to time vector tt, and save movie to mp4 file.
 𝐼,Γ=example3("OCCA");
 
 lon,lat=Float64.(Γ["XC"][1]),Float64.(Γ["YC"][1])
-DepthLog=Float64.(log10.(Γ["Depth"][1]))
-DepthLog[(!isfinite).(DepthLog)].=minimum(DepthLog[isfinite.(DepthLog)])
-(lon,lat,DepthLog)=circshift.((lon,lat,DepthLog),Ref((-200,0)));
+(lon,lat)=circshift.((lon,lat),Ref((-200,0)));
 lon[findall(lon.<20)] .+= 360.0;
 
 θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
@@ -50,7 +48,7 @@ lon[findall(lon.<20)] .+= 360.0;
 𝐼.🔴.year=𝐼.🔴.t ./86400/365; 
 🔴_by_t = groupby(𝐼.🔴, :t);
 
-scene = MakieMap(DepthLog,colorrange=(3.,4.))
+scene = MakieBase(θ,collect(2:2:28))
 MakieScatterMovie(scene,𝐼.🔴,0:0.05:2,"tmp.mp4")
 ```
 """
@@ -93,7 +91,7 @@ end
 Add a scatter plot of e.g. x,y,z
 
 ```
-scene = MakieMap(DepthLog,colorrange=(3.,4.))
+scene = MakieBase(θ,collect(2:2:28))
 _, threeD, twoD = MakieScatter(scene,🔴_by_t[end])
 ```
 """
@@ -125,40 +123,36 @@ function MakieScatter(scene::Scene,df)
 end
 
 """
-    MakieMap(col;colorrange=AbstractPlotting.Automatic())
+    MakieBase(θ,T)
 
 Contour plot of a gridded 2D array, `col`, projected onto e.g. 200m depth plane.
 
 ```
-scene = MakieMap(OceanDepth,colorrange=(0.,6000.))
+scene = MakieBase(θ,collect(2:2:28))
 ```
 """
-function MakieMap(col;colorrange=AbstractPlotting.Automatic())
+function MakieBase(θ,T)
     zmul=1/5
     xs = [x for y in lat[1,91:130], x in lon[131:230,1]]
     ys = [y for y in lat[1,91:130], x in lon[131:230,1]]
-    cs = zmul*col[131:230,91:130]
-
-#    xs = [x for y in lat[1,:], x in lon[:,1]]
-#    ys = [y for y in lat[1,:], x in lon[:,1]]
-#    cs = col[:,:]
+    cs = θ[1,17][131:230,91:130]
 
     lim=FRect3D([minimum(xs) minimum(ys) -200.0*zmul],
                 [maximum(xs)-minimum(xs) maximum(ys)-minimum(ys) 200.0*zmul])
 
-    scene = Makie.contour(vec(xs[1,:]), vec(ys[:,1]), cs, levels = 15, linewidth = 2, 
+    scene = Makie.contour(vec(xs[1,:]), vec(ys[:,1]), cs, levels = T, linewidth = 2,
     transformation = (:xy, -200.0*zmul), color=:black, limits=lim)#,show_axis = false)
 
     nk=maximum(findall(Γ["RC"].>-200))
     tmp1=fill(NaN,(160,nk));
     [tmp1[:,k].=vec(θ[k][131,:]) for k=1:nk];
     Makie.contour!(scene,vec(lat[1,91:130]),vec(Γ["RC"][1:nk])*zmul,tmp1[91:130,:],
-    levels=20, transformation = (:yz, lon[131,1]), color=:black)
+    levels=T, transformation = (:yz, lon[131,1]), color=:black)
 
     tmp1=fill(NaN,(360,nk));
     [tmp1[:,k].=vec(θ[k][:,91]) for k=1:nk];
     Makie.contour!(scene,vec(lon[131:230,1]),vec(Γ["RC"][1:nk])*zmul,tmp1[131:230,:],
-    levels=20, transformation = (:xz, lat[1,91]), color=:black)
+    levels=T, transformation = (:xz, lat[1,91]), color=:black)
 
     scene.center = false # prevent scene from recentering on display
     update_cam!(scene, Vec3f0(maximum(xs)+60,mean(ys),-20.0*zmul), 
