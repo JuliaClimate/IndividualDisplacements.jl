@@ -9,8 +9,8 @@ notebooks = joinpath(src, "notebooks")
 execute = true # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
 
-lst1 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","detailed_look","particle_cloud"]
-lst2 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","detailed_look","particle_cloud"]
+lst1 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","three_dimensional_ocean","detailed_look","particle_cloud"]
+lst2 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","three_dimensional_ocean","detailed_look","particle_cloud"]
 tst1(x) = Bool(sum(isequal.(x, lst1)))
 tst2(x) = Bool(sum(isequal.(x, lst2)))
 
