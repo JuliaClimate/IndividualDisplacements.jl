@@ -53,7 +53,10 @@ end
 function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
 
-   #add third coordinate
+   #add year (convenience time axis for plotting)
+   df.year=df.t ./86400/365
+
+   #add depth (i.e. the 3rd, vertical, coordinate)
    k=sol[3,:,:]
    df.k=k[:] #level
    k=Int.(floor.(df.k)); w=(df.k-k); 
@@ -86,18 +89,21 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
    xy[3,:] .= z_init
    id=collect(1:size(xy,2))
 
-   tr = DataFrame([fill(Int, 2) ; fill(Float64, 7)], [:ID, :fid, :x, :y, :k, :z, :t, :lon, :lat])
+   tr = DataFrame([fill(Int, 2) ; fill(Float64, 8)], 
+   [:ID, :fid, :x, :y, :k, :z, :t, :lon, :lat, :year])
 
    𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, 🚄 = 🚄, ∫ = ∫, 🔧 = 🔧, 𝑃=𝑃)
 
    return 𝐼
 end
 
+set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=nf)
+
+𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=100)
+
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.1 Compute Displacements
 #
-
-𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=1000);
 
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 
@@ -111,10 +117,11 @@ end
 # - either `Plots.jl`:
 
 include(joinpath(p,"../examples/recipes_plots.jl"))
+
 PlotBasic(𝐼.🔴,100,90.0)
 
 # - or `Makie.jl`:
 
 #include(joinpath(p,"../examples/recipes_Makie.jl"))
-#p=PlotMakie(𝐼.🔴,1000,180.);
+#p=PlotMakie(𝐼.🔴,100,180.);
 #display(p)

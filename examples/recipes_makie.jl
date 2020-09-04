@@ -1,5 +1,5 @@
 
-using Random, Makie, DataFrames, ColorSchemes
+using Random, Makie, DataFrames, ColorSchemes, Statistics
 
 """
     PlotMakie(df::DataFrame,nn::Integer)
@@ -36,19 +36,21 @@ MakieScatterMovie(scene,df,tt,fil::String)
 Animate positions, according to time vector tt, and save movie to mp4 file.
 
 ```
-𝐼,Γ=example3("OCCA");
+using IndividualDisplacements
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/recipes_Makie.jl"))
+module ex3
+    fil="../examples/worldwide/three_dimensional_ocean.jl"
+    include(joinpath(Main.p,fil))
+    export set_up_individuals, Γ
+end
 
-lon,lat=Float64.(Γ["XC"][1]),Float64.(Γ["YC"][1])
-(lon,lat)=circshift.((lon,lat),Ref((-200,0)));
-lon[findall(lon.<20)] .+= 360.0;
+using .ex3
+𝐼=set_up_individuals(ex3.𝐼);
+𝑇=(0.0,𝐼.𝑃.𝑇[2])
+∫!(𝐼,𝑇)
 
-θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
-[θ[1,k][:,:]=circshift(θ[1,k][:,:],(-200,0)) for k=1:50]
-
-𝐼.🔴.year=𝐼.🔴.t ./86400/365; 
-🔴_by_t = groupby(𝐼.🔴, :t);
-
-scene = MakieBase(θ,collect(2:2:28))
+scene = MakieBase(0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1),collect(2:2:28))
 MakieScatterMovie(scene,𝐼.🔴,0:0.05:2,"tmp.mp4")
 ```
 """
@@ -131,7 +133,15 @@ Contour plot of a gridded 2D array, `col`, projected onto e.g. 200m depth plane.
 scene = MakieBase(θ,collect(2:2:28))
 ```
 """
-function MakieBase(θ,T)
+function MakieBase(θin,T)
+
+    lon,lat=Float64.(Γ["XC"][1]),Float64.(Γ["YC"][1])
+    (lon,lat)=circshift.((lon,lat),Ref((-200,0)));
+    lon[findall(lon.<20)] .+= 360.0;
+
+    θ=deepcopy(θin)
+    [θ[1,k][:,:]=circshift(θ[1,k][:,:],(-200,0)) for k=1:50]
+        
     zmul=1/5
     xs = [x for y in lat[1,91:130], x in lon[131:230,1]]
     ys = [y for y in lat[1,91:130], x in lon[131:230,1]]
