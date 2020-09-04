@@ -69,3 +69,40 @@ function reset_lonlat!(𝐼::Individuals)
     isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
     𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
 end
+
+## Convenience Methods (size,show,similar)
+
+Base.size(A::Individuals) = size(A.📌)
+
+function Base.show(io::IO, 𝐼::Individuals) where {T}
+    @unpack 🚄,📌,𝑃, 𝐷, 𝑀, 🔧, 🆔, 🔴, ∫ = 𝐼
+    printstyled(io, "  📌 details     = ",color=:normal)
+    printstyled(io, "$(size(📌)) $(typeof(𝐼).parameters[1])\n",color=:blue)
+    printstyled(io, "  🔴 details     = ",color=:normal)
+    printstyled(io, "$(size(🔴)) $(names(🔴))\n",color=:blue)
+    printstyled(io, "  🆔 range       = ",color=:normal)
+    printstyled(io, "$(extrema(🆔))\n",color=:blue)
+    printstyled(io, "  🚄 function    = ",color=:normal)
+    printstyled(io, "$(🚄)\n",color=:blue)
+    printstyled(io, "  ∫  function    = ",color=:normal)
+    printstyled(io, "$(∫)\n",color=:blue)
+    printstyled(io, "  🔧 function    = ",color=:normal)
+    printstyled(io, "$(🔧)\n",color=:blue)
+    printstyled(io, "  Parameters     = ",color=:normal)
+    printstyled(io, "$(keys(𝑃))\n",color=:blue)
+  return
+end
+
+function Base.similar(𝐼::Individuals)
+    @unpack 🚄,📌,𝑃, 𝐷, 𝑀, 🔧, 🆔, 🔴, ∫ = 𝐼
+    T = typeof(𝐼).parameters[1]
+    return Individuals{T}(📌=similar(📌),🔴=similar(🔴),🆔=similar(🆔),
+                          🚄=🚄, ∫=∫, 🔧=🔧, 𝑃=𝑃, 𝐷=𝐷, 𝑀=𝑀)
+end
+
+function Base.diff(𝐼::Individuals)
+    f(x)=last(x).-first(x)
+    🔴_by_ID = groupby(𝐼.🔴, :ID)
+    return combine(🔴_by_ID,nrow,:lat => f => :dlat,:lon => f => :dlon)
+end
+
