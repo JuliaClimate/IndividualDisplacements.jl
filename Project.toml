@@ -1,7 +1,7 @@
 name = "IndividualDisplacements"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 authors = ["gaelforget <gforget@mit.edu>"]
-version = "0.1.15"
+version = "0.1.16"
 
 [deps]
 CFTime = "179af706-886a-5703-950a-314cd64e0468"
@@ -9,6 +9,7 @@ CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CyclicArrays = "6023044f-b3ef-4c22-8399-3ec90a0c9b75"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+MITgcmTools = "62725fbc-3a66-4df3-9000-e33e85b3a198"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
 NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
@@ -19,9 +20,10 @@ UnPack = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
 [compat]
 CFTime = "0.1"
 CSV = "0.6, 0.7"
-CyclicArrays = "0.2, 0.4"
+CyclicArrays = "0.2, 0.3, 0.4"
 DataFrames = "0.21"
 MeshArrays = "0.2"
+MITgcmTools = "0.1.6"
 NetCDF = "0.10"
 OrdinaryDiffEq = "5"
 StatsBase = "0.33"

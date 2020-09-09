@@ -1,6 +1,5 @@
 
-using CyclicArrays
-using UnPack
+using CyclicArrays, OrdinaryDiffEq, IndividualDisplacements
 
 function cyclicarray_example()
     𝑃=cyclicarray_setup()
@@ -38,10 +37,7 @@ function cyclicarray_setup()
 
     F=f.(Y,X)
 
-    #f = sin.(2*x .+ 10 .* sin.(x)) .+ sin.(3*y)
-
     phi=CyclicArray(F,g)
-    contourf(phi.data, aspect_ratio=1,xlim=(0,360),ylim=(0,360))
     xg=CyclicArray(repeat(ind, 1, length(x))',g)
     yg=CyclicArray(repeat(ind, 1, length(x)),g)
     u=diff(phi,dims=2)

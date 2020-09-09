@@ -1,42 +1,57 @@
 
 """
-    postprocess_lonlat()
+    postprocess_lonlat(sol,𝑃::NamedTuple)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
+using "exchanged" 𝑃.XC, 𝑃.YC via `add_lonlat!`
 """
-function postprocess_lonlat(sol,XC,YC)
-    ID=collect(1:size(sol,2))*ones(1,size(sol,3))
+function postprocess_lonlat(sol,𝑃::NamedTuple,id=missing)
+    ismissing(id) ? id=collect(1:size(sol,2)) : nothing
+    𝐼=id*ones(1,size(sol,3))
+
     x=sol[1,:,:]
     y=sol[2,:,:]
-    XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
-    df = DataFrame(ID=Int.(ID[:]), x=x[:], y=y[:], fIndex=fIndex[:])
+    𝑃.XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
 
-    lon=Array{Float64,1}(undef,size(df,1)); lat=similar(lon)
+    nf=size(sol,2)
+    nt=size(sol,3)
+    t=[ceil(i/nf)-1 for i in 1:nt*nf]
+    t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t
 
-    for ii=1:length(lon)
-        #get location in grid index space
-        x=df[ii,:x]; y=df[ii,:y]; fIndex=Int(df[ii,:fIndex])
-        dx,dy=[x - floor(x) .+ 0.5,y - floor(y) .+ 0.5]
-        i_c,j_c = Int32.(floor.([x y])) .+ 1
-        #interpolate lon and lat to position
-        tmp=view(YC[fIndex],i_c:i_c+1,j_c:j_c+1)
-        lat[ii]=(1.0-dx)*(1.0-dy)*tmp[1,1]+dx*(1.0-dy)*tmp[2,1]+(1.0-dx)*dy*tmp[1,2]+dx*dy*tmp[2,2]
-
-        tmp=view(XC[fIndex],i_c:i_c+1,j_c:j_c+1)
-        if (maximum(tmp)>minimum(tmp)+180)
-            tmp1=deepcopy(tmp)
-            tmp1[findall(tmp.<maximum(tmp)-180)] .+= 360.
-            tmp=tmp1
-        end
-        #kk=findall(tmp.<maximum(tmp)-180); tmp[kk].=tmp[kk].+360.0
-        lon[ii]=(1.0-dx)*(1.0-dy)*tmp[1,1]+dx*(1.0-dy)*tmp[2,1]+(1.0-dx)*dy*tmp[1,2]+dx*dy*tmp[2,2]
-    end
-
-    df.lon=lon; df.lat=lat; #show(df[end-3:end,:])
+    df = DataFrame(ID=Int.(𝐼[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
+    add_lonlat!(df,𝑃.XC,𝑃.YC)
     return df
 end
 
-postprocess_lonlat(sol,uvetc::Dict) = postprocess_lonlat(sol,uvetc["XC"],uvetc["YC"])
+"""
+    add_lonlat!(df::DataFrame,XC,YC)
+
+Add lon & lat to dataframe using "exchanged" XC, YC
+"""
+function add_lonlat!(df::DataFrame,XC,YC)
+    x=df[!,:x];
+    y=df[!,:y];
+    f=Int.(df[!,:fid]);
+    dx,dy=(x - floor.(x) .+ 0.5,y - floor.(y) .+ 0.5);
+    i_c = Int32.(floor.(x)) .+ 1;
+    j_c = Int32.(floor.(y)) .+ 1;
+
+    lon=zeros(length(x),4)
+    [lon[k,:]=XC[f[k]][i_c[k]:i_c[k]+1,j_c[k]:j_c[k]+1][:] for k in 1:length(i_c)]
+    lat=zeros(length(x),4)
+    [lat[k,:]=YC[f[k]][i_c[k]:i_c[k]+1,j_c[k]:j_c[k]+1][:] for k in 1:length(i_c)]
+
+    k=findall(vec(maximum(lon,dims=2)-minimum(lon,dims=2)) .> 180.0)
+    tmp=view(lon,k,:)
+    tmp[findall(tmp.<0.0)]=tmp[findall(tmp.<0.0)] .+ 360.0
+
+    df.lon=(1.0 .-dx).*(1.0 .-dy).*lon[:,1]+dx.*(1.0 .-dy).*lon[:,2] +
+         (1.0 .-dx).*dy.*lon[:,3]+dx.*dy.*lon[:,4]
+    df.lat=(1.0 .-dx).*(1.0 .-dy).*lat[:,1]+dx.*(1.0 .-dy).*lat[:,2] +
+         (1.0 .-dx).*dy.*lat[:,3]+dx.*dy.*lat[:,4]
+
+    return df
+end
 
 """
     postprocess_xy()
@@ -44,35 +59,39 @@ postprocess_lonlat(sol,uvetc::Dict) = postprocess_lonlat(sol,uvetc["XC"],uvetc["
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_xy(sol,𝑃)
+function postprocess_xy(sol,𝑃::NamedTuple)
     nf=size(sol,2)
     nt=size(sol,3)
-    nx,ny=size(𝑃["XC"][1])
+    nx,ny=𝑃.ioSize[1:2]
 
     x=sol[1,:,:]
     y=sol[2,:,:]
-    size(𝑃["XC"],1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
-    ID=collect(1:size(sol,2))*ones(1,size(sol,3))
-    df = DataFrame(ID=Int.(ID[:]), fIndex=fIndex[:],
-    x=mod.(x[:],Ref(nx)), y=mod.(y[:],Ref(ny)))
-
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    df[!,:t]=𝑃["t0"] .+ (𝑃["t1"]-𝑃["t0"])/t[end].*t
+    #size(𝑃.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
+    ID=collect(1:size(sol,2))*ones(1,size(sol,3))
+
+    df = DataFrame(ID=Int.(ID[:]), t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t,
+                   x=mod.(x[:],Ref(nx)), y=mod.(y[:],Ref(ny)))
+
     return df
 end
 
-"""
-    read_uvetc(k::Int,γ::Dict,pth::String)
+postprocess_xy(sol,𝑃,id) = postprocess_xy(sol,𝑃)
 
-Define `uvetc` given the grid variables `γ` and a vertical level choice `k`
+"""
+    read_uvetc(k::Int,Γ::Dict,pth::String)
+
+Define `uvetc` given the grid variables `Γ` and a vertical level choice `k`
 including velocities obtained from files in `pth`
 """
-function read_uvetc(k::Int,γ::Dict,pth::String)
-    nt=12; msk=(γ["hFacC"][:,k] .> 0.) #select depth
+function read_uvetc(k::Int,Γ::Dict,pth::String)
+    𝑃 = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
+    Γ = dict_to_nt( Γ )
+    nt=12; msk=(Γ.hFacC[:,k] .> 0.) #select depth
 
-    u=0. *γ["XC"]; v=0. *γ["XC"];
+    u=0. ./Γ.DXC; v=0. ./Γ.DYC;
     for t=1:nt
-        (U,V)=read_velocities(γ["XC"].grid,t,pth)
+        (U,V)=read_velocities(Γ.XC.grid,t,pth)
         for i=1:size(u,1)
             u[i]=u[i] + U[i,k]
             v[i]=v[i] + V[i,k]
@@ -82,35 +101,60 @@ function read_uvetc(k::Int,γ::Dict,pth::String)
     v=v ./ nt #time average
 
     u[findall(isnan.(u))]=0.0; v[findall(isnan.(v))]=0.0 #mask with 0s rather than NaNs
-    u=u./γ["DXC"]; v=v./γ["DYC"]; #normalize to grid units
+    u=u./Γ.DXC; v=v./Γ.DYC; #normalize to grid units
 
     (u,v)=exchange(u,v,1) #add 1 point at each edge for u and v
-    XC=exchange(γ["XC"]) #add 1 lon point at each edge
-    YC=exchange(γ["YC"]) #add 1 lat point at each edge
+    XC=exchange(Γ.XC) #add 1 lon point at each edge
+    YC=exchange(Γ.YC) #add 1 lat point at each edge
 
     t0=0.0; t1=86400*366*10.0; dt=10*86400.0;
-    uvetc = Dict("u0" => u, "u1" => u, "v0" => v, "v1" => v,
-    "t0" => t0, "t1" => t1, "dt" => dt, "msk" => msk, "XC" => XC, "YC" => YC)
-    uvetc=merge(uvetc,IndividualDisplacements.NeighborTileIndices_cs(γ));
+    tmp = (u0=u, u1=u, v0=v, v1=v, t0=t0, t1=t1, dt=dt, msk=msk, XC=XC, YC=YC)
 
-    return uvetc
+    return merge(𝑃,tmp)
 end
 
 """
-    read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
+    set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
 
-Define `uvetc` given the grid variables `γ`, a vertical level choice `k`, the
-time `t` in `seconds` (Float64), and velocities obtained from files in `pth`.
+Define the `𝑃` _parameter_ tuple given grid variables `Γ`, vertical level
+choice `k`, time `t` in `seconds`, and velocity fields obtained from
+files in `pth`.
 
-The two climatological months (`m0`,`m1`) that bracket time `t` will be
-extracted (e.g. months 12 & 1 then 1 & 2 and so on).
+The two climatological months (`m0`,`m1`) that bracket time `t` are
+read to memory (e.g. months 12 & 1 then 1 & 2 and so on).
 
-_Note: the nitial implementation does this only approximately by setting
-every months duration to 1 year / 12 for simplicity; should be improved..._
+_Note: the initial implementation approximates every month duration
+to 365 days / 12 months for simplicity._
 """
-function read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
-    dt=86400.0*365.0/12.0
-    t<0.0 ? error("time needs to be positive") : nothing
+function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
+    XC=exchange(Γ["XC"]) #add 1 lon point at each edge
+    YC=exchange(Γ["YC"]) #add 1 lat point at each edge
+    iDXC=1. ./Γ["DXC"]
+    iDYC=1. ./Γ["DYC"]
+    γ=Γ["XC"].grid
+    mon=86400.0*365.0/12.0
+
+    𝑃 = (u0=MeshArray(γ,Float64), u1=MeshArray(γ,Float64),
+         v0=MeshArray(γ,Float64), v1=MeshArray(γ,Float64),
+         𝑇=[-mon/2,mon/2], 🔄 = update_𝑃!, pth=pth,
+         XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC,
+         k=k, msk=Γ["hFacC"][:, k])
+
+    tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
+    𝑃 = merge(𝑃 , tmp)
+
+    𝑃.🔄(k,0.0,𝑃)
+    return 𝑃
+end
+
+"""
+    update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
+
+Update velocity and time arrays inside 𝑃 (e.g. 𝑃.u0[:], etc, and 𝑃.𝑇[:])
+based on the chosen vertical level `k` and time `t` (in `seconds`).
+"""
+function update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
+    dt=𝑃.𝑇[2]-𝑃.𝑇[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
     m1=m0+1
@@ -122,42 +166,38 @@ function read_uvetc(k::Int,t::Float64,γ::Dict,pth::String)
     m1=mod(m1,12)
     m1==0 ? m1=12 : nothing
 
-    #println([t0/dt,t1/dt,m0,m1])
-
-    (U,V)=read_velocities(γ["XC"].grid,m0,pth)
+    (U,V)=read_velocities(𝑃.u0.grid,m0,𝑃.pth)
     u0=U[:,k]; v0=V[:,k]
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
-    u0=u0./γ["DXC"]; v0=v0./γ["DYC"]; #normalize to grid units
+    u0=u0.*𝑃.iDXC; v0=v0.*𝑃.iDYC; #normalize to grid units
     (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
 
-    (U,V)=read_velocities(γ["XC"].grid,m1,pth)
+    (U,V)=read_velocities(𝑃.u0.grid,m1,𝑃.pth)
     u1=U[:,k]; v1=V[:,k]
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
-    u1=u1./γ["DXC"]; v1=v1./γ["DYC"]; #normalize to grid units
+    u1=u1.*𝑃.iDXC; v1=v1.*𝑃.iDYC; #normalize to grid units
     (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
 
-    msk=(γ["hFacC"][:,k] .> 0.) #select depth
-    XC=exchange(γ["XC"]) #add 1 lon point at each edge
-    YC=exchange(γ["YC"]) #add 1 lat point at each edge
+    𝑃.u0[:]=u0[:]
+    𝑃.u1[:]=u1[:]
+    𝑃.v0[:]=v0[:]
+    𝑃.v1[:]=v1[:]
+    𝑃.𝑇[:]=[t0,t1]
 
-    uvetc = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1,
-    "t0" => t0, "t1" => t1, "dt" => dt, "msk" => msk, "XC" => XC, "YC" => YC)
-    uvetc=merge(uvetc,IndividualDisplacements.NeighborTileIndices_cs(γ));
-
-    return uvetc
 end
 
+
 """
-    initialize_gridded(uvetc::Dict,n_subset::Int=1)
+    initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
 
 Define initial condition (u0,du) as a subset of grid points
 """
-function initialize_gridded(uvetc::Dict,n_subset::Int=1)
-    msk=uvetc["msk"]
+function initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
+    msk=𝑃.msk
     uInitS = Array{Float64,2}(undef, 3, prod(msk.grid.ioSize))
 
     kk = 0
-    for fIndex = 1:5
+    for fIndex = 1:length(msk.fSize)
         nx, ny = msk.fSize[fIndex]
         ii1 = 0.5:1.0:nx
         ii2 = 0.5:1.0:ny
@@ -225,8 +265,8 @@ initialize_lonlat(Γ::Dict,lon::Float64,lat::Float64;msk=missing) = initialize_l
 Read velocity components `u,v` from files in `pth`for time `t`
 """
 function read_velocities(γ::gcmgrid,t::Int,pth::String)
-    u=Main.read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
-    v=Main.read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
+    u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
+    v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
     return u,v
 end
 
