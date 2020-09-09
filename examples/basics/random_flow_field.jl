@@ -46,29 +46,25 @@ n=100
 x0=x0 .+(x1-x0).*rand(n)
 y0=y0 .+(y1-y0).*rand(n)
 
-u0=transpose([x0[:] y0[:] ones(size(x0[:]))]);
+xy=transpose([x0[:] y0[:] ones(size(x0[:]))]);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.1 Compute Trajectories
 
-𝑇 = (𝑃["t0"],𝑃["t1"])
-prob = ODEProblem(⬡!,u0,𝑇,𝑃)
-sol = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
-size(sol)
+tr = DataFrame( ID=[], x=[], y=[], t = [])
+solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
+𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔! = ⬡!, □ = solv, ▽ = postprocess_xy, tr =tr)
 
-#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 2.2 Process Output
-
-df=postprocess_xy(sol,𝑃);
+start!(𝐼)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 2.3 Plot Results
+# ## 2.2 Plot Results
 #
 # For example, generate a simple animation (with `if true`):
 
 if false
-anim = @animate for t in 0:2.0:maximum(df[!,:t])
-   phi_and_subset(Γ,ϕ,df,t)
+anim = @animate for t in 0:2.0:maximum(𝐼.tr.t)
+   phi_and_subset(Γ,ϕ,𝐼.tr,t)
 end
 pth=tempdir()*"/"
 gif(anim, pth*"RandomFlow.gif", fps = 15)
