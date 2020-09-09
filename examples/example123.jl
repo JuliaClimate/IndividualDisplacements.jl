@@ -1,4 +1,4 @@
-using MeshArrays, Statistics, OrdinaryDiffEq
+using MeshArrays, Statistics, OrdinaryDiffEq, IndividualDisplacements
 
 """
     example1()
@@ -28,47 +28,57 @@ Reproducing `MITgcm/verification/flt_example/` case. This is based on an
 extended and modified configuration of the standard MITgcm test case.
 
 ```
-(df,ref,sol)=example2();
+(𝐼,df,ref)=example2();
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/recipes_plots.jl"))
 PlotBasic(df,300,100000.0)
 
 using Plots
-Plots.plot(sol[1,:],sol[2,:],linewidth=5,lc=:black, title="One Trajectory Example",
+Plots.plot(𝐼.tr.x,𝐼.tr.y,linewidth=5,lc=:black, title="One Trajectory Example",
 xaxis="x",yaxis="y",label="Julia Solution") # legend=false
 pl=Plots.plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,lc=:red,label="MITgcm Solution")
 ```
 """
 function example2()
-   p=dirname(pathof(IndividualDisplacements))
-   dirIn=joinpath(p,"../examples/flt_example/")
-   prec=Float32
-   df=read_flt(dirIn,prec)
-   uvetc=example2_setup()
-   #
-   tmp=df[df.ID .== 200, :]
-   nSteps=Int32(tmp[end,:time]/3600)-2
-   ref=transpose([tmp[1:nSteps,:lon] tmp[1:nSteps,:lat]])
-   maxLon=80*5.e3
-   maxLat=42*5.e3
-   for i=1:nSteps-1
-       ref[1,i+1]-ref[1,i]>maxLon/2 ? ref[1,i+1:end]-=fill(maxLon,(nSteps-i)) : nothing
-       ref[1,i+1]-ref[1,i]<-maxLon/2 ? ref[1,i+1:end]+=fill(maxLon,(nSteps-i)) : nothing
-       ref[2,i+1]-ref[2,i]>maxLat/2 ? ref[2,i+1:end]-=fill(maxLat,(nSteps-i)) : nothing
-       ref[2,i+1]-ref[2,i]<-maxLat/2 ? ref[2,i+1:end]+=fill(maxLat,(nSteps-i)) : nothing
-   end
-   ref=ref./uvetc["dx"]
-   #
-   uInit=[tmp[1,:lon];tmp[1,:lat]]./uvetc["dx"]
-   du=fill(0.0,2)
-   #
-   tspan = (0.0,nSteps*3600.0)
-   #prob = ODEProblem(dxy_dt_replay,uInit,tspan,tmp)
-   prob = ODEProblem(⬡,uInit,tspan,uvetc)
-   sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
-   #
-   return df,ref,sol
+   𝑃,Γ=example2_setup()
+   (xy,df,ref,nSteps)=example2_xy(𝑃)
+
+   𝑃.𝑇[:] = [0.0,nSteps*3600.0]
+   solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+   tr = DataFrame( ID=[], x=[], y=[], t = [])
+
+   𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔! = ⬡, □ = solv, ▽ = postprocess_xy, tr = tr)
+   start!(𝐼)
+
+   return 𝐼, df,ref
+end
+
+"""
+example2_xy()
+
+Read MITgcm/pkg/flt output
+"""
+function example2_xy(𝑃)
+p=dirname(pathof(IndividualDisplacements))
+dirIn=joinpath(p,"../examples/flt_example/")
+prec=Float32
+df=read_flt(dirIn,prec)
+#
+tmp=df[df.ID .== 200, :]
+nSteps=Int32(tmp[end,:time]/3600)-2
+ref=transpose([tmp[1:nSteps,:lon] tmp[1:nSteps,:lat]])
+maxLon=80*5.e3
+maxLat=42*5.e3
+for i=1:nSteps-1
+    ref[1,i+1]-ref[1,i]>maxLon/2 ? ref[1,i+1:end]-=fill(maxLon,(nSteps-i)) : nothing
+    ref[1,i+1]-ref[1,i]<-maxLon/2 ? ref[1,i+1:end]+=fill(maxLon,(nSteps-i)) : nothing
+    ref[2,i+1]-ref[2,i]>maxLat/2 ? ref[2,i+1:end]-=fill(maxLat,(nSteps-i)) : nothing
+    ref[2,i+1]-ref[2,i]<-maxLat/2 ? ref[2,i+1:end]+=fill(maxLat,(nSteps-i)) : nothing
+end
+ref=ref./𝑃.dx
+xy=[tmp[1,:lon];tmp[1,:lat]]./𝑃.dx
+return xy,df,ref,nSteps
 end
 
 """
@@ -113,23 +123,17 @@ function example2_setup()
    v0=v0./Γ["dx"]
    v1=v1./Γ["dx"]
 
-   ## Merge the two dictionaries:
-
-   uvetc=Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1)
-
-   uvetc=merge(uvetc,Γ)
-
    ## Visualize velocity fields
 
    mskW=read_mds(γ.path*"hFacW",MeshArray(γ,Float32,nr))
    mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
    mskS=read_mds(γ.path*"hFacS",MeshArray(γ,Float32,nr))
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
+   Γ=merge(Γ,Dict("mskW" => mskW, "mskS" => mskS))
 
-   msk=Dict("mskW" => mskW, "mskS" => mskS)
-
-   uvetc=merge(uvetc,msk)
-
+   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, dx=Γ["dx"],
+        𝑇=[t0,t1], XC=Γ["XC"], YC=Γ["YC"], ioSize=(80,42))
+   return 𝑃,Γ
 end
 
 """
@@ -141,13 +145,14 @@ Run particle trajectory simulation over near-global ocean domain (79.5°S to
 return the result as a `DataFrame` that can be manipulated or plotted later.
 
 ```
-using IndividualDisplacements, MAT, NetCDF
-df=example3("OCCA")
-
+using IndividualDisplacements, MAT, NetCDF, DataFrames, Plots
 p=dirname(pathof(IndividualDisplacements))
 
+𝐼=example3("OCCA");
+df=𝐼.tr
+
 include(joinpath(p,"../examples/recipes_plots.jl"))
-PlotBasic(df,1000,90.0)
+PlotBasic(df,100,90.0)
 
 #include(joinpath(p,"../examples/recipes_pyplot.jl"))
 #PyPlot.figure(); PlotMapProj(df,3000); gcf()
@@ -155,8 +160,8 @@ PlotBasic(df,1000,90.0)
 #include(joinpath(p,"../examples/recipes_Makie.jl"))
 #PlotMakie(df,3000,180.)
 
-n=maximum(df.ID)
-nt=size(df,1)/n
+nf=maximum(df.ID)
+nt=size(df,1)/nf
 dt=maximum(df.t)/(nt-1)
 @gif for t in 0:nt-1
    scatter_zcolor(df,t*dt,df.z,(0,10))
@@ -166,48 +171,47 @@ end
 function example3(nam::String="OCCA" ; bck::Bool=false, z_init=0.5,
    lon_rng=(-165.0,-145.0), lat_rng=(25.0,35.0))
    if nam=="OCCA"
-      uvetc=OCCA_setup(backward_in_time=bck)
+      𝑃,Γ=OCCA_setup(backward_in_time=bck)
    elseif nam=="LLC90"
-      uvetc=example3_setup(backward_in_time=bck)
+      𝑃,Γ=example3_setup(backward_in_time=bck)
    else
       error("unknown example (nam parameter value)")
    end
 
-   nx,ny=size(uvetc["XC"][1])
-
+   nx,ny=𝑃.ioSize[1:2]
    lo0,lo1=lon_rng
    la0,la1=lat_rng
-   n=1000
-   lon=lo0 .+(lo1-lo0).*rand(n)
-   lat=la0 .+(la1-la0).*rand(n)
-   (u0,du)=initialize_lonlat(uvetc,lon,lat)
-   u0[3,:] .= z_init
 
-   #dxyz_dt(du,u0,uvetc,0.0)
-   𝑇 = (0.0,uvetc["t1"]-uvetc["t0"])
-   prob = ODEProblem(dxyz_dt,u0,𝑇,uvetc)
-   #sol = solve(prob,Tsit5(),reltol=1e-4,abstol=1e-4)
-   sol = solve(prob,RK4(),dt=uvetc["dt"])
-   #sol = solve(prob,Euler(),dt=uvetc["dt"])
+   nf=100
+   lon=lo0 .+(lo1-lo0).*rand(nf)
+   lat=la0 .+(la1-la0).*rand(nf)
+   (xy,_)=initialize_lonlat(Γ,lon,lat)
+   xy[3,:] .= z_init
+   id=collect(1:size(xy,2))
 
-   sol[1,:,:]=mod.(sol[1,:,:],nx)
-   sol[2,:,:]=mod.(sol[2,:,:],ny)
-   XC=exchange(uvetc["XC"])
-   YC=exchange(uvetc["YC"])
-   df=postprocess_lonlat(sol,XC,YC)
+   function solv(prob)
+      sol=solve(prob,Euler(),dt=10*86400.0)
+      sol[1,:,:]=mod.(sol[1,:,:],nx)
+      sol[2,:,:]=mod.(sol[2,:,:],ny)
+      return sol
+   end
 
-   #add third coordinate
-   z=sol[3,:,:]
-   df.z=z[:]
+   tr = DataFrame( ID=[], x=[], y=[], t = [], lon=[], lat=[], z=[], fid=[])
 
-   #add time coordinate
-   nt=size(df,1)/n
-   df.t=uvetc["dt"]*[ceil(i/n)-1 for i in 1:nt*n]
+   function postproc(sol,𝑃::NamedTuple,id=missing)
+      df=postprocess_lonlat(sol,𝑃,id)
+      #add third coordinate
+      z=sol[3,:,:]
+      df.z=z[:]
+      #to plot e.g. Pacific Ocean transports, shift longitude convention?
+      df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
+      return df
+   end
 
-   #to plot e.g. Pacific Ocean transports, shift longitude convention?
-   df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
+   𝐼 = Individuals{Float64}(xy=xy, id=id, 𝑃=𝑃, ⎔! = dxyz_dt, □ = solv, ▽ = postproc, tr = tr)
+   start!(𝐼)
 
-   return df
+   return 𝐼
 end
 
 """
@@ -227,8 +231,8 @@ example3((-165.0,-155.0),(5.0,15.0),5.5,true)
 """
 function example3(lon_rng,lat_rng,z_init,bck)
    df=example3("OCCA",bck=bck, z_init=z_init,lon_rng=lon_rng,lat_rng=lat_rng)
-   n=maximum(df.ID)
-   nt=size(df,1)/n
+   nf=maximum(df.ID)
+   nt=size(df,1)/nf
    dt=maximum(df.t)/(nt-1)
    return @gif for t in 0:nt-1
         scatter_zcolor(df,t*dt,df.z,(0,10))
@@ -279,16 +283,12 @@ function example3_setup(;backward_in_time::Bool=false)
    u0=s*u; u1=s*u;
    v0=s*v; v1=s*v;
 
-   t0=0.0; t1=86400*366*2.0; dt=10*86400.0;
+   t0=0.0; t1=86400*366*2.0;
 
    u0=u0./Γ["DXC"]
    u1=u1./Γ["DXC"]
    v0=v0./Γ["DYC"]
    v1=v1./Γ["DYC"]
-
-   uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1, "t0" => t0, "t1" => t1, "dt" => dt) ;
-
-   uvetc=merge(uvt,Γ);
 
    nr=50; kk=1;
 
@@ -296,10 +296,12 @@ function example3_setup(;backward_in_time::Bool=false)
    mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
    mskS=read(γ.path*"hFacS.latlon.data",MeshArray(γ,Float32,nr))
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
-
    msk=Dict("mskW" => mskW, "mskS" => mskS)
 
-   return merge(uvetc,msk)
+   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, 𝑇=[t0,t1], ioSize=(360,178),
+        XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]))
+
+   return 𝑃,Γ
 
 end
 
@@ -356,18 +358,24 @@ function OCCA_setup(;backward_in_time::Bool=false)
    tmpx=circshift(Γ["XC"][1],[-180 0])
    tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
    Γ["XC"][1]=tmpx
-   delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS"]);
+
+   tmpx=circshift(Γ["XG"][1],[-180 0])
+   tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
+   Γ["XG"][1]=tmpx
+   Γ["Depth"][1]=circshift(Γ["Depth"][1],[-180 0])
+
+   delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS","DXG","DYG","RAC","RAZ","RAS"]);
 
    backward_in_time ? s=-1.0 : s=1.0
    u0=s*u; u1=s*u;
    v0=s*v; v1=s*v;
    w0=s*w; w1=s*w;
 
-   t0=0.0; t1=86400*366*2.0; dt=dt=10*86400.0;
+   t0=0.0; t1=86400*366*2.0;
 
-   uvt = Dict("u0" => u0, "u1" => u1, "v0" => v0, "v1" => v1,
-              "w0" => w0, "w1" => w1, "t0" => t0, "t1" => t1, "dt" => dt) ;
+   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, w0=w0, w1=w1, 𝑇=[t0,t1],
+   XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), ioSize=(360,160,50))
 
-   return merge(uvt,Γ)
+   return 𝑃,Γ
 
 end

@@ -26,19 +26,19 @@ end
     update_location_cs!
 
 Update location (x,y,fIndex) when out of domain. Note: initially, this
-only works for the `dpdo` grid type provided by `MeshArrays.jl`.
+only works for the `cs` & `llc` grid types provided by `MeshArrays.jl`.
 """
-function update_location_cs!(u::Array{Float64,1},grid::Dict)
+function update_location_cs!(u::Array{Float64,1},𝑃::NamedTuple)
     x,y = u[1:2]
     fIndex = Int(u[3])
-    nx,ny=grid["XC"].fSize[fIndex]
+    nx,ny=𝑃.XC.fSize[fIndex]
     if x<0||x>nx||y<0||y>ny
         j = 0
-        x<0 ? j=grid["aW"][fIndex] : nothing
-        x>nx ? j=grid["aE"][fIndex] : nothing
-        y<0 ? j=grid["aS"][fIndex] : nothing
-        y>ny ? j=grid["aN"][fIndex] : nothing
-        (x,y)=grid["RelocFunctions"][j,fIndex](x,y)
+        x<0 ? j=𝑃.aW[fIndex] : nothing
+        x>nx ? j=𝑃.aE[fIndex] : nothing
+        y<0 ? j=𝑃.aS[fIndex] : nothing
+        y>ny ? j=𝑃.aN[fIndex] : nothing
+        (x,y)=𝑃.RelocFunctions[j,fIndex](x,y)
         u[1]=x
         u[2]=y
         u[3]=j
