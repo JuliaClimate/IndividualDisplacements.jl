@@ -10,8 +10,11 @@ function PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
    COs=["w" "y" "g" "k"]
 
    plt=plot(leg=false)
+   df_by_ID = groupby(df, :ID)
+   ID_list=[df_by_ID[i][1,:ID] for i in 1:length(df_by_ID)]
    for ii=1:nn
-      tmp=df[df.ID .== IDs[ii], :]
+      jj=findall(ID_list.==IDs[ii])[1]
+      tmp=df_by_ID[jj]
       if dMax > 0.
          d=abs.(diff(tmp[!,:lon]))
          jj=findall(d .> dMax)
@@ -21,7 +24,9 @@ function PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
          tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
       end
       CO=COs[mod(ii,4)+1]
-      plot!(tmp[!,:lon],tmp[!,:lat],linewidth=0.3)
+      
+      haskey(df,:z) ? plot!(tmp[!,:lon],tmp[!,:lat],tmp[!,:z],linewidth=0.3) : nothing
+      !haskey(df,:z) ? plot!(tmp[!,:lon],tmp[!,:lat],linewidth=0.3) : nothing
       #plot!(tmp[!,:lon],tmp[!,:lat],tmp[!,:z],linewidth=0.3)
    end
    return plt

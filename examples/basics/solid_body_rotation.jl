@@ -108,8 +108,9 @@ p=Int(ceil(nt/100))
 anim = @animate for i ∈ 1:p:nt
     myplot(i)
 end
-pth=tempdir()*"/"
-#gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
+
+#md pth=tempdir()*"/"
+#md gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:

@@ -79,9 +79,11 @@ end
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.4 Compute summary statistics
 #
+# See [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) documentation for detail and additinal functionalities.
 
 gdf = groupby(𝐼.🔴, :ID)
-#show(combine(gdf,nrow,:lat => mean))
+sgdf= combine(gdf,nrow,:lat => mean)
+sgdf[rand(1:size(sgdf,1),4),:]
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Plot trajectories / individual positions

@@ -10,35 +10,65 @@ postprocess_default = postprocess_lonlat
 """
     struct Individuals{T}
 
-- Data:           📌 (position), 🔴 (record), 🆔 (ID)
-- Functions:      🚄 (velocity), ∫ (time integration), 🔧 (postprocessing)
-- NamedTuples:    𝑃 (parameters), 𝐷 (diagnostics), 𝑀 (metadata)
+- Data:           📌 (position),   🔴(record),           🆔 (ID)
+- Functions:      🚄 (velocity),   ∫ (integration), 🔧(postprocessing)
+- NamedTuples:    𝑃  (parameters), 𝐷 (diagnostics),      𝑀 (metadata)
 
 Keyword constructor -- for example:
 
 ```
 𝐼=Individuals{Float64}(📌=zeros(3,2),🆔=1:2,🔴=DataFrame( ID=[], x=[], y=[], z=[], t = []))
 ```
+
+Or alternatively, without unicode:
+
+```
+𝐼=Individuals(position=zeros(3,2),ID=1:2,record=DataFrame( ID=[], x=[], y=[], z=[], t = []))
+```
+
+Keyword cheatsheet:
+
+- 📌=`\\:pushpin:<tab>`,        🔴=`\\:red_circle:<tab>`, 🆔=`\\:id:<tab>`
+- 🚄=`\\bullettrain_side<tab>`, ∫=`\\int<tab>`,           🔧=`\\wrench<tab>`
+- 𝑃=`\\itP<tab>`,               𝐷=`\\itD<tab>`,            𝑀 =`\\itM<tab>`
 """
 Base.@kwdef struct Individuals{T}
-    📌  ::Array{T,2} = Array{T,2}(undef, Tuple(Int.(zeros(1,2)))) #\:pushpin:<tab>
+   📌  ::Array{T,2} = Array{T,2}(undef, Tuple(Int.(zeros(1,2)))) #\:pushpin:<tab>
    🔴  ::DataFrame = rec_default #\:red_circle:<tab>
-   🆔  ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
+   🆔   ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
    🚄  ::Function = dxy_dt #\bullettrain_side<tab>
    ∫   ::Function = solver_default #\int<tab>
    🔧  ::Function = postprocess_default #\wrench<tab>
    𝑃   ::NamedTuple = 𝑃_default #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
-   𝑀  ::NamedTuple = NamedTuple() #\itM<tab>
+   𝑀   ::NamedTuple = NamedTuple() #\itM<tab>
+end
+
+# constructor that uses plain text keywords:
+function Individuals(;
+    position::Array{T,2} = Array{T,2}(undef, Tuple(Int.(zeros(1,2)))),
+    record::DataFrame = rec_default,
+    ID::Union{Array{Int,1},UnitRange{Int}} = Array{Int,1}(undef, 0),
+    velocity::Function = dxy_dt,
+    integration::Function = solver_default,
+    postprocessing::Function = postprocess_default,
+    parameters::NamedTuple = 𝑃_default,
+    diagnostics::NamedTuple = NamedTuple(),
+    metadata::NamedTuple = NamedTuple()
+    ) where T
+    Individuals{T}(📌=position,🔴=record,🆔=ID,
+    🚄=velocity,   ∫=integration, 🔧=postprocessing,
+    𝑃=parameters, 𝐷=diagnostics, 𝑀=metadata)    
 end
 
 """
     ∫!(𝐼::Individuals,𝑇::Tuple)
 
-Displace individuals continuously over time period 𝑇 starting from position 📌. This is typically achived by 
-computing the cumulative integral of velocity experienced by the individuals (∫ 🚄 dt).
+Displace simulated individuals continuously through space over time period 𝑇 starting from position 📌. 
 
-To finish `∫!` can postprocess with 🔧, records results into 🔴, & updates 📌
+- This is typically achieved by computing the cumulative integral of velocity experienced by each individual along its trajectory (∫ 🚄 dt).
+- The current default is `solve(prob,Euler(),dt=2*day)` but all solver options from the [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) package are available.
+- After this, `∫!` is also equiped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consiste in updating 📌 to be ready for continuing in a subsequent call to `∫!`.
 """
 function ∫!(𝐼::Individuals,𝑇::Tuple)
     @unpack 🚄,📌,𝑃, 🔧, 🆔, 🔴, ∫ = 𝐼
@@ -88,7 +118,7 @@ function Base.show(io::IO, 𝐼::Individuals) where {T}
     printstyled(io, "$(∫)\n",color=:blue)
     printstyled(io, "  🔧 function    = ",color=:normal)
     printstyled(io, "$(🔧)\n",color=:blue)
-    printstyled(io, "  Parameters     = ",color=:normal)
+    printstyled(io, "  𝑃  details     = ",color=:normal)
     printstyled(io, "$(keys(𝑃))\n",color=:blue)
   return
 end
