@@ -112,7 +112,7 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.2 Analyze Results
 #
-# The simulation output result is stored as a `DataFrame`, 🔴`, which is easily manipulated or plotted, using e.g. 
+# The recorded simulation output, 🔴, is a in the [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format, which is easily manipulated or plotted.
 #
 # - either `Plots.jl`:
 
