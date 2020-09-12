@@ -17,7 +17,7 @@ true
 ```
 
 ```jldoctest
-using IndividualDisplacements
+using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/worldwide/global_ocean_circulation.jl"))
 ref=[78. 88.]
@@ -150,7 +150,7 @@ Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 (`x,y`) to compute the derivative of position v time  `du_dt`.
 
 ```jldoctest
-using IndividualDisplacements
+using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/basics/particle_cloud.jl"))
 ref=[29.381183342468674  19.890831699436823]

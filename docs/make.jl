@@ -38,11 +38,11 @@ makedocs(
     format = Documenter.HTML(),
     pages = [
 		"Introduction" => "index.md",
-                "API" => "workflow.md",
+        "User Guide" => "workflow.md",
 		"Examples" => "examples.md",
 		"Real Ocean" => pages("worldwide"),
-                "Other Examples" => p_BE,
-		"Tool Boxes" => "API.md"],
+        "Other Examples" => p_BE,
+		"Tool Box" => "API.md"],
     modules = [IndividualDisplacements]
 )
 
