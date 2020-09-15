@@ -25,8 +25,8 @@ function PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
       end
       CO=COs[mod(ii,4)+1]
       
-      haskey(df,:z) ? plot!(tmp[!,:lon],tmp[!,:lat],tmp[!,:z],linewidth=0.3) : nothing
-      !haskey(df,:z) ? plot!(tmp[!,:lon],tmp[!,:lat],linewidth=0.3) : nothing
+      hasproperty(df,:z) ? plot!(tmp[!,:lon],tmp[!,:lat],tmp[!,:z],linewidth=0.3) : nothing
+      !hasproperty(df,:z) ? plot!(tmp[!,:lon],tmp[!,:lat],linewidth=0.3) : nothing
       #plot!(tmp[!,:lon],tmp[!,:lat],tmp[!,:z],linewidth=0.3)
    end
    return plt
