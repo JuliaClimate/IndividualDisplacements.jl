@@ -154,7 +154,6 @@ function update_𝑃!(𝑃::NamedTuple,t::Float64)
 
 end
 
-
 """
     initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
 
@@ -241,4 +240,26 @@ function reset_lonlat!(𝐼::Individuals)
     𝐼.📌[:,k_reset].=v0[:,1:n_reset]
     isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
     𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
+end
+
+"""
+using MeshArrays, IndividualDisplacements
+
+lon=[i for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
+lat=[j for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
+(f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
+IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)
+
+D=Γ["Depth"]
+tmp1=interp_to_lonlat(D,Γ,lon,lat)
+tmp2=interp_to_lonlat(D,IntFac)
+"""
+function interp_to_lonlat(X::MeshArray,Γ::Dict,lon,lat)
+    (f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
+    return reshape(Interpolate(X,f,i,j,w),size(lon))
+end
+
+function interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
+    @unpack f,i,j,w,lon,lat = IntFac
+    return reshape(Interpolate(X,f,i,j,w),size(lon))
 end
