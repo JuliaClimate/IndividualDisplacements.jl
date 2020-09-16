@@ -1,9 +1,14 @@
 
+"""
+    defaults for Individuals constructor
+"""
+
 day=86400.0
 mon=365/12*day
+OneMonth=[-0.5*mon,0.5*mon]
+
 solver_default(prob) = solve(prob,Euler(),dt=2*day)
-𝑃_default = ( 𝑇 = [-0.5*mon,0.5*mon] , 🔄 = update_𝑃!,
-              u0=[] , u1=[] , v0=[] , v1=[] )
+param_default = ( 𝑇=OneMonth , 🔄=update_𝑃!, u0=[], u1=[], v0=[], v1=[])
 rec_default = DataFrame(fill(Float64, 7),[:ID, :x, :y, :t, :lon, :lat, :fid])
 postprocess_default = postprocess_lonlat
 
@@ -14,16 +19,20 @@ postprocess_default = postprocess_lonlat
 - Functions:      🚄 (velocity),   ∫ (integration), 🔧(postprocessing)
 - NamedTuples:    𝑃  (parameters), 𝐷 (diagnostics),      𝑀 (metadata)
 
-Keyword constructor -- for example:
+Default keyword constructor example:
 
 ```
-𝐼=Individuals{Float64}(📌=zeros(3,2),🆔=1:2,🔴=DataFrame( ID=[], x=[], y=[], z=[], t = []))
+df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
+𝐼=Individuals{Float64}(📌=zeros(3,10),🆔=1:10,🔴=deepcopy(df))
+𝐼=Individuals(📌=zeros(3,2),🆔=collect(1:2),🔴=deepcopy(df))
 ```
 
-Or alternatively, without unicode:
+Plain text (or no-unicode) constructor example:
 
 ```
-𝐼=Individuals(position=zeros(3,2),ID=1:2,record=DataFrame( ID=[], x=[], y=[], z=[], t = []))
+df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
+I=(position=zeros(3,2),ID=1:2,record=deepcopy(df))
+I=Individuals(I)
 ```
 
 Keyword cheatsheet:
@@ -39,26 +48,37 @@ Base.@kwdef struct Individuals{T}
    🚄  ::Function = dxy_dt #\bullettrain_side<tab>
    ∫   ::Function = solver_default #\int<tab>
    🔧  ::Function = postprocess_default #\wrench<tab>
-   𝑃   ::NamedTuple = 𝑃_default #\itP<tab>
+   𝑃   ::NamedTuple = param_default #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
-   𝑀   ::NamedTuple = NamedTuple() #\itM<tab>
+   𝑀   ::NamedTuple = NamedTuple() #\itM<tab>vec
 end
 
-# constructor that uses plain text keywords:
-function Individuals(;
-    position::Array{T,2} = Array{T,2}(undef, Tuple(Int.(zeros(1,2)))),
-    record::DataFrame = rec_default,
-    ID::Union{Array{Int,1},UnitRange{Int}} = Array{Int,1}(undef, 0),
-    velocity::Function = dxy_dt,
-    integration::Function = solver_default,
-    postprocessing::Function = postprocess_default,
-    parameters::NamedTuple = 𝑃_default,
-    diagnostics::NamedTuple = NamedTuple(),
-    metadata::NamedTuple = NamedTuple()
-    ) where T
-    Individuals{T}(📌=position,🔴=record,🆔=ID,
-    🚄=velocity,   ∫=integration, 🔧=postprocessing,
-    𝑃=parameters, 𝐷=diagnostics, 𝑀=metadata)    
+"""
+    Individuals(NT::NamedTuple)
+
+Constructor that uses a NamedTuple with only plain text keywords (i.e. no-unicode needed).
+
+```
+df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
+I=(position=zeros(3,2),ID=1:2,record=deepcopy(df))
+I=Individuals(I)
+```
+"""
+function Individuals(NT::NamedTuple)
+
+    haskey(NT,:position) ? 📌=NT.position : 📌=Array{Float64,2}(undef, Tuple(Int.(zeros(1,2))))
+    haskey(NT,:record) ? 🔴=NT.record : 🔴=rec_default
+    haskey(NT,:ID) ? 🆔=NT.ID : 🆔=Array{Int,1}(undef, 0)
+    haskey(NT,:velocity) ? 🚄=NT.velocity : 🚄=dxy_dt
+    haskey(NT,:integration) ? ∫=NT.integration : ∫=solver_default
+    haskey(NT,:postprocessing) ? 🔧=NT.postprocessing : 🔧=postprocess_default
+    haskey(NT,:parameters) ? 𝑃=NT.parameters : 𝑃=param_default
+    haskey(NT,:diagnostics) ? 𝐷=NT.diagnostics : 𝐷=NamedTuple()
+    haskey(NT,:metadata) ? 𝑀=NT.metadata : 𝑀=NamedTuple()
+    isa(📌,UnitRange) ? 📌=collect(📌) : nothing
+    haskey(NT,:type) ? T=NT.type : T=eltype(📌)
+
+    Individuals{T}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,𝑃=𝑃,𝐷=𝐷,𝑀=𝑀)    
 end
 
 """
