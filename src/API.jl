@@ -7,7 +7,7 @@ day=86400.0
 mon=365/12*day
 OneMonth=[-0.5*mon,0.5*mon]
 
-solver_default(prob) = solve(prob,Euler(),dt=2*day)
+solver_default(prob) = solve(prob,Euler(),dt=day)
 param_default = ( 𝑇=OneMonth , 🔄=(x->x), u0=[], u1=[], v0=[], v1=[])
 rec_default = DataFrame(fill(Float64, 7),[:ID, :x, :y, :t, :lon, :lat, :fid])
 postprocess_default = (x->x)
@@ -87,7 +87,7 @@ end
 Displace simulated individuals continuously through space over time period 𝑇 starting from position 📌. 
 
 - This is typically achieved by computing the cumulative integral of velocity experienced by each individual along its trajectory (∫ 🚄 dt).
-- The current default is `solve(prob,Euler(),dt=2*day)` but all solver options from the [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) package are available.
+- The current default is `solve(prob,Euler(),dt=day)` but all solver options from the [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) package are available.
 - After this, `∫!` is also equiped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consiste in updating 📌 to be ready for continuing in a subsequent call to `∫!`.
 """
 function ∫!(𝐼::Individuals,𝑇::Tuple)
