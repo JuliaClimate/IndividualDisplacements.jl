@@ -8,9 +8,9 @@ mon=365/12*day
 OneMonth=[-0.5*mon,0.5*mon]
 
 solver_default(prob) = solve(prob,Euler(),dt=2*day)
-param_default = ( 𝑇=OneMonth , 🔄=update_𝑃!, u0=[], u1=[], v0=[], v1=[])
+param_default = ( 𝑇=OneMonth , 🔄=(x->x), u0=[], u1=[], v0=[], v1=[])
 rec_default = DataFrame(fill(Float64, 7),[:ID, :x, :y, :t, :lon, :lat, :fid])
-postprocess_default = postprocess_lonlat
+postprocess_default = (x->x)
 
 """
     struct Individuals{T}
@@ -102,22 +102,6 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     append!(🔴,tmp[np+1:end,:])
 
     📌[:,:] = deepcopy(sol[:,:,end])
-end
-
-"""
-    reset_lonlat!(𝐼::Individuals)
-
-Randomly select a fraction (𝐼.𝑃.frac) of the particles and reset their positions.
-"""
-function reset_lonlat!(𝐼::Individuals)
-    np=length(𝐼.🆔)
-    n_reset = Int(round(𝐼.𝑃.frac*np))
-    (lon, lat) = randn_lonlat(2*n_reset)
-    (v0, _) = initialize_lonlat(𝐼.𝑃.Γ, lon, lat; msk = 𝐼.𝑃.msk)
-    k_reset = rand(1:np, n_reset)
-    𝐼.📌[:,k_reset].=v0[:,1:n_reset]
-    isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
-    𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
 end
 
 ## Convenience Methods (size,show,similar)
