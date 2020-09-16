@@ -117,32 +117,36 @@ end
 
 Compute Ocean depth logarithm.
 """
-function DL()
-    lon=[i for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
-    lat=[j for i=-179.5:1.0:179.5, j=-89.5:1.0:89.5]
-    (f,i,j,w,_,_,_)=InterpolationFactors(𝐼.𝑃.Γ,vec(lon),vec(lat))
-    DL=log10.(Interpolate(𝐼.𝑃.Γ["Depth"],f,i,j,w))
+function DL(Γ)
+    lon=[i for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
+    lat=[j for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
+    DL=interp_to_lonlat(Γ["Depth"],Γ,lon,lat)
+    DL[findall(DL.<0)].=0
+    DL=transpose(log10.(DL))
     DL[findall((!isfinite).(DL))].=NaN
-    DL=transpose(reshape(DL,size(lon)));
     return lon[:,1],lat[1,:],DL
 end
 
 """
-    plot_end_points(𝐼::Individuals)
+    plot_end_points(𝐼::Individuals,Γ)
 
 Plot initial and final positions, superimposed on a map of ocean depth log.
 """
-function plot_end_points(𝐼::Individuals)
-    plt=contourf(DL(),clims=(1.5,5),c = :ice, colorbar=false)
+function plot_end_points(𝐼::Individuals,Γ)
+    lo,la,dl=DL(Γ)
+    xlims=extrema(lo)
+    ylims=extrema(la)
+    plt=contourf(lo,la,dl,clims=(1.5,5),c = :ice, colorbar=false, xlims=xlims,ylims=ylims)
 
     t=𝑃.𝑇[2]
     df = 𝐼.🔴[ (𝐼.🔴.t.>t-1.0).&(𝐼.🔴.t.<=t) , :]
-    scatter!(df.lon,df.lat,markersize=1.5,c=:red,leg=:none,
-    xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:circle, stroke(0)))
+    lo=deepcopy(df.lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
+    scatter!(lo,df.lat,markersize=1.5,c=:red,leg=:none,marker = (:circle, stroke(0)))
 
     t=0.0
     df = 𝐼.🔴[ (𝐼.🔴.t.>t-1.0).&(𝐼.🔴.t.<=t) , :]
-    scatter!(df.lon,df.lat,markersize=1.5,c=:yellow,leg=:none,
-    xlims=(-180.0,180.0),ylims=(-90.0,90.0),marker = (:dot, stroke(0)))
+    lo=deepcopy(df.lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
+    scatter!(lo,df.lat,markersize=1.5,c=:yellow,leg=:none,marker = (:dot, stroke(0)))
+
     return plt
 end

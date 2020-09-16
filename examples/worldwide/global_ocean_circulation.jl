@@ -102,5 +102,5 @@ sgdf[rand(1:size(sgdf,1),4),:]
 #
 # ```
 # include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/recipes_plots.jl"))
-# a_plot(𝐼)
+# plot_end_points(𝐼,𝐼.𝑃.)
 # ```
