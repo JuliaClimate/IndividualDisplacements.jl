@@ -1,5 +1,5 @@
 
-using Random, Makie, DataFrames, ColorSchemes, Statistics
+using Random, Makie, MeshArrays, DataFrames, ColorSchemes, Statistics
 
 """
     PlotMakie(df::DataFrame,nn::Integer)
@@ -39,6 +39,7 @@ Animate positions, according to time vector tt, and save movie to mp4 file.
 using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/recipes_Makie.jl"))
+include(joinpath(p,"../examples/helper_functions.jl"))
 module ex3
     fil="../examples/worldwide/three_dimensional_ocean.jl"
     include(joinpath(Main.p,fil))
@@ -50,7 +51,8 @@ using .ex3
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
-scene = MakieBase(0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1),collect(2:2:28))
+θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
+scene = MakieBase(θ,2:2:28)
 MakieScatterMovie(scene,𝐼.🔴,0:0.05:2,"tmp.mp4")
 ```
 """
@@ -93,7 +95,7 @@ end
 Add a scatter plot of e.g. x,y,z
 
 ```
-scene = MakieBase(θ,collect(2:2:28))
+scene = MakieBase(θ,2:2:28)
 _, threeD, twoD = MakieScatter(scene,🔴_by_t[end])
 ```
 """
@@ -108,66 +110,82 @@ function MakieScatter(scene::Scene,df)
     nt=length(df[!, :lon])
     xs[1:nt] = deepcopy(df[!, :lon])
     #xs[xs.>180.0] .-= 360.0
-    xs[xs.<20.0] .+= 360.0
+    xs[xs.<20.0] .+= 360.0  
     ys[1:nt] = deepcopy(df[!, :lat])
     zs[1:nt] = deepcopy(df[!, :z])
     z0=0*zs .- 200.0
   
-    Makie.scatter!(scene, xs, ys, zmul*zs, markersize = 2.0, 
-    show_axis = false, color=zs)[end]
+    Makie.scatter!(scene, xs, ys, zmul*zs, markersize = 1000.0, 
+    show_axis = false, color=zs, strokewidth=0.0)[end]
     threeD = scene[end]
  
-    Makie.scatter!(scene, xs, ys, zmul*z0, markersize = 1.0, 
-    show_axis = false, color=:black)[end]
+    Makie.scatter!(scene, xs, ys, zmul*z0, markersize = 100.0, 
+    show_axis = false, color=:magenta, strokewidth=0.0)[end]
     twoD = scene[end]
 
     return scene, threeD, twoD
 end
 
 """
-    MakieBase(θ,T)
+    MakieBase(θ,T; LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.:10:200.)
 
-Contour plot of a gridded 2D array, `col`, projected onto e.g. 200m depth plane.
+Contour plot of a gridded 2D array projected onto e.g. 200m depth plane.
 
 ```
-scene = MakieBase(θ,collect(2:2:28))
+scene = MakieBase(θ,2:2:28)
 ```
 """
-function MakieBase(θin,T)
+function MakieBase(θ,T; LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.:10:200.)
 
-    lon,lat=Float64.(Γ["XC"][1]),Float64.(Γ["YC"][1])
-    (lon,lat)=circshift.((lon,lat),Ref((-200,0)));
-    lon[findall(lon.<20)] .+= 360.0;
+    isa(T,AbstractRange) ? T=collect(T) : nothing
 
-    θ=deepcopy(θin)
-    [θ[1,k][:,:]=circshift(θ[1,k][:,:],(-200,0)) for k=1:50]
-        
+    lo=[i for i=LONin, j=LATin]
+    la=[j for i=LONin, j=LATin]
+    lon=deepcopy(lo); lat=deepcopy(la);  
+
+    xlims=extrema(Γ["XC"][1])
+    lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
+    lo[findall(lo.>xlims[2])]=lo[findall(lo.>xlims[2])].-360
+    (f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
+    IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)
+    
+    dMin,dMax=extrema(DEPin)
+    d=isosurface(θ,12,Γ["RC"])
+    d[1][findall(isnan.(d[1]))].=0.
+    dd=interp_to_lonlat(d,IntFac)
+    dd[findall(dd.<-dMax)].=NaN #-dMax
+
     zmul=1/5
-    xs = [x for y in lat[1,91:130], x in lon[131:230,1]]
-    ys = [y for y in lat[1,91:130], x in lon[131:230,1]]
-    cs = θ[1,17][131:230,91:130]
+    kMax=maximum(findall(Γ["RC"].>-dMax))
+    θbox=fill(NaN,(size(lo)...,kMax));
+    [θbox[:,:,k].=interp_to_lonlat(θ[:,k],IntFac) for k=1:kMax];
 
-    lim=FRect3D([minimum(xs) minimum(ys) -200.0*zmul],
-                [maximum(xs)-minimum(xs) maximum(ys)-minimum(ys) 200.0*zmul])
+    lim=FRect3D([minimum(lon) minimum(lat) -dMax*zmul],
+            [maximum(lon)-minimum(lon) maximum(lat)-minimum(lat) (dMax-dMin)*zmul])
+    #eyepos=Vec3f0(minimum(lon),mean(lat),-1.1*dMax*zmul)
+    #lookat=Vec3f0(maximum(lon)+60,mean(lat)-40,-0.1*dMax*zmul)
 
-    scene = Makie.contour(vec(xs[1,:]), vec(ys[:,1]), cs, levels = T, linewidth = 2,
-    transformation = (:xy, -200.0*zmul), color=:black, limits=lim)#,show_axis = false)
+    scene=Scene(camera = cam3d!)
+    #scene.center = false # prevent scene from recentering on display
+    #update_cam!(scene, lookat, eyepos)
 
-    nk=maximum(findall(Γ["RC"].>-200))
-    tmp1=fill(NaN,(160,nk));
-    [tmp1[:,k].=vec(θ[k][131,:]) for k=1:nk];
-    Makie.contour!(scene,vec(lat[1,91:130]),vec(Γ["RC"][1:nk])*zmul,tmp1[91:130,:],
-    levels=T, transformation = (:yz, lon[131,1]), color=:black)
+    #bottom
+    scene = Makie.contour!(scene,vec(lon[:,1]), vec(lat[1,:]), θbox[:,:,kMax], levels = T,
+    transformation = (:xy, -dMax*zmul), limits=lim, color=:black, linewidth = 2)#,show_axis = false)
 
-    tmp1=fill(NaN,(360,nk));
-    [tmp1[:,k].=vec(θ[k][:,91]) for k=1:nk];
-    Makie.contour!(scene,vec(lon[131:230,1]),vec(Γ["RC"][1:nk])*zmul,tmp1[131:230,:],
-    levels=T, transformation = (:xz, lat[1,91]), color=:black)
+    #sides
+    Makie.contour!(scene,vec(lat[1,:]),vec(Γ["RC"][1:kMax])*zmul,θbox[1,:,:],
+    levels=T, transformation = (:yz, lon[1,1]), color=:black, linewidth = 2)
 
-    scene.center = false # prevent scene from recentering on display
-    update_cam!(scene, Vec3f0(maximum(xs)+60,mean(ys),-20.0*zmul), 
-                       Vec3f0(minimum(xs),mean(ys),-220.0*zmul))
-    xlabel!("lon"); ylabel!("lat"); zlabel!("$zmul x depth")
+    Makie.contour!(scene,vec(lon[:,1]),vec(Γ["RC"][1:kMax])*zmul,θbox[:,1,:],
+    levels=T, transformation = (:xz, lat[1,1]), color=:black, linewidth = 2)
+
+    #isotherm
+    scatter!(scene,vec(lon[:,1]),vec(lat[1,:]), zmul*dd, 
+    markersize=1., linewidth=0., color=:black, limits=lim)
+
+    #xlabel!("lon"); ylabel!("lat"); zlabel!("$zmul x depth")
+    xlabel!(""); ylabel!(""); zlabel!("")
 
     return scene
-end
+    end
