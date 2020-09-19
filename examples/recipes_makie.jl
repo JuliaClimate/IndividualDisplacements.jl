@@ -47,13 +47,21 @@ module ex3
 end
 
 using .ex3
-𝐼=set_up_individuals(ex3.𝐼);
+𝐼=set_up_individuals(ex3.𝐼,nf=1000);
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
 θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
-scene = MakieBase(θ,2:2:28)
-MakieScatterMovie(scene,𝐼.🔴,0:0.05:2,"tmp.mp4")
+d=isosurface(θ,15,Γ["RC"])
+d[1][findall(isnan.(d[1]))].=0.
+𝐼.🔴.d=interp_to_xy(𝐼.🔴,exchange(d))
+
+c=fill(:gold,length(𝐼.🔴.d))
+c[findall(𝐼.🔴.d.<𝐼.🔴.z)].=:red
+𝐼.🔴.c=c
+
+scene = MakieBase(θ,2:2:28,Tiso=15)
+MakieScatterMovie(scene,𝐼.🔴,0:0.02:2,"tmp.mp4")
 ```
 """
 function MakieScatterMovie(scene::Scene,df,tt,fil::String)
@@ -62,18 +70,21 @@ function MakieScatterMovie(scene::Scene,df,tt,fil::String)
    _, threeD, twoD = MakieScatter(scene,🔴_by_t[end])
 
    np,nmax=length(🔴_by_t[end][:lon]),100000
-   xs,ys,zs=fill(NaN,nmax),fill(NaN,nmax),fill(NaN,nmax)
+   (xs,ys,zs)=fill(NaN,nmax),fill(NaN,nmax),fill(NaN,nmax)
+   cs=fill(:blue,nmax)
    zmul=1/5
    
    ye=[🔴_by_t[i][1,:year] for i in 1:length(🔴_by_t)]
    tt,dt=collect(tt),0.25
 
    scene
-   record(scene, fil, 1:length(tt); framerate=12) do i
+   record(scene, fil, 1:length(tt); framerate=8) do i
        jj = findall( (ye.>tt[i]-dt).&(ye.<=tt[i]) )
        [xs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:lon] for j in jj]
        [ys[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:lat] for j in jj]
        [zs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:z] for j in jj]
+       [cs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:c] for j in jj]
+       
        #xs[xs.>180.0] .-= 360.0
        xs[xs.<20.0] .+= 360.0
        #
@@ -84,6 +95,9 @@ function MakieScatterMovie(scene::Scene,df,tt,fil::String)
        #
        twoD[1] = xs
        twoD[2] = ys
+       twoD[:color] = cs
+       #
+       rotate_cam!(scene,-0.05, 0., 0.)
    end
 
    return scene
@@ -95,7 +109,7 @@ end
 Add a scatter plot of e.g. x,y,z
 
 ```
-scene = MakieBase(θ,2:2:28)
+scene = MakieBase(θ,2:2:28;θ0=15)
 _, threeD, twoD = MakieScatter(scene,🔴_by_t[end])
 ```
 """
@@ -107,6 +121,7 @@ function MakieScatter(scene::Scene,df)
     xs=fill(NaN,nmax)
     ys=fill(NaN,nmax)
     zs=fill(NaN,nmax)
+    cs=fill(:black,nmax)
     nt=length(df[!, :lon])
     xs[1:nt] = deepcopy(df[!, :lon])
     #xs[xs.>180.0] .-= 360.0
@@ -114,13 +129,14 @@ function MakieScatter(scene::Scene,df)
     ys[1:nt] = deepcopy(df[!, :lat])
     zs[1:nt] = deepcopy(df[!, :z])
     z0=0*zs .- 200.0
-  
+    cs[1:nt]=deepcopy(df[!, :c])
+
     Makie.scatter!(scene, xs, ys, zmul*zs, markersize = 1000.0, 
     show_axis = false, color=zs, strokewidth=0.0)[end]
     threeD = scene[end]
  
-    Makie.scatter!(scene, xs, ys, zmul*z0, markersize = 100.0, 
-    show_axis = false, color=:magenta, strokewidth=0.0)[end]
+    Makie.scatter!(scene, xs, ys, zmul*z0, markersize = 500.0, 
+    show_axis = false, color=cs, strokewidth=0.0)[end]
     twoD = scene[end]
 
     return scene, threeD, twoD
@@ -135,7 +151,7 @@ Contour plot of a gridded 2D array projected onto e.g. 200m depth plane.
 scene = MakieBase(θ,2:2:28)
 ```
 """
-function MakieBase(θ,T; LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.:10:200.)
+function MakieBase(θ,T; Tiso=12, LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.:10:200.)
 
     isa(T,AbstractRange) ? T=collect(T) : nothing
 
@@ -150,7 +166,7 @@ function MakieBase(θ,T; LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.:10:200.)
     IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)
     
     dMin,dMax=extrema(DEPin)
-    d=isosurface(θ,12,Γ["RC"])
+    d=isosurface(θ,Tiso,Γ["RC"])
     d[1][findall(isnan.(d[1]))].=0.
     dd=interp_to_lonlat(d,IntFac)
     dd[findall(dd.<-dMax)].=NaN #-dMax
@@ -188,4 +204,4 @@ function MakieBase(θ,T; LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.:10:200.)
     xlabel!(""); ylabel!(""); zlabel!("")
 
     return scene
-    end
+end
