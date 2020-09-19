@@ -47,21 +47,17 @@ module ex3
 end
 
 using .ex3
-𝐼=set_up_individuals(ex3.𝐼,nf=1000);
-𝑇=(0.0,𝐼.𝑃.𝑇[2])
+𝐼=set_up_individuals(ex3.𝐼,nf=10000);
+𝑇=(0.0,2*𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
-
-θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
-d=isosurface(θ,15,Γ["RC"])
-d[1][findall(isnan.(d[1]))].=0.
-𝐼.🔴.d=interp_to_xy(𝐼.🔴,exchange(d))
 
 c=fill(:gold,length(𝐼.🔴.d))
 c[findall(𝐼.🔴.d.<𝐼.🔴.z)].=:red
 𝐼.🔴.c=c
 
+θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
 scene = MakieBase(θ,2:2:28,Tiso=15)
-MakieScatterMovie(scene,𝐼.🔴,0:0.02:2,"tmp.mp4")
+MakieScatterMovie(scene,𝐼.🔴,0:0.02:4,"tmp.mp4")
 ```
 """
 function MakieScatterMovie(scene::Scene,df,tt,fil::String)
@@ -109,7 +105,7 @@ end
 Add a scatter plot of e.g. x,y,z
 
 ```
-scene = MakieBase(θ,2:2:28;θ0=15)
+scene = MakieBase(θ,2:2:28;Tiso=15)
 _, threeD, twoD = MakieScatter(scene,🔴_by_t[end])
 ```
 """
@@ -131,7 +127,7 @@ function MakieScatter(scene::Scene,df)
     z0=0*zs .- 200.0
     cs[1:nt]=deepcopy(df[!, :c])
 
-    Makie.scatter!(scene, xs, ys, zmul*zs, markersize = 1000.0, 
+    Makie.scatter!(scene, xs, ys, zmul*zs, markersize = 500.0, 
     show_axis = false, color=zs, strokewidth=0.0)[end]
     threeD = scene[end]
  
@@ -169,7 +165,8 @@ function MakieBase(θ,T; Tiso=12, LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.
     d=isosurface(θ,Tiso,Γ["RC"])
     d[1][findall(isnan.(d[1]))].=0.
     dd=interp_to_lonlat(d,IntFac)
-    dd[findall(dd.<-dMax)].=NaN #-dMax
+    dd[findall(dd.>=-dMin)].=NaN #-dMin
+    dd[findall(dd.<=-dMax)].=NaN #-dMax
 
     zmul=1/5
     kMax=maximum(findall(Γ["RC"].>-dMax))
@@ -193,8 +190,14 @@ function MakieBase(θ,T; Tiso=12, LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.
     Makie.contour!(scene,vec(lat[1,:]),vec(Γ["RC"][1:kMax])*zmul,θbox[1,:,:],
     levels=T, transformation = (:yz, lon[1,1]), color=:black, linewidth = 2)
 
+    Makie.contour!(scene,vec(lat[end,:]),vec(Γ["RC"][1:kMax])*zmul,θbox[end,:,:],
+    levels=T, transformation = (:yz, lon[end,1]), color=:black, linewidth = 2)
+
     Makie.contour!(scene,vec(lon[:,1]),vec(Γ["RC"][1:kMax])*zmul,θbox[:,1,:],
     levels=T, transformation = (:xz, lat[1,1]), color=:black, linewidth = 2)
+
+    #Makie.contour!(scene,vec(lon[:,end]),vec(Γ["RC"][1:kMax])*zmul,θbox[:,end,:],
+    #levels=T, transformation = (:xz, lat[1,end]), color=:black, linewidth = 2)
 
     #isotherm
     scatter!(scene,vec(lon[:,1]),vec(lat[1,:]), zmul*dd, 
