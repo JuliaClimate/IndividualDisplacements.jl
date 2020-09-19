@@ -117,7 +117,7 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 # - either `Plots.jl`:
 
 include(joinpath(p,"../examples/recipes_plots.jl"))
-
+#plot_end_points(𝐼,Γ)
 PlotBasic(𝐼.🔴,100,90.0)
 
 # - or `Makie.jl`:
@@ -125,3 +125,12 @@ PlotBasic(𝐼.🔴,100,90.0)
 #include(joinpath(p,"../examples/recipes_Makie.jl"))
 #p=PlotMakie(𝐼.🔴,100,180.);
 #display(p)
+
+#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
+#
+# Compute isothermal depth
+
+θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
+d=isosurface(θ,15,Γ["RC"])
+d[1][findall(isnan.(d[1]))].=0.
+𝐼.🔴.d=interp_to_xy(𝐼.🔴,exchange(d))
