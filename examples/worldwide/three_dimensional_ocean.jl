@@ -62,6 +62,12 @@ function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    k=Int.(floor.(df.k)); w=(df.k-k); 
    df.z=𝑃.RF[1 .+ k].*(1 .- w)+𝑃.RF[2 .+ k].*w #depth
 
+   #add one isotherm depth
+   θ=0.5*(𝑃.θ0+𝑃.θ1)
+   d=isosurface(θ,15,𝑃.RC)
+   d[findall(isnan.(d))].=0.
+   df.d=interp_to_xy(df,exchange(d));
+
    #to plot e.g. Pacific Ocean transports, shift longitude convention?
    df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
    return df
@@ -89,8 +95,8 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
    xy[3,:] .= z_init
    id=collect(1:size(xy,2))
 
-   tr = DataFrame([fill(Int, 2) ; fill(Float64, 8)], 
-   [:ID, :fid, :x, :y, :k, :z, :t, :lon, :lat, :year])
+   tr = DataFrame([fill(Int, 2) ; fill(Float64, 9)], 
+   [:ID, :fid, :x, :y, :k, :z, :d, :t, :lon, :lat, :year])
 
    𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, 🚄 = 🚄, ∫ = ∫, 🔧 = 🔧, 𝑃=𝑃)
 
@@ -125,12 +131,3 @@ PlotBasic(𝐼.🔴,100,90.0)
 #include(joinpath(p,"../examples/recipes_Makie.jl"))
 #p=PlotMakie(𝐼.🔴,100,180.);
 #display(p)
-
-#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-#
-# Compute isothermal depth
-
-θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
-d=isosurface(θ,15,Γ["RC"])
-d[1][findall(isnan.(d[1]))].=0.
-𝐼.🔴.d=interp_to_xy(𝐼.🔴,exchange(d))
