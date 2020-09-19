@@ -243,6 +243,11 @@ function reset_lonlat!(𝐼::Individuals)
 end
 
 """
+    interp_to_lonlat
+
+Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps for plotting purposes).
+
+```
 using MeshArrays, IndividualDisplacements
 
 lon=[i for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
@@ -253,6 +258,7 @@ IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)
 D=Γ["Depth"]
 tmp1=interp_to_lonlat(D,Γ,lon,lat)
 tmp2=interp_to_lonlat(D,IntFac)
+```
 """
 function interp_to_lonlat(X::MeshArray,Γ::Dict,lon,lat)
     (f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
@@ -262,4 +268,25 @@ end
 function interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
     @unpack f,i,j,w,lon,lat = IntFac
     return reshape(Interpolate(X,f,i,j,w),size(lon))
+end
+
+
+"""
+    interp_to_xy(df::DataFrame,Zin)
+
+Interpolate "exchanged" / "hallo-included" Zin to df[!,:x], df[!,:y] on df[!,:fid]
+"""
+function interp_to_xy(df::DataFrame,Zin)
+    x=df[!,:x];
+    y=df[!,:y];
+    f=Int.(df[!,:fid]);
+    dx,dy=(x - floor.(x) .+ 0.5,y - floor.(y) .+ 0.5);
+    i_c = Int32.(floor.(x)) .+ 1;
+    j_c = Int32.(floor.(y)) .+ 1;
+
+    Z=zeros(length(x),4)
+    [Z[k,:]=Zin[f[k]][i_c[k]:i_c[k]+1,j_c[k]:j_c[k]+1][:] for k in 1:length(i_c)]
+
+    return (1.0 .-dx).*(1.0 .-dy).*Z[:,1]+dx.*(1.0 .-dy).*Z[:,2] +
+           (1.0 .-dx).*dy.*Z[:,3]+dx.*dy.*Z[:,4]
 end
