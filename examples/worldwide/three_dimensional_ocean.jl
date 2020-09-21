@@ -66,7 +66,12 @@ function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    θ=0.5*(𝑃.θ0+𝑃.θ1)
    d=isosurface(θ,15,𝑃.RC)
    d[findall(isnan.(d))].=0.
-   df.d=interp_to_xy(df,exchange(d));
+   df.iso=interp_to_xy(df,exchange(d));
+
+   #add color = f(iso-z)
+   c=fill(:gold,length(df.iso))
+   c[findall(df.iso.<df.z)].=:violet
+   df.col=c
 
    #to plot e.g. Pacific Ocean transports, shift longitude convention?
    df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
@@ -95,8 +100,8 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
    xy[3,:] .= z_init
    id=collect(1:size(xy,2))
 
-   tr = DataFrame([fill(Int, 2) ; fill(Float64, 9)], 
-   [:ID, :fid, :x, :y, :k, :z, :d, :t, :lon, :lat, :year])
+   tr = DataFrame([fill(Int, 2) ; fill(Float64, 9); fill(Symbol, 1)], 
+   [:ID, :fid, :x, :y, :k, :z, :iso, :t, :lon, :lat, :year, :col])
 
    𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, 🚄 = 🚄, ∫ = ∫, 🔧 = 🔧, 𝑃=𝑃)
 
@@ -123,8 +128,8 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 # - either `Plots.jl`:
 
 include(joinpath(p,"../examples/recipes_plots.jl"))
-#plot_end_points(𝐼,Γ)
 PlotBasic(𝐼.🔴,100,90.0)
+#plot_end_points(𝐼,Γ)
 
 # - or `Makie.jl`:
 
