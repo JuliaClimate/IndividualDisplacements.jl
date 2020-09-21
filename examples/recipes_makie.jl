@@ -51,10 +51,6 @@ using .ex3
 𝑇=(0.0,2*𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
-c=fill(:gold,length(𝐼.🔴.d))
-c[findall(𝐼.🔴.d.<𝐼.🔴.z)].=:red
-𝐼.🔴.c=c
-
 θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
 scene = MakieBase(θ,2:2:28,Tiso=15)
 MakieScatterMovie(scene,𝐼.🔴,0:0.02:4,"tmp.mp4")
@@ -74,12 +70,12 @@ function MakieScatterMovie(scene::Scene,df,tt,fil::String)
    tt,dt=collect(tt),0.25
 
    scene
-   record(scene, fil, 1:length(tt); framerate=8) do i
+   record(scene, fil, 1:length(tt); framerate=12) do i
        jj = findall( (ye.>tt[i]-dt).&(ye.<=tt[i]) )
        [xs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:lon] for j in jj]
        [ys[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:lat] for j in jj]
        [zs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:z] for j in jj]
-       [cs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:c] for j in jj]
+       [cs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:col] for j in jj]
        
        #xs[xs.>180.0] .-= 360.0
        xs[xs.<20.0] .+= 360.0
@@ -125,10 +121,10 @@ function MakieScatter(scene::Scene,df)
     ys[1:nt] = deepcopy(df[!, :lat])
     zs[1:nt] = deepcopy(df[!, :z])
     z0=0*zs .- 200.0
-    cs[1:nt]=deepcopy(df[!, :c])
+    cs[1:nt]=deepcopy(df[!, :col])
 
     Makie.scatter!(scene, xs, ys, zmul*zs, markersize = 500.0, 
-    show_axis = false, color=zs, strokewidth=0.0)[end]
+    show_axis = false, color=zs, colormap = :turbo, strokewidth=0.0)[end]
     threeD = scene[end]
  
     Makie.scatter!(scene, xs, ys, zmul*z0, markersize = 500.0, 
@@ -149,6 +145,9 @@ scene = MakieBase(θ,2:2:28)
 """
 function MakieBase(θ,T; Tiso=12, LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.:10:200.)
 
+    sds=(x1=false,xn=true,y1=true,yn=false)
+    zmul=1/5
+
     isa(T,AbstractRange) ? T=collect(T) : nothing
 
     lo=[i for i=LONin, j=LATin]
@@ -168,7 +167,6 @@ function MakieBase(θ,T; Tiso=12, LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.
     dd[findall(dd.>=-dMin)].=NaN #-dMin
     dd[findall(dd.<=-dMax)].=NaN #-dMax
 
-    zmul=1/5
     kMax=maximum(findall(Γ["RC"].>-dMax))
     θbox=fill(NaN,(size(lo)...,kMax));
     [θbox[:,:,k].=interp_to_lonlat(θ[:,k],IntFac) for k=1:kMax];
@@ -178,7 +176,7 @@ function MakieBase(θ,T; Tiso=12, LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.
     #eyepos=Vec3f0(minimum(lon),mean(lat),-1.1*dMax*zmul)
     #lookat=Vec3f0(maximum(lon)+60,mean(lat)-40,-0.1*dMax*zmul)
 
-    scene=Scene(camera = cam3d!)
+    scene=Scene(camera = cam3d!,colormap = :blues)
     #scene.center = false # prevent scene from recentering on display
     #update_cam!(scene, lookat, eyepos)
 
@@ -187,21 +185,22 @@ function MakieBase(θ,T; Tiso=12, LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.
     transformation = (:xy, -dMax*zmul), limits=lim, color=:black, linewidth = 2)#,show_axis = false)
 
     #sides
-    Makie.contour!(scene,vec(lat[1,:]),vec(Γ["RC"][1:kMax])*zmul,θbox[1,:,:],
-    levels=T, transformation = (:yz, lon[1,1]), color=:black, linewidth = 2)
+    sds.x1 ? Makie.contour!(scene,vec(lat[1,:]),vec(Γ["RC"][1:kMax])*zmul,θbox[1,:,:],
+    levels=T, transformation = (:yz, lon[1,1]), color=:black, linewidth = 2) : nothing
 
-    Makie.contour!(scene,vec(lat[end,:]),vec(Γ["RC"][1:kMax])*zmul,θbox[end,:,:],
-    levels=T, transformation = (:yz, lon[end,1]), color=:black, linewidth = 2)
+    sds.xn ? Makie.contour!(scene,vec(lat[end,:]),vec(Γ["RC"][1:kMax])*zmul,θbox[end,:,:],
+    levels=T, transformation = (:yz, lon[end,1]), color=:black, linewidth = 2) : nothing
 
-    Makie.contour!(scene,vec(lon[:,1]),vec(Γ["RC"][1:kMax])*zmul,θbox[:,1,:],
-    levels=T, transformation = (:xz, lat[1,1]), color=:black, linewidth = 2)
+    sds.y1 ? Makie.contour!(scene,vec(lon[:,1]),vec(Γ["RC"][1:kMax])*zmul,θbox[:,1,:],
+    levels=T, transformation = (:xz, lat[1,1]), color=:black, linewidth = 2) : nothing
 
-    #Makie.contour!(scene,vec(lon[:,end]),vec(Γ["RC"][1:kMax])*zmul,θbox[:,end,:],
-    #levels=T, transformation = (:xz, lat[1,end]), color=:black, linewidth = 2)
+    sds.yn ? Makie.contour!(scene,vec(lon[:,end]),vec(Γ["RC"][1:kMax])*zmul,θbox[:,end,:],
+    levels=T, transformation = (:xz, lat[1,end]), color=:black, linewidth = 2) : nothing
 
     #isotherm
-    scatter!(scene,vec(lon[:,1]),vec(lat[1,:]), zmul*dd, 
-    markersize=1., linewidth=0., color=:black, limits=lim)
+    bw(i::Float64) = ColorSchemes.RGB{Float64}(i, i, i)
+    wireframe!(scene,vec(lon[:,1]),vec(lat[1,:]), zmul*dd, 
+    linewidth=0.25, color=bw(0.7))
 
     #xlabel!("lon"); ylabel!("lat"); zlabel!("$zmul x depth")
     xlabel!(""); ylabel!(""); zlabel!("")
