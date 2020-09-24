@@ -11,7 +11,7 @@ examples/run_offflt
 examples/llc90_latlon
 examples/OCCA_climatology
 examples/GRID_*
-examples/nctiles_*
+examples/nctiles_climatology
 docs/src/basics
 docs/src/worldwide
 docs/src/notebooks
