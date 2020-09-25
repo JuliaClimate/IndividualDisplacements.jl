@@ -1,10 +1,10 @@
 
 """
-    get_grid_if_needed()
+    get_llc90_grid_if_needed()
 
 Download global `MITgcm` grid and transport output to `examples/GRID_LLC90`
 """
-function get_grid_if_needed()
+function get_llc90_grid_if_needed()
   p=dirname(pathof(IndividualDisplacements))
   p=joinpath(p,"../examples/GRID_LLC90")
   r="https://github.com/gaelforget/GRID_LLC90"
@@ -12,17 +12,49 @@ function get_grid_if_needed()
 end
 
 """
-    get_velocity_if_needed()
+    get_ecco_velocity_if_needed()
 
 Download `MITgcm` transport output to `examples/nctiles_climatology` if needed
 """
-function get_velocity_if_needed()
-    p=dirname(pathof(IndividualDisplacements))
-    pth="$p/../examples/nctiles_climatology/"
-    lst=joinpath(p,"../examples/nctiles_climatology.csv")
+function get_ecco_velocity_if_needed()
+    lst=joinpath(dirname(pathof(OceanStateEstimation)),"../examples/nctiles_climatology.csv")
+    pth=joinpath(dirname(pathof(IndividualDisplacements)),"../examples/nctiles_climatology/")
     !isdir("$pth") ? mkdir("$pth") : nothing
     !isdir("$pth"*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
     !isdir("$pth"*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
+    !isdir("$pth"*"WVELMASS") ? get_from_dataverse(lst,"WVELMASS",pth) : nothing
+end
+
+"""
+    get_ll360_grid_if_needed()
+
+Download global `MITgcm` grid and transport output to `examples/GRID_LL360`
+"""
+function get_ll360_grid_if_needed()
+  p=dirname(pathof(IndividualDisplacements))
+  p=joinpath(p,"../examples/GRID_LL360")
+  r="https://github.com/gaelforget/GRID_LL360"
+  !isdir(p) ? run(`git clone $r $p`) : nothing
+end
+
+"""
+    get_occa_velocity_if_needed()
+
+Download `MITgcm` transport output to `examples/OCCA_climatology` if needed
+"""
+function get_occa_velocity_if_needed()
+    lst=joinpath(dirname(pathof(OceanStateEstimation)),"../examples/OCCA_climatology.csv")
+    pth=joinpath(dirname(pathof(IndividualDisplacements)),"../examples/OCCA_climatology/")
+    #nams = CSV.File(lst) |> DataFrame!
+    #nams = nams.name[:]
+    nams = ("DDuvel.0406clim.nc","DDvvel.0406clim.nc","DDwvel.0406clim.nc","DDtheta.0406clim.nc","DDsalt.0406clim.nc")
+    !isdir("$pth") ? mkdir("$pth") : nothing
+    if !isfile("$pth"*"DDuvel.0406clim.nc") 
+        tmp=joinpath(dirname(pathof(IndividualDisplacements)),"../examples/OCCA_climatology/tmp/")
+        !isdir("$tmp") ? mkdir("$tmp") : nothing
+        [get_from_dataverse(lst,nam,tmp) for nam in nams]
+        [mv(joinpath(tmp,nam,nam),joinpath(pth,nam)) for nam in nams]
+    end
 end
 
 """
