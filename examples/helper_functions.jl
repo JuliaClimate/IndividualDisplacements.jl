@@ -19,9 +19,10 @@ Download `MITgcm` transport output to `examples/nctiles_climatology` if needed
 function get_velocity_if_needed()
     p=dirname(pathof(IndividualDisplacements))
     pth="$p/../examples/nctiles_climatology/"
+    lst=joinpath(p,"../examples/nctiles_climatology.csv")
     !isdir("$pth") ? mkdir("$pth") : nothing
-    !isdir("$pth"*"UVELMASS") ? get_from_dataverse("UVELMASS",pth) : nothing
-    !isdir("$pth"*"VVELMASS") ? get_from_dataverse("VVELMASS",pth) : nothing
+    !isdir("$pth"*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
+    !isdir("$pth"*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
 end
 
 """
