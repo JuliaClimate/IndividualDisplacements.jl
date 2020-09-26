@@ -17,8 +17,11 @@ end
 Download `MITgcm` transport output to `examples/nctiles_climatology` if needed
 """
 function get_ecco_velocity_if_needed()
-    lst=joinpath(dirname(pathof(OceanStateEstimation)),"../examples/nctiles_climatology.csv")
-    pth=joinpath(dirname(pathof(IndividualDisplacements)),"../examples/nctiles_climatology/")
+    p=dirname(pathof(IndividualDisplacements))
+    q=dirname(pathof(OceanStateEstimation))
+    lst=joinpath(p,"../examples/nctiles_climatology.csv")
+    pth=joinpath(p,"../examples/nctiles_climatology/")
+    !isfile(lst) ? run(`cp $q/../examples/nctiles_climatology.csv $p/../examples/`) : nothing
     !isdir("$pth") ? mkdir("$pth") : nothing
     !isdir("$pth"*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
     !isdir("$pth"*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
@@ -43,10 +46,11 @@ end
 Download `MITgcm` transport output to `examples/OCCA_climatology` if needed
 """
 function get_occa_velocity_if_needed()
-    lst=joinpath(dirname(pathof(OceanStateEstimation)),"../examples/OCCA_climatology.csv")
-    pth=joinpath(dirname(pathof(IndividualDisplacements)),"../examples/OCCA_climatology/")
-    #nams = CSV.File(lst) |> DataFrame!
-    #nams = nams.name[:]
+    p=dirname(pathof(IndividualDisplacements))
+    q=dirname(pathof(OceanStateEstimation))
+    lst=joinpath(p,"../examples/OCCA_climatology.csv")
+    pth=joinpath(p,"../examples/OCCA_climatology/")
+    !isfile(lst) ? run(`cp $q/../examples/OCCA_climatology.csv $p/../examples/`) : nothing
     nams = ("DDuvel.0406clim.nc","DDvvel.0406clim.nc","DDwvel.0406clim.nc","DDtheta.0406clim.nc","DDsalt.0406clim.nc")
     !isdir("$pth") ? mkdir("$pth") : nothing
     if !isfile("$pth"*"DDuvel.0406clim.nc") 
