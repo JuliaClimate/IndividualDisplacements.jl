@@ -1,5 +1,6 @@
 using Test, Documenter
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, OceanStateEstimation
+include(joinpath(dirname(pathof(IndividualDisplacements)),"../test/helper_functions.jl"))
 
 module datadeps
   using IndividualDisplacements, OceanStateEstimation
