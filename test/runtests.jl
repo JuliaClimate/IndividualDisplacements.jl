@@ -1,11 +1,14 @@
 using Test, Documenter
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, OceanStateEstimation
 
-include(joinpath(dirname(pathof(IndividualDisplacements)),"../test/helper_functions.jl"))
-include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
-get_llc90_grid_if_needed(); get_ecco_velocity_if_needed();
-get_ll360_grid_if_needed(); get_occa_velocity_if_needed();
-get_flt_ex_if_needed();
+module datadeps
+  using IndividualDisplacements, OceanStateEstimation
+  include(joinpath(dirname(pathof(IndividualDisplacements)),"../test/helper_functions.jl"))
+  include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
+  get_llc90_grid_if_needed(); get_ecco_velocity_if_needed();
+  get_ll360_grid_if_needed(); get_occa_velocity_if_needed();
+  get_flt_ex_if_needed();
+end;
 
 @testset "test1" begin
     uvetc,sol=test1_setup()
