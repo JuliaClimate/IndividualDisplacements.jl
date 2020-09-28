@@ -115,7 +115,7 @@ end
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:
 
-plt=myplot(nt)
-scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
-#scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
-scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
+#md plt=myplot(nt)
+#md scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
+#md #scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
+#md scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
