@@ -16,7 +16,7 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
 true
 ```
 
-```
+```jldoctest
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/worldwide/global_ocean_circulation.jl"))
