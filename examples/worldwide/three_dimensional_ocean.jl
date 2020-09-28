@@ -11,6 +11,8 @@
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 #
+# ![Three dimensional simulation 1/2](https://user-images.githubusercontent.com/20276764/94491655-9cb95780-01b6-11eb-9273-173865ed6340.png)
+# ![Three dimensional simulation 2/2](https://user-images.githubusercontent.com/20276764/94491485-595ee900-01b6-11eb-95e6-c2cacb812f46.png)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 1. Load Software
@@ -117,7 +119,7 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 # ## 3.1 Compute Displacements
 #
 
-𝑇=(0.0,𝐼.𝑃.𝑇[2])
+𝑇=(0.0,100*86400.0)
 
 ∫!(𝐼,𝑇)
 

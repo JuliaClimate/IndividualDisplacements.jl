@@ -92,6 +92,18 @@ prod(isapprox.(𝐼.📌',ref))
 
 true
 ```
+
+```jldoctest
+using IndividualDisplacements, Statistics
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/worldwide/three_dimensional_ocean.jl"))
+ref=[211. 34. -70.]
+prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,atol=50.0))
+
+# output
+
+true
+```
 """
 function dxyz_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     #compute positions in index units
