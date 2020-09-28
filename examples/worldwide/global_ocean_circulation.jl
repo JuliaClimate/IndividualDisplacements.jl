@@ -1,7 +1,7 @@
 
 # # Global Climatology
 #
-#md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/global_ocean_circulation.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/global_ocean_circulation.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/global_ocean_circulation.ipynb)
 #
 # Advect particles with climatological monthly mean flow at selected depth level
@@ -44,7 +44,7 @@ keys(𝑃)
 #
 # - initial particle positions randomly over Global Ocean
 
-xy=init_global_randn(10000,𝑃); id=collect(1:size(xy,2))
+xy=init_global_randn(1000,𝑃); id=collect(1:size(xy,2))
 𝐼 = Individuals{Float64}(📌=xy[:,:], 🆔=id, 🔧=postprocess_lonlat, 🚄 = dxy_dt!, 𝑃=𝑃)
 
 fieldnames(typeof(𝐼))
