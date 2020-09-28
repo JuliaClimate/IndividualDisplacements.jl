@@ -236,6 +236,7 @@ function reset_lonlat!(𝐼::Individuals)
     n_reset = Int(round(𝐼.𝑃.frac*np))
     (lon, lat) = randn_lonlat(2*n_reset)
     (v0, _) = initialize_lonlat(𝐼.𝑃.Γ, lon, lat; msk = 𝐼.𝑃.msk)
+    n_reset=min(n_reset,size(v0,2))
     k_reset = rand(1:np, n_reset)
     𝐼.📌[:,k_reset].=v0[:,1:n_reset]
     isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
