@@ -1,6 +1,6 @@
 # # Three Dimensions
 #
-#md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/three_dimensional_ocean.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/three_dimensional_ocean.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/three_dimensional_ocean.ipynb)
 #
 # Advect particles with climatological mean flow in three dimensions starting from a selected depth level
@@ -16,7 +16,7 @@
 # ## 1. Load Software
 #
 
-using IndividualDisplacements, DataFrames, OceanStateEstimation
+using IndividualDisplacements, DataFrames, OceanStateEstimation, NetCDF
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))

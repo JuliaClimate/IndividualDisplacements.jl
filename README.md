@@ -3,6 +3,7 @@
 [![Travis Build Status](https://travis-ci.org/JuliaClimate/IndividualDisplacements.jl.svg?branch=master)](https://travis-ci.org/JuliaClimate/IndividualDisplacements.jl)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaClimate.github.io/IndividualDisplacements.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev)
+[![codecov](https://codecov.io/gh/JuliaClimate/IndividualDisplacements.jl/branch/master/graph/badge.svg?token=qgMClXyzVB)](undefined)
 
 [![DOI](https://zenodo.org/badge/208676176.svg)](https://zenodo.org/badge/latestdoi/208676176)
 [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs%2Fsrc%2Fnotebooks)
