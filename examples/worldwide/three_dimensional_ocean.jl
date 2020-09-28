@@ -16,7 +16,7 @@
 # ## 1. Load Software
 #
 
-using IndividualDisplacements, NetCDF, DataFrames, OceanStateEstimation, CSV, Plots
+using IndividualDisplacements, DataFrames, OceanStateEstimation
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
@@ -128,8 +128,8 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 #
 # - either `Plots.jl`:
 
-include(joinpath(p,"../examples/recipes_plots.jl"))
-PlotBasic(𝐼.🔴,100,90.0)
+#md include(joinpath(p,"../examples/recipes_plots.jl"))
+#md PlotBasic(𝐼.🔴,100,90.0)
 #plot_end_points(𝐼,Γ)
 
 # - or `Makie.jl`:
