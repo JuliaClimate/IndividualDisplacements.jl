@@ -1,6 +1,6 @@
 # # Three Dimensions
 #
-#md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/three_dimensional_ocean.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/three_dimensional_ocean.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/three_dimensional_ocean.ipynb)
 #
 # Advect particles with climatological mean flow in three dimensions starting from a selected depth level
@@ -11,12 +11,14 @@
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 #
+# ![Three dimensional simulation 1/2](https://user-images.githubusercontent.com/20276764/94491655-9cb95780-01b6-11eb-9273-173865ed6340.png)
+# ![Three dimensional simulation 2/2](https://user-images.githubusercontent.com/20276764/94491485-595ee900-01b6-11eb-95e6-c2cacb812f46.png)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 1. Load Software
 #
 
-using IndividualDisplacements, NetCDF, DataFrames, OceanStateEstimation, CSV, Plots
+using IndividualDisplacements, DataFrames, OceanStateEstimation, NetCDF
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
@@ -117,7 +119,7 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 # ## 3.1 Compute Displacements
 #
 
-𝑇=(0.0,𝐼.𝑃.𝑇[2])
+𝑇=(0.0,100*86400.0)
 
 ∫!(𝐼,𝑇)
 
@@ -128,8 +130,8 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 #
 # - either `Plots.jl`:
 
-include(joinpath(p,"../examples/recipes_plots.jl"))
-PlotBasic(𝐼.🔴,100,90.0)
+#md include(joinpath(p,"../examples/recipes_plots.jl"))
+#md PlotBasic(𝐼.🔴,100,90.0)
 #plot_end_points(𝐼,Γ)
 
 # - or `Makie.jl`:

@@ -17,12 +17,18 @@ end
 Download `MITgcm` transport output to `examples/nctiles_climatology` if needed
 """
 function get_ecco_velocity_if_needed()
-    lst=joinpath(dirname(pathof(OceanStateEstimation)),"../examples/nctiles_climatology.csv")
-    pth=joinpath(dirname(pathof(IndividualDisplacements)),"../examples/nctiles_climatology/")
+    p=dirname(pathof(IndividualDisplacements))
+    q=dirname(pathof(OceanStateEstimation))
+    pth0=pwd()
+    cd(joinpath(p,"../examples/"))
+    lst="nctiles_climatology.csv"
+    pth="nctiles_climatology/"
+    !isfile(lst) ? run(`cp $q/../examples/nctiles_climatology.csv $p/../examples/`) : nothing
     !isdir("$pth") ? mkdir("$pth") : nothing
     !isdir("$pth"*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
     !isdir("$pth"*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
     !isdir("$pth"*"WVELMASS") ? get_from_dataverse(lst,"WVELMASS",pth) : nothing
+    cd(pth0)
 end
 
 """
@@ -43,10 +49,13 @@ end
 Download `MITgcm` transport output to `examples/OCCA_climatology` if needed
 """
 function get_occa_velocity_if_needed()
-    lst=joinpath(dirname(pathof(OceanStateEstimation)),"../examples/OCCA_climatology.csv")
-    pth=joinpath(dirname(pathof(IndividualDisplacements)),"../examples/OCCA_climatology/")
-    #nams = CSV.File(lst) |> DataFrame!
-    #nams = nams.name[:]
+    p=dirname(pathof(IndividualDisplacements))
+    q=dirname(pathof(OceanStateEstimation))
+    pth0=pwd()
+    cd(joinpath(p,"../examples/"))
+    lst="OCCA_climatology.csv"
+    pth="OCCA_climatology/"
+    !isfile(lst) ? run(`cp $q/../examples/OCCA_climatology.csv $p/../examples/`) : nothing
     nams = ("DDuvel.0406clim.nc","DDvvel.0406clim.nc","DDwvel.0406clim.nc","DDtheta.0406clim.nc","DDsalt.0406clim.nc")
     !isdir("$pth") ? mkdir("$pth") : nothing
     if !isfile("$pth"*"DDuvel.0406clim.nc") 
@@ -55,6 +64,7 @@ function get_occa_velocity_if_needed()
         [get_from_dataverse(lst,nam,tmp) for nam in nams]
         [mv(joinpath(tmp,nam,nam),joinpath(pth,nam)) for nam in nams]
     end
+    cd(pth0)
 end
 
 """

@@ -1,6 +1,6 @@
 # # Single Particle
 #
-#md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/solid_body_rotation.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
 #
 # Simulate the trajectory of an individual point, first in a perfectly circular flow (a.k.a. solid body rotation). Then add a convergent term to obtain a spiraling trajectory, and a constant vertical velocity for the third dimension. These simple flow configurations can be thought of as idealized models e.g. ocean meso-scale eddies.
@@ -103,11 +103,11 @@ myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,ar
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
 
-nt=length(𝐼.🔴.x)
-p=Int(ceil(nt/100))
-anim = @animate for i ∈ 1:p:nt
-    myplot(i)
-end
+#md nt=length(𝐼.🔴.x)
+#md p=Int(ceil(nt/100))
+#md anim = @animate for i ∈ 1:p:nt
+#md     myplot(i)
+#md end
 
 #md pth=tempdir()*"/"
 #md gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
@@ -115,7 +115,7 @@ end
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:
 
-plt=myplot(nt)
-scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
-#scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
-scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
+#md plt=myplot(nt)
+#md scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
+#md #scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
+#md scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
