@@ -103,11 +103,11 @@ myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,ar
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
 
-nt=length(𝐼.🔴.x)
-p=Int(ceil(nt/100))
-anim = @animate for i ∈ 1:p:nt
-    myplot(i)
-end
+#md nt=length(𝐼.🔴.x)
+#md p=Int(ceil(nt/100))
+#md anim = @animate for i ∈ 1:p:nt
+#md     myplot(i)
+#md end
 
 #md pth=tempdir()*"/"
 #md gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
