@@ -1,6 +1,6 @@
-# # Random Flow Simulation
+# # Random Flow
 #
-#md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/random_flow_field.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/random_flow_field.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/random_flow_field.ipynb)
 #
 # Simulate trajectories of a particle cloud in a randomly generated flow field.
@@ -20,7 +20,7 @@ using OrdinaryDiffEq, IndividualDisplacements, MeshArrays
 p=dirname(pathof(MeshArrays)); include(joinpath(p,"../examples/Demos.jl"))
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
-include(joinpath(p,"../examples/recipes_plots.jl"))
+include(joinpath(p,"../examples/recipes_plots.jl"));
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1.2 Setup Problem
@@ -51,11 +51,13 @@ xy=transpose([x0[:] y0[:] ones(size(x0[:]))]);
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.1 Compute Trajectories
 
-tr = DataFrame( ID=[], x=[], y=[], t = [])
+tr = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :x, :y, :t])
 solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
-𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔! = ⬡!, □ = solv, ▽ = postprocess_xy, tr =tr)
+𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
+                         🚄 = dxy_dt!, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
 
-start!(𝐼)
+𝑇=(0.0,𝐼.𝑃.𝑇[2])
+∫!(𝐼,𝑇)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.2 Plot Results
