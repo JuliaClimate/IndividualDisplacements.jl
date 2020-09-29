@@ -3,6 +3,30 @@
 
 Interpolate velocity from gridded fields (2D; with halos) to position `u`
 (`x,y,fIndex`) to compute the derivative of position v time  `du_dt`.
+
+```jldoctest
+using IndividualDisplacements, Statistics
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/basics/random_flow_field.jl"))
+ref=[4. 6.]
+prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
+
+# output
+
+true
+```
+
+```jldoctest
+using IndividualDisplacements, Statistics
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/worldwide/global_ocean_circulation.jl"))
+ref=[78. 88.]
+prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
+
+# output
+
+true
+```
 """
 function dxy_dt!(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     #compute positions in index units
@@ -56,6 +80,30 @@ end
 
 Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 (`x,y,z`) to compute the derivative of position v time  `du_dt`.
+
+```jldoctest
+using IndividualDisplacements
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/basics/solid_body_rotation.jl"))
+ref=[7.767441577479032 9.513402495574852 0.7065855989421701]
+prod(isapprox.(𝐼.📌',ref))
+
+# output
+
+true
+```
+
+```jldoctest
+using IndividualDisplacements, Statistics
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/worldwide/three_dimensional_ocean.jl"))
+ref=[211. 34. -70.]
+prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,atol=50.0))
+
+# output
+
+true
+```
 """
 function dxyz_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     #compute positions in index units
@@ -112,6 +160,18 @@ end
 
 Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 (`x,y`) to compute the derivative of position v time  `du_dt`.
+
+```jldoctest
+using IndividualDisplacements, Statistics
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/basics/particle_cloud.jl"))
+ref=[29.381183342468674  19.890831699436823]
+prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref))
+
+# output
+
+true
+```
 """
 function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     #compute positions in index units

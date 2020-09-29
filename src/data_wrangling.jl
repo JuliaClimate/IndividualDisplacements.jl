@@ -1,14 +1,15 @@
 
 """
-    postprocess_lonlat(sol,𝑃::NamedTuple)
+    postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 using "exchanged" 𝑃.XC, 𝑃.YC via `add_lonlat!`
 """
-function postprocess_lonlat(sol,𝑃::NamedTuple,id=missing)
+function postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
-    𝐼=id*ones(1,size(sol,3))
+    ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
+    id=id*ones(1,size(sol,3))
     x=sol[1,:,:]
     y=sol[2,:,:]
     𝑃.XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
@@ -16,9 +17,9 @@ function postprocess_lonlat(sol,𝑃::NamedTuple,id=missing)
     nf=size(sol,2)
     nt=size(sol,3)
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t
+    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
-    df = DataFrame(ID=Int.(𝐼[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
+    df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
     add_lonlat!(df,𝑃.XC,𝑃.YC)
     return df
 end
@@ -59,58 +60,22 @@ end
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_xy(sol,𝑃::NamedTuple)
+function postprocess_xy(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+    ismissing(id) ? id=collect(1:size(sol,2)) : nothing
+    ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
+
     nf=size(sol,2)
     nt=size(sol,3)
     nx,ny=𝑃.ioSize[1:2]
 
-    x=sol[1,:,:]
-    y=sol[2,:,:]
+    id=id*ones(1,size(sol,3))
+    x=mod.(sol[1,:,:],Ref(nx))
+    y=mod.(sol[2,:,:],Ref(ny))
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
     #size(𝑃.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
-    ID=collect(1:size(sol,2))*ones(1,size(sol,3))
+    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
-    df = DataFrame(ID=Int.(ID[:]), t=𝑃.𝑇[1] .+ (𝑃.𝑇[2]-𝑃.𝑇[1])/t[end].*t,
-                   x=mod.(x[:],Ref(nx)), y=mod.(y[:],Ref(ny)))
-
-    return df
-end
-
-postprocess_xy(sol,𝑃,id) = postprocess_xy(sol,𝑃)
-
-"""
-    read_uvetc(k::Int,Γ::Dict,pth::String)
-
-Define `uvetc` given the grid variables `Γ` and a vertical level choice `k`
-including velocities obtained from files in `pth`
-"""
-function read_uvetc(k::Int,Γ::Dict,pth::String)
-    𝑃 = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
-    Γ = dict_to_nt( Γ )
-    nt=12; msk=(Γ.hFacC[:,k] .> 0.) #select depth
-
-    u=0. ./Γ.DXC; v=0. ./Γ.DYC;
-    for t=1:nt
-        (U,V)=read_velocities(Γ.XC.grid,t,pth)
-        for i=1:size(u,1)
-            u[i]=u[i] + U[i,k]
-            v[i]=v[i] + V[i,k]
-        end
-    end
-    u=u ./ nt
-    v=v ./ nt #time average
-
-    u[findall(isnan.(u))]=0.0; v[findall(isnan.(v))]=0.0 #mask with 0s rather than NaNs
-    u=u./Γ.DXC; v=v./Γ.DYC; #normalize to grid units
-
-    (u,v)=exchange(u,v,1) #add 1 point at each edge for u and v
-    XC=exchange(Γ.XC) #add 1 lon point at each edge
-    YC=exchange(Γ.YC) #add 1 lat point at each edge
-
-    t0=0.0; t1=86400*366*10.0; dt=10*86400.0;
-    tmp = (u0=u, u1=u, v0=v, v1=v, t0=t0, t1=t1, dt=dt, msk=msk, XC=XC, YC=YC)
-
-    return merge(𝑃,tmp)
+    return DataFrame(ID=Int.(id[:]), t=t[:], x=x[:], y=y[:])
 end
 
 """
@@ -143,17 +108,20 @@ function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
     tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
     𝑃 = merge(𝑃 , tmp)
 
-    𝑃.🔄(k,0.0,𝑃)
+    𝑃.🔄(𝑃,0.0)
     return 𝑃
 end
 
 """
-    update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
+    update_𝑃!(𝑃::NamedTuple,t::Float64)
 
-Update velocity and time arrays inside 𝑃 (e.g. 𝑃.u0[:], etc, and 𝑃.𝑇[:])
-based on the chosen vertical level `k` and time `t` (in `seconds`).
+Update input data (velocity arrays) and time period (array) inside 𝑃 (𝑃.u0[:], etc, and 𝑃.𝑇[:])
+based on the chosen time `t` (in `seconds`). 
+
+_Note: for now, it is assumed that (1) input 𝑃.𝑇 is used to infer `dt` between consecutive velocity fields,
+(2) periodicity of 12 monthly records, (3) vertical 𝑃.k is selected -- but this could easily be generalized._ 
 """
-function update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
+function update_𝑃!(𝑃::NamedTuple,t::Float64)
     dt=𝑃.𝑇[2]-𝑃.𝑇[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
@@ -167,13 +135,13 @@ function update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
     m1==0 ? m1=12 : nothing
 
     (U,V)=read_velocities(𝑃.u0.grid,m0,𝑃.pth)
-    u0=U[:,k]; v0=V[:,k]
+    u0=U[:,𝑃.k]; v0=V[:,𝑃.k]
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
     u0=u0.*𝑃.iDXC; v0=v0.*𝑃.iDYC; #normalize to grid units
     (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
 
     (U,V)=read_velocities(𝑃.u0.grid,m1,𝑃.pth)
-    u1=U[:,k]; v1=V[:,k]
+    u1=U[:,𝑃.k]; v1=V[:,𝑃.k]
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
     u1=u1.*𝑃.iDXC; v1=v1.*𝑃.iDYC; #normalize to grid units
     (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
@@ -185,7 +153,6 @@ function update_𝑃!(k::Int,t::Float64,𝑃::NamedTuple)
     𝑃.𝑇[:]=[t0,t1]
 
 end
-
 
 """
     initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
@@ -260,41 +227,67 @@ end
 initialize_lonlat(Γ::Dict,lon::Float64,lat::Float64;msk=missing) = initialize_lonlat(Γ,[lon],[lat];msk=msk)
 
 """
-    read_velocities(γ::gcmgrid,t::Int,pth::String)
+    reset_lonlat!(𝐼::Individuals)
 
-Read velocity components `u,v` from files in `pth`for time `t`
+Randomly select a fraction (𝐼.𝑃.frac) of the particles and reset their positions.
 """
-function read_velocities(γ::gcmgrid,t::Int,pth::String)
-    u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
-    v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
-    return u,v
+function reset_lonlat!(𝐼::Individuals)
+    np=length(𝐼.🆔)
+    n_reset = Int(round(𝐼.𝑃.frac*np))
+    (lon, lat) = randn_lonlat(2*n_reset)
+    (v0, _) = initialize_lonlat(𝐼.𝑃.Γ, lon, lat; msk = 𝐼.𝑃.msk)
+    n_reset=min(n_reset,size(v0,2))
+    k_reset = rand(1:np, n_reset)
+    𝐼.📌[:,k_reset].=v0[:,1:n_reset]
+    isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
+    𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
 end
 
 """
-    read_mds(filRoot::String,x::MeshArray)
+    interp_to_lonlat
 
-Read a gridded variable from 2x2 tile files. This is used
-in `example2_setup()` with `flt_example/`
+Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps for plotting purposes).
+
+```
+using MeshArrays, IndividualDisplacements
+
+lon=[i for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
+lat=[j for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
+(f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
+IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)
+
+D=Γ["Depth"]
+tmp1=interp_to_lonlat(D,Γ,lon,lat)
+tmp2=interp_to_lonlat(D,IntFac)
+```
 """
-function read_mds(filRoot::String,x::MeshArray)
-   prec=eltype(x)
-   prec==Float64 ? reclen=8 : reclen=4;
+function interp_to_lonlat(X::MeshArray,Γ::Dict,lon,lat)
+    (f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
+    return reshape(Interpolate(X,f,i,j,w),size(lon))
+end
 
-   (n1,n2)=Int64.(x.grid.ioSize ./ 2);
-   fil=filRoot*".001.001.data"
-   tmp1=stat(fil);
-   n3=Int64(tmp1.size/n1/n2/reclen);
+function interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
+    @unpack f,i,j,w,lon,lat = IntFac
+    return reshape(Interpolate(X,f,i,j,w),size(lon))
+end
 
-   v00=x.grid.write(x)
-   for ii=1:2; for jj=1:2;
-      fid = open(filRoot*".00$ii.00$jj.data")
-      fld = Array{prec,1}(undef,(n1*n2*n3))
-      read!(fid,fld)
-      fld = hton.(fld)
 
-      n3>1 ? s=(n1,n2,n3) : s=(n1,n2)
-      v00[1+(ii-1)*n1:ii*n1,1+(jj-1)*n2:jj*n2,:]=reshape(fld,s)
-   end; end;
+"""
+    interp_to_xy(df::DataFrame,Zin)
 
-   return x.grid.read(v00,x)
+Interpolate "exchanged" / "hallo-included" Zin to df[!,:x], df[!,:y] on df[!,:fid]
+"""
+function interp_to_xy(df::DataFrame,Zin)
+    x=df[!,:x];
+    y=df[!,:y];
+    f=Int.(df[!,:fid]);
+    dx,dy=(x - floor.(x) .+ 0.5,y - floor.(y) .+ 0.5);
+    i_c = Int32.(floor.(x)) .+ 1;
+    j_c = Int32.(floor.(y)) .+ 1;
+
+    Z=zeros(length(x),4)
+    [Z[k,:]=Zin[f[k]][i_c[k]:i_c[k]+1,j_c[k]:j_c[k]+1][:] for k in 1:length(i_c)]
+
+    return (1.0 .-dx).*(1.0 .-dy).*Z[:,1]+dx.*(1.0 .-dy).*Z[:,2] +
+           (1.0 .-dx).*dy.*Z[:,3]+dx.*dy.*Z[:,4]
 end

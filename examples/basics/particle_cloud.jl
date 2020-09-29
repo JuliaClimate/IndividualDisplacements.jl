@@ -1,6 +1,6 @@
-# # Particle Cloud Simulation
+# # Particle Cloud
 #
-#md # [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/web1?filepath=docs/src/notebooks/particle_cloud.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/particle_cloud.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/particle_cloud.ipynb)
 #
 # Using the same setup as `detailed_look.jl` or `example2()`, here we simulate
@@ -16,7 +16,7 @@
 using IndividualDisplacements, OrdinaryDiffEq, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/recipes_plots.jl"))
-include(joinpath(p,"../examples/example123.jl"))
+include(joinpath(p,"../examples/example123.jl"));
 
 # ## 2. Setup Problem
 
@@ -29,19 +29,21 @@ xy=transpose([x y])
 
 𝑃.𝑇[:] = [0.0,2998*3600.0]
 solv(prob) = solve(prob,Tsit5(),reltol=1e-6,abstol=1e-6)
-tr = DataFrame( ID=[], x=[], y=[], t = [])
+tr = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :x, :y, :t])
 
-𝐼 = Individuals{Float64}(xy=xy[:,:], 𝑃=𝑃, ⎔! = ⬡, □ = solv, ▽ = postprocess_xy, tr = tr)
+𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
+                         🚄 = dxy_dt, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃);
 
 # ## 3. Compute Trajectories
 
-start!(𝐼)
+𝑇=(0.0,𝐼.𝑃.𝑇[2])
+∫!(𝐼,𝑇)
 
 # ## 4. Display results
 
-𝐼.tr.lon=5000*𝐼.tr.x
-𝐼.tr.lat=5000*𝐼.tr.y
-plt=PlotBasic(𝐼.tr,size(xy,2),100000.0)
+𝐼.🔴.lon=5000*𝐼.🔴.x
+𝐼.🔴.lat=5000*𝐼.🔴.y
+#md plt=PlotBasic(𝐼.🔴,size(xy,2),100000.0)
 
 # Compare with trajectory output from `MITgcm`
 
