@@ -26,7 +26,7 @@ Pkg.test("IndividualDisplacements")
 
 The movies highlighted above are from [global\_ocean\_circulation.jl](https://juliaclimate.github.io/IndividualDisplacements.jl/dev/worldwide/global_ocean_circulation/). The basic examples shown below are from [solid\_body\_rotation.jl](https://juliaclimate.github.io/IndividualDisplacements.jl/dev/basics/solid_body_rotation/) and [random\_flow\_field.jl](https://juliaclimate.github.io/IndividualDisplacements.jl/dev/basics/random_flow_field/). For more, please report to [the docs](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev).
 
-[<img src="https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png"  width="45%">](https://www.youtube.com/watch?v=W5DNqJG9jt0) <img src="https://user-images.githubusercontent.com/20276764/94491485-595ee900-01b6-11eb-95e6-c2cacb812f46.png" " width="30%"> 
+[<img src="https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png"  width="45%">](https://www.youtube.com/watch?v=W5DNqJG9jt0) <img src="https://user-images.githubusercontent.com/20276764/94491485-595ee900-01b6-11eb-95e6-c2cacb812f46.png" width="30%"> 
 
 <img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif" width="40%"> <img src="https://user-images.githubusercontent.com/20276764/94755085-4b010080-0361-11eb-94fd-ff1b68b99f94.png" width="40%"> 
 
