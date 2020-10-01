@@ -59,5 +59,12 @@ Literate.notebook("IndividualDisplacements.jl/examples/worldwide/three_dimension
 
 And so on and so forth -- see documentation for a list of examples.
 
+### Would like to contribute?
 
+Thank you for your interest in contributing to this package! 
+
+Please start by filing a ticket in the GitHub issue tracker if you think you’ve found a bug, found a potential fix for a bug, would like to suggest additional features, would like guidance on how to add features, or could help improve the documentation for example. 
+
+You can also send a GitHub pull request directly but filing a ticket first is often preferable e.g. to avoid duplicating efforts or confusion. For an example of how to work with pull requests, please refer to the [MITgcm documentation](https://mitgcm.readthedocs.io/en/latest/contributing/contributing.html).
+ 
 
