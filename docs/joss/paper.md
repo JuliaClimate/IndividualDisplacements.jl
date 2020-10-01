@@ -30,7 +30,7 @@ bibliography: paper.bib
 
 # Summary
 
-`IndividualDisplacements.jl` [@MeshArraysAugust2020] is focused on computation and analysis of individual displacements across the global climate system. _Individuals_ is used here as a generic term to represent points, particles, parcels, materials, etc that tend to be carried around the Earth by geophysical fluids (via oceanic currents or atmospheric flows for example). 
+`IndividualDisplacements.jl` [@IndividualDisplacementsAugust2020] is focused on computation and analysis of individual displacements across the global climate system. _Individuals_ is used here as a generic term to represent points, particles, parcels, materials, etc that tend to be carried around the Earth by geophysical fluids (via oceanic currents or atmospheric flows for example). 
 
 This package is aimed at the analysis of numerical models that simulate Oceanic and / or Atmospheric transport processes on, typically, global staggered C-grids [e.g. see @gmd-8-3071-2015]. Inter-operability with these climate model grids, based on `MeshArrays.jl` which was introduced at [JuliaCon 2018 (video link)](https://youtu.be/RDxAy_zSUvg) [@MeshArraysAugust2020], is a key feature. The chosen approach covers the comparatively simple grids used in e.g. satellite data products as well.
 
