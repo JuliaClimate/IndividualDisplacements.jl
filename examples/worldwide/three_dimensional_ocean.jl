@@ -130,10 +130,10 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 #
 # - either `Plots.jl`:
 
-#!jl include(joinpath(p,"../examples/recipes_plots.jl"))
-#!jl #PlotBasic(𝐼.🔴,100,90.0)
-#!jl p=plot_end_points(𝐼,Γ)
-#!jl display(p)
+#md include(joinpath(p,"../examples/recipes_plots.jl"))
+#md #PlotBasic(𝐼.🔴,100,90.0)
+#md p=plot_end_points(𝐼,Γ)
+#md display(p)
 
 # - or `Makie.jl`:
 
