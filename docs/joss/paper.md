@@ -58,7 +58,9 @@ The documentation of `IndividualDisplacements.jl` is also now considered suffici
 
 # Acknowledgements
 
-We acknowledge contributions from the open source community at large, the paper reviewers and journal editor, as well as developers of `Julia` and its packages upon which `IndividualDisplacements.jl` crucially depends.
+We acknowledge contributions from the open source community at large, the paper reviewers and journal editor, as well as developers of `Julia` and its packages upon which `IndividualDisplacements.jl` crucially depends. 
+
+Funding that supported this work was provided by the Simons Collaboration on Computational Biogeochemical Modeling of Marine Ecosystems (CBIOMES) (grant no. 549931) and the National Aeronautic and Space Administration (grant NASA 19-PO19-0001, NNH19ZDA001N-PO, and grant NASA 80NSSC17K0561, NNH16ZDA001N-IDS).
 
 # References
 
