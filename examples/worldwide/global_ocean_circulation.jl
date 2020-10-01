@@ -99,7 +99,8 @@ sgdf[rand(1:size(sgdf,1),4),:]
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # Or select a background map (e.g. `lon`, `lat`, and `DL=log10(bottom depth)`)
 # and a recipe to superimpose initial and final locations. Try:
-
-#!jl include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/recipes_plots.jl"))
-#!jl p=plot_end_points(𝐼,𝐼.𝑃.Γ)
-#!jl display(p)
+#
+#```
+#include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/recipes_plots.jl"))
+#plot_end_points(𝐼,𝐼.𝑃.Γ)
+#```
