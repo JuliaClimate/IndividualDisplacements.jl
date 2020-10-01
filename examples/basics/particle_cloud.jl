@@ -41,8 +41,8 @@ tr = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :x, :y, :t])
 
 # ## 4. Display results
 
-𝐼.🔴.lon=5000*𝐼.🔴.x
-𝐼.🔴.lat=5000*𝐼.🔴.y
+#md 𝐼.🔴.lon=5000*𝐼.🔴.x
+#md 𝐼.🔴.lat=5000*𝐼.🔴.y
 #md plt=PlotBasic(𝐼.🔴,size(xy,2),100000.0)
 
 # Compare with trajectory output from `MITgcm`
