@@ -17,18 +17,12 @@ end
 Download `MITgcm` transport output to `examples/nctiles_climatology` if needed
 """
 function get_ecco_velocity_if_needed()
-    p=dirname(pathof(IndividualDisplacements))
-    q=dirname(pathof(OceanStateEstimation))
-    pth0=pwd()
-    cd(joinpath(p,"../examples/"))
-    lst="nctiles_climatology.csv"
-    pth="nctiles_climatology/"
-    !isfile(lst) ? run(`cp $q/../examples/nctiles_climatology.csv $p/../examples/`) : nothing
-    !isdir("$pth") ? mkdir("$pth") : nothing
-    !isdir("$pth"*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
-    !isdir("$pth"*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
-    !isdir("$pth"*"WVELMASS") ? get_from_dataverse(lst,"WVELMASS",pth) : nothing
-    cd(pth0)
+    p=dirname(pathof(OceanStateEstimation))
+    lst=joinpath(p,"../examples/nctiles_climatology.csv")
+    pth=ECCOclim_path
+    !isdir(pth*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
+    !isdir(pth*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
+    !isdir(pth*"WVELMASS") ? get_from_dataverse(lst,"WVELMASS",pth) : nothing
 end
 
 """
@@ -49,22 +43,16 @@ end
 Download `MITgcm` transport output to `examples/OCCA_climatology` if needed
 """
 function get_occa_velocity_if_needed()
-    p=dirname(pathof(IndividualDisplacements))
-    q=dirname(pathof(OceanStateEstimation))
-    pth0=pwd()
-    cd(joinpath(p,"../examples/"))
-    lst="OCCA_climatology.csv"
-    pth="OCCA_climatology/"
-    !isfile(lst) ? run(`cp $q/../examples/OCCA_climatology.csv $p/../examples/`) : nothing
+    p=dirname(pathof(OceanStateEstimation))
+    lst=joinpath(p,"../examples/OCCA_climatology.csv")
+    pth=OCCAclim_path
     nams = ("DDuvel.0406clim.nc","DDvvel.0406clim.nc","DDwvel.0406clim.nc","DDtheta.0406clim.nc","DDsalt.0406clim.nc")
-    !isdir("$pth") ? mkdir("$pth") : nothing
     if !isfile("$pth"*"DDuvel.0406clim.nc") 
-        tmp=joinpath(dirname(pathof(IndividualDisplacements)),"../examples/OCCA_climatology/tmp/")
-        !isdir("$tmp") ? mkdir("$tmp") : nothing
+        tmp=joinpath(pth,"tmp/")
+        !isdir(tmp) ? mkdir(tmp) : nothing
         [get_from_dataverse(lst,nam,tmp) for nam in nams]
         [mv(joinpath(tmp,nam,nam),joinpath(pth,nam)) for nam in nams]
     end
-    cd(pth0)
 end
 
 """
@@ -128,7 +116,7 @@ function setup_global_ocean(;k=1,ny=2)
   Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
 
   #initialize u0,u1 etc
-  𝑃=set_up_𝑃(k,0.0,Γ,joinpath(p,"../examples/nctiles_climatology/"));
+  𝑃=set_up_𝑃(k,0.0,Γ,ECCOclim_path);
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, Γ=Γ)
@@ -218,22 +206,21 @@ function OCCA_setup(;backward_in_time::Bool=false)
    γ=GridSpec("PeriodicChannel",dirIn)
    Γ=GridLoad(γ)
 
-   dirIn=joinpath(p,"../examples/OCCA_climatology/")
    n=length(Γ["RC"])
 
-   fileIn=dirIn*"DDuvel.0406clim.nc"
+   fileIn=OCCAclim_path*"DDuvel.0406clim.nc"
    u = ncread(fileIn,"u")
    u=dropdims(mean(u,dims=4),dims=4)
    u[findall(u .< -1.0e10)] .=0.0
    u=read(u,MeshArray(γ,Float32,n))
 
-   fileIn=dirIn*"DDvvel.0406clim.nc"
+   fileIn=OCCAclim_path*"DDvvel.0406clim.nc"
    v = ncread(fileIn,"v")
    v=dropdims(mean(v,dims=4),dims=4)
    v[findall(v .< -1.0e10)] .=0.0
    v=read(v,MeshArray(γ,Float32,n))
 
-   fileIn=dirIn*"DDwvel.0406clim.nc"
+   fileIn=OCCAclim_path*"DDwvel.0406clim.nc"
    w = ncread(fileIn,"w")
    w=dropdims(mean(w,dims=4),dims=4)
    w[findall(w .< -1.0e10)] .=0.0
@@ -241,13 +228,13 @@ function OCCA_setup(;backward_in_time::Bool=false)
    w[:,:,1] .=0.0
    w=read(w,MeshArray(γ,Float32,n+1))
 
-   fileIn=dirIn*"DDtheta.0406clim.nc"
+   fileIn=OCCAclim_path*"DDtheta.0406clim.nc"
    θ = ncread(fileIn,"theta")
    θ=dropdims(mean(θ,dims=4),dims=4)
    θ[findall(θ .< -1.0e10)] .=NaN
    θ=read(θ,MeshArray(γ,Float32,n))
 
-   fileIn=dirIn*"DDsalt.0406clim.nc"
+   fileIn=OCCAclim_path*"DDsalt.0406clim.nc"
    𝑆 = ncread(fileIn,"salt")
    𝑆=dropdims(mean(𝑆,dims=4),dims=4)
    𝑆[findall(𝑆 .< -1.0e10)] .=NaN
