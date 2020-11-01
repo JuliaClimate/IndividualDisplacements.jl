@@ -22,7 +22,7 @@ using IndividualDisplacements, DataFrames, OceanStateEstimation, NetCDF
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
-get_ll360_grid_if_needed(); get_occa_velocity_if_needed();
+get_occa_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2.1 Ocean Circulation Setup
