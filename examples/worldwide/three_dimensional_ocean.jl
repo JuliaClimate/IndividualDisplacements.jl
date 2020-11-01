@@ -119,7 +119,7 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 # ## 3.1 Compute Displacements
 #
 
-𝑇=(0.0,10*86400.0)
+𝑇=(0.0,100*86400.0)
 
 ∫!(𝐼,𝑇)
 
