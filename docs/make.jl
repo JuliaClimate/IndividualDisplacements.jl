@@ -6,9 +6,9 @@ module datadeps
   using IndividualDisplacements, OceanStateEstimation
   include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
   include(joinpath(dirname(pathof(IndividualDisplacements)),"../test/helper_functions.jl"))
-  get_ecco_velocity_if_needed();
-  get_occa_velocity_if_needed();
-  get_flt_ex_if_needed();
+  #uget_ecco_velocity_if_needed();
+  #get_occa_velocity_if_needed();
+  #get_flt_ex_if_needed();
 end
 
 # generate tutorials and how-to guides using Literate
