@@ -1,17 +1,5 @@
 
 """
-    get_llc90_grid_if_needed()
-
-Download global `MITgcm` grid and transport output to `examples/GRID_LLC90`
-"""
-function get_llc90_grid_if_needed()
-  p=dirname(pathof(IndividualDisplacements))
-  p=joinpath(p,"../examples/GRID_LLC90")
-  r="https://github.com/gaelforget/GRID_LLC90"
-  !isdir(p) ? run(`git clone $r $p`) : nothing
-end
-
-"""
     get_ecco_velocity_if_needed()
 
 Download `MITgcm` transport output to `examples/nctiles_climatology` if needed
@@ -23,18 +11,6 @@ function get_ecco_velocity_if_needed()
     !isdir(pth*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
     !isdir(pth*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
     !isdir(pth*"WVELMASS") ? get_from_dataverse(lst,"WVELMASS",pth) : nothing
-end
-
-"""
-    get_ll360_grid_if_needed()
-
-Download global `MITgcm` grid and transport output to `examples/GRID_LL360`
-"""
-function get_ll360_grid_if_needed()
-  p=dirname(pathof(IndividualDisplacements))
-  p=joinpath(p,"../examples/GRID_LL360")
-  r="https://github.com/gaelforget/GRID_LL360"
-  !isdir(p) ? run(`git clone $r $p`) : nothing
 end
 
 """
@@ -111,7 +87,7 @@ function setup_global_ocean(;k=1,ny=2)
 
   #read grid and set up connections between subdomains
   p=dirname(pathof(IndividualDisplacements))
-  γ=GridSpec("LatLonCap",joinpath(p,"../examples/GRID_LLC90/"))
+  γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
   Γ=GridLoad(γ)
   Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
 
@@ -137,7 +113,6 @@ function example3_setup(;backward_in_time::Bool=false)
 
    p=dirname(pathof(IndividualDisplacements))
    dirIn=joinpath(p,"../examples/llc90_latlon/")
-
    γ=gcmgrid(dirIn,"PeriodicChannel",1,
                   [(360,178)], [360 178], Float32, read, write)
 
@@ -201,11 +176,8 @@ Define gridded variables and return result as Dictionary (`uvetc`).
 """
 function OCCA_setup(;backward_in_time::Bool=false)
 
-   p=dirname(pathof(IndividualDisplacements))
-   dirIn=joinpath(p,"../examples/GRID_LL360/")
-   γ=GridSpec("PeriodicChannel",dirIn)
+   γ=GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
    Γ=GridLoad(γ)
-
    n=length(Γ["RC"])
 
    fileIn=OCCAclim_path*"DDuvel.0406clim.nc"
