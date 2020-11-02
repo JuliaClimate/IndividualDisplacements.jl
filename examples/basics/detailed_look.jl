@@ -35,7 +35,7 @@ get_flt_ex_if_needed()
 dirIn=joinpath(p,"../examples/flt_example/")
 prec=Float32
 df=read_flt(dirIn,prec)
-plt=PlotBasic(df,300,100000.0)
+#!md plt=PlotBasic(df,300,100000.0)
 
 # ## 3. Read Gridded Variables
 #
@@ -45,9 +45,9 @@ plt=PlotBasic(df,300,100000.0)
 
 # ## 4. Visualize Velocity Fields
 
-plt=heatmap(Γ["mskW"][1,1].*𝑃.u0[1,1],title="U at the start")
+#!md plt=heatmap(Γ["mskW"][1,1].*𝑃.u0[1,1],title="U at the start")
 
-plt=heatmap(Γ["mskW"][1,1].*𝑃.u1[1,1]-𝑃.u0[1,1],title="U end - U start")
+#!md plt=heatmap(Γ["mskW"][1,1].*𝑃.u1[1,1]-𝑃.u0[1,1],title="U end - U start")
 
 # ## 5. Visualize Trajectories
 #
@@ -61,16 +61,16 @@ tmp[1:4,:]
 x=Γ["XG"].f[1][:,1]
 y=Γ["YC"].f[1][1,:]
 z=transpose(Γ["mskW"][1].*𝑃.u0[1,1])
-plt=contourf(x,y,z,c=:delta)
-plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
+#!md plt=contourf(x,y,z,c=:delta)
+#!md plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
 # Super-impose trajectory over velocity field (... then for v)
 
 x=Γ["XC"].f[1][:,1]
 y=Γ["YG"].f[1][1,:]
 z=transpose(Γ["mskW"][1].*𝑃.v0[1,1])
-plt=contourf(x,y,z,c=:delta)
-plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
+#!md plt=contourf(x,y,z,c=:delta)
+#!md plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
 # ## 6. Interpolate Velocities
 
@@ -105,10 +105,10 @@ for i=1:100
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
-plt=plot(tmpx,tmpu,label="u (interp)")
-plot!(Γ["YG"].f[1][1,1:10]./𝑃.dx,𝑃.u0.f[1][1,1:10],marker=:o,label="u (C-grid)")
-plot!(tmpx,tmpv,label="v (interp)")
-plot!(Γ["YG"].f[1][1,1:10]./𝑃.dx,𝑃.v0.f[1][1,1:10],marker=:o,label="v (C-grid)")
+#!md plt=plot(tmpx,tmpu,label="u (interp)")
+#!md plot!(Γ["YG"].f[1][1,1:10]./𝑃.dx,𝑃.u0.f[1][1,1:10],marker=:o,label="u (C-grid)")
+#!md plot!(tmpx,tmpv,label="v (interp)")
+#!md plot!(Γ["YG"].f[1][1,1:10]./𝑃.dx,𝑃.v0.f[1][1,1:10],marker=:o,label="v (C-grid)")
 
 # Compare recomputed velocities with those from `pkg/flt`
 
@@ -125,10 +125,10 @@ for i=1:nSteps
     tmpv[i]=du[2]
 end
 #
-plt=plot(tmpu,label="u")
-plot!(tmpv,label="v")
-plot!(refu,label="u (ref)")
-plot!(refv,label="v (ref)")
+#!md plt=plot(tmpu,label="u")
+#!md plot!(tmpv,label="v")
+#!md plot!(refu,label="u (ref)")
+#!md plot!(refv,label="v (ref)")
 
 # ## 6. Compute Trajectories
 #
@@ -161,6 +161,6 @@ for i=1:nSteps-1
 end
 ref=ref./𝑃.dx
 
-plt=plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
-     xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
-plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,label="MITgcm Solution")
+#!md plt=plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
+#!md      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
+#!md plot!(ref[1,:],ref[2,:],lw=3,ls=:dash,label="MITgcm Solution")

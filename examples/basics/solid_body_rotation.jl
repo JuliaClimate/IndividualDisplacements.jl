@@ -103,19 +103,19 @@ myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,ar
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
 
-#!jl nt=length(𝐼.🔴.x)
-#!jl p=Int(ceil(nt/100))
-#!jl anim = @animate for i ∈ 1:p:nt
-#!jl     myplot(i)
-#!jl end
+#!md nt=length(𝐼.🔴.x)
+#!md p=Int(ceil(nt/100))
+#!md anim = @animate for i ∈ 1:p:nt
+#!md     myplot(i)
+#!md end
 
-#!jl pth=tempdir()*"/"
-#!jl gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
+#!md pth=tempdir()*"/"
+#!md gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:
 
-#!jl plt=myplot(nt)
-#!jl scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
-#!jl #scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
-#!jl scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
+#!md plt=myplot(nt)
+#!md scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
+#!md #scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
+#!md scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
