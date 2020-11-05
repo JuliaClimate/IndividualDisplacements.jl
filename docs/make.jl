@@ -19,7 +19,7 @@ notebooks = joinpath(src, "notebooks")
 execute = true # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
 
-lst1 = ["solid_body_rotation","random_flow_field"]
+lst1 = ["solid_body_rotation","random_flow_field","global_ocean_circulation"]
 lst2 = ["none"]
 tst1(x) = !isempty(lst1) && Bool(sum(isequal.(x, lst1)))
 tst2(x) = !isempty(lst2) && Bool(sum(isequal.(x, lst2)))
@@ -50,7 +50,7 @@ makedocs(
 		"Introduction" => "index.md",
         "User Guide" => "workflow.md",
 		"Examples" => "examples.md",
-#		"Real Ocean" => pages("worldwide"),
+		"Real Ocean" => pages("worldwide"),
         "Other Examples" => p_BE,
 		"Tool Box" => "API.md"],
     modules = [IndividualDisplacements]
