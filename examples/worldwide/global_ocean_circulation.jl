@@ -44,7 +44,7 @@ keys(𝑃)
 #
 # - initial particle positions randomly over Global Ocean
 
-xy=init_global_randn(1000,𝑃); id=collect(1:size(xy,2))
+xy=init_global_randn(10,𝑃); id=collect(1:size(xy,2))
 𝐼 = Individuals{Float64}(📌=xy[:,:], 🆔=id, 🔧=postprocess_lonlat, 🚄 = dxy_dt!, 𝑃=𝑃)
 
 fieldnames(typeof(𝐼))
@@ -74,7 +74,7 @@ end
 # ## 3.3 Iterate For `ny*12` Months
 #
 
-[step!(𝐼) for y=1:2, m=1:12]
+[step!(𝐼) for y=1:1, m=1:2]
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.4 Compute summary statistics
