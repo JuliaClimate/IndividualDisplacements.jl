@@ -113,7 +113,7 @@ end
 
 set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=nf)
 
-𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=100)
+𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=10)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.1 Compute Displacements
