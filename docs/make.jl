@@ -50,7 +50,7 @@ makedocs(
 		"Introduction" => "index.md",
         "User Guide" => "workflow.md",
 		"Examples" => "examples.md",
-		"Real Ocean" => pages("worldwide"),
+#		"Real Ocean" => pages("worldwide"),
         "Other Examples" => p_BE,
 		"Tool Box" => "API.md"],
     modules = [IndividualDisplacements]
