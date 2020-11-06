@@ -20,9 +20,9 @@
 
 using IndividualDisplacements, DataFrames, OceanStateEstimation, NetCDF
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/example123.jl"))
+#include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
-get_occa_velocity_if_needed();
+#get_occa_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2.1 Ocean Circulation Setup
@@ -31,15 +31,15 @@ get_occa_velocity_if_needed();
 nam="OCCA"
 bck=false
 
-if nam=="OCCA"
-   𝑃,Γ=OCCA_setup(backward_in_time=bck)
-   🚄 =dxyz_dt!
-elseif nam=="LL90"
-   𝑃,Γ=example3_setup(backward_in_time=bck)
-   🚄 =dxy_dt
-else
-   error("unknown example (nam parameter value)")
-end
+#if nam=="OCCA"
+#   𝑃,Γ=OCCA_setup(backward_in_time=bck)
+#   🚄 =dxyz_dt!
+#elseif nam=="LL90"
+#   𝑃,Γ=example3_setup(backward_in_time=bck)
+#   🚄 =dxy_dt
+#else
+#   error("unknown example (nam parameter value)")
+#end
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2.2 Solver And Analysis Setup
@@ -52,6 +52,8 @@ function ∫(prob)
    sol[2,:,:]=mod.(sol[2,:,:],ny)
    return sol
 end
+
+∫(prob)=solve(prob,Euler(),dt=86400.0)
 
 function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
