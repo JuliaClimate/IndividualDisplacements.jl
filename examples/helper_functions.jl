@@ -184,37 +184,33 @@ function OCCA_setup(;backward_in_time::Bool=false)
    delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS","DXG","DYG","RAC","RAZ","RAS"]);
    backward_in_time ? s=-1.0 : s=1.0
 
+   function rd(filename, varname,n)
+   fil = NetCDF.open(filename, varname)
+   siz = size(fil)
+   tmp = zeros(siz[1:2]...,n)
+   [tmp .+= fil[:,:,1:n,t] for t=1:12]
+   tmp ./= 12.0
+   tmp[findall(tmp.<-1e22)] .= 0.0
+   return tmp
+   end
+
    fileIn=OCCAclim_path*"DDuvel.0406clim.nc"
-   u = ncread(fileIn,"u")[:,:,1:n,:]
-   u=dropdims(mean(u,dims=4),dims=4)
-   u[findall(u .< -1.0e10)] .=0.0
-   u=s*read(u,MeshArray(γ,Float32,n))
+   u=s*read(rd(fileIn,"u",n),MeshArray(γ,Float32,n))
 
    fileIn=OCCAclim_path*"DDvvel.0406clim.nc"
-   v = ncread(fileIn,"v")[:,:,1:n,:]
-   v=dropdims(mean(v,dims=4),dims=4)
-   v[findall(v .< -1.0e10)] .=0.0
-   v=read(v,MeshArray(γ,Float32,n))
+   v=s*read(rd(fileIn,"v",n),MeshArray(γ,Float32,n))
 
    fileIn=OCCAclim_path*"DDwvel.0406clim.nc"
-   w = ncread(fileIn,"w")[:,:,1:n,:]
-   w=dropdims(mean(w,dims=4),dims=4)
-   w[findall(w .< -1.0e10)] .=0.0
+   w=s*rd(fileIn,"w",n)
    w=-cat(w,zeros(360, 160),dims=3)
    w[:,:,1] .=0.0
    w=read(w,MeshArray(γ,Float32,n+1))
 
    fileIn=OCCAclim_path*"DDtheta.0406clim.nc"
-   θ = ncread(fileIn,"theta")[:,:,1:n,:]
-   θ=dropdims(mean(θ,dims=4),dims=4)
-   θ[findall(θ .< -1.0e10)] .=NaN
-   θ=read(θ,MeshArray(γ,Float32,n))
+   θ=s*read(rd(fileIn,"theta",n),MeshArray(γ,Float32,n))
 
 #   fileIn=OCCAclim_path*"DDsalt.0406clim.nc"
-#   𝑆 = ncread(fileIn,"salt")[:,:,1:n,:]
-#   𝑆=dropdims(mean(𝑆,dims=4),dims=4)
-#   𝑆[findall(𝑆 .< -1.0e10)] .=NaN
-#   𝑆=read(𝑆,MeshArray(γ,Float32,n))
+#   𝑆=s*read(rd(fileIn,"salt",n),MeshArray(γ,Float64,n))
 
    for i in eachindex(u)
       u[i]=u[i]./Γ["DXC"][1]
