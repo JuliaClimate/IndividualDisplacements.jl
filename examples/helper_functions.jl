@@ -1,46 +1,16 @@
 
 """
-    get_llc90_grid_if_needed()
-
-Download global `MITgcm` grid and transport output to `examples/GRID_LLC90`
-"""
-function get_llc90_grid_if_needed()
-  p=dirname(pathof(IndividualDisplacements))
-  p=joinpath(p,"../examples/GRID_LLC90")
-  r="https://github.com/gaelforget/GRID_LLC90"
-  !isdir(p) ? run(`git clone $r $p`) : nothing
-end
-
-"""
     get_ecco_velocity_if_needed()
 
 Download `MITgcm` transport output to `examples/nctiles_climatology` if needed
 """
 function get_ecco_velocity_if_needed()
-    p=dirname(pathof(IndividualDisplacements))
-    q=dirname(pathof(OceanStateEstimation))
-    pth0=pwd()
-    cd(joinpath(p,"../examples/"))
-    lst="nctiles_climatology.csv"
-    pth="nctiles_climatology/"
-    !isfile(lst) ? run(`cp $q/../examples/nctiles_climatology.csv $p/../examples/`) : nothing
-    !isdir("$pth") ? mkdir("$pth") : nothing
-    !isdir("$pth"*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
-    !isdir("$pth"*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
-    !isdir("$pth"*"WVELMASS") ? get_from_dataverse(lst,"WVELMASS",pth) : nothing
-    cd(pth0)
-end
-
-"""
-    get_ll360_grid_if_needed()
-
-Download global `MITgcm` grid and transport output to `examples/GRID_LL360`
-"""
-function get_ll360_grid_if_needed()
-  p=dirname(pathof(IndividualDisplacements))
-  p=joinpath(p,"../examples/GRID_LL360")
-  r="https://github.com/gaelforget/GRID_LL360"
-  !isdir(p) ? run(`git clone $r $p`) : nothing
+    p=dirname(pathof(OceanStateEstimation))
+    lst=joinpath(p,"../examples/nctiles_climatology.csv")
+    pth=ECCOclim_path
+    !isdir(pth*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
+    !isdir(pth*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
+    !isdir(pth*"WVELMASS") ? get_from_dataverse(lst,"WVELMASS",pth) : nothing
 end
 
 """
@@ -49,22 +19,16 @@ end
 Download `MITgcm` transport output to `examples/OCCA_climatology` if needed
 """
 function get_occa_velocity_if_needed()
-    p=dirname(pathof(IndividualDisplacements))
-    q=dirname(pathof(OceanStateEstimation))
-    pth0=pwd()
-    cd(joinpath(p,"../examples/"))
-    lst="OCCA_climatology.csv"
-    pth="OCCA_climatology/"
-    !isfile(lst) ? run(`cp $q/../examples/OCCA_climatology.csv $p/../examples/`) : nothing
+    p=dirname(pathof(OceanStateEstimation))
+    lst=joinpath(p,"../examples/OCCA_climatology.csv")
+    pth=OCCAclim_path
     nams = ("DDuvel.0406clim.nc","DDvvel.0406clim.nc","DDwvel.0406clim.nc","DDtheta.0406clim.nc","DDsalt.0406clim.nc")
-    !isdir("$pth") ? mkdir("$pth") : nothing
     if !isfile("$pth"*"DDuvel.0406clim.nc") 
-        tmp=joinpath(dirname(pathof(IndividualDisplacements)),"../examples/OCCA_climatology/tmp/")
-        !isdir("$tmp") ? mkdir("$tmp") : nothing
+        tmp=joinpath(pth,"tmp/")
+        !isdir(tmp) ? mkdir(tmp) : nothing
         [get_from_dataverse(lst,nam,tmp) for nam in nams]
         [mv(joinpath(tmp,nam,nam),joinpath(pth,nam)) for nam in nams]
     end
-    cd(pth0)
 end
 
 """
@@ -123,12 +87,12 @@ function setup_global_ocean(;k=1,ny=2)
 
   #read grid and set up connections between subdomains
   p=dirname(pathof(IndividualDisplacements))
-  γ=GridSpec("LatLonCap",joinpath(p,"../examples/GRID_LLC90/"))
+  γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
   Γ=GridLoad(γ)
   Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
 
   #initialize u0,u1 etc
-  𝑃=set_up_𝑃(k,0.0,Γ,joinpath(p,"../examples/nctiles_climatology/"));
+  𝑃=set_up_𝑃(k,0.0,Γ,ECCOclim_path);
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, Γ=Γ)
@@ -149,7 +113,6 @@ function example3_setup(;backward_in_time::Bool=false)
 
    p=dirname(pathof(IndividualDisplacements))
    dirIn=joinpath(p,"../examples/llc90_latlon/")
-
    γ=gcmgrid(dirIn,"PeriodicChannel",1,
                   [(360,178)], [360 178], Float32, read, write)
 
@@ -213,45 +176,41 @@ Define gridded variables and return result as Dictionary (`uvetc`).
 """
 function OCCA_setup(;backward_in_time::Bool=false)
 
-   p=dirname(pathof(IndividualDisplacements))
-   dirIn=joinpath(p,"../examples/GRID_LL360/")
-   γ=GridSpec("PeriodicChannel",dirIn)
+   γ=GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
    Γ=GridLoad(γ)
-
-   dirIn=joinpath(p,"../examples/OCCA_climatology/")
    n=length(Γ["RC"])
+   #n=10
 
-   fileIn=dirIn*"DDuvel.0406clim.nc"
-   u = ncread(fileIn,"u")
-   u=dropdims(mean(u,dims=4),dims=4)
-   u[findall(u .< -1.0e10)] .=0.0
-   u=read(u,MeshArray(γ,Float32,n))
+   delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS","DXG","DYG","RAC","RAZ","RAS"]);
+   backward_in_time ? s=-1.0 : s=1.0
 
-   fileIn=dirIn*"DDvvel.0406clim.nc"
-   v = ncread(fileIn,"v")
-   v=dropdims(mean(v,dims=4),dims=4)
-   v[findall(v .< -1.0e10)] .=0.0
-   v=read(v,MeshArray(γ,Float32,n))
+   function rd(filename, varname,n)
+   fil = NetCDF.open(filename, varname)
+   siz = size(fil)
+   tmp = zeros(siz[1:2]...,n)
+   [tmp .+= fil[:,:,1:n,t] for t=1:12]
+   tmp ./= 12.0
+   tmp[findall(tmp.<-1e22)] .= 0.0
+   return tmp
+   end
 
-   fileIn=dirIn*"DDwvel.0406clim.nc"
-   w = ncread(fileIn,"w")
-   w=dropdims(mean(w,dims=4),dims=4)
-   w[findall(w .< -1.0e10)] .=0.0
+   fileIn=OCCAclim_path*"DDuvel.0406clim.nc"
+   u=s*read(rd(fileIn,"u",n),MeshArray(γ,Float32,n))
+
+   fileIn=OCCAclim_path*"DDvvel.0406clim.nc"
+   v=s*read(rd(fileIn,"v",n),MeshArray(γ,Float32,n))
+
+   fileIn=OCCAclim_path*"DDwvel.0406clim.nc"
+   w=s*rd(fileIn,"w",n)
    w=-cat(w,zeros(360, 160),dims=3)
    w[:,:,1] .=0.0
    w=read(w,MeshArray(γ,Float32,n+1))
 
-   fileIn=dirIn*"DDtheta.0406clim.nc"
-   θ = ncread(fileIn,"theta")
-   θ=dropdims(mean(θ,dims=4),dims=4)
-   θ[findall(θ .< -1.0e10)] .=NaN
-   θ=read(θ,MeshArray(γ,Float32,n))
+   fileIn=OCCAclim_path*"DDtheta.0406clim.nc"
+   θ=s*read(rd(fileIn,"theta",n),MeshArray(γ,Float32,n))
 
-   fileIn=dirIn*"DDsalt.0406clim.nc"
-   𝑆 = ncread(fileIn,"salt")
-   𝑆=dropdims(mean(𝑆,dims=4),dims=4)
-   𝑆[findall(𝑆 .< -1.0e10)] .=NaN
-   𝑆=read(𝑆,MeshArray(γ,Float32,n))
+#   fileIn=OCCAclim_path*"DDsalt.0406clim.nc"
+#   𝑆=s*read(rd(fileIn,"salt",n),MeshArray(γ,Float64,n))
 
    for i in eachindex(u)
       u[i]=u[i]./Γ["DXC"][1]
@@ -262,7 +221,7 @@ function OCCA_setup(;backward_in_time::Bool=false)
       u[i]=circshift(u[i],[-180 0])
       v[i]=circshift(v[i],[-180 0])
       θ[i]=circshift(θ[i],[-180 0])
-      𝑆[i]=circshift(𝑆[i],[-180 0])
+#      𝑆[i]=circshift(𝑆[i],[-180 0])
    end
 
    for i in eachindex(w)
@@ -279,19 +238,22 @@ function OCCA_setup(;backward_in_time::Bool=false)
    Γ["XG"][1]=tmpx
    Γ["Depth"][1]=circshift(Γ["Depth"][1],[-180 0])
 
-   delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS","DXG","DYG","RAC","RAZ","RAS"]);
-
-   backward_in_time ? s=-1.0 : s=1.0
-   u0=s*u; u1=s*u;
-   v0=s*v; v1=s*v;
-   w0=s*w; w1=s*w;
-
    t0=0.0; t1=86400*366*2.0;
 
-   𝑃 = (θ0=θ, θ1=θ, 𝑆0=𝑆, 𝑆1=𝑆, u0=u0, u1=u1, v0=v0, v1=v1, w0=w0, w1=w1, 𝑇=[t0,t1],
+#   for k=1:n
+#    (tmpu,tmpv)=exchange(u[:,k],v[:,k],1)
+#    u[:,k]=tmpu
+#    v[:,k]=tmpv
+#   end
+#   for k=1:n+1
+#    tmpw=exchange(w[:,k],1)
+#    w[:,k]=tmpw
+#   end
+
+   𝑃 = (θ0=θ, θ1=θ, u0=u, u1=u, v0=v, v1=v, w0=w, w1=w, 𝑇=[t0,t1],
    XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), 
    RF=Γ["RF"], RC=Γ["RC"],
-   ioSize=(360,160,50))
+   ioSize=(360,160,n))
 
    return 𝑃,Γ
 
