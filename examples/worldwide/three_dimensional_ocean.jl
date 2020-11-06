@@ -32,8 +32,8 @@ nam="OCCA"
 bck=false
 
 #if nam=="OCCA"
-#   𝑃,Γ=OCCA_setup(backward_in_time=bck)
-#   🚄 =dxyz_dt!
+   𝑃,Γ=OCCA_setup(backward_in_time=bck)
+   🚄 =dxyz_dt!
 #elseif nam=="LL90"
 #   𝑃,Γ=example3_setup(backward_in_time=bck)
 #   🚄 =dxy_dt
@@ -101,9 +101,12 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
 
    lon=lo0 .+(lo1-lo0).*rand(nf)
    lat=la0 .+(la1-la0).*rand(nf)
-   (xy,_)=initialize_lonlat(Γ,lon,lat)
-   xy[3,:] .= z_init
-   xy=cat(xy,ones(1,10),dims=1)
+   #(xy,_)=initialize_lonlat(Γ,lon,lat)
+   #xy[3,:] .= z_init
+   #xy=cat(xy,ones(1,nf),dims=1)
+   dlo=21. - Γ["XC"][1][21,1]
+   dla=111. - Γ["YC"][1][1,111]
+   xy=[lon' .+ dlo;lat' .+ dla;z_init*ones(1,nf);ones(1,nf)]
    id=collect(1:size(xy,2))
 
    tr = DataFrame([fill(Int, 2) ; fill(Float64, 9); fill(Symbol, 1)], 
@@ -116,7 +119,7 @@ end
 
 set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=nf)
 
-#𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=10)
+𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=10)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.1 Compute Displacements
