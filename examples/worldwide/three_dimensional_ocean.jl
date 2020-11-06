@@ -19,10 +19,12 @@
 #
 
 using IndividualDisplacements, DataFrames, OceanStateEstimation, NetCDF
+using MeshArrays, OrdinaryDiffEq
+
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
-get_ll360_grid_if_needed(); get_occa_velocity_if_needed();
+get_occa_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2.1 Ocean Circulation Setup
@@ -99,8 +101,12 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
 
    lon=lo0 .+(lo1-lo0).*rand(nf)
    lat=la0 .+(la1-la0).*rand(nf)
-   (xy,_)=initialize_lonlat(Γ,lon,lat)
-   xy[3,:] .= z_init
+   #(xy,_)=initialize_lonlat(Γ,lon,lat)
+   #xy[3,:] .= z_init
+   #xy=cat(xy,ones(1,nf),dims=1)
+   dlo=21. - Γ["XC"][1][21,1]
+   dla=111. - Γ["YC"][1][1,111]
+   xy=[lon' .+ dlo;lat' .+ dla;z_init*ones(1,nf)]
    id=collect(1:size(xy,2))
 
    tr = DataFrame([fill(Int, 2) ; fill(Float64, 9); fill(Symbol, 1)], 
