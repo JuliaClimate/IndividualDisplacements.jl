@@ -19,6 +19,8 @@
 #
 
 using IndividualDisplacements, DataFrames, OceanStateEstimation, NetCDF
+using MeshArrays, OrdinaryDiffEq
+
 p=dirname(pathof(IndividualDisplacements))
 #include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
