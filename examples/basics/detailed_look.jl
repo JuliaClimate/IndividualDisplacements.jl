@@ -31,7 +31,7 @@ include(joinpath(p,"../examples/helper_functions.jl"));
 #
 # from `MITgcm/pkg/flt`
 
-get_flt_ex_if_needed()
+IndividualDisplacements.get_flt_ex_if_needed()
 dirIn=joinpath(p,"../examples/flt_example/")
 prec=Float32
 df=read_flt(dirIn,prec)

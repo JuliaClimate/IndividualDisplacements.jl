@@ -24,7 +24,7 @@ using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
 using Statistics, DataFrames, MITgcmTools, OceanStateEstimation
 
 include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
-get_ecco_velocity_if_needed();
+IndividualDisplacements.get_ecco_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Set Up Parameters & Inputs
