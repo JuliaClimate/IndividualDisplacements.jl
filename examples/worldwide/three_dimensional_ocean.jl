@@ -24,7 +24,7 @@ using MeshArrays, OrdinaryDiffEq
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
-get_occa_velocity_if_needed();
+IndividualDisplacements.get_occa_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2.1 Ocean Circulation Setup
