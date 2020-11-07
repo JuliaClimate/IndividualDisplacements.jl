@@ -3,6 +3,18 @@
 
 Interpolate velocity from gridded fields (3D; with halos) to position `u`
 (`x,y,z,fIndex`) to compute the derivative of position v time  `du_dt`.
+
+```jldoctest
+using IndividualDisplacements, Statistics
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/worldwide/three_dimensional_ocean.jl"))
+ref=[211. 34. -70.]
+prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,atol=50.0))
+
+# output
+
+true
+```
 """
 function dxyz_dt!(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     #compute positions in index units
@@ -149,18 +161,6 @@ p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/basics/solid_body_rotation.jl"))
 ref=[7.767441577479032 9.513402495574852 0.7065855989421701]
 prod(isapprox.(𝐼.📌',ref))
-
-# output
-
-true
-```
-
-```jldoctest
-using IndividualDisplacements, Statistics
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/worldwide/three_dimensional_ocean.jl"))
-ref=[211. 34. -70.]
-prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,atol=50.0))
 
 # output
 
