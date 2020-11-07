@@ -1,4 +1,66 @@
 """
+    dxyz_dt!(du,u,p::NamedTuple,tim)
+
+Interpolate velocity from gridded fields (3D; with halos) to position `u`
+(`x,y,z,fIndex`) to compute the derivative of position v time  `du_dt`.
+"""
+function dxyz_dt!(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
+    #compute positions in index units
+    dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
+    dt>1.0 ? error("dt>1.0") : nothing
+    dt<0.0 ? error("dt>0.0") : nothing
+    g=𝑃.u0.grid
+    #
+    g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
+    g.class=="CubeSphere" ? update_location_cs!(u,𝑃) : nothing
+    g.class=="LatLonCap" ? update_location_cs!(u,𝑃) : nothing
+
+    x,y,z = u[1:3]
+    fIndex = Int(u[4])
+    nx,ny=g.fSize[fIndex]
+    nz=size(𝑃.u0,2)
+    #
+    dx,dy,dz=[x - floor(x),y - floor(y),z - floor(z)]
+    i_c,j_c = Int32.(floor.([x y])) .+ 2
+    k_c = Int32.(floor.(z)) .+ 1
+    #
+    i_w,i_e=[i_c i_c+1]
+    j_s,j_n=[j_c j_c+1]
+    k_l,k_r=[k_c k_c+1]
+    #interpolate u to position and time
+    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0.f[fIndex,k_c][i_w,j_c]+
+    dx*(1.0-dt)*𝑃.u0.f[fIndex,k_c][i_e,j_c]+
+    (1.0-dx)*dt*𝑃.u1.f[fIndex,k_c][i_w,j_c]+
+    dx*dt*𝑃.u1.f[fIndex,k_c][i_e,j_c]
+    #interpolate v to position and time
+    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0.f[fIndex,k_c][i_c,j_s]+
+    dy*(1.0-dt)*𝑃.v0.f[fIndex,k_c][i_c,j_n]+
+    (1.0-dy)*dt*𝑃.v1.f[fIndex,k_c][i_c,j_s]+
+    dy*dt*𝑃.v1.f[fIndex,k_c][i_c,j_n]
+    #interpolate w to position and time
+    du[3]=(1.0-dz)*(1.0-dt)*𝑃.w0.f[fIndex,k_l][i_c,j_c]+
+    dz*(1.0-dt)*𝑃.w0.f[fIndex,k_r][i_c,j_c]+
+    (1.0-dz)*dt*𝑃.w1.f[fIndex,k_l][i_c,j_c]+
+    dz*dt*𝑃.w1.f[fIndex,k_r][i_c,j_c]
+    
+    #leave face index unchanged
+    du[4]=0.0
+    #
+    return du
+end
+
+function dxyz_dt!(du::Array{Float64,2},u::Array{Float64,2},𝑃::NamedTuple,tim)
+    for i=1:size(u,2)
+        tmpdu=du[1:4,i]
+        tmpu=u[1:4,i]
+        dxyz_dt!(tmpdu,tmpu,𝑃,tim)
+        du[1:4,i]=tmpdu
+        u[1:4,i]=tmpu
+    end
+    return du
+end
+
+"""
     dxy_dt!(du,u,p::NamedTuple,tim)
 
 Interpolate velocity from gridded fields (2D; with halos) to position `u`

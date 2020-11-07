@@ -195,15 +195,15 @@ function OCCA_setup(;backward_in_time::Bool=false)
 
    t0=0.0; t1=86400*366*2.0;
 
-#   for k=1:n
-#    (tmpu,tmpv)=exchange(u[:,k],v[:,k],1)
-#    u[:,k]=tmpu
-#    v[:,k]=tmpv
-#   end
-#   for k=1:n+1
-#    tmpw=exchange(w[:,k],1)
-#    w[:,k]=tmpw
-#   end
+   for k=1:n
+    (tmpu,tmpv)=exchange(u[:,k],v[:,k],1)
+    u[:,k]=tmpu
+    v[:,k]=tmpv
+   end
+   for k=1:n+1
+    tmpw=exchange(w[:,k],1)
+    w[:,k]=tmpw
+   end
 
    𝑃 = (θ0=θ, θ1=θ, u0=u, u1=u, v0=v, v1=v, w0=w, w1=w, 𝑇=[t0,t1],
    XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), 

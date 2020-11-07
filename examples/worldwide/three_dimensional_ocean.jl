@@ -35,7 +35,7 @@ bck=false
 
 if nam=="OCCA"
    𝑃,Γ=OCCA_setup(backward_in_time=bck)
-   🚄 =dxyz_dt
+   🚄 =dxyz_dt!
 elseif nam=="LL90"
    𝑃,Γ=example3_setup(backward_in_time=bck)
    🚄 =dxy_dt
@@ -54,6 +54,8 @@ function ∫(prob)
    sol[2,:,:]=mod.(sol[2,:,:],ny)
    return sol
 end
+
+∫(prob)=solve(prob,Euler(),dt=86400.0)
 
 function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
@@ -106,7 +108,7 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
    #xy=cat(xy,ones(1,nf),dims=1)
    dlo=21. - Γ["XC"][1][21,1]
    dla=111. - Γ["YC"][1][1,111]
-   xy=[lon' .+ dlo;lat' .+ dla;z_init*ones(1,nf)]
+   xy=[lon' .+ dlo;lat' .+ dla;z_init*ones(1,nf);ones(1,nf)]
    id=collect(1:size(xy,2))
 
    tr = DataFrame([fill(Int, 2) ; fill(Float64, 9); fill(Symbol, 1)], 
