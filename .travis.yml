@@ -29,6 +29,10 @@ jobs:
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
                                     Pkg.develop(PackageSpec(path=pwd()))'
+        - julia --project -e 'using IndividualDisplacements;
+                              IndividualDisplacements.get_ecco_velocity_if_needed();
+                              IndividualDisplacements.get_occa_velocity_if_needed();
+                              IndividualDisplacements.get_flt_ex_if_needed();';
         - travis_wait 59 julia --project=docs/ docs/make.jl
       after_success: skip
   allow_failures:
