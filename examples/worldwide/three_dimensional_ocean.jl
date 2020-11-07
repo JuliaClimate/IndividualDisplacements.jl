@@ -96,7 +96,7 @@ end
 Set up `Individuals` data structure with `nf` particles moving within a near-global Ocean domain. 
 """
 function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000, 
-      z_init=4.5, lon_rng=(-160.0,-150.0), lat_rng=(30.0,40.0))
+      z_init=4.5, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
 
    lo0,lo1=lon_rng
    la0,la1=lat_rng
@@ -121,13 +121,13 @@ end
 
 set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=nf)
 
-𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=100)
+𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=10)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.1 Compute Displacements
 #
 
-𝑇=(0.0,100*86400.0)
+𝑇=(0.0,10*86400.0)
 
 ∫!(𝐼,𝑇)
 
