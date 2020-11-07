@@ -184,16 +184,3 @@ function get_occa_velocity_if_needed()
         [mv(joinpath(tmp,nam,nam),joinpath(pth,nam)) for nam in nams]
     end
 end
-
-"""
-    get_flt_ex_if_needed()
-
-Download simple grid, velocity, & trajectory output from `MITgcm/pkg/flt`
-to `examples/flt_example`
-"""
-function get_flt_ex_if_needed()
-    p=dirname(pathof(IndividualDisplacements))
-    p=joinpath(p,"../examples/flt_example")
-    r="https://github.com/gaelforget/flt_example"
-    !isdir(p) ? run(`git clone $r $p`) : nothing
-end
