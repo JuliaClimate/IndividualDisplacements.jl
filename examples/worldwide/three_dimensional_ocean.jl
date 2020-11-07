@@ -19,10 +19,12 @@
 #
 
 using IndividualDisplacements, DataFrames, OceanStateEstimation, NetCDF
+using MeshArrays, OrdinaryDiffEq
+
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
-get_ll360_grid_if_needed(); get_occa_velocity_if_needed();
+IndividualDisplacements.get_occa_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2.1 Ocean Circulation Setup
@@ -33,7 +35,7 @@ bck=false
 
 if nam=="OCCA"
    𝑃,Γ=OCCA_setup(backward_in_time=bck)
-   🚄 =dxyz_dt
+   🚄 =dxyz_dt!
 elseif nam=="LL90"
    𝑃,Γ=example3_setup(backward_in_time=bck)
    🚄 =dxy_dt
@@ -52,6 +54,8 @@ function ∫(prob)
    sol[2,:,:]=mod.(sol[2,:,:],ny)
    return sol
 end
+
+∫(prob)=solve(prob,Euler(),dt=86400.0)
 
 function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
@@ -92,15 +96,19 @@ end
 Set up `Individuals` data structure with `nf` particles moving within a near-global Ocean domain. 
 """
 function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000, 
-      z_init=4.5, lon_rng=(-160.0,-150.0), lat_rng=(30.0,40.0))
+      z_init=4.5, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
 
    lo0,lo1=lon_rng
    la0,la1=lat_rng
 
    lon=lo0 .+(lo1-lo0).*rand(nf)
    lat=la0 .+(la1-la0).*rand(nf)
-   (xy,_)=initialize_lonlat(Γ,lon,lat)
-   xy[3,:] .= z_init
+   #(xy,_)=initialize_lonlat(Γ,lon,lat)
+   #xy[3,:] .= z_init
+   #xy=cat(xy,ones(1,nf),dims=1)
+   dlo=21. - Γ["XC"][1][21,1]
+   dla=111. - Γ["YC"][1][1,111]
+   xy=[lon' .+ dlo;lat' .+ dla;z_init*ones(1,nf);ones(1,nf)]
    id=collect(1:size(xy,2))
 
    tr = DataFrame([fill(Int, 2) ; fill(Float64, 9); fill(Symbol, 1)], 
@@ -113,13 +121,13 @@ end
 
 set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=nf)
 
-𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=100)
+𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=10)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.1 Compute Displacements
 #
 
-𝑇=(0.0,100*86400.0)
+𝑇=(0.0,10*86400.0)
 
 ∫!(𝐼,𝑇)
 
