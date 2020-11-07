@@ -4,7 +4,6 @@ using IndividualDisplacements
 #download data dependencies if needed
 IndividualDisplacements.get_ecco_velocity_if_needed();
 IndividualDisplacements.get_occa_velocity_if_needed();
-IndividualDisplacements.get_flt_ex_if_needed();
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")
@@ -16,7 +15,7 @@ nb = true      # Set to true to generate the notebooks
 
 #lst1 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","three_dimensional_ocean","detailed_look","particle_cloud"]
 #lst2 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","three_dimensional_ocean","detailed_look","particle_cloud"]
-lst1 = ["solid_body_rotation","random_flow_field"]
+lst1 = ["solid_body_rotation","random_flow_field","global_ocean_circulation"]
 lst2 = ["none"]
 tst1(x) = !isempty(lst1) && Bool(sum(isequal.(x, lst1)))
 tst2(x) = !isempty(lst2) && Bool(sum(isequal.(x, lst2)))

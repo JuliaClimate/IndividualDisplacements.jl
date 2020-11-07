@@ -1,8 +1,13 @@
 module IndividualDisplacements
 
 using MeshArrays, OrdinaryDiffEq, StatsBase, DataFrames
-using NetCDF, Dates, CFTime, CSV, UnPack, Random
+using NetCDF, Dates, CFTime, CSV, UnPack, Random, Pkg.Artifacts
 using CyclicArrays, MITgcmTools, OceanStateEstimation
+
+p=dirname(pathof(IndividualDisplacements))
+artifact_toml = joinpath(p, "../Artifacts.toml")
+flt_example_hash = artifact_hash("flt_example", artifact_toml)
+flt_example = joinpath(artifact_path(flt_example_hash)*"/","flt_example-1.0/")
 
 include("API.jl")
 include("compute.jl")

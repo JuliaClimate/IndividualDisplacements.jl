@@ -4,7 +4,6 @@ include(joinpath(dirname(pathof(IndividualDisplacements)),"../test/helper_functi
 
 IndividualDisplacements.get_ecco_velocity_if_needed();
 IndividualDisplacements.get_occa_velocity_if_needed();
-IndividualDisplacements.get_flt_ex_if_needed();
 
 @testset "test1" begin
     uvetc,sol=test1_setup()

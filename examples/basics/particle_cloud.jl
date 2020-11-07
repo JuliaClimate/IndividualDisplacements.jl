@@ -47,5 +47,5 @@ tr = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :x, :y, :t])
 
 # Compare with trajectory output from `MITgcm`
 
-#df=read_flt(joinpath(p,"../examples/flt_example/"),Float32)
+#df=read_flt(IndividualDisplacements.flt_example,Float32)
 #ref=PlotBasic(df,size(xy,2),100000.0)
