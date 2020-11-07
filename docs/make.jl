@@ -2,14 +2,9 @@ using Documenter, Literate
 using IndividualDisplacements
 
 #download data dependencies if needed
-module datadeps
-  using IndividualDisplacements, OceanStateEstimation
-  include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
-  include(joinpath(dirname(pathof(IndividualDisplacements)),"../test/helper_functions.jl"))
-  #get_ecco_velocity_if_needed();
-  #get_occa_velocity_if_needed();
-  #get_flt_ex_if_needed();
-end
+IndividualDisplacements.get_ecco_velocity_if_needed();
+IndividualDisplacements.get_occa_velocity_if_needed();
+IndividualDisplacements.get_flt_ex_if_needed();
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")
@@ -19,8 +14,9 @@ notebooks = joinpath(src, "notebooks")
 execute = true # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
 
-lst1 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","three_dimensional_ocean","detailed_look","particle_cloud"]
+#lst1 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","three_dimensional_ocean","detailed_look","particle_cloud"]
 #lst2 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","three_dimensional_ocean","detailed_look","particle_cloud"]
+lst1 = ["solid_body_rotation","random_flow_field"]
 lst2 = ["none"]
 tst1(x) = !isempty(lst1) && Bool(sum(isequal.(x, lst1)))
 tst2(x) = !isempty(lst2) && Bool(sum(isequal.(x, lst2)))

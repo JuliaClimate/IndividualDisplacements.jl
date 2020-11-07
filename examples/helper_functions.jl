@@ -134,7 +134,7 @@ function OCCA_setup(;backward_in_time::Bool=false)
    γ=GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
    Γ=GridLoad(γ)
    n=length(Γ["RC"])
-   #n=10
+   n=10
 
    delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS","DXG","DYG","RAC","RAZ","RAS"]);
    backward_in_time ? s=-1.0 : s=1.0
