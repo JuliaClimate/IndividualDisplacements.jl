@@ -1,7 +1,8 @@
 module IndividualDisplacements
 
-using MeshArrays, OrdinaryDiffEq, StatsBase, DataFrames, Random
-using NetCDF, Dates, CFTime, CSV, UnPack, CyclicArrays, MITgcmTools
+using MeshArrays, OrdinaryDiffEq, StatsBase, DataFrames
+using NetCDF, Dates, CFTime, CSV, UnPack, Random
+using CyclicArrays, MITgcmTools, OceanStateEstimation
 
 include("API.jl")
 include("compute.jl")
