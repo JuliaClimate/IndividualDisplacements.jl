@@ -46,7 +46,8 @@ function example2()
 
    𝑃.𝑇[:] = [0.0,nSteps*3600.0]
    solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
-   tr = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :x, :y, :t])
+
+   tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
    
    𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🚄 = dxy_dt, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
    𝑇=(0.0,𝐼.𝑃.𝑇[2])
