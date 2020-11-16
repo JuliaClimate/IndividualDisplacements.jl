@@ -77,7 +77,8 @@ begin
 	  return sol
 	end
 	
-	tr = DataFrame([fill(Int, 2) ; fill(Float64, 6)],[:ID, :fid, :x, :y, :z, :t, :lon, :lat])
+	tr = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
+	               z=Float64[], t=Float64[], lon=Float64[], lat=Float64[])
 
 	function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
 	  df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
