@@ -29,7 +29,7 @@ xy=transpose([x y])
 
 𝑃.𝑇[:] = [0.0,2998*3600.0]
 solv(prob) = solve(prob,Tsit5(),reltol=1e-6,abstol=1e-6)
-tr = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :x, :y, :t])
+tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
 
 𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
                          🚄 = dxy_dt, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃);
