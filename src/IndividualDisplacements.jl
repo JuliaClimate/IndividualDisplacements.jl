@@ -1,6 +1,6 @@
 module IndividualDisplacements
 
-using MeshArrays, OrdinaryDiffEq, StatsBase, DataFrames
+using MeshArrays, OrdinaryDiffEq, DataFrames
 using NetCDF, Dates, CFTime, CSV, UnPack, Random, Pkg.Artifacts
 using CyclicArrays, MITgcmTools, OceanStateEstimation
 
