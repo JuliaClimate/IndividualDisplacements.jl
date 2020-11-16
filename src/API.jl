@@ -9,7 +9,8 @@ OneMonth=[-0.5*mon,0.5*mon]
 
 solver_default(prob) = solve(prob,Euler(),dt=day)
 param_default = ( 𝑇=OneMonth , 🔄=(x->x), u0=[], u1=[], v0=[], v1=[])
-rec_default = DataFrame(fill(Float64, 7),[:ID, :x, :y, :t, :lon, :lat, :fid])
+rec_default = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[], 
+                        lon=Float64[], lat=Float64[], fid=Int[])
 postprocess_default = (x->x)
 
 """

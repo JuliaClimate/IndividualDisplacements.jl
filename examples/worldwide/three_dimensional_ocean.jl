@@ -111,8 +111,9 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
    xy=[lon' .+ dlo;lat' .+ dla;z_init*ones(1,nf);ones(1,nf)]
    id=collect(1:size(xy,2))
 
-   tr = DataFrame([fill(Int, 2) ; fill(Float64, 9); fill(Symbol, 1)], 
-   [:ID, :fid, :x, :y, :k, :z, :iso, :t, :lon, :lat, :year, :col])
+   tr = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
+                  k=Float64[], z=Float64[], iso=Float64[], t=Float64[], 
+                  lon=Float64[], lat=Float64[], year=Float64[], col=Symbol[])
 
    𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, 🚄 = 🚄, ∫ = ∫, 🔧 = 🔧, 𝑃=𝑃)
 
