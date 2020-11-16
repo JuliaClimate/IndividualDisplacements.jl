@@ -160,7 +160,7 @@ using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/basics/solid_body_rotation.jl"))
 ref=[7.767441577479032 9.513402495574852 0.7065855989421701]
-prod(isapprox.(𝐼.📌',ref))
+prod(isapprox.(𝐼.📌',ref,atol=1.0))
 
 # output
 
@@ -228,7 +228,7 @@ using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/basics/particle_cloud.jl"))
 ref=[29.381183342468674  19.890831699436823]
-prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref))
+prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=1.0))
 
 # output
 
