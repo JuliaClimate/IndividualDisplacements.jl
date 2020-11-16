@@ -32,7 +32,8 @@ function read_drifters(fil::String;chnk=Inf,rng=(missing,missing))
    la=la[ii]
    ID=ID[ii]
 
-   df = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :lon, :lat, :t])
+   df = DataFrame(ID=Int[], lon=Float64[], lat=Float64[], t=Float64[])
+   
    !isinf(chnk) ? nn=Int(ceil(length(ii)/chnk)) : nn=1
    for jj=1:nn
       #println([jj nn])
