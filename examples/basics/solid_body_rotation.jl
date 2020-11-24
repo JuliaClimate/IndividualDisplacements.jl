@@ -78,8 +78,9 @@ function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
     return df
  end
 
-𝐼 = Individuals{Float64}(📌=📌[:,:], 🔴=tr, 🆔=collect(1:size(📌,2)),
-                         🚄 = dxyz_dt, ∫ = solv, 🔧 = postproc, 𝑃=𝑃);
+I=(position=📌[:,:],record=deepcopy(tr),velocity=dxyz_dt,
+integration=solv,postprocessing=postproc,parameters=𝑃)
+𝐼=Individuals(I)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ### 2.2 Compute Trajectories
