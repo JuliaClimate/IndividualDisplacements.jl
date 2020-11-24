@@ -9,16 +9,30 @@ function postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
-    id=id*ones(1,size(sol,3))
-    x=sol[1,:,:]
-    y=sol[2,:,:]
-    𝑃.XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
+    nd=length(size(sol))
+    nt=size(sol,nd)
+    nf=size(sol,nd-1)
+    id=id*ones(1,size(sol,nd))
+    if (size(sol,1)>1)&&(nd>2)
+        x=sol[1,:,:]
+        y=sol[2,:,:]
+        fIndex=sol[end,:,:]
+    elseif (nd>2)
+        x=[sol[1,i,j][1] for i in 1:nf, j in 1:nt]
+        y=[sol[1,i,j][2] for i in 1:nf, j in 1:nt]
+        fIndex=[sol[1,i,j][end] for i in 1:nf, j in 1:nt]
+    else
+        x=sol[1,:]
+        y=sol[2,:]
+        fIndex=sol[end,:]
+        nf=1
+    end
 
-    nf=size(sol,2)
-    nt=size(sol,3)
+    𝑃.XC.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
+
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
     t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
-
+    
     df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
     add_lonlat!(df,𝑃.XC,𝑃.YC)
     return df
@@ -67,10 +81,19 @@ function postprocess_xy(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
     nf=size(sol,2)
     nt=size(sol,3)
     nx,ny=𝑃.ioSize[1:2]
+    nd=length(size(sol))
 
-    id=id*ones(1,size(sol,3))
-    x=mod.(sol[1,:,:],Ref(nx))
-    y=mod.(sol[2,:,:],Ref(ny))
+    id=id*ones(1,size(sol,nd))
+    if (size(sol,1)>1)&&(nd>2)
+        x=mod.(sol[1,:,:],Ref(nx))
+        y=mod.(sol[2,:,:],Ref(ny))
+    elseif (nd>2)
+        x=[mod(sol[1,i,j][1],nx) for i in 1:nf, j in 1:nt]
+        y=[mod(sol[1,i,j][2],ny) for i in 1:nf, j in 1:nt]
+    else
+        x=mod.(sol[1,:],Ref(nx))
+        y=mod.(sol[2,:],Ref(ny))
+    end
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
     #size(𝑃.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
     t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t

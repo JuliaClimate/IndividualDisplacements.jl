@@ -1,3 +1,8 @@
+#needed for distributivity within ordindary diff eq
+
+import Base: zero
+zero(tmp::Array) = zero.(tmp)
+
 """
     dxyz_dt!(du,u,p::NamedTuple,tim)
 
@@ -62,14 +67,7 @@ function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
 end
 
 function dxyz_dt!(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
-    for i=1:size(u,2)
-        tmpdu=du[1:4,i]
-        tmpu=u[1:4,i]
-        dxyz_dt!(tmpdu,tmpu,𝑃,tim)
-        du[1:4,i]=tmpdu
-        u[1:4,i]=tmpu
-    end
-    return du
+    [dxyz_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
@@ -139,14 +137,7 @@ function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
 end
 
 function dxy_dt!(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
-    for i=1:size(u,2)
-        tmpdu=du[1:3,i]
-        tmpu=u[1:3,i]
-        dxy_dt!(tmpdu,tmpu,𝑃,tim)
-        du[1:3,i]=tmpdu
-        u[1:3,i]=tmpu
-    end
-    return du
+    [dxy_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
@@ -209,12 +200,7 @@ function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
 end
 
 function dxyz_dt(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
-    for i=1:size(u,2)
-        tmpdu=du[1:3,i]
-        dxyz_dt(tmpdu,u[1:3,i],𝑃,tim)
-        du[1:3,i]=tmpdu
-    end
-    return du
+    [dxyz_dt(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
@@ -267,12 +253,7 @@ function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
 end
 
 function dxy_dt(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
-    for i=1:size(u,2)
-        tmpdu=du[1:2,i]
-        dxy_dt(tmpdu,u[1:2,i],𝑃,tim)
-        du[1:2,i]=tmpdu
-    end
-    return du
+    [dxy_dt(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """

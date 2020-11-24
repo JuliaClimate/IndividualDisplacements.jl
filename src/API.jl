@@ -102,7 +102,9 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     isempty(🔴) ? np =0 : np=length(🆔)
     append!(🔴,tmp[np+1:end,:])
 
-    📌[:,:] = deepcopy(sol[:,:,end])
+    nd=length(size(sol))
+    nd==3 ? 📌[:,:] = deepcopy(sol[:,:,end]) : 📌[:] = deepcopy(sol[:,end])
+
 end
 
 ## Convenience Methods (size,show,similar)

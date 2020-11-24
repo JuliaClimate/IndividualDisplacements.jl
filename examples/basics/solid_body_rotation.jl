@@ -73,12 +73,12 @@ solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
 function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
     df=postprocess_xy(sol,𝑃,id=id,𝑇=𝑇)
     #add third coordinate
-    z=sol[3,:,:]
+    z=sol[3,:]
     df.z=z[:]
     return df
  end
 
-I=(position=📌[:,:],record=deepcopy(tr),velocity=dxyz_dt,
+I=(position=📌,record=deepcopy(tr),velocity=dxyz_dt,
 integration=solv,postprocessing=postproc,parameters=𝑃)
 𝐼=Individuals(I)
 
