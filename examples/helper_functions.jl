@@ -215,8 +215,12 @@ function OCCA_setup(;backward_in_time::Bool=false)
 
 end
 
-##
+"""
+    init_global_range(lons::Tuple = (-160.0, -150.0),lats::Tuple = (35.0, 45.0))
 
+Randomly distribute `np` points over a lon,la region, and 
+return position in grid index space (`i,j,subdomain`).
+"""
 function init_global_range(lons::Tuple = (-160.0, -150.0),lats::Tuple = (35.0, 45.0))
     lo0, lo1 = lons #(-160.0, -150.0)
     la0, la1 = lats #(35.0, 45.0)
@@ -228,10 +232,34 @@ function init_global_range(lons::Tuple = (-160.0, -150.0),lats::Tuple = (35.0, 4
     return u0
 end
 
+"""
+    init_global_randn(np ::Int , 𝑃::NamedTuple)
+
+Randomly distribute `np` points over the Earth, within `𝑃.msk` 
+region, and return position in grid index space (`i,j,subdomain`).
+"""
 function init_global_randn(np ::Int , 𝑃::NamedTuple)
     (lon, lat) = randn_lonlat(2*np)
     (u0, _) = initialize_lonlat(𝑃.Γ, lon, lat; msk = 𝑃.msk)
     u0[:,1:np]
+end
+
+"""
+    reset_lonlat!(𝐼::Individuals)
+
+Randomly select a fraction (𝐼.𝑃.frac) of the particles and reset their positions.
+"""
+function reset_lonlat!(𝐼::Individuals)
+    np=length(𝐼.🆔)
+    n_reset = Int(round(𝐼.𝑃.frac*np))
+    (lon, lat) = randn_lonlat(2*n_reset)
+    (v0, _) = initialize_lonlat(𝐼.𝑃.Γ, lon, lat; msk = 𝐼.𝑃.msk)
+    n_reset=min(n_reset,size(v0,2))
+    k_reset = rand(1:np, n_reset)
+    v0 = permutedims([v0[:,i] for i in 1:size(v0,2)])
+    𝐼.📌[k_reset].=v0[1:n_reset]
+    isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
+    𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
 end
 
 ##
