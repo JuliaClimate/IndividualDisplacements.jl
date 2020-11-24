@@ -25,7 +25,7 @@ include(joinpath(p,"../examples/example123.jl"));
 ii1=5:5:40; ii2=5:5:25
 x=vec([x-0.5 for x in ii1, y in ii2])
 y=vec([y-0.5 for x in ii1, y in ii2])
-xy=transpose([x y])
+xy = permutedims([[x[i];y[i];1.0] for i in eachindex(x)])
 
 𝑃.𝑇[:] = [0.0,2998*3600.0]
 solv(prob) = solve(prob,Tsit5(),reltol=1e-6,abstol=1e-6)
@@ -34,7 +34,7 @@ tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
 #𝐼 = Individuals{Float64,2}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
 #                         🚄 = dxy_dt, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃);
 
-I=(position=xy[:,:],record=deepcopy(tr),velocity=dxy_dt,
+I=(position=xy,record=deepcopy(tr),velocity=dxy_dt,
    integration=solv,postprocessing=postprocess_xy,parameters=𝑃)
 𝐼=Individuals(I)
 

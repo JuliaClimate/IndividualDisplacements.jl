@@ -44,7 +44,10 @@ keys(𝑃)
 #
 # - initial particle positions randomly over Global Ocean
 
-I=(position=init_global_randn(1000,𝑃),velocity=dxy_dt!,
+xy = init_global_randn(1000,𝑃)
+xy = permutedims([xy[:,i] for i in 1:size(xy,2)])
+
+I=(position=xy,velocity=dxy_dt!,
    postprocessing=postprocess_lonlat,parameters=𝑃)
 𝐼=Individuals(I)
 
@@ -66,7 +69,7 @@ fieldnames(typeof(𝐼))
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐼.𝑃.🔄(𝐼.𝑃,t_ϵ)
-    reset_lonlat!(𝐼)
+    #reset_lonlat!(𝐼)
     𝑇=Tuple(𝐼.𝑃.𝑇)
     ∫!(𝐼,𝑇)
 end
