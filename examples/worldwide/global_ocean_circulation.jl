@@ -69,7 +69,7 @@ fieldnames(typeof(𝐼))
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐼.𝑃.🔄(𝐼.𝑃,t_ϵ)
-    #reset_lonlat!(𝐼)
+    reset_lonlat!(𝐼)
     𝑇=Tuple(𝐼.𝑃.𝑇)
     ∫!(𝐼,𝑇)
 end

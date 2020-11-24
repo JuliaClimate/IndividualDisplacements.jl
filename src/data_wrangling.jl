@@ -250,23 +250,6 @@ end
 initialize_lonlat(Γ::Dict,lon::Float64,lat::Float64;msk=missing) = initialize_lonlat(Γ,[lon],[lat];msk=msk)
 
 """
-    reset_lonlat!(𝐼::Individuals)
-
-Randomly select a fraction (𝐼.𝑃.frac) of the particles and reset their positions.
-"""
-function reset_lonlat!(𝐼::Individuals)
-    np=length(𝐼.🆔)
-    n_reset = Int(round(𝐼.𝑃.frac*np))
-    (lon, lat) = randn_lonlat(2*n_reset)
-    (v0, _) = initialize_lonlat(𝐼.𝑃.Γ, lon, lat; msk = 𝐼.𝑃.msk)
-    n_reset=min(n_reset,size(v0,2))
-    k_reset = rand(1:np, n_reset)
-    𝐼.📌[:,k_reset].=v0[:,1:n_reset]
-    isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
-    𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
-end
-
-"""
     interp_to_lonlat
 
 Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps for plotting purposes).
@@ -293,7 +276,6 @@ function interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
     @unpack f,i,j,w,lon,lat = IntFac
     return reshape(Interpolate(X,f,i,j,w),size(lon))
 end
-
 
 """
     interp_to_xy(df::DataFrame,Zin)
