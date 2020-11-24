@@ -115,7 +115,9 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
                   k=Float64[], z=Float64[], iso=Float64[], t=Float64[], 
                   lon=Float64[], lat=Float64[], year=Float64[], col=Symbol[])
 
-   𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, 🚄 = 🚄, ∫ = ∫, 🔧 = 🔧, 𝑃=𝑃)
+   I=(position=xy,record=deepcopy(tr),velocity=🚄, integration=∫, 
+      postprocessing=🔧,parameters=𝑃)
+   𝐼=Individuals(I)
 
    return 𝐼
 end
