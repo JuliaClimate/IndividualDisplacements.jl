@@ -64,7 +64,7 @@ function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    df.year=df.t ./86400/365
 
    #add depth (i.e. the 3rd, vertical, coordinate)
-   k=sol[3,:,:]
+   k=[sol[1,i,j][3] for i in 1:size(sol,2), j in 1:size(sol,3)]
    df.k=k[:] #level
    k=Int.(floor.(df.k)); w=(df.k-k); 
    df.z=𝑃.RF[1 .+ k].*(1 .- w)+𝑃.RF[2 .+ k].*w #depth
@@ -108,7 +108,8 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
    #xy=cat(xy,ones(1,nf),dims=1)
    dlo=21. - Γ["XC"][1][21,1]
    dla=111. - Γ["YC"][1][1,111]
-   xy=[lon' .+ dlo;lat' .+ dla;z_init*ones(1,nf);ones(1,nf)]
+  
+   xy = permutedims([[lon[i]+dlo;lat[i]+dla;z_init;1.0] for i in eachindex(lon)])
    id=collect(1:size(xy,2))
 
    tr = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 

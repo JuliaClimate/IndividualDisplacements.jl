@@ -11,6 +11,7 @@ Set up a random flow field over the domain specified by Γ
 """
 function setup_random_flow(Γ::Dict)
   (_,ϕ,_,_)=demo2(Γ);
+  ϕ=0.5*ϕ
 
   (u,v)=gradient(ϕ,Γ)
   u=u./Γ["DXC"]#normalization to grid units
