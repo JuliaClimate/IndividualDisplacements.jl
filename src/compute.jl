@@ -1,5 +1,4 @@
-#needed for distributivity within ordindary diff eq
-
+#needed within OrdinaryDiffEq somehow:
 import Base: zero
 zero(tmp::Array) = zero.(tmp)
 

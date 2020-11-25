@@ -10,7 +10,7 @@ src = joinpath(@__DIR__, "src/")
 lit = joinpath(@__DIR__, "../examples/")
 notebooks = joinpath(src, "notebooks")
 
-execute = true # Set to true for executing notebooks and documenter!
+execute = false # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
 
 lst1 = ["solid_body_rotation","random_flow_field","global_ocean_circulation","detailed_look","particle_cloud"]
@@ -33,10 +33,12 @@ ismd(f) = splitext(f)[2] == ".md"
 pages(folder) = [joinpath(folder, f) for f in readdir(joinpath(src, folder)) if ismd(f)]
 
 p=pages("basics"); np=length(p)
-i=findall((!occursin).("detailed_look",p)); i=[i;setdiff(1:np,i)]; p=p[i]
-i=findall((occursin).("solid_body_rotation",p)); i=[i;setdiff(1:np,i)]; p=p[i]
-p_BE=p
-
+i=findall((occursin).("solid_body_rotation",p)); 
+j=findall((occursin).("random_flow_field",p)); 
+p_tu=[p[i];p[j]]
+i=findall((occursin).("solid_body_rotation",p)); 
+j=findall((occursin).("particle_cloud",p)); 
+p_mi=[p[i];p[j]]
 
 makedocs(
     sitename = "IndividualDisplacements",
@@ -44,9 +46,10 @@ makedocs(
     pages = [
 		"Introduction" => "index.md",
         "User Guide" => "workflow.md",
-		"Examples" => "examples.md",
-		"Real Ocean" => pages("worldwide"),
-        "Other Examples" => p_BE,
+        "Example Guide" => "examples.md",
+        "Tutorial Examples" => p_tu, 
+		"Real Ocean Cases" => pages("worldwide"),
+        "MITgcm Examples" => p_mi, 
 		"Tool Box" => "API.md"],
     modules = [IndividualDisplacements]
 )
