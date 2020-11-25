@@ -30,35 +30,6 @@ The movies highlighted above are from [global\_ocean\_circulation.jl](https://ju
 
 <img src="https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif" width="40%"> <img src="https://user-images.githubusercontent.com/20276764/94755085-4b010080-0361-11eb-94fd-ff1b68b99f94.png" width="40%"> 
 
-
-### Run The Examples
-
-Download the examples folder:
-
-```
-git clone https://github.com/JuliaClimate/IndividualDisplacements.jl
-julia --project=IndividualDisplacements.jl/docs/
-```
-
-Get all needed packages and `IndividualDisplacements.jl`:
-
-```
-using Pkg
-Pkg.activate("IndividualDisplacements.jl/docs/")
-Pkg.instantiate()
-Pkg.add("IndividualDisplacements")
-```
-
-Generate jupyter notebook using `Literate.jl`:
-
-```
-using Literate
-Literate.notebook("IndividualDisplacements.jl/examples/basics/solid_body_rotation.jl", ".", execute = true, documenter = false)
-Literate.notebook("IndividualDisplacements.jl/examples/worldwide/three_dimensional_ocean.jl", ".", execute = true, documenter = false)
-```
-
-And so on and so forth -- see documentation for a list of examples.
-
 ### Would like to contribute?
 
 Thank you for your interest in contributing to this package! 
