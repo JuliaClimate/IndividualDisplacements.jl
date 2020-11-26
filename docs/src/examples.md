@@ -1,6 +1,11 @@
-The four examples outlined below are meant to serve as a tutorial, and thus complement the rest of the package documentation. Afterwards, this section provides a listing of the other examples, plotting recipes, and tools which are included in the package. 
+## Summary
 
-Users aiming to set up `IndividualDisplacements` for a different problem might also find examples of data wrangling codes in `helper_functions.jl` useful. These define grids and ingest velocity fields for the examples below.
+The four examples outlined below form a tutorial, and thus complement the rest of the package documentation. Afterwards, this section provides a listing of the other examples, plotting recipes, and tools which are included in the package. 
+
+Users aiming to set up `IndividualDisplacements` for a different problem might also find examples of data wrangling codes in `helper_functions.jl` useful. These define grids and ingest velocity fields for the examples below. 
+
+For plotting result, the examples use `recipes_plots.jl`, `recipes_makie.jl`, and `recipes_pyplot.jl` which demo three popular plotting packages.
+
 
 ## Single Particle Example
 
@@ -32,21 +37,20 @@ A simulation over the global ocean based on a data-constrained, realistic, model
 
 [![simulated particle movie (3D)](https://user-images.githubusercontent.com/20276764/94491485-595ee900-01b6-11eb-95e6-c2cacb812f46.png)](https://youtu.be/twAAE_WUs_g)
 
-## Tools And More
+## Tool Box, Etc.
 
-
-- Plotting: `recipes_plots.jl`, `recipes_makie.jl`, `recipes_pyplot.jl` demonstrate three popular plotting packages (see examples).
-
-- Tools (see `compute.jl`, `data_wrangling.jl`):
+- Tools included in `src/` (see `compute.jl`, `data_wrangling.jl`):
 	- Velocity interpolaton functions for several array / grid types.
 	- Preprocessing and postprocessing methods.
 	- I/O routines to read / write results from / to file.
 
 - Two examples that reproduce trajectories computed earlier in Fortran ([MITgcm/pkg/flt](https://mitgcm.readthedocs.io/en/latest/outp_pkgs/outp_pkgs.html#)): `detailed_look.jl` illustrates package features in more detail; `particle_cloud.jl` illustrates a computation of many trajectories at once. 
 
-- For more see also: `example_CyclicArray.jl`, `example123.jl`, `helper_functions.jl` in the `examples/` folder.
+- For more see also: `example_CyclicArray.jl`, `example123.jl`, `helper_functions.jl`; and for plotting : `recipes_plots.jl`, `recipes_makie.jl`, `recipes_pyplot.jl` also in the `examples/` folder.
 
-## Run The Examples
+## Running The Examples
+
+To run the examples, one needs `julia` and the relevant packages. Inputs will be downloaded as needed upon running the examples. The following three steps will do this, and generate a jupyter notebook version of the example which is easy to rerun afterwards.
 
 #### 1. Download the examples folder:
 
