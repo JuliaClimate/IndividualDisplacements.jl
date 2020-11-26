@@ -95,20 +95,17 @@ function scatter_movie(𝐼; cam=(0, 90))
 end
 
 """
-    phi_and_subset(Γ,ϕ,df,t,dt=5.0)
+    phi_scatter(Γ,ϕ,df)
 
 ```
-t=maximum(df[!,:t])
-phi_and_subset(Γ,ϕ,df,t)
+phi_scatter(Γ,ϕ,df)
 ```
 """
-function phi_and_subset(Γ,ϕ,df,t=missing,dt=5.0)
-    ismissing(t) ? t=maximum(df[!,:t]) : nothing
-    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
+function phi_scatter(Γ,ϕ,df)
     nx,ny=size(ϕ[1])
     contourf(vec(Γ["XC"][1][:,1]),vec(Γ["YC"][1][1,:]),
         transpose(ϕ[1]),c = :blues,linewidth = 0.1)
-    scatter!(df_t.x,df_t.y,markersize=2.0,c=:red,
+    scatter!(df.x,df.y,markersize=2.0,c=:red,
     xlims=(0,nx),ylims=(0,ny),leg=:none,marker = (:circle, stroke(0)))
 end
 

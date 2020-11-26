@@ -39,18 +39,18 @@ A simulation over the global ocean based on a data-constrained, realistic, model
 
 ## Tool Box, Etc.
 
-- Tools included in `src/` (see `compute.jl`, `data_wrangling.jl`):
+- Tools included in `src/compute.jl` and `data_wrangling.jl`:
 	- Velocity interpolaton functions for several array / grid types.
 	- Preprocessing and postprocessing methods.
 	- I/O routines to read / write results from / to file.
 
-- Two examples that reproduce trajectories computed earlier in Fortran ([MITgcm/pkg/flt](https://mitgcm.readthedocs.io/en/latest/outp_pkgs/outp_pkgs.html#)): `detailed_look.jl` illustrates package features in more detail; `particle_cloud.jl` illustrates a computation of many trajectories at once. 
+-  Examples reproducing trajectories that had been computed earlier in Fortran ([MITgcm/pkg/flt](https://mitgcm.readthedocs.io/en/latest/outp_pkgs/outp_pkgs.html#)) are `detailed_look.jl` and `particle_cloud.jl`. 
 
 - For more see also: `example_CyclicArray.jl`, `example123.jl`, `helper_functions.jl`; and for plotting : `recipes_plots.jl`, `recipes_makie.jl`, `recipes_pyplot.jl` also in the `examples/` folder.
 
 ## Running The Examples
 
-To run the examples, one needs `julia` and the relevant packages. Inputs will be downloaded as needed upon running the examples. The following three steps will do this, and generate a jupyter notebook version of the example which is easy to rerun afterwards.
+Running the examples requires `julia` and its relevant packages. Inputs get downloaded as needed upon running the examples. The first three steps below do this, and generate jupyter notebook versions of the examples (easy to rerun afterwards). Once everything is setup then user can just call examples directly in `julia` (i.e., skip to last step below).
 
 #### 1. Download the examples folder:
 
@@ -77,3 +77,11 @@ Literate.notebook("IndividualDisplacements.jl/examples/worldwide/three_dimension
 ```
 
 And so on and so forth -- see documentation for a list of examples.
+
+#### 4. or alternatively, in the julia REPL:
+
+```
+using IndividualDisplacements
+p=dirname(pathof(IndividualDisplacements))
+include(p*"/../examples/worldwide/global_ocean_circulation.jl")
+```
