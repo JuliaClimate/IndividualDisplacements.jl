@@ -1,6 +1,6 @@
 The four examples outlined below are meant to serve as a tutorial, and thus complement the rest of the package documentation. Afterwards, this section provides a listing of the other examples, plotting recipes, and tools which are included in the package. 
 
-User interested in setting up `IndividualDisplacements` for a different problem might also find examples of data wrangling codes in `helper_functions.jl` useful. These are used in the examples to define grids and the ingestion of velocity fields.
+Users aiming to set up `IndividualDisplacements` for a different problem might also find examples of data wrangling codes in `helper_functions.jl` useful. These define grids and ingest velocity fields for the examples below.
 
 ## Single Particle Example
 
