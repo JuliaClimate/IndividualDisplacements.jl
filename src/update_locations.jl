@@ -53,7 +53,7 @@ end
 Update location (x,y,fIndex) when out of domain. Note: initially, this
 only works for the `dpdo` grid type provided by `MeshArrays.jl`.
 """
-function update_location_dpdo!(u::Array{Float64,1},grid::gcmgrid)
+function update_location_dpdo!(u::AbstractArray{T,1},grid::gcmgrid) where T
     x,y = u[1:2]
     fIndex = Int(u[3])
     #

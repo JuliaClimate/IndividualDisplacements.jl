@@ -47,15 +47,26 @@ end
 # ## 2.2 Solver And Analysis Setup
 #
 
-function ∫(prob)
-   sol=solve(prob,Tsit5(),saveat=10*86400.0)
-   nx,ny=𝑃.ioSize[1:2]
-   sol[1,:,:]=mod.(sol[1,:,:],nx)
-   sol[2,:,:]=mod.(sol[2,:,:],ny)
-   return sol
+function my🚄(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+   nf=size(u,2)
+   nx=360
+   ny=160
+   [u[1,i][1]=mod(u[1,i][1],nx) for i in 1:nf]
+   [u[1,i][2]=mod(u[1,i][2],ny) for i in 1:nf]
+   [dxyz_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
-∫(prob)=solve(prob,Euler(),dt=86400.0)
+function ∫(prob)
+   #sol=solve(prob,Tsit5(),saveat=10*86400.0)
+   sol=IndividualDisplacements.solver_default(prob)
+   #sol=solve(prob,Euler(),dt=86400.0)
+   nx,ny=𝑃.ioSize[1:2]
+   nf=size(sol,2)
+   nt=size(sol,3)
+   [sol[1,i,j][1]=mod(sol[1,i,j][1],nx) for i in 1:nf, j in 1:nt]
+   [sol[1,i,j][2]=mod(sol[1,i,j][2],ny) for i in 1:nf, j in 1:nt]
+   return sol
+end
 
 function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
@@ -64,7 +75,7 @@ function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    df.year=df.t ./86400/365
 
    #add depth (i.e. the 3rd, vertical, coordinate)
-   k=sol[3,:,:]
+   k=[sol[1,i,j][3] for i in 1:size(sol,2), j in 1:size(sol,3)]
    df.k=k[:] #level
    k=Int.(floor.(df.k)); w=(df.k-k); 
    df.z=𝑃.RF[1 .+ k].*(1 .- w)+𝑃.RF[2 .+ k].*w #depth
@@ -108,14 +119,17 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
    #xy=cat(xy,ones(1,nf),dims=1)
    dlo=21. - Γ["XC"][1][21,1]
    dla=111. - Γ["YC"][1][1,111]
-   xy=[lon' .+ dlo;lat' .+ dla;z_init*ones(1,nf);ones(1,nf)]
+  
+   xy = permutedims([[lon[i]+dlo;lat[i]+dla;z_init;1.0] for i in eachindex(lon)])
    id=collect(1:size(xy,2))
 
    tr = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
                   k=Float64[], z=Float64[], iso=Float64[], t=Float64[], 
                   lon=Float64[], lat=Float64[], year=Float64[], col=Symbol[])
 
-   𝐼 = Individuals{Float64}(📌=xy, 🔴=tr, 🆔=id, 🚄 = 🚄, ∫ = ∫, 🔧 = 🔧, 𝑃=𝑃)
+   I=(position=xy,record=deepcopy(tr),velocity=my🚄, integration=∫, 
+      postprocessing=🔧,parameters=𝑃)
+   𝐼=Individuals(I)
 
    return 𝐼
 end
