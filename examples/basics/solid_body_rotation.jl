@@ -114,6 +114,9 @@ myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,ar
     title="Solid body rotation / Spiral example",leg=false,
     xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
 
+#!jl include(joinpath(p,"../examples/recipes_plots.jl"));
+#!jl nt=length(𝐼.🔴.x)
+
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:
 
@@ -124,9 +127,6 @@ myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,ar
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
-
-#!jl include(joinpath(p,"../examples/recipes_plots.jl"));
-#!jl nt=length(𝐼.🔴.x)
 
 #!jl p=Int(ceil(nt/100))
 #!jl anim = @animate for i ∈ 1:p:nt
