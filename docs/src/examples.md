@@ -2,7 +2,7 @@ The four examples outlined below are meant to serve as a tutorial, and thus comp
 
 User interested in setting up `IndividualDisplacements` for a different problem might also find examples of data wrangling codes in `helper_functions.jl` useful. These are used in the examples to define grids and the ingestion of velocity fields.
 
-## Single, Moving, Particle Example
+## Single Particle Example
 
 This example starts with a three-dimensional flow field `u,v,w`, initializes a single particle / individual position `📌`, and wraps everything up as data structure `𝐼`.
 
@@ -14,7 +14,7 @@ Here, the idealized flow field consists of [rigid body rotation](https://en.wiki
 
 ![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
 
-## Population Of Individuals
+## Particle Set Example
 
 A random flow field is generated on a doubly periodic grid, and used to advect a cloud of points. This illustrates defining a grid from scracth, and then simulating many trajectories at once.
 
@@ -26,7 +26,7 @@ A simulation over the global ocean based on a data-constrained, realistic, model
 
 [![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
 
-## Three-Dimensional Pathways
+## Three Dimensional Paths
 
 A simulation over the global ocean based on a data-constrained, realistic, model:
 
@@ -46,7 +46,7 @@ A simulation over the global ocean based on a data-constrained, realistic, model
 
 - For more see also: `example_CyclicArray.jl`, `example123.jl`, `helper_functions.jl` in the `examples/` folder.
 
-## How-To Run The Examples
+## Run The Examples
 
 #### 1. Download the examples folder:
 
