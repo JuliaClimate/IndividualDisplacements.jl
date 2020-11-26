@@ -36,7 +36,7 @@ p=pages("basics"); np=length(p)
 i=findall((occursin).("solid_body_rotation",p)); 
 j=findall((occursin).("random_flow_field",p)); 
 p_tu=[p[i];p[j]]
-i=findall((occursin).("solid_body_rotation",p)); 
+i=findall((occursin).("detailed_look",p)); 
 j=findall((occursin).("particle_cloud",p)); 
 p_mi=[p[i];p[j]]
 
