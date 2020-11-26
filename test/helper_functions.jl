@@ -65,8 +65,9 @@ function test2_periodic_domain(np = 12, nq = 12)
     y0 = nq * (0.4:0.04:0.6)
     x0 = vec(x0) * ones(1, length(y0))
     y0 = ones(size(x0, 1), 1) * transpose(vec(y0))
-    u0 = transpose([x0[:] y0[:] ones(size(x0[:]))])
-
+    u0 = permutedims([[x0[i];y0[i];1.0] for i in eachindex(x0)])
+    du=0*u0
+    
     #solve for trajectories
     prob = ODEProblem(dxy_dt!, u0, 𝑃.𝑇, 𝑃)
     sol = solve(prob,Euler(),dt=𝑃.dt)

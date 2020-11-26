@@ -38,15 +38,15 @@ I=Individuals(I)
 
 Keyword cheatsheet:
 
-- 📌=`\\:pushpin:<tab>`,        🔴=`\\:red_circle:<tab>`, 🆔=`\\:id:<tab>`
-- 🚄=`\\bullettrain_side<tab>`, ∫=`\\int<tab>`,           🔧=`\\wrench<tab>`
-- 𝑃=`\\itP<tab>`,               𝐷=`\\itD<tab>`,            𝑀 =`\\itM<tab>`
+- 📌=`\\:pushpin:<tab>`,          🔴=`\\:red_circle:<tab>`, 🆔=`\\:id:<tab>`
+- 🚄=`\\:bullettrain_side:<tab>`, ∫=`\\int<tab>`,          🔧=`\\wrench<tab>`
+- 𝑃=`\\itP<tab>`,                 𝐷=`\\itD<tab>`,           𝑀=`\\itM<tab>`
 """
-Base.@kwdef struct Individuals{T}
-   📌  ::Array{T,2} = Array{T,2}(undef, Tuple(Int.(zeros(1,2)))) #\:pushpin:<tab>
+Base.@kwdef struct Individuals{T,N}
+   📌  ::Array{T,N} = Array{T,N}(undef, Tuple(Int.(zeros(1,N)))) #\:pushpin:<tab>
    🔴  ::DataFrame = rec_default #\:red_circle:<tab>
    🆔   ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
-   🚄  ::Function = dxy_dt #\bullettrain_side<tab>
+   🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
    ∫   ::Function = solver_default #\int<tab>
    🔧  ::Function = postprocess_default #\wrench<tab>
    𝑃   ::NamedTuple = param_default #\itP<tab>
@@ -69,7 +69,7 @@ function Individuals(NT::NamedTuple)
 
     haskey(NT,:position) ? 📌=NT.position : 📌=Array{Float64,2}(undef, Tuple(Int.(zeros(1,2))))
     haskey(NT,:record) ? 🔴=NT.record : 🔴=rec_default
-    haskey(NT,:ID) ? 🆔=NT.ID : 🆔=Array{Int,1}(undef, 0)
+    haskey(NT,:ID) ? 🆔=NT.ID : 🆔=collect(1:size(📌,2))    
     haskey(NT,:velocity) ? 🚄=NT.velocity : 🚄=dxy_dt
     haskey(NT,:integration) ? ∫=NT.integration : ∫=solver_default
     haskey(NT,:postprocessing) ? 🔧=NT.postprocessing : 🔧=postprocess_default
@@ -79,7 +79,7 @@ function Individuals(NT::NamedTuple)
     isa(📌,UnitRange) ? 📌=collect(📌) : nothing
     haskey(NT,:type) ? T=NT.type : T=eltype(📌)
 
-    Individuals{T}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,𝑃=𝑃,𝐷=𝐷,𝑀=𝑀)    
+    Individuals{T,ndims(📌)}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,𝑃=𝑃,𝐷=𝐷,𝑀=𝑀)    
 end
 
 """
@@ -102,7 +102,9 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     isempty(🔴) ? np =0 : np=length(🆔)
     append!(🔴,tmp[np+1:end,:])
 
-    📌[:,:] = deepcopy(sol[:,:,end])
+    nd=length(size(sol))
+    nd==3 ? 📌[:,:] = deepcopy(sol[:,:,end]) : 📌[:] = deepcopy(sol[:,end])
+
 end
 
 ## Convenience Methods (size,show,similar)

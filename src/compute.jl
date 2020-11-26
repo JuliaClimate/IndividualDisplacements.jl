@@ -1,3 +1,7 @@
+#needed within OrdinaryDiffEq somehow:
+import Base: zero
+zero(tmp::Array) = zero.(tmp)
+
 """
     dxyz_dt!(du,u,p::NamedTuple,tim)
 
@@ -16,7 +20,7 @@ prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,a
 true
 ```
 """
-function dxyz_dt!(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
+function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     dt>1.0 ? error("dt>1.0") : nothing
@@ -61,15 +65,8 @@ function dxyz_dt!(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     return du
 end
 
-function dxyz_dt!(du::Array{Float64,2},u::Array{Float64,2},𝑃::NamedTuple,tim)
-    for i=1:size(u,2)
-        tmpdu=du[1:4,i]
-        tmpu=u[1:4,i]
-        dxyz_dt!(tmpdu,tmpu,𝑃,tim)
-        du[1:4,i]=tmpdu
-        u[1:4,i]=tmpu
-    end
-    return du
+function dxyz_dt!(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+    [dxyz_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
@@ -102,7 +99,7 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
 true
 ```
 """
-function dxy_dt!(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
+function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     dt>1.0 ? error("dt>1.0") : nothing
@@ -138,15 +135,8 @@ function dxy_dt!(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     return du
 end
 
-function dxy_dt!(du::Array{Float64,2},u::Array{Float64,2},𝑃::NamedTuple,tim)
-    for i=1:size(u,2)
-        tmpdu=du[1:3,i]
-        tmpu=u[1:3,i]
-        dxy_dt!(tmpdu,tmpu,𝑃,tim)
-        du[1:3,i]=tmpdu
-        u[1:3,i]=tmpu
-    end
-    return du
+function dxy_dt!(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+    [dxy_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
@@ -167,7 +157,7 @@ prod(isapprox.(𝐼.📌',ref,atol=1.0))
 true
 ```
 """
-function dxyz_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
+function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
@@ -208,13 +198,8 @@ function dxyz_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     return du
 end
 
-function dxyz_dt(du::Array{Float64,2},u::Array{Float64,2},𝑃::NamedTuple,tim)
-    for i=1:size(u,2)
-        tmpdu=du[1:3,i]
-        dxyz_dt(tmpdu,u[1:3,i],𝑃,tim)
-        du[1:3,i]=tmpdu
-    end
-    return du
+function dxyz_dt(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+    [dxyz_dt(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
@@ -235,7 +220,7 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=1.0))
 true
 ```
 """
-function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
+function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
@@ -266,13 +251,8 @@ function dxy_dt(du::Array{Float64,1},u::Array{Float64,1},𝑃::NamedTuple,tim)
     return du
 end
 
-function dxy_dt(du::Array{Float64,2},u::Array{Float64,2},𝑃::NamedTuple,tim)
-    for i=1:size(u,2)
-        tmpdu=du[1:2,i]
-        dxy_dt(tmpdu,u[1:2,i],𝑃,tim)
-        du[1:2,i]=tmpdu
-    end
-    return du
+function dxy_dt(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+    [dxy_dt(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
@@ -283,7 +263,7 @@ not needed when CyclicArrays is used to extend valid indice ranges).
 
 _notes:_ spatial interpolation & temporal interpolation are lacking
 """
-function dxy_dt_CyclicArray(du::Array{Float64,2},u::Array{Float64,2},𝑃::NamedTuple,tim)
+function dxy_dt_CyclicArray(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
     np=size(du,2)
     xi,yi=(u[1,:],u[2,:])
 

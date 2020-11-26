@@ -46,16 +46,18 @@ n=100
 x0=x0 .+(x1-x0).*rand(n)
 y0=y0 .+(y1-y0).*rand(n)
 
-xy=transpose([x0[:] y0[:] ones(size(x0[:]))]);
+xy = permutedims([[x0[i];y0[i];1.0] for i in eachindex(x0)])
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.1 Compute Trajectories
 
 tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
 solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
-𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
-                         🚄 = dxy_dt!, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
 
+I=(position=deepcopy(xy),record=deepcopy(tr),velocity=dxy_dt!,
+   integration=solv,postprocessing=postprocess_xy,parameters=𝑃)
+𝐼=Individuals(I)
+                      
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
@@ -65,8 +67,8 @@ solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
 # For example, generate a simple animation (with `if true`):
 
 if false
-anim = @animate for t in 0:2.0:maximum(𝐼.tr.t)
-   phi_and_subset(Γ,ϕ,𝐼.tr,t)
+anim = @animate for t in 0:2.0:maximum(𝐼.🔴.t)
+   phi_and_subset(Γ,ϕ,𝐼.🔴,t)
 end
 pth=tempdir()*"/"
 gif(anim, pth*"RandomFlow.gif", fps = 15)
