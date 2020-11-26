@@ -23,39 +23,58 @@
 using OrdinaryDiffEq, Plots, DataFrames
 using IndividualDisplacements, MeshArrays
 
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/helper_functions.jl"))
+
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### 1.2  Gridded Domain
 
 np,nz=16,4 #horizontal and vertical domain size
 Γ=simple_periodic_domain(np)
-γ=Γ["XC"].grid;
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### 1.3 Velocity Fields
+#
+# Exercise: find `simple_flow_field` within `helper_functions.jl` and modify the 
+# flow field parameters (e.g. intensity and sign of the convergent term).
 
-#Solid-body rotation around central location ...
-i=Int(np/2+1)
-u=-(Γ["YG"].-Γ["YG"][1][i,i])
-v=(Γ["XG"].-Γ["XG"][1][i,i])
+u,v,w=simple_flow_field(Γ,np,nz)
 
-#... plus a convergent term to / from central location
-d=-0.01
-u=u+d*(Γ["XG"].-Γ["XG"][1][i,i])
-v=v+d*(Γ["YG"].-Γ["YG"][1][i,i])
+# ### 1.4 Velocity Methods
+#
+# `🚄` relies only on parameters (velocity fields, grid, etc) 
+# contained in `𝑃` to compute velocity at the space-time position
+# of the individual. The solver (here: `solv`) can then integrate 
+# over time the result of `🚄` (see `OrdinaryDiffEq.jl` docs).
 
-#Replicate u,v in vertical dimension
-uu=MeshArray(γ,γ.ioPrec,nz)
-[uu[k]=u[1] for k=1:nz]
-vv=MeshArray(γ,γ.ioPrec,nz)
-[vv[k]=v[1] for k=1:nz]
+🚄 = dxyz_dt
 
-#Vertical velocity component w
-w=fill(1.0,MeshArray(γ,γ.ioPrec,nz));
+𝑃=(u0=u, u1=u, v0=v, v1=v,w0=0.0*w, w1=1.0*w, 𝑇=[0,19.95*2*pi], ioSize=(np,np,nz))
+
+solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ### 1.4 Initial Positions
+# ### 1.5 Initial Positions
+#
+# In this initial example we set up only one, three-dimensional, individual
 
 📌=[np*1/3,np*1/3,nz*1/3]
+
+# And set up the data structure to record individual properties along 
+# its trajectory accordingly. It will be the postprocessing function
+# (`postproc`) responsibility to provide the record. It is thus important 
+# that this intermediary be consistent with the solver setup (`sol`) and 
+# the expected record format (`🔴`).
+
+🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
+
+function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
+    df=postprocess_xy(sol,𝑃,id=id,𝑇=𝑇)
+    #add third coordinate
+    z=sol[3,:]
+    df.z=z[:]
+    return df
+end
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2 Trajectory Simulations
@@ -64,22 +83,15 @@ w=fill(1.0,MeshArray(γ,γ.ioPrec,nz));
 #
 # ### 2.1 Setup Individuals
 #
+# Exercise: make the sinking velocity decrease with time 
+# (hint: it increases as specified below); change the  
+# number of times the particle goes around the origin; etc
 
-𝑃=(u0=uu, u1=uu, v0=vv, v1=vv,w0=0.0*w, w1=-0.01*w, 𝑇=[0,19.95*2*pi], ioSize=(np,np,nz))
-
-tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
-solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
-
-function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
-    df=postprocess_xy(sol,𝑃,id=id,𝑇=𝑇)
-    #add third coordinate
-    z=sol[3,:]
-    df.z=z[:]
-    return df
- end
-
-I=(position=📌,record=deepcopy(tr),velocity=dxyz_dt,
+#assemble as a NamedTuple:
+I=(position=📌,record=🔴,velocity=🚄,
 integration=solv,postprocessing=postproc,parameters=𝑃)
+
+#construct Individuals from NamedTuple:
 𝐼=Individuals(I)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -104,7 +116,9 @@ myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,ar
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
 
+#!jl include(joinpath(p,"../examples/recipes_plots.jl"));
 #!jl nt=length(𝐼.🔴.x)
+
 #!jl p=Int(ceil(nt/100))
 #!jl anim = @animate for i ∈ 1:p:nt
 #!jl     myplot(i)
