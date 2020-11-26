@@ -1,24 +1,32 @@
-In summary ... 
+The four examples outlined below are meant to serve as a tutorial, and thus complement the rest of the package documentation. Afterwards, this section provides a listing of the other examples, plotting recipes, and tools which are included in the package. 
 
-## `solid_body_rotation.jl`
+User interested in setting up `IndividualDisplacements` for a different problem might also find examples of data wrangling codes in `helper_functions.jl` useful. These are used in the examples to define grids and the ingestion of velocity fields.
 
-An idealized flow example, based on solid body rotation, also useful for unit testing.
+## Single, Moving, Particle Example
+
+This example starts with a three-dimensional flow field `u,v,w`, initializes a single particle / individual position `📌`, and wraps everything up as data structure `𝐼`.
+
+It then displaces the individual(s) position in `𝐼` by integrating its instantaneous velocity, [moving through space with the flow](https://en.wikipedia.org/wiki/Lagrangian_and_Eulerian_specification_of_the_flow_field), over time `𝑇`. 
+
+This is generally the main computation done in this package -- interpolating `u,v,w` to individual positions `𝐼.📌` on the fly, using `𝐼.🚄`, and integrating through time, using `𝐼.∫`.
+
+Here, the idealized flow field consists of [rigid body rotation](https://en.wikipedia.org/wiki/Rigid_body), plus a convergent term, plus a sinking term. This generates a downward, converging spiral -- a relevant case in the Ocean.
 
 ![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
 
-## `random_flow_field.jl`
+## Population Of Individuals
 
 A random flow field is generated on a doubly periodic grid, and used to advect a cloud of points. This illustrates defining a grid from scracth, and then simulating many trajectories at once.
 
 ![RandomFlow](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif)
 
-## `global_ocean_circulation.jl`
+## Global Ocean Circulation
 
 A simulation over the global ocean based on a data-constrained, realistic, model:
 
 [![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
 
-## `three_dimensional_ocean.jl`
+## Three-Dimensional Pathways
 
 A simulation over the global ocean based on a data-constrained, realistic, model:
 

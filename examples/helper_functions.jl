@@ -1,4 +1,40 @@
+"""
+    simple_flow_field(Γ::Dict,np,nz)
 
+Set up an idealized flow field which consists of 
+[rigid body rotation](https://en.wikipedia.org/wiki/Rigid_body), 
+plus a convergent term, plus a sinking term.
+
+```
+Γ=simple_periodic_domain(12)
+u,v,w=simple_flow_field(Γ,12,4)
+```
+"""
+function simple_flow_field(Γ,np,nz)
+    γ=Γ["XC"].grid;
+    
+    #Solid-body rotation around central location ...
+    i=Int(np/2+1)
+    u=-(Γ["YG"].-Γ["YG"][1][i,i])
+    v=(Γ["XG"].-Γ["XG"][1][i,i])
+    
+    #... plus a convergent term to / from central location
+    d=-0.01
+    u=u+d*(Γ["XG"].-Γ["XG"][1][i,i])
+    v=v+d*(Γ["YG"].-Γ["YG"][1][i,i])
+    
+    #Replicate u,v in vertical dimension
+    uu=MeshArray(γ,γ.ioPrec,nz)
+    [uu[k]=u[1] for k=1:nz]
+    vv=MeshArray(γ,γ.ioPrec,nz)
+    [vv[k]=v[1] for k=1:nz]
+    
+    #Vertical velocity component w    
+    w=fill(-0.01,MeshArray(γ,γ.ioPrec,nz));
+    
+    return uu,vv,w
+end
+    
 """
     setup_random_flow(Γ::Dict)
 
