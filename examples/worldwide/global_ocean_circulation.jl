@@ -44,8 +44,12 @@ keys(𝑃)
 #
 # - initial particle positions randomly over Global Ocean
 
-xy=init_global_randn(1000,𝑃); id=collect(1:size(xy,2))
-𝐼 = Individuals{Float64}(📌=xy[:,:], 🆔=id, 🔧=postprocess_lonlat, 🚄 = dxy_dt!, 𝑃=𝑃)
+xy = init_global_randn(1000,𝑃)
+xy = permutedims([xy[:,i] for i in 1:size(xy,2)])
+
+I=(position=xy,velocity=dxy_dt!,
+   postprocessing=postprocess_lonlat,parameters=𝑃)
+𝐼=Individuals(I)
 
 fieldnames(typeof(𝐼))
 
