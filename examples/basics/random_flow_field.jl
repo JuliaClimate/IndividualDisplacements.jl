@@ -17,7 +17,8 @@
 # ## 1.1 Import Software
 
 using OrdinaryDiffEq, IndividualDisplacements, MeshArrays
-p=dirname(pathof(MeshArrays)); include(joinpath(p,"../examples/Demos.jl"))
+p=dirname(pathof(MeshArrays))
+include(joinpath(p,"../examples/Demos.jl"))
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
 include(joinpath(p,"../examples/recipes_plots.jl"));
@@ -40,7 +41,7 @@ nq=12
 # ## 1.3 Initial Conditions
 
 x0,x1=np .*(0.4,0.6)
-y0,y1=np .*(0.4,0.6)
+y0,y1=nq .*(0.4,0.6)
 
 n=100
 x0=x0 .+(x1-x0).*rand(n)
@@ -64,12 +65,11 @@ I=(position=deepcopy(xy),record=deepcopy(tr),velocity=dxy_dt!,
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2.2 Plot Results
 #
-# For example, generate a simple animation (with `if true`):
+# For example, generate a simple animation:
 
-if false
-anim = @animate for t in 0:2.0:maximum(𝐼.🔴.t)
-   phi_and_subset(Γ,ϕ,𝐼.🔴,t)
-end
-pth=tempdir()*"/"
-gif(anim, pth*"RandomFlow.gif", fps = 15)
-end
+#!jl 🔴_by_t = groupby(𝐼.🔴, :t)
+#!jl anim = @animate for t in eachindex(🔴_by_t)
+#!jl    phi_scatter(Γ,ϕ,🔴_by_t[t])
+#!jl end
+#!jl pth=tempdir()*"/"
+#!jl gif(anim, pth*"RandomFlow.gif", fps = 15)
