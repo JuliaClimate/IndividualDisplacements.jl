@@ -1,27 +1,27 @@
 ## Summary
 
-The four examples outlined below form a tutorial, and thus complement the rest of the package documentation. Afterwards, this section provides a listing of the other examples, plotting recipes, and tools which are included in the package. 
+The four examples outlined below form a tutorial, and thus complement the rest of the package documentation. Afterwards, we provide a listing of other examples, plotting recipes, and tools included in the package. 
 
-Users aiming to set up `IndividualDisplacements` for a different problem might also find examples of data wrangling codes in `helper_functions.jl` useful. These define grids and ingest velocity fields for the examples below. 
+A user seeking to configure `IndividualDisplacements.jl` for a new problem might also find, hopefully useful, examples of data wrangling codes in `helper_functions.jl`. They define grids and ingest velocity fields for the examples below. 
 
-For plotting result, the examples use `recipes_plots.jl`, `recipes_makie.jl`, and `recipes_pyplot.jl` which demo three popular plotting packages.
-
+Output is in [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format which readily provides powerful and convenient analysis methods. Plotting trajectories in space and time, for example, can be done as in `recipes_plots.jl`, `recipes_makie.jl`, and `recipes_pyplot.jl` (see examples).
 
 ## Single Particle Example
 
-This example starts with a three-dimensional flow field `u,v,w`, initializes a single particle / individual position `📌`, and wraps everything up as data structure `𝐼`.
+Here we start with a three-dimensional flow field `u,v,w`, initialize a single particle / individual position `📌`, and wrap everything up within a custom data structure `𝐼`.
 
-It then displaces the individual(s) position in `𝐼` by integrating its instantaneous velocity, [moving through space with the flow](https://en.wikipedia.org/wiki/Lagrangian_and_Eulerian_specification_of_the_flow_field), over time `𝑇`. 
-
+The individual(s) in `𝐼` is then displaced by integrating its instantaneous velocity, [moving along through space](https://en.wikipedia.org/wiki/Lagrangian_and_Eulerian_specification_of_the_flow_field), over time `𝑇`. 
 This is generally the main computation done in this package -- interpolating `u,v,w` to individual positions `𝐼.📌` on the fly, using `𝐼.🚄`, and integrating through time, using `𝐼.∫`.
 
-Here, the idealized flow field consists of [rigid body rotation](https://en.wikipedia.org/wiki/Rigid_body), plus a convergent term, plus a sinking term. This generates a downward, converging spiral -- a relevant case in the Ocean.
+The flow field consists of [rigid body rotation](https://en.wikipedia.org/wiki/Rigid_body), plus a convergent term, plus a sinking term in the third direction. This generates a downward, converging spiral -- a idealized version of a relevant case in the Ocean.
 
 ![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
 
 ## Particle Set Example
 
-A random flow field is generated on a doubly periodic grid, and used to advect a cloud of points. This illustrates defining a grid from scracth, and then simulating many trajectories at once.
+Here we illustrate how one can simply go from a velocity array to solving for trajectories. The included convenience function (constructor) defines a grid based on input array dimensions, adds the initial condition and time range, and returns the `Individuals` data structure `𝐼`. 
+
+A random flow field is generated on a doubly periodic grid, and used to advect a cloud of points -- just by calling `∫!(𝐼)`. Exercises include the non-periodic domain case, statistics made easy via `DataFrames.jl`, and replacing the flow field with your own.
 
 ![RandomFlow](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif)
 
