@@ -20,9 +20,7 @@
 #
 # ### 1.1 Import Software
 
-using OrdinaryDiffEq, Plots, DataFrames
-using IndividualDisplacements, MeshArrays
-
+using IndividualDisplacements, DataFrames
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
 
@@ -110,12 +108,13 @@ integration=solv,postprocessing=postproc,parameters=𝑃)
 # - generate animation using `myplot`
 # - single plot example using `myplot`
 
-myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
-    title="Solid body rotation / Spiral example",leg=false,
-    xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
-
+#!jl p=dirname(pathof(IndividualDisplacements))
 #!jl include(joinpath(p,"../examples/recipes_plots.jl"));
 #!jl nt=length(𝐼.🔴.x)
+
+#!jl myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
+#!jl     title="Solid body rotation / Spiral example",leg=false,
+#!jl     xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:

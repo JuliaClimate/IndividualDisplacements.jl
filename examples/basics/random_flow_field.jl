@@ -14,62 +14,47 @@
 # ![particles in random flow](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 1.1 Import Software
+# ## 1. Import Software
 
-using OrdinaryDiffEq, IndividualDisplacements, MeshArrays
-p=dirname(pathof(MeshArrays))
-include(joinpath(p,"../examples/Demos.jl"))
+using IndividualDisplacements, DataFrames
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
-include(joinpath(p,"../examples/recipes_plots.jl"));
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 1.2 Setup Problem
+# ## 2. Setup Problem
 
-# Put grid variables in a dictionary.
+# ### 2.1 Sample flow field
+#
+# (staggered u,v derived from randomly generated ϕ streamfunction)
 
-np=8
-nq=12
-Γ=simple_periodic_domain(np,nq);
-
-#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# Derive flow field from randomly generated ϕ streamfunction
-
-𝑃,ϕ=setup_random_flow(Γ);
+u,v,ϕ=setup_random_flow()
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 1.3 Initial Conditions
+# ### 2.2 Initialize Individuals
 
-x0,x1=np .*(0.4,0.6)
-y0,y1=nq .*(0.4,0.6)
+np,nq=size(u)
+x=np*(0.4 .+ 0.2*rand(100))
+y=np*(0.4 .+ 0.2*rand(100))
 
-n=100
-x0=x0 .+(x1-x0).*rand(n)
-y0=y0 .+(y1-y0).*rand(n)
-
-xy = permutedims([[x0[i];y0[i];1.0] for i in eachindex(x0)])
+𝐼=setup_point_cloud(u,v,X=x,Y=y)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 2.1 Compute Trajectories
+# ## 3. Compute Trajectories
 
-tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
-solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
-
-I=(position=deepcopy(xy),record=deepcopy(tr),velocity=dxy_dt!,
-   integration=solv,postprocessing=postprocess_xy,parameters=𝑃)
-𝐼=Individuals(I)
-                      
-𝑇=(0.0,𝐼.𝑃.𝑇[2])
-∫!(𝐼,𝑇)
+∫!(𝐼)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 2.2 Plot Results
+# ## 4. Plot Results
 #
 # For example, generate a simple animation:
+
+#!jl p=dirname(pathof(IndividualDisplacements))
+#!jl include(joinpath(p,"../examples/recipes_plots.jl"));
 
 #!jl 🔴_by_t = groupby(𝐼.🔴, :t)
 #!jl anim = @animate for t in eachindex(🔴_by_t)
 #!jl    phi_scatter(Γ,ϕ,🔴_by_t[t])
 #!jl end
+
 #!jl pth=tempdir()*"/"
 #!jl gif(anim, pth*"RandomFlow.gif", fps = 15)
