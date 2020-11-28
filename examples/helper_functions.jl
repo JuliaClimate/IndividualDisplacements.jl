@@ -52,8 +52,21 @@ Set up a random flow field over a gridded domain of size np,nq
 function setup_random_flow(;np=12,nq=18)
     Γ=simple_periodic_domain(np,nq)
     (_,ϕ,_,_)=demo2(Γ)
-    (u,v)=gradient(ϕ,Γ)
-    return u[1],v[1],ϕ[1]
+    ϕ .*= 0.5
+
+    #For the convergent / scalar potential case, ϕ is interpreted as being 
+    #on center points -- hence the standard gradient function readily gives 
+    #what we need
+    #(u,v)=gradient(ϕ,Γ) 
+    #return u[1],v[1],ϕ[1]
+
+    #For the rotational / streamfunction case, ϕ is interpreted as being 
+    #on S/W corner points -- this is ok since the grid is homegeneous, 
+    #and conveniently yields an adequate substitution u,v <- -v,u; but note
+    #that doing the same with gradient() would shift indices inconsistenly
+    u=-(circshift(ϕ[1], (0,-1))-ϕ[1])
+    v=(circshift(ϕ[1], (-1,0))-ϕ[1])
+    return u,v,ϕ[1]
 end
 
 function setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
@@ -61,13 +74,12 @@ function setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
     Γ=simple_periodic_domain(np,nq)
     u=MeshArray(Γ["XC"].grid,[U])
     v=MeshArray(Γ["XC"].grid,[V])
-    (u,v)=exchange(u,v,1)
-    u0=-v; u1=-v; v0=u; v1=u;
+    #(u,v)=exchange(u,v,1)
+    #vel=dxy_dt!
+    vel=dxy_dt
 
-    𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, 𝑇=[0.0,1.0], ioSize=Γ["XC"].grid.ioSize)
-    vel=dxy_dt!
+    𝑃 = (u0=u, u1=u, v0=v, v1=v, 𝑇=[0.0,1.0], ioSize=Γ["XC"].grid.ioSize)
     pp=postprocess_xy
-
     isempty(X) ? X=np*rand(10) : nothing
     isempty(Y) ? Y=nq*rand(10) : nothing
 
