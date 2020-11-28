@@ -25,7 +25,19 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 
 # ### 2.1 Sample flow field
 #
-# (staggered u,v derived from randomly generated ϕ streamfunction)
+# The `u,v` arrays below can be replaced with any other pair provided by the user.
+#
+# A couple of important considerations, however:
+# - `u,v` are staggered on a C-grid; by `-0.5` grid point in direction `1` for `u` (`2` for `v`)
+#  from the grid cell center (0.5,0.5)
+# - `u,v` here derive from streamfunction `ϕ`, defined at the corner point, which ensures that 
+#  the resulting `u,v` is non-divergent, purely rotational, over the C-grid domain
+#
+# In brief:
+# ```
+# u=-(circshift(ϕ, (0,-1))-ϕ)
+# v=(circshift(ϕ, (-1,0))-ϕ)
+# ```
 
 u,v,ϕ=setup_random_flow()
 
@@ -37,6 +49,7 @@ x=np*(0.4 .+ 0.2*rand(100))
 y=np*(0.4 .+ 0.2*rand(100))
 
 𝐼=setup_point_cloud(u,v,X=x,Y=y)
+#𝐼.𝑃.𝑇[2]=1000.
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Compute Trajectories
@@ -53,7 +66,7 @@ y=np*(0.4 .+ 0.2*rand(100))
 
 #!jl 🔴_by_t = groupby(𝐼.🔴, :t)
 #!jl anim = @animate for t in eachindex(🔴_by_t)
-#!jl    phi_scatter(Γ,ϕ,🔴_by_t[t])
+#!jl    phi_scatter(ϕ,🔴_by_t[t])
 #!jl end
 
 #!jl pth=tempdir()*"/"
