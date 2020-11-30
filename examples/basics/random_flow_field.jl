@@ -51,6 +51,12 @@ u,v,ϕ=setup_random_flow()
 # v=0.5*(circshift(vC, (1,0))+vC)
 # ```
 
+#Exercises: 
+# - change this initial distribution of partices
+# - increase the duration of the trajectory simulation
+# - treat the non-periodic domain case by padding u,v with zeros 
+# - replace `u,v` with your own two-dimensional flow fields 
+
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ### 2.2 Initialize Individuals
 
