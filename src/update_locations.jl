@@ -47,6 +47,8 @@ function update_location_cs!(u::Array{Float64,1},𝑃::NamedTuple)
     return u
 end
 
+update_location_llc!(u,𝑃) = update_location_cs!(u,𝑃)
+
 """
     update_location_dpdo!
 
