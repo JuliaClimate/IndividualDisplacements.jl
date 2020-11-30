@@ -1,22 +1,27 @@
-The four examples outlined below are meant to serve as a tutorial, and thus complement the rest of the package documentation. Afterwards, this section provides a listing of the other examples, plotting recipes, and tools which are included in the package. 
+## Summary
 
-User interested in setting up `IndividualDisplacements` for a different problem might also find examples of data wrangling codes in `helper_functions.jl` useful. These are used in the examples to define grids and the ingestion of velocity fields.
+The four examples outlined below form a tutorial, and thus complement the rest of the package documentation. Afterwards, we provide a listing of other examples, plotting recipes, and tools included in the package. 
+
+A user seeking to configure `IndividualDisplacements.jl` for a new problem might also find, hopefully useful, examples of data wrangling codes in `helper_functions.jl`. They define grids and ingest velocity fields for the examples below. 
+
+Output is in [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format which readily provides powerful and convenient analysis methods. Plotting trajectories in space and time, for example, can be done as in `recipes_plots.jl`, `recipes_makie.jl`, and `recipes_pyplot.jl` (see examples).
 
 ## Single Particle Example
 
-This example starts with a three-dimensional flow field `u,v,w`, initializes a single particle / individual position `📌`, and wraps everything up as data structure `𝐼`.
+Here we start with a three-dimensional flow field `u,v,w`, initialize a single particle / individual position `📌`, and wrap everything up within a custom data structure `𝐼`.
 
-It then displaces the individual(s) position in `𝐼` by integrating its instantaneous velocity, [moving through space with the flow](https://en.wikipedia.org/wiki/Lagrangian_and_Eulerian_specification_of_the_flow_field), over time `𝑇`. 
-
+The individual(s) in `𝐼` is then displaced by integrating its instantaneous velocity, [moving along through space](https://en.wikipedia.org/wiki/Lagrangian_and_Eulerian_specification_of_the_flow_field), over time `𝑇`. 
 This is generally the main computation done in this package -- interpolating `u,v,w` to individual positions `𝐼.📌` on the fly, using `𝐼.🚄`, and integrating through time, using `𝐼.∫`.
 
-Here, the idealized flow field consists of [rigid body rotation](https://en.wikipedia.org/wiki/Rigid_body), plus a convergent term, plus a sinking term. This generates a downward, converging spiral -- a relevant case in the Ocean.
+The flow field consists of [rigid body rotation](https://en.wikipedia.org/wiki/Rigid_body), plus a convergent term, plus a sinking term in the third direction. This generates a downward, converging spiral -- a idealized version of a relevant case in the Ocean.
 
 ![SolidBodyRotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
 
 ## Particle Set Example
 
-A random flow field is generated on a doubly periodic grid, and used to advect a cloud of points. This illustrates defining a grid from scracth, and then simulating many trajectories at once.
+Here we illustrate how one can simply go from a velocity array to solving for trajectories. The included convenience function (constructor) defines a grid based on input array dimensions, adds the initial condition and time range, and returns the `Individuals` data structure `𝐼`. 
+
+A random flow field is generated on a doubly periodic grid, and used to advect a cloud of points -- just by calling `∫!(𝐼)`. Exercises include the non-periodic domain case, statistics made easy via `DataFrames.jl`, and replacing the flow field with your own.
 
 ![RandomFlow](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif)
 
@@ -32,21 +37,20 @@ A simulation over the global ocean based on a data-constrained, realistic, model
 
 [![simulated particle movie (3D)](https://user-images.githubusercontent.com/20276764/94491485-595ee900-01b6-11eb-95e6-c2cacb812f46.png)](https://youtu.be/twAAE_WUs_g)
 
-## Tools And More
+## Tool Box, Etc.
 
-
-- Plotting: `recipes_plots.jl`, `recipes_makie.jl`, `recipes_pyplot.jl` demonstrate three popular plotting packages (see examples).
-
-- Tools (see `compute.jl`, `data_wrangling.jl`):
+- Tools included in `src/compute.jl` and `data_wrangling.jl`:
 	- Velocity interpolaton functions for several array / grid types.
 	- Preprocessing and postprocessing methods.
 	- I/O routines to read / write results from / to file.
 
-- Two examples that reproduce trajectories computed earlier in Fortran ([MITgcm/pkg/flt](https://mitgcm.readthedocs.io/en/latest/outp_pkgs/outp_pkgs.html#)): `detailed_look.jl` illustrates package features in more detail; `particle_cloud.jl` illustrates a computation of many trajectories at once. 
+-  Examples reproducing trajectories that had been computed earlier in Fortran ([MITgcm/pkg/flt](https://mitgcm.readthedocs.io/en/latest/outp_pkgs/outp_pkgs.html#)) are `detailed_look.jl` and `particle_cloud.jl`. 
 
-- For more see also: `example_CyclicArray.jl`, `example123.jl`, `helper_functions.jl` in the `examples/` folder.
+- For more see also: `example_CyclicArray.jl`, `example123.jl`, `helper_functions.jl`; and for plotting : `recipes_plots.jl`, `recipes_makie.jl`, `recipes_pyplot.jl` also in the `examples/` folder.
 
-## Run The Examples
+## Running The Examples
+
+Running the examples requires `julia` and its relevant packages. Inputs get downloaded as needed upon running the examples. The first three steps below do this, and generate jupyter notebook versions of the examples (easy to rerun afterwards). Once everything is setup then user can just call examples directly in `julia` (i.e., skip to last step below).
 
 #### 1. Download the examples folder:
 
@@ -73,3 +77,11 @@ Literate.notebook("IndividualDisplacements.jl/examples/worldwide/three_dimension
 ```
 
 And so on and so forth -- see documentation for a list of examples.
+
+#### 4. or alternatively, in the julia REPL:
+
+```
+using IndividualDisplacements
+p=dirname(pathof(IndividualDisplacements))
+include(p*"/../examples/worldwide/global_ocean_circulation.jl")
+```

@@ -136,7 +136,7 @@ end
 
 set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=nf)
 
-𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=10)
+𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=100)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.1 Compute Displacements
@@ -153,13 +153,13 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 #
 # - either `Plots.jl`:
 
-#md include(joinpath(p,"../examples/recipes_plots.jl"))
-#md #PlotBasic(𝐼.🔴,100,90.0)
-#md p=plot_end_points(𝐼,Γ)
-#md display(p)
+#!jl #include(joinpath(p,"../examples/recipes_plots.jl"))
+#!jl ##PlotBasic(𝐼.🔴,100,90.0)
+#!jl #p=plot_end_points(𝐼,Γ)
+#!jl #display(p)
 
 # - or `Makie.jl`:
 
-#include(joinpath(p,"../examples/recipes_Makie.jl"))
-#p=PlotMakie(𝐼.🔴,100,180.);
-#display(p)
+#!jl #include(joinpath(p,"../examples/recipes_Makie.jl"))
+#!jl #p=PlotMakie(𝐼.🔴,100,180.);
+#!jl #display(p)
