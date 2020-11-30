@@ -1,3 +1,8 @@
+
+using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
+p=dirname(pathof(MeshArrays))
+include(joinpath(p,"../examples/Demos.jl"))
+
 """
     simple_flow_field(Γ::Dict,np,nz)
 
@@ -36,30 +41,56 @@ function simple_flow_field(Γ,np,nz)
 end
     
 """
-    setup_random_flow(Γ::Dict)
+    setup_random_flow(;np=12,nq=18)
 
-Set up a random flow field over the domain specified by Γ
+Set up a random flow field over a gridded domain of size np,nq
 
 ```
-Γ=simple_periodic_domain(12)
-𝑃,ϕ=setup_random_flow(Γ)
+ϕ,u,v=setup_random_flow()
 ```
 """
-function setup_random_flow(Γ::Dict)
-  (_,ϕ,_,_)=demo2(Γ);
-  ϕ=0.5*ϕ
+function setup_random_flow(;np=12,nq=18)
+    Γ=simple_periodic_domain(np,nq)
+    (_,ϕ,_,_)=demo2(Γ)
+    ϕ .*= 0.5
 
-  (u,v)=gradient(ϕ,Γ)
-  u=u./Γ["DXC"]#normalization to grid units
-  v=v./Γ["DYC"]
+    #For the convergent / scalar potential case, ϕ is interpreted as being 
+    #on center points -- hence the standard gradient function readily gives 
+    #what we need
+    #(u,v)=gradient(ϕ,Γ) 
+    #return u[1],v[1],ϕ[1]
 
-  (u,v)=exchange(u,v,1)
-  u0=-v; u1=-v;
-  v0=u; v1=u;
+    #For the rotational / streamfunction case, ϕ is interpreted as being 
+    #on S/W corner points -- this is ok since the grid is homegeneous, 
+    #and conveniently yields an adequate substitution u,v <- -v,u; but note
+    #that doing the same with gradient() would shift indices inconsistenly
+    u=-(circshift(ϕ[1], (0,-1))-ϕ[1])
+    v=(circshift(ϕ[1], (-1,0))-ϕ[1])
+    return u,v,ϕ[1]
+end
 
-  𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, 𝑇=[0.0,400.0], ioSize=ϕ.grid.ioSize)
-  return 𝑃,ϕ
+function setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
+    np,nq=size(U)
+    Γ=simple_periodic_domain(np,nq)
+    u=MeshArray(Γ["XC"].grid,[U])
+    v=MeshArray(Γ["XC"].grid,[V])
+    #(u,v)=exchange(u,v,1)
+    #vel=dxy_dt!
+    vel=dxy_dt
 
+    𝑃 = (u0=u, u1=u, v0=v, v1=v, 𝑇=[0.0,1.0], ioSize=Γ["XC"].grid.ioSize)
+    pp=postprocess_xy
+    isempty(X) ? X=np*rand(10) : nothing
+    isempty(Y) ? Y=nq*rand(10) : nothing
+
+    xy = permutedims([[X[i];Y[i];1.0] for i in eachindex(X)])
+    tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
+    solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
+    
+    I=(position=xy,record=tr,velocity=vel,
+       integration=solv,postprocessing=pp,parameters=𝑃)
+
+    return Individuals(I)
 end
 
 """

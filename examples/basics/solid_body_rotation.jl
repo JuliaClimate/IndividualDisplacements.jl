@@ -20,9 +20,7 @@
 #
 # ### 1.1 Import Software
 
-using OrdinaryDiffEq, Plots, DataFrames
-using IndividualDisplacements, MeshArrays
-
+using IndividualDisplacements, DataFrames
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
 
@@ -40,7 +38,7 @@ np,nz=16,4 #horizontal and vertical domain size
 
 u,v,w=simple_flow_field(Γ,np,nz)
 
-# ### 1.4 Velocity Methods
+# ### 1.4 Velocity Function
 #
 # `🚄` relies only on parameters (velocity fields, grid, etc) 
 # contained in `𝑃` to compute velocity at the space-time position
@@ -54,16 +52,16 @@ u,v,w=simple_flow_field(Γ,np,nz)
 solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ### 1.5 Initial Positions
+# ### 1.5 Initial Position
 #
-# In this initial example we set up only one, three-dimensional, individual
+# Here we set up just one individual in a three-dimensional space,
 
 📌=[np*1/3,np*1/3,nz*1/3]
 
-# And set up the data structure to record individual properties along 
-# its trajectory accordingly. It will be the postprocessing function
-# (`postproc`) responsibility to provide the record. It is thus important 
-# that this intermediary be consistent with the solver setup (`sol`) and 
+# and the data structure ([DataFrame](http://juliadata.github.io/DataFrames.jl/stable/)) 
+# to record properties along the individual's path accordingly. It is the postprocessing 
+# function's responsibility to provide the record. It is thus important that this 
+# intermediary (`postproc`) be consistent with the solver setup (`sol`) and 
 # the expected record format (`🔴`).
 
 🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
@@ -79,13 +77,14 @@ end
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2 Trajectory Simulations
 #
-# Here we turn our problem configuration in a struct (`Individuals`) which contains the initial positions, flow fields, and all that will be necesssary to compute trajectories over time (`∫!(𝐼,𝑇)`).
-#
+# Now that every thing needed to carry out the computation is in place, 
+# we wrap up the problem configuration in a struct (`Individuals`) which 
+# links to the initial positions, flow fields, etc. all that will be 
+# necessary to compute trajectories over time (`∫!(𝐼,𝑇)`). Simple methods to
+# visualize the individual trajectory (plot or movie) are provided at the end.
+
 # ### 2.1 Setup Individuals
 #
-# Exercise: make the sinking velocity decrease with time 
-# (hint: it increases as specified below); change the  
-# number of times the particle goes around the origin; etc
 
 #assemble as a NamedTuple:
 I=(position=📌,record=🔴,velocity=🚄,
@@ -109,15 +108,24 @@ integration=solv,postprocessing=postproc,parameters=𝑃)
 # - generate animation using `myplot`
 # - single plot example using `myplot`
 
-myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
-    title="Solid body rotation / Spiral example",leg=false,
-    xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
+#!jl p=dirname(pathof(IndividualDisplacements))
+#!jl include(joinpath(p,"../examples/recipes_plots.jl"));
+#!jl nt=length(𝐼.🔴.x)
+
+#!jl myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
+#!jl     title="Solid body rotation / Spiral example",leg=false,
+#!jl     xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
+
+#nb # %% {"slideshow": {"slide_type": "subslide"}}
+# Single plot example:
+
+#!jl plt=myplot(nt)
+#!jl scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
+#!jl #scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
+#!jl scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
-
-#!jl include(joinpath(p,"../examples/recipes_plots.jl"));
-#!jl nt=length(𝐼.🔴.x)
 
 #!jl p=Int(ceil(nt/100))
 #!jl anim = @animate for i ∈ 1:p:nt
@@ -127,10 +135,6 @@ myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,ar
 #!jl pth=tempdir()*"/"
 #!jl gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
 
-#nb # %% {"slideshow": {"slide_type": "subslide"}}
-# Single plot example:
-
-#!jl plt=myplot(nt)
-#!jl scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
-#!jl #scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
-#!jl scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
+# Exercise: make the sinking velocity decrease with time 
+# (hint: it increases as specified above in the original notebook); 
+# change the number of times the particle goes around the origin; etc
