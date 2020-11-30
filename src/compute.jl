@@ -29,7 +29,7 @@ function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     #
     g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
     g.class=="CubeSphere" ? update_location_cs!(u,𝑃) : nothing
-    g.class=="LatLonCap" ? update_location_cs!(u,𝑃) : nothing
+    g.class=="LatLonCap" ? update_location_llc!(u,𝑃) : nothing
 
     x,y,z = u[1:3]
     fIndex = Int(u[4])
@@ -108,7 +108,7 @@ function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     #
     g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
     g.class=="CubeSphere" ? update_location_cs!(u,𝑃) : nothing
-    g.class=="LatLonCap" ? update_location_cs!(u,𝑃) : nothing
+    g.class=="LatLonCap" ? update_location_llc!(u,𝑃) : nothing
 
     x,y = u[1:2]
     fIndex = Int(u[3])
