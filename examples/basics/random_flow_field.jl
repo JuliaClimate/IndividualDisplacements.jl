@@ -80,13 +80,13 @@ y=nq*(0.4 .+ 0.2*rand(100))
 #
 # For example, generate a simple animation:
 
-#!jl p=dirname(pathof(IndividualDisplacements))
-#!jl include(joinpath(p,"../examples/recipes_plots.jl"));
+#md p=dirname(pathof(IndividualDisplacements))
+#md include(joinpath(p,"../examples/recipes_plots.jl"));
 
-#!jl 🔴_by_t = groupby(𝐼.🔴, :t)
-#!jl anim = @animate for t in eachindex(🔴_by_t)
-#!jl    phi_scatter(ϕ,🔴_by_t[t])
-#!jl end
+#md 🔴_by_t = groupby(𝐼.🔴, :t)
+#md anim = @animate for t in eachindex(🔴_by_t)
+#md    phi_scatter(ϕ,🔴_by_t[t])
+#md end
 
-#!jl pth=tempdir()*"/"
-#!jl gif(anim, pth*"RandomFlow.gif", fps = 15)
+#md pth=tempdir()*"/"
+#md gif(anim, pth*"RandomFlow.gif", fps = 15)
