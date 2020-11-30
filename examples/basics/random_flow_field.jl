@@ -26,19 +26,22 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 # ### 2.1 Sample flow field
 #
 # The `u,v` arrays below can be replaced with any other pair provided by the user.
-#
 # A couple of important considerations, however:
+
 # - `u,v` are staggered on a C-grid; by `-0.5` grid point in direction `1` for `u` (`2` for `v`)
 #  from the grid cell center (0.5,0.5)
 # - `u,v` here derive from streamfunction `ϕ`, defined at the corner point, which ensures that 
 #  the resulting `u,v` is non-divergent, purely rotational, over the C-grid domain
 #
 # In brief:
+#
 # ```
 # u=-(circshift(ϕ, (0,-1))-ϕ)
 # v=(circshift(ϕ, (-1,0))-ϕ)
 # ```
-#
+
+u,v,ϕ=setup_random_flow()
+
 # If user were to start with collocated velocity (`uC,vC` at the grid cell center) then
 # one can easily obtain the staggered velocity (`u,v`) as follows. These may contain both 
 # [rotational and divergent](https://en.wikipedia.org/wiki/Helmholtz_decomposition) components.
@@ -47,8 +50,6 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 # u=0.5*(circshift(uC, (0,1))+uC)
 # v=0.5*(circshift(vC, (1,0))+vC)
 # ```
-
-u,v,ϕ=setup_random_flow()
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ### 2.2 Initialize Individuals
