@@ -38,6 +38,15 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 # u=-(circshift(ϕ, (0,-1))-ϕ)
 # v=(circshift(ϕ, (-1,0))-ϕ)
 # ```
+#
+# If user were to start with collocated velocity (`uC,vC` at the grid cell center) then
+# one can easily obtain the staggered velocity (`u,v`) as follows. These may contain both 
+# [rotational and divergent](https://en.wikipedia.org/wiki/Helmholtz_decomposition) components.
+#
+# ```
+# u=0.5*(circshift(uC, (0,1))+uC)
+# v=0.5*(circshift(vC, (1,0))+vC)
+# ```
 
 u,v,ϕ=setup_random_flow()
 
@@ -46,7 +55,7 @@ u,v,ϕ=setup_random_flow()
 
 np,nq=size(u)
 x=np*(0.4 .+ 0.2*rand(100))
-y=np*(0.4 .+ 0.2*rand(100))
+y=nq*(0.4 .+ 0.2*rand(100))
 
 𝐼=setup_point_cloud(u,v,X=x,Y=y)
 #𝐼.𝑃.𝑇[2]=1000.
