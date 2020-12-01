@@ -1,4 +1,16 @@
 """
+    location_is_out(u::AbstractArray{T,1},grid::gcmgrid)
+
+Test whether location (x,y,fIndex) is out of domain. If true then
+one typically needs to call update_location_cs! or update_location_dpdo!
+"""
+
+function location_is_out(u::AbstractArray{T,1},grid::gcmgrid) where T
+    u[1]<0|| u[1]> grid.fSize[Int(u[end])][1]|| 
+    u[2]<0|| u[2]> grid.fSize[Int(u[end])][2]
+end
+
+"""
     NeighborTileIndices_dpdo(ni::Int,nj::Int)
 
 List of W, E, S, N neighbor tile IDs in the case of a doubly

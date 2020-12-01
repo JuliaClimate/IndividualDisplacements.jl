@@ -7,7 +7,8 @@ day=86400.0
 mon=365/12*day
 OneMonth=[-0.5*mon,0.5*mon]
 
-solver_default(prob) = solve(prob,Euler(),dt=day)
+solver_default(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+#solver_default(prob) = solve(prob,Euler(),dt=day)
 param_default = ( 𝑇=OneMonth , 🔄=(x->x), u0=[], u1=[], v0=[], v1=[])
 rec_default = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[], 
                         lon=Float64[], lat=Float64[], fid=Int[])
