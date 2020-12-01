@@ -20,6 +20,9 @@ postprocess_default = (x->x)
 - Functions:      🚄 (velocity),   ∫ (integration), 🔧(postprocessing)
 - NamedTuples:    𝑃  (parameters), 𝐷 (diagnostics),      𝑀 (metadata)
 
+The velocity function 🚄 typically computes velocity at an arbitrary position within the 
+chosen space-time domain (📌 to start) by interpolating gridded variables obtained from 𝑃.
+
 Default keyword constructor example:
 
 ```
