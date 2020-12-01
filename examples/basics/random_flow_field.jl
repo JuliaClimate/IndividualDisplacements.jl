@@ -66,7 +66,7 @@ y=nq*(0.4 .+ 0.2*rand(100));
 # The `setup_point_cloud` function then wraps everything in the `Individuals` data structure.
 
 𝐼=setup_point_cloud(u,v,X=x,Y=y)
-#𝐼.𝑃.𝑇[2]=1000.
+𝐼.𝑃.𝑇[2]=100.
 𝐼.🔴
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
