@@ -60,13 +60,13 @@ u,v,ϕ=setup_random_flow()
 # For example, we can initialize 100 particles within a central subdomain as follows.
 
 np,nq=size(u)
-x=np*(0.4 .+ 0.2*rand(100))
-y=nq*(0.4 .+ 0.2*rand(100));
+x=np*(0. .+ 1.0*rand(1000))
+y=nq*(0. .+ 1.0*rand(1000));
 
 # The `setup_point_cloud` function then wraps everything in the `Individuals` data structure.
 
 𝐼=setup_point_cloud(u,v,X=x,Y=y)
-𝐼.𝑃.𝑇[2]=100.
+𝐼.𝑃.𝑇[2]=1000.
 𝐼.🔴
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
@@ -90,4 +90,4 @@ y=nq*(0.4 .+ 0.2*rand(100));
 #md end
 
 #md pth=tempdir()*"/"
-#md gif(anim, pth*"RandomFlow.gif", fps = 15)
+#md gif(anim, pth*"RandomFlow.gif", fps = 10)
