@@ -28,7 +28,7 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 # ### 1.2  Gridded Domain
 
 np,nz=16,4 #horizontal and vertical domain size
-Γ=simple_periodic_domain(np)
+Γ=simple_periodic_domain(np);
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### 1.3 Velocity Fields
@@ -36,7 +36,7 @@ np,nz=16,4 #horizontal and vertical domain size
 # Exercise: find `simple_flow_field` within `helper_functions.jl` and modify the 
 # flow field parameters (e.g. intensity and sign of the convergent term).
 
-u,v,w=simple_flow_field(Γ,np,nz)
+u,v,w=simple_flow_field(Γ,np,nz);
 
 # ### 1.4 Velocity Function
 #
@@ -108,32 +108,32 @@ integration=solv,postprocessing=postproc,parameters=𝑃)
 # - generate animation using `myplot`
 # - single plot example using `myplot`
 
-#!jl p=dirname(pathof(IndividualDisplacements))
-#!jl include(joinpath(p,"../examples/recipes_plots.jl"));
-#!jl nt=length(𝐼.🔴.x)
+#md p=dirname(pathof(IndividualDisplacements))
+#md include(joinpath(p,"../examples/recipes_plots.jl"));
+#md nt=length(𝐼.🔴.x)
 
-#!jl myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
-#!jl     title="Solid body rotation / Spiral example",leg=false,
-#!jl     xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
+#md myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
+#md     title="Solid body rotation / Spiral example",leg=false,
+#md     xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:
 
-#!jl plt=myplot(nt)
-#!jl scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
-#!jl #scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
-#!jl scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
+#md plt=myplot(nt)
+#md scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
+#md #scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
+#md scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
 
-#!jl p=Int(ceil(nt/100))
-#!jl anim = @animate for i ∈ 1:p:nt
-#!jl     myplot(i)
-#!jl end
+#md p=Int(ceil(nt/100))
+#md anim = @animate for i ∈ 1:p:nt
+#md     myplot(i)
+#md end
 
-#!jl pth=tempdir()*"/"
-#!jl gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
+#md pth=tempdir()*"/"
+#md gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
 
 # Exercise: make the sinking velocity decrease with time 
 # (hint: it increases as specified above in the original notebook); 
