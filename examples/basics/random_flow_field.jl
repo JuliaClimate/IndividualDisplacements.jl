@@ -1,15 +1,21 @@
-# # Random Flow
+# # Particle Set
 #
 #md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/random_flow_field.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/random_flow_field.ipynb)
 #
-# Simulate trajectories of a particle cloud in a randomly generated flow field.
-# A doubly periodic domain is used and an animation generated.
+# Simulate trajectories of a particle cloud in a two-dimensional flow field.
+# A doubly-periodic domain and randomly-generated flow fields are initially used.
 # For additional documentation e.g. see :
 # [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
 # [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
+#
+# Exercises: 
+# - change the initial distribution of partices
+# - increase the duration of the trajectories simulation
+# - treat the non-periodic domain case by padding `u,v` with zeros 
+# - replace `u,v` with your own two-dimensional flow fields 
 #
 # ![particles in random flow](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif)
 
@@ -21,9 +27,7 @@ p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 2. Setup Problem
-
-# ### 2.1 Sample flow field
+# ## 2. Flow Field
 #
 # The `u,v` arrays below can be replaced with any other pair provided by the user.
 # A couple of important considerations, however:
@@ -31,8 +35,7 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 # - `u,v` are staggered on a C-grid; by `-0.5` grid point in direction `1` for `u` (`2` for `v`)
 #  from the grid cell center (0.5,0.5)
 # - `u,v` here derive from streamfunction `ϕ`, defined at the corner point, which ensures that 
-#  the resulting `u,v` is non-divergent, purely rotational, over the C-grid domain
-#
+#  the resulting `u,v` is non-divergent, purely rotational, over the C-grid domain.
 # In brief:
 #
 # ```
@@ -52,17 +55,24 @@ u,v,ϕ=setup_random_flow()
 # ```
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ### 2.2 Initialize Individuals
+# ## 3. Initialize Individuals
+#
+# For example, we can initialize 100 particles within a central subdomain as follows.
 
 np,nq=size(u)
 x=np*(0.4 .+ 0.2*rand(100))
-y=nq*(0.4 .+ 0.2*rand(100))
+y=nq*(0.4 .+ 0.2*rand(100));
+
+# The `setup_point_cloud` function then wraps everything in the `Individuals` data structure.
 
 𝐼=setup_point_cloud(u,v,X=x,Y=y)
 #𝐼.𝑃.𝑇[2]=1000.
+𝐼.🔴
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Compute Trajectories
+#
+# The time period is `𝐼.𝑃.𝑇` by default, unless `∫!(𝐼,𝑇)` is called instead.
 
 ∫!(𝐼)
 
@@ -71,13 +81,13 @@ y=nq*(0.4 .+ 0.2*rand(100))
 #
 # For example, generate a simple animation:
 
-#!jl p=dirname(pathof(IndividualDisplacements))
-#!jl include(joinpath(p,"../examples/recipes_plots.jl"));
+#md p=dirname(pathof(IndividualDisplacements))
+#md include(joinpath(p,"../examples/recipes_plots.jl"));
 
-#!jl 🔴_by_t = groupby(𝐼.🔴, :t)
-#!jl anim = @animate for t in eachindex(🔴_by_t)
-#!jl    phi_scatter(ϕ,🔴_by_t[t])
-#!jl end
+#md 🔴_by_t = groupby(𝐼.🔴, :t)
+#md anim = @animate for t in eachindex(🔴_by_t)
+#md    phi_scatter(ϕ,🔴_by_t[t])
+#md end
 
-#!jl pth=tempdir()*"/"
-#!jl gif(anim, pth*"RandomFlow.gif", fps = 15)
+#md pth=tempdir()*"/"
+#md gif(anim, pth*"RandomFlow.gif", fps = 15)

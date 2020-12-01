@@ -19,9 +19,11 @@ The flow field consists of [rigid body rotation](https://en.wikipedia.org/wiki/R
 
 ## Particle Set Example
 
-Here we illustrate how one can simply go from a velocity array to solving for trajectories. The included convenience function (constructor) defines a grid based on input array dimensions, adds the initial condition and time range, and returns the `Individuals` data structure `𝐼`. 
+Here we illustrate (1) the simulation of an ensemble of particles and (2) how one simply goes from a velocity array to solving for trajectories using `IndividualDisplacements.jl`. 
 
-A random flow field is generated on a doubly periodic grid, and used to advect a cloud of points -- just by calling `∫!(𝐼)`. Exercises include the non-periodic domain case, statistics made easy via `DataFrames.jl`, and replacing the flow field with your own.
+The included convenience function (`setup_point_cloud`) defines a grid based on input array dimensions, adds the initial condition and time range, and returns the `Individuals` data structure `𝐼`. All that is left to do at this stage is call `∫!(𝐼)`.
+
+The prototype for this example is based on a randomly generated flow field in a doubly periodic gridded domain. Exercises include the non-periodic domain case, statistics made easy via `DataFrames.jl`, and replacing the flow field with your own.
 
 ![RandomFlow](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/RandomFlow.gif)
 
