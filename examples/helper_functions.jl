@@ -74,9 +74,9 @@ function setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
     Γ=simple_periodic_domain(np,nq)
     u=MeshArray(Γ["XC"].grid,[U])
     v=MeshArray(Γ["XC"].grid,[V])
-    #(u,v)=exchange(u,v,1)
-    #vel=dxy_dt!
-    vel=dxy_dt
+    #vel=dxy_dt
+    (u,v)=exchange(u,v,1)
+    vel=dxy_dt!
 
     𝑃 = (u0=u, u1=u, v0=v, v1=v, 𝑇=[0.0,1.0], ioSize=Γ["XC"].grid.ioSize)
     pp=postprocess_xy
