@@ -105,7 +105,7 @@ function phi_scatter(ϕ,df)
     nx,ny=size(ϕ)
     contourf(-0.5 .+ (1:nx),-0.5 .+ (1:ny),
              transpose(ϕ),c = :blues,linewidth = 0.1)
-    scatter!(df.x,df.y,markersize=2.0,c=:red,marker = (:circle, stroke(0)),
+    scatter!(df.x,df.y,markersize=4.0,c=:red,marker = (:circle, stroke(0)),
              xlims=(0,nx),ylims=(0,ny),leg=:none)
 end
 
