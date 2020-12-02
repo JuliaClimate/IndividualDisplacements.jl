@@ -29,26 +29,19 @@ The prototype for this example is based on a randomly generated flow field in a 
 
 ## Global Ocean Circulation
 
-A simulation over the global ocean based on a data-constrained, realistic, model:
+A simulation of floating particles over the Global Ocean which illustrates (1) using time variable velocity fields, (2) global connections, (3) particle re-seeding, and (4) output statistics. 
+
+The flow field is based on a data-constrained, realistic, ocean model. The problem is configured in a way to mimic, albeit very crudely, the near-surface tranport of plastics or planktons.
 
 [![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
 
 ## Three Dimensional Paths
 
-A simulation over the global ocean based on a data-constrained, realistic, model:
+A simulation of particles that follow the three-dimensional ocean circulation. This example illustrates (1) the 3D case in a relatistic configuration, (2) tracking the advent or origin of a water patch, and (3) multifacted visualizations in 3D.
+
+The flow field is based on a data-constrained, realistic, ocean model. The problem configuration mimics, albeit very approximately, ocean tracers / coumpounds transported by water masses .
 
 [![simulated particle movie (3D)](https://user-images.githubusercontent.com/20276764/94491485-595ee900-01b6-11eb-95e6-c2cacb812f46.png)](https://youtu.be/twAAE_WUs_g)
-
-## Tool Box, Etc.
-
-- Tools included in `src/compute.jl` and `data_wrangling.jl`:
-	- Velocity interpolaton functions for several array / grid types.
-	- Preprocessing and postprocessing methods.
-	- I/O routines to read / write results from / to file.
-
--  Examples reproducing trajectories that had been computed earlier in Fortran ([MITgcm/pkg/flt](https://mitgcm.readthedocs.io/en/latest/outp_pkgs/outp_pkgs.html#)) are `detailed_look.jl` and `particle_cloud.jl`. 
-
-- For more see also: `example_CyclicArray.jl`, `example123.jl`, `helper_functions.jl`; and for plotting : `recipes_plots.jl`, `recipes_makie.jl`, `recipes_pyplot.jl` also in the `examples/` folder.
 
 ## Running The Examples
 
@@ -87,3 +80,14 @@ using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
 include(p*"/../examples/worldwide/global_ocean_circulation.jl")
 ```
+
+## Tool Box, Etc.
+
+- Tools included in `src/compute.jl` and `data_wrangling.jl`:
+	- Velocity interpolaton functions for several array / grid types.
+	- Preprocessing and postprocessing methods.
+	- I/O routines to read / write results from / to file.
+
+-  Examples reproducing trajectories that had been computed earlier in Fortran ([MITgcm/pkg/flt](https://mitgcm.readthedocs.io/en/latest/outp_pkgs/outp_pkgs.html#)) are `detailed_look.jl` and `particle_cloud.jl`. 
+
+- For more see also: `example_CyclicArray.jl`, `example123.jl`, `helper_functions.jl`; and for plotting : `recipes_plots.jl`, `recipes_makie.jl`, `recipes_pyplot.jl` also in the `examples/` folder.
