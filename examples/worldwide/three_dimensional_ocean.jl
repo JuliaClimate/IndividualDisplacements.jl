@@ -57,9 +57,10 @@ function my🚄(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
 end
 
 function ∫(prob)
-   #sol=solve(prob,Tsit5(),saveat=10*86400.0)
+   #sol=solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8,saveat=5*86400.0)
    sol=IndividualDisplacements.solver_default(prob)
    #sol=solve(prob,Euler(),dt=86400.0)
+
    nx,ny=𝑃.ioSize[1:2]
    nf=size(sol,2)
    nt=size(sol,3)
@@ -76,7 +77,8 @@ function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
 
    #add depth (i.e. the 3rd, vertical, coordinate)
    k=[sol[1,i,j][3] for i in 1:size(sol,2), j in 1:size(sol,3)]
-   df.k=k[:] #level
+   nz=length(𝐼.𝑃.u1)
+   df.k=min.(max.(k[:],Ref(0.0)),Ref(nz)) #level
    k=Int.(floor.(df.k)); w=(df.k-k); 
    df.z=𝑃.RF[1 .+ k].*(1 .- w)+𝑃.RF[2 .+ k].*w #depth
 
