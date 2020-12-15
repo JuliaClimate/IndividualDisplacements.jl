@@ -67,11 +67,11 @@ function MakieScatterMovie(scene::Scene,df,tt,fil::String)
    zmul=1/5
    
    ye=[🔴_by_t[i][1,:year] for i in 1:length(🔴_by_t)]
-   tt,dt=collect(tt),0.25
+   tt,dt=collect(tt),median(diff(tt))
 
    scene
    record(scene, fil, 1:length(tt); framerate=12) do i
-       jj = findall( (ye.>tt[i]-dt).&(ye.<=tt[i]) )
+       jj = findall( (ye.>tt[i]-dt/2).&(ye.<=tt[i]+dt/2) )
        [xs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:lon] for j in jj]
        [ys[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:lat] for j in jj]
        [zs[collect((1:np).+(j-jj[1])*np)]=🔴_by_t[j][:,:z] for j in jj]
