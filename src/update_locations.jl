@@ -42,7 +42,7 @@ only works for the `cs` & `llc` grid types provided by `MeshArrays.jl`.
 """
 function update_location_cs!(u::Array{Float64,1},𝑃::NamedTuple)
     x,y = u[1:2]
-    fIndex = Int(u[3])
+    fIndex = Int(u[end])
     nx,ny=𝑃.XC.fSize[fIndex]
     if x<0||x>nx||y<0||y>ny
         j = 0
@@ -53,7 +53,7 @@ function update_location_cs!(u::Array{Float64,1},𝑃::NamedTuple)
         (x,y)=𝑃.RelocFunctions[j,fIndex](x,y)
         u[1]=x
         u[2]=y
-        u[3]=j
+        u[end]=j
     end
     #
     return u
