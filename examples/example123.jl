@@ -69,16 +69,17 @@ df=read_flt(dirIn,prec)
 tmp=df[df.ID .== 200, :]
 nSteps=Int32(tmp[end,:time]/3600)-2
 ref=transpose([tmp[1:nSteps,:lon] tmp[1:nSteps,:lat]])
-maxLon=80*5.e3
-maxLat=42*5.e3
+dx=5000.0
+maxLon=80*dx
+maxLat=42*dx
 for i=1:nSteps-1
     ref[1,i+1]-ref[1,i]>maxLon/2 ? ref[1,i+1:end]-=fill(maxLon,(nSteps-i)) : nothing
     ref[1,i+1]-ref[1,i]<-maxLon/2 ? ref[1,i+1:end]+=fill(maxLon,(nSteps-i)) : nothing
     ref[2,i+1]-ref[2,i]>maxLat/2 ? ref[2,i+1:end]-=fill(maxLat,(nSteps-i)) : nothing
     ref[2,i+1]-ref[2,i]<-maxLat/2 ? ref[2,i+1:end]+=fill(maxLat,(nSteps-i)) : nothing
 end
-ref=ref./𝑃.dx
-xy=[tmp[1,:lon];tmp[1,:lat]]./𝑃.dx
+ref=ref./dx
+xy=[tmp[1,:lon];tmp[1,:lat]]./dx
 return xy,df,ref,nSteps
 end
 
