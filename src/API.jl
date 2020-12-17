@@ -28,7 +28,7 @@ Default keyword constructor example:
 
 ```
 df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
-𝐼=Individuals{Float64}(📌=zeros(3,10),🆔=1:10,🔴=deepcopy(df))
+𝐼=Individuals{Float64,2}(📌=zeros(3,10),🆔=1:10,🔴=deepcopy(df))
 𝐼=Individuals(📌=zeros(3,2),🆔=collect(1:2),🔴=deepcopy(df))
 ```
 
