@@ -56,7 +56,7 @@ fieldnames(typeof(𝐼))
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # - initial integration from time 0 to 0.5 month
 
-𝑇=(0.0,86400.0)
+𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
@@ -78,7 +78,7 @@ end
 # ## 3.3 Iterate For `ny*12` Months
 #
 
-[step!(𝐼) for y=1:2, m=1:12]
+[step!(𝐼) for y=1:1, m=1:1]
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.4 Compute summary statistics
