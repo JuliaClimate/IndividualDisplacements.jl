@@ -27,7 +27,6 @@ x=vec([x-0.5 for x in ii1, y in ii2])
 y=vec([y-0.5 for x in ii1, y in ii2])
 xy = permutedims([[x[i];y[i];1.0] for i in eachindex(x)])
 
-𝑃.𝑇[:] = [0.0,2998*3600.0]
 solv(prob) = solve(prob,Tsit5(),reltol=1e-6,abstol=1e-6)
 tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
 
@@ -40,7 +39,7 @@ I=(position=xy,record=deepcopy(tr),velocity=dxy_dt,
 
 # ## 3. Compute Trajectories
 
-𝑇=(0.0,𝐼.𝑃.𝑇[2])
+𝑇 = (0.0,2998*3600.0)
 ∫!(𝐼,𝑇)
 
 # ## 4. Display results
