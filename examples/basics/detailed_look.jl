@@ -45,9 +45,9 @@ df=read_flt(dirIn,prec);
 
 # ## 4. Visualize Velocity Fields
 
-#md plt=heatmap(Γ["mskW"][1,1].*𝑃.u0[1,1],title="U at the start")
+#md plt=heatmap(Γ["mskW"][1,1].*𝑃.u0,title="U at the start")
 
-#md plt=heatmap(Γ["mskW"][1,1].*𝑃.u1[1,1]-𝑃.u0[1,1],title="U end - U start")
+#md plt=heatmap(Γ["mskW"][1,1].*𝑃.u1-𝑃.u0,title="U end - U start")
 
 # ## 5. Visualize Trajectories
 #
@@ -60,7 +60,7 @@ tmp[1:4,:]
 
 x=Γ["XG"].f[1][:,1]
 y=Γ["YC"].f[1][1,:]
-z=transpose(Γ["mskW"][1].*𝑃.u0[1,1]);
+z=transpose(Γ["mskW"][1].*𝑃.u0);
 
 #md plt=contourf(x,y,z,c=:delta)
 #md plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
@@ -69,7 +69,7 @@ z=transpose(Γ["mskW"][1].*𝑃.u0[1,1]);
 
 x=Γ["XC"].f[1][:,1]
 y=Γ["YG"].f[1][1,:]
-z=transpose(Γ["mskW"][1].*𝑃.v0[1,1]);
+z=transpose(Γ["mskW"][1].*𝑃.v0);
 
 #md plt=contourf(x,y,z,c=:delta)
 #md plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
@@ -93,9 +93,9 @@ for i=1:100
 end
 
 #md plt=plot(tmpx,tmpu,label="u (interp)")
-#md plot!(Γ["XG"].f[1][1:10,1]./𝑃.dx,𝑃.u0.f[1][1:10,1],marker=:o,label="u (C-grid)")
+#md plot!(Γ["XG"].f[1][1:10,1]./𝑃.dx,𝑃.u0[1:10,1],marker=:o,label="u (C-grid)")
 #md plot!(tmpx,tmpv,label="v (interp)")
-#md plot!(Γ["XG"].f[1][1:10,1]./𝑃.dx,𝑃.v0.f[1][1:10,1],marker=:o,label="v (C-grid)")
+#md plot!(Γ["XG"].f[1][1:10,1]./𝑃.dx,𝑃.v0[1:10,1],marker=:o,label="v (C-grid)")
 
 # And similarly in the other direction
 
@@ -110,9 +110,9 @@ for i=1:100
 end
 
 #md plt=plot(tmpx,tmpu,label="u (interp)")
-#md plot!(Γ["YG"].f[1][1,1:10]./𝑃.dx,𝑃.u0.f[1][1,1:10],marker=:o,label="u (C-grid)")
+#md plot!(Γ["YG"].f[1][1,1:10]./𝑃.dx,𝑃.u0[1,1:10],marker=:o,label="u (C-grid)")
 #md plot!(tmpx,tmpv,label="v (interp)")
-#md plot!(Γ["YG"].f[1][1,1:10]./𝑃.dx,𝑃.v0.f[1][1,1:10],marker=:o,label="v (C-grid)")
+#md plot!(Γ["YG"].f[1][1,1:10]./𝑃.dx,𝑃.v0[1,1:10],marker=:o,label="v (C-grid)")
 
 # Compare recomputed velocities with those from `pkg/flt`
 
