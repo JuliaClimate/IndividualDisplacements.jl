@@ -151,7 +151,7 @@ function dxy_dt!(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
 end
 
 """
-    dxyz_dt(du,u,𝑃::NamedTuple,tim)
+    dxyz_dt(du,u,𝑃::𝑃_Array3D,tim)
 
 Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 (`x,y,z`) to compute the derivative of position v time  `du_dt`.
@@ -214,7 +214,7 @@ function dxyz_dt(du::Array{T,2},u::Array{T,2},𝑃::𝑃_Array3D,tim) where T
 end
 
 """
-    dxy_dt(du,u,𝑃::NamedTuple,tim)
+    dxy_dt(du,u,𝑃::𝑃_Array2D,tim)
 
 Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 (`x,y`) to compute the derivative of position v time  `du_dt`.
@@ -231,7 +231,7 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=1.0))
 true
 ```
 """
-function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
+function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::𝑃_Array2D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
@@ -262,7 +262,7 @@ function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     return du
 end
 
-function dxy_dt(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+function dxy_dt(du::Array{T,2},u::Array{T,2},𝑃::𝑃_Array2D,tim) where T
     [dxy_dt(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
