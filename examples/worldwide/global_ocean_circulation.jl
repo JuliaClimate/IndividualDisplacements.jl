@@ -56,7 +56,7 @@ fieldnames(typeof(𝐼))
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # - initial integration from time 0 to 0.5 month
 
-𝑇=(0.0,𝐼.𝑃.𝑇[2])
+𝑇=(0.0,86400.0)
 ∫!(𝐼,𝑇)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
