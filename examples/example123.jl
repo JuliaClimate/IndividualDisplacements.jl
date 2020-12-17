@@ -131,7 +131,7 @@ function example2_setup()
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
    Γ=merge(Γ,Dict("mskW" => mskW, "mskS" => mskS))
 
-   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, dx=Γ["dx"],
-        𝑇=[t0,t1], XC=Γ["XC"], YC=Γ["YC"], ioSize=(80,42))
+   𝑃 = (u0=u0[1], u1=u1[1], v0=v0[1], v1=v1[1], dx=Γ["dx"],
+        𝑇=[t0,t1], XC=Γ["XC"][1], YC=Γ["YC"][1], ioSize=(80,42))
    return 𝑃,Γ
 end
