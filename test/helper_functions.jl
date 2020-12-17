@@ -24,7 +24,7 @@ function test1_setup()
     u0=u./dx; u1=u./dx
     v0=v./dx; v1=v./dx
 
-    𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, 𝑇=[t0,t1], XC=XC, YC=YC, ioSize=(80,42))
+    𝑃 = (u0=u0[1], u1=u1[1], v0=v0[1], v1=v1[1], 𝑇=[t0,t1])
     u0=[200000.0;0.0]./dx
     du=fill(0.0,2);
     prob = ODEProblem(dxy_dt,u0,[0.0,2998*3600.0],𝑃)

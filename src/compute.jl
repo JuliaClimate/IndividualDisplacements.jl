@@ -173,7 +173,7 @@ function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
     x,y,z = u[1:3]
-    nx,ny,nz = 𝑃.ioSize
+    nx,ny,nz = size(𝑃.u0)
     x,y=[mod(x,nx),mod(y,ny)]
     z=mod(z,nz)
     #
@@ -191,20 +191,20 @@ function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     #z>=nz-1 ? (k_l,k_r)=(nz,1) : nothing
 
     #interpolate u to position and time
-    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0.f[1,k_c][i_w,j_c]+
-    dx*(1.0-dt)*𝑃.u0.f[1,k_c][i_e,j_c]+
-    (1.0-dx)*dt*𝑃.u1.f[1,k_c][i_w,j_c]+
-    dx*dt*𝑃.u1.f[1,k_c][i_e,j_c]
+    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0[i_w,j_c,k_c]+
+    dx*(1.0-dt)*𝑃.u0[i_e,j_c,k_c]+
+    (1.0-dx)*dt*𝑃.u1[i_w,j_c,k_c]+
+    dx*dt*𝑃.u1[i_e,j_c,k_c]
     #interpolate v to position and time
-    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0.f[1,k_c][i_c,j_s]+
-    dy*(1.0-dt)*𝑃.v0.f[1,k_c][i_c,j_n]+
-    (1.0-dy)*dt*𝑃.v1.f[1,k_c][i_c,j_s]+
-    dy*dt*𝑃.v1.f[1,k_c][i_c,j_n]
+    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0[i_c,j_s,k_c]+
+    dy*(1.0-dt)*𝑃.v0[i_c,j_n,k_c]+
+    (1.0-dy)*dt*𝑃.v1[i_c,j_s,k_c]+
+    dy*dt*𝑃.v1[i_c,j_n,k_c]
     #interpolate w to position and time
-    du[3]=(1.0-dz)*(1.0-dt)*𝑃.w0.f[1,k_l][i_c,j_c]+
-    dz*(1.0-dt)*𝑃.w0.f[1,k_r][i_c,j_c]+
-    (1.0-dz)*dt*𝑃.w1.f[1,k_l][i_c,j_c]+
-    dz*dt*𝑃.w1.f[1,k_r][i_c,j_c]
+    du[3]=(1.0-dz)*(1.0-dt)*𝑃.w0[i_c,j_c,k_l]+
+    dz*(1.0-dt)*𝑃.w0[i_c,j_c,k_r]+
+    (1.0-dz)*dt*𝑃.w1[i_c,j_c,k_l]+
+    dz*dt*𝑃.w1[i_c,j_c,k_r]
     #
     return du
 end
@@ -236,7 +236,7 @@ function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
     x,y = u[1:2]
-    nx,ny=𝑃.ioSize
+    nx,ny=size(𝑃.u0)
     x,y=[mod(x,nx),mod(y,ny)]
     #
     dx,dy=[x - floor(x),y - floor(y)]
@@ -249,15 +249,15 @@ function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     j_s,j_n=[j_c j_c+1]
     y>=ny-1 ? (j_s,j_n)=(ny,1) : nothing
     #interpolate u to position and time
-    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0.f[1][i_w,j_c]+
-    dx*(1.0-dt)*𝑃.u0.f[1][i_e,j_c]+
-    (1.0-dx)*dt*𝑃.u1.f[1][i_w,j_c]+
-    dx*dt*𝑃.u1.f[1][i_e,j_c]
+    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0[i_w,j_c]+
+    dx*(1.0-dt)*𝑃.u0[i_e,j_c]+
+    (1.0-dx)*dt*𝑃.u1[i_w,j_c]+
+    dx*dt*𝑃.u1[i_e,j_c]
     #interpolate v to position and time
-    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0.f[1][i_c,j_s]+
-    dy*(1.0-dt)*𝑃.v0.f[1][i_c,j_n]+
-    (1.0-dy)*dt*𝑃.v1.f[1][i_c,j_s]+
-    dy*dt*𝑃.v1.f[1][i_c,j_n]
+    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0[i_c,j_s]+
+    dy*(1.0-dt)*𝑃.v0[i_c,j_n]+
+    (1.0-dy)*dt*𝑃.v1[i_c,j_s]+
+    dy*dt*𝑃.v1[i_c,j_n]
     #
     return du
 end

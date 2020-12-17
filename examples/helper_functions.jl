@@ -37,7 +37,7 @@ function simple_flow_field(Γ,np,nz)
     #Vertical velocity component w    
     w=fill(-0.01,MeshArray(γ,γ.ioPrec,nz));
     
-    return uu,vv,w
+    return write(uu),write(vv),write(w)
 end
     
 """
