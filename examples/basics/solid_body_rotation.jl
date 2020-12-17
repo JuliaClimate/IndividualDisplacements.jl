@@ -41,13 +41,13 @@ u,v,w=simple_flow_field(Γ,np,nz);
 # ### 1.4 Velocity Function
 #
 # `🚄` relies only on parameters (velocity fields, grid, etc) 
-# contained in `𝑃` to compute velocity at the space-time position
+# contained in `𝑄` to compute velocity at the space-time position
 # of the individual. The solver (here: `solv`) can then integrate 
 # over time the result of `🚄` (see `OrdinaryDiffEq.jl` docs).
 
 🚄 = dxyz_dt
 
-𝑃=(u0=u, u1=u, v0=v, v1=v,w0=0.0*w, w1=1.0*w, 𝑇=[0,19.95*2*pi], ioSize=(np,np,nz))
+𝑄=𝑃_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,(0,19.95*2*pi))
 
 solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
 
@@ -66,8 +66,8 @@ solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
 
 🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
 
-function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
-    df=postprocess_xy(sol,𝑃,id=id,𝑇=𝑇)
+function postproc(sol,𝑄::FlowParameters;id=missing,𝑇=missing)
+    df=postprocess_xy(sol,𝑄,id=id,𝑇=𝑇)
     #add third coordinate
     z=sol[3,:]
     df.z=z[:]
@@ -88,7 +88,7 @@ end
 
 #assemble as a NamedTuple:
 I=(position=📌,record=🔴,velocity=🚄,
-integration=solv,postprocessing=postproc,parameters=𝑃)
+integration=solv,postprocessing=postproc,parameters=𝑄)
 
 #construct Individuals from NamedTuple:
 𝐼=Individuals(I)
