@@ -28,7 +28,7 @@ Default keyword constructor example:
 
 ```
 df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
-𝐼=Individuals{Float64}(📌=zeros(3,10),🆔=1:10,🔴=deepcopy(df))
+𝐼=Individuals{Float64,2}(📌=zeros(3,10),🆔=1:10,🔴=deepcopy(df))
 𝐼=Individuals(📌=zeros(3,2),🆔=collect(1:2),🔴=deepcopy(df))
 ```
 
@@ -48,7 +48,7 @@ Keyword cheatsheet:
 """
 Base.@kwdef struct Individuals{T,N}
    📌  ::Array{T,N} = Array{T,N}(undef, Tuple(Int.(zeros(1,N)))) #\:pushpin:<tab>
-   🔴  ::DataFrame = rec_default #\:red_circle:<tab>
+   🔴  ::DataFrame = similar(rec_default) #\:red_circle:<tab>
    🆔   ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
    🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
    ∫   ::Function = solver_default #\int<tab>
@@ -72,7 +72,7 @@ I=Individuals(I)
 function Individuals(NT::NamedTuple)
 
     haskey(NT,:position) ? 📌=NT.position : 📌=Array{Float64,2}(undef, Tuple(Int.(zeros(1,2))))
-    haskey(NT,:record) ? 🔴=NT.record : 🔴=rec_default
+    haskey(NT,:record) ? 🔴=NT.record : 🔴=similar(rec_default)
     haskey(NT,:ID) ? 🆔=NT.ID : 🆔=collect(1:size(📌,2))    
     haskey(NT,:velocity) ? 🚄=NT.velocity : 🚄=dxy_dt
     haskey(NT,:integration) ? ∫=NT.integration : ∫=solver_default

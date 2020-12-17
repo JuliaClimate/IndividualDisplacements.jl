@@ -78,7 +78,7 @@ end
 # ## 3.3 Iterate For `ny*12` Months
 #
 
-[step!(𝐼) for y=1:2, m=1:12]
+[step!(𝐼) for y=1:1, m=1:1]
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.4 Compute summary statistics

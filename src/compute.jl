@@ -46,12 +46,12 @@ function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     j_s,j_n=[j_c j_c+1]
     k_l,k_r=[k_c k_c+1]
     #
-    k_c=max(k_c,nz)
-    k_l=max(k_l,nz)
-    k_r=max(k_r,nz)
-    k_c=min(k_c,1)
-    k_l=min(k_l,1)
-    k_r=min(k_r,1)
+    k_c=min(k_c,nz)
+    k_l=min(k_l,nz)
+    k_r=min(k_r,nz)
+    k_c=max(k_c,1)
+    k_l=max(k_l,1)
+    k_r=max(k_r,1)
     #interpolate u to position and time
     du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0.f[fIndex,k_c][i_w,j_c]+
     dx*(1.0-dt)*𝑃.u0.f[fIndex,k_c][i_e,j_c]+
