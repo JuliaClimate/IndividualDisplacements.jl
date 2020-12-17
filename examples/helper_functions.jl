@@ -230,10 +230,10 @@ function OCCA_setup(;backward_in_time::Bool=false)
    w=read(w,MeshArray(γ,Float32,n+1))
 
    fileIn=OCCAclim_path*"DDtheta.0406clim.nc"
-   θ=s*read(rd(fileIn,"theta",n),MeshArray(γ,Float32,n))
+   θ=read(rd(fileIn,"theta",n),MeshArray(γ,Float32,n))
 
 #   fileIn=OCCAclim_path*"DDsalt.0406clim.nc"
-#   𝑆=s*read(rd(fileIn,"salt",n),MeshArray(γ,Float64,n))
+#   𝑆=read(rd(fileIn,"salt",n),MeshArray(γ,Float64,n))
 
    for i in eachindex(u)
       u[i]=u[i]./Γ["DXC"][1]
