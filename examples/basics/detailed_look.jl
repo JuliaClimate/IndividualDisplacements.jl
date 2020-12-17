@@ -76,7 +76,8 @@ z=transpose(Γ["mskW"][1].*𝑃.v0);
 
 # ## 6. Interpolate Velocities
 
-uInit=[tmp[1,:lon];tmp[1,:lat]]./𝑃.dx
+dx=Γ["dx"]
+uInit=[tmp[1,:lon];tmp[1,:lat]]./dx
 nSteps=Int32(tmp[end,:time]/3600)-2
 du=fill(0.0,2);
 
@@ -86,16 +87,16 @@ tmpu=fill(0.0,100)
 tmpv=fill(0.0,100)
 tmpx=fill(0.0,100)
 for i=1:100
-    tmpx[i]=500.0 *i./𝑃.dx
-    dxy_dt(du,[tmpx[i];0.499./𝑃.dx],𝑃,0.0)
+    tmpx[i]=500.0 *i./dx
+    dxy_dt(du,[tmpx[i];0.499./dx],𝑃,0.0)
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
 
 #md plt=plot(tmpx,tmpu,label="u (interp)")
-#md plot!(Γ["XG"].f[1][1:10,1]./𝑃.dx,𝑃.u0[1:10,1],marker=:o,label="u (C-grid)")
+#md plot!(Γ["XG"].f[1][1:10,1]./dx,𝑃.u0[1:10,1],marker=:o,label="u (C-grid)")
 #md plot!(tmpx,tmpv,label="v (interp)")
-#md plot!(Γ["XG"].f[1][1:10,1]./𝑃.dx,𝑃.v0[1:10,1],marker=:o,label="v (C-grid)")
+#md plot!(Γ["XG"].f[1][1:10,1]./dx,𝑃.v0[1:10,1],marker=:o,label="v (C-grid)")
 
 # And similarly in the other direction
 
@@ -103,16 +104,16 @@ tmpu=fill(0.0,100)
 tmpv=fill(0.0,100)
 tmpy=fill(0.0,100)
 for i=1:100
-    tmpy[i]=500.0 *i./𝑃.dx
-    dxy_dt(du,[0.499./𝑃.dx;tmpy[i]],𝑃,0.0)
+    tmpy[i]=500.0 *i./dx
+    dxy_dt(du,[0.499./dx;tmpy[i]],𝑃,0.0)
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
 
 #md plt=plot(tmpx,tmpu,label="u (interp)")
-#md plot!(Γ["YG"].f[1][1,1:10]./𝑃.dx,𝑃.u0[1,1:10],marker=:o,label="u (C-grid)")
+#md plot!(Γ["YG"].f[1][1,1:10]./dx,𝑃.u0[1,1:10],marker=:o,label="u (C-grid)")
 #md plot!(tmpx,tmpv,label="v (interp)")
-#md plot!(Γ["YG"].f[1][1,1:10]./𝑃.dx,𝑃.v0[1,1:10],marker=:o,label="v (C-grid)")
+#md plot!(Γ["YG"].f[1][1,1:10]./dx,𝑃.v0[1,1:10],marker=:o,label="v (C-grid)")
 
 # Compare recomputed velocities with those from `pkg/flt`
 
@@ -122,9 +123,9 @@ tmpx=fill(0.0,nSteps); tmpy=fill(0.0,nSteps);
 refu=fill(0.0,nSteps); refv=fill(0.0,nSteps);
 for i=1:nSteps
     dxy_dt_replay(du,[tmp[i,:lon],tmp[i,:lat]],tmp,tmp[i,:time])
-    refu[i]=du[1]./𝑃.dx
-    refv[i]=du[2]./𝑃.dx
-    dxy_dt(du,[tmp[i,:lon],tmp[i,:lat]]./𝑃.dx,𝑃,tmp[i,:time])
+    refu[i]=du[1]./dx
+    refv[i]=du[2]./dx
+    dxy_dt(du,[tmp[i,:lon],tmp[i,:lat]]./dx,𝑃,tmp[i,:time])
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
@@ -163,7 +164,7 @@ for i=1:nSteps-1
     ref[2,i+1]-ref[2,i]>maxLat/2 ? ref[2,i+1:end]-=fill(maxLat,(nSteps-i)) : nothing
     ref[2,i+1]-ref[2,i]<-maxLat/2 ? ref[2,i+1:end]+=fill(maxLat,(nSteps-i)) : nothing
 end
-ref=ref./𝑃.dx;
+ref=ref./dx;
 
 #md plt=plot(sol[1,:],sol[2,:],linewidth=5,title="Using Recomputed Velocities",
 #md      xaxis="lon",yaxis="lat",label="Julia Solution") # legend=false
