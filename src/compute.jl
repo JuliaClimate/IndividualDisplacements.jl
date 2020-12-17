@@ -168,7 +168,7 @@ prod(isapprox.(𝐼.📌',ref,atol=1.0))
 true
 ```
 """
-function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
+function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::𝑃_Array3D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
@@ -209,7 +209,7 @@ function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     return du
 end
 
-function dxyz_dt(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+function dxyz_dt(du::Array{T,2},u::Array{T,2},𝑃::𝑃_Array3D,tim) where T
     [dxyz_dt(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 

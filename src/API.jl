@@ -1,4 +1,45 @@
 
+## Flow field parameters
+
+abstract type FlowParameters end
+
+struct 𝑃_Array2D{T} <: FlowParameters
+    u0::Array{T,2}
+    u1::Array{T,2}
+    v0::Array{T,2}
+    v1::Array{T,2}
+    𝑇::Tuple{T,T}
+end
+
+struct 𝑃_Array3D{T} <: FlowParameters
+    u0::Array{T,3}
+    u1::Array{T,3}
+    v0::Array{T,3}
+    v1::Array{T,3}
+    w0::Array{T,3}
+    w1::Array{T,3}
+    𝑇::Tuple{T,T}
+end
+
+struct 𝑃_MeshArray2D{T} <: FlowParameters
+    u0::AbstractMeshArray{T,1}
+    u1::AbstractMeshArray{T,1}
+    v0::AbstractMeshArray{T,1}
+    v1::AbstractMeshArray{T,1}
+    𝑇::Tuple{T,T}
+end
+
+struct 𝑃_MeshArray3D{T} <: FlowParameters
+    u0::AbstractMeshArray{T,2}
+    u1::AbstractMeshArray{T,2}
+    v0::AbstractMeshArray{T,2}
+    v1::AbstractMeshArray{T,2}
+    w0::AbstractMeshArray{T,2}
+    w1::AbstractMeshArray{T,2}
+    𝑇::Tuple{T,T}
+end
+
+
 """
     defaults for Individuals constructor
 """
@@ -53,7 +94,7 @@ Base.@kwdef struct Individuals{T,N}
    🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
    ∫   ::Function = solver_default #\int<tab>
    🔧  ::Function = postprocess_default #\wrench<tab>
-   𝑃   ::NamedTuple = param_default #\itP<tab>
+   𝑃   ::Union{NamedTuple,FlowParameters} = param_default #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
    𝑀   ::NamedTuple = NamedTuple() #\itM<tab>vec
 end
@@ -153,4 +194,3 @@ function Base.diff(𝐼::Individuals)
     🔴_by_ID = groupby(𝐼.🔴, :ID)
     return combine(🔴_by_ID,nrow,:lat => f => :dlat,:lon => f => :dlon)
 end
-
