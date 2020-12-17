@@ -74,13 +74,14 @@ end
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_xy(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+function postprocess_xy(sol,𝑃::Union{NamedTuple,FlowParameters}; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
     nf=size(sol,2)
     nt=size(sol,3)
-    nx,ny=𝑃.ioSize[1:2]
+
+    isa(𝑃.u0,MeshArray) ? (nx,ny)=𝑃.u0.grid.ioSize[1:2] : (nx,ny)=size(𝑃.u0)[1:2]
     nd=length(size(sol))
 
     id=id*ones(1,size(sol,nd))
