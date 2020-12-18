@@ -8,7 +8,7 @@ struct 𝑃_Array2D{T} <: FlowParameters
     u1::Array{T,2}
     v0::Array{T,2}
     v1::Array{T,2}
-    𝑇::Tuple{T,T}
+    𝑇::Array{T}
 end
 
 struct 𝑃_Array3D{T} <: FlowParameters
@@ -18,7 +18,7 @@ struct 𝑃_Array3D{T} <: FlowParameters
     v1::Array{T,3}
     w0::Array{T,3}
     w1::Array{T,3}
-    𝑇::Tuple{T,T}
+    𝑇::Array{T}
 end
 
 struct 𝑃_MeshArray2D{T} <: FlowParameters
@@ -26,7 +26,8 @@ struct 𝑃_MeshArray2D{T} <: FlowParameters
     u1::AbstractMeshArray{T,1}
     v0::AbstractMeshArray{T,1}
     v1::AbstractMeshArray{T,1}
-    𝑇::Tuple{T,T}
+    𝑇::Array{T}
+    update_location!::Function
 end
 
 struct 𝑃_MeshArray3D{T} <: FlowParameters
@@ -36,7 +37,8 @@ struct 𝑃_MeshArray3D{T} <: FlowParameters
     v1::AbstractMeshArray{T,2}
     w0::AbstractMeshArray{T,2}
     w1::AbstractMeshArray{T,2}
-    𝑇::Tuple{T,T}
+    𝑇::Array{T}
+    update_location!::Function
 end
 
 
@@ -178,7 +180,7 @@ function Base.show(io::IO, 𝐼::Individuals) where {T}
     printstyled(io, "  🔧 function    = ",color=:normal)
     printstyled(io, "$(🔧)\n",color=:blue)
     printstyled(io, "  𝑃  details     = ",color=:normal)
-    printstyled(io, "$(keys(𝑃))\n",color=:blue)
+    printstyled(io, "$(fieldnames(typeof(𝑃)))\n",color=:blue)
   return
 end
 

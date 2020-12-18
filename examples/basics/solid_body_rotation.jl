@@ -47,7 +47,7 @@ u,v,w=simple_flow_field(Γ,np,nz);
 
 🚄 = dxyz_dt
 
-𝑄=𝑃_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,(0,19.95*2*pi))
+𝑄=𝑃_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0,19.95*2*pi])
 
 solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
 

@@ -33,9 +33,9 @@ IndividualDisplacements.get_ecco_velocity_if_needed();
 # - read grid variables & velocities
 # - normalize velocities
 
-𝑃=setup_global_ocean(k=1,ny=2);
+𝑃,𝐷=setup_global_ocean(k=1,ny=2);
 
-keys(𝑃)
+fieldnames(typeof(𝑃))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Main Computation Loop
@@ -44,11 +44,15 @@ keys(𝑃)
 #
 # - initial particle positions randomly over Global Ocean
 
-xy = init_global_randn(1000,𝑃)
+xy = init_global_randn(1000,𝐷)
 xy = permutedims([xy[:,i] for i in 1:size(xy,2)])
 
+function 🔧(sol,𝑃::𝑃_MeshArray2D;id=missing,𝑇=missing)
+    df=postprocess_lonlat(sol,𝐷,id=id,𝑇=𝑇)
+end
+ 
 I=(position=xy,velocity=dxy_dt!,
-   postprocessing=postprocess_lonlat,parameters=𝑃)
+   postprocessing=🔧,parameters=𝑃)
 𝐼=Individuals(I)
 
 fieldnames(typeof(𝐼))
@@ -68,8 +72,8 @@ fieldnames(typeof(𝐼))
 
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
-    𝐼.𝑃.🔄(𝐼.𝑃,t_ϵ)
-    reset_lonlat!(𝐼)
+    𝐷.🔄(𝐼.𝑃,𝐷,t_ϵ)
+    reset_lonlat!(𝐼,𝐷)
     𝑇=Tuple(𝐼.𝑃.𝑇)
     ∫!(𝐼,𝑇)
 end

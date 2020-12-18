@@ -24,7 +24,7 @@ function test1_setup()
     u0=u./dx; u1=u./dx
     v0=v./dx; v1=v./dx
 
-    𝑃=𝑃_Array2D{eltype(u)}(u0[1], u1[1], v0[1], v1[1], (t0,t1))
+    𝑃=𝑃_Array2D{eltype(u)}(u0[1], u1[1], v0[1], v1[1], [t0,t1])
     
     u0=[200000.0;0.0]./dx
     du=fill(0.0,2);
@@ -58,8 +58,9 @@ function test2_periodic_domain(np = 12, nq = 12)
     u = 0.1 ./ Γ.DXC
     v = 0.3 ./ Γ.DYC
     (u, v) = exchange(u, v, 1)
-    𝑃 = (u0=u, u1=u, v0=v, v1=v, 𝑇=[0.0,400.0], dt=0.1,
-         XC=Γ.XC, YC=Γ.YC, ioSize=(np,nq))
+
+    f = (u -> IndividualDisplacements.update_location_dpdo!(u,Γ.XC.grid))
+    𝑃=𝑃_MeshArray2D{eltype(u)}(u,u,v,v,[0.0,400.0],f)
 
     #initial conditions
     x0 = np * (0.4:0.04:0.6)
@@ -71,7 +72,7 @@ function test2_periodic_domain(np = 12, nq = 12)
     
     #solve for trajectories
     prob = ODEProblem(dxy_dt!, u0, 𝑃.𝑇, 𝑃)
-    sol = solve(prob,Euler(),dt=𝑃.dt)
+    sol = solve(prob,Euler(),dt=0.1)
 
     return postprocess_xy(sol, 𝑃),𝑃
 end
