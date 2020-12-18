@@ -20,7 +20,7 @@ prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,a
 true
 ```
 """
-function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
+function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝑃_MeshArray3D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     dt>1.0 ? error("dt>1.0") : nothing
@@ -28,9 +28,10 @@ function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     g=𝑃.u0.grid
     #
     while location_is_out(u,g)
-        g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
-        g.class=="CubeSphere" ? update_location_cs!(u,𝑃) : nothing
-        g.class=="LatLonCap" ? update_location_llc!(u,𝑃) : nothing
+#        g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
+#        g.class=="CubeSphere" ? update_location_cs!(u,𝑃) : nothing
+#        g.class=="LatLonCap" ? update_location_llc!(u,𝑃) : nothing
+         𝑃.update_location!(u)
     end
 
     x,y,z = u[1:3]
@@ -74,7 +75,7 @@ function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     return du
 end
 
-function dxyz_dt!(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+function dxyz_dt!(du::Array{T,2},u::Array{T,2},𝑃::𝑃_MeshArray3D,tim) where T
     [dxyz_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
@@ -108,7 +109,7 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
 true
 ```
 """
-function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
+function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝑃_MeshArray2D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     dt>1.0 ? error("dt>1.0") : nothing
@@ -116,9 +117,7 @@ function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     g=𝑃.u0.grid
     #
     while location_is_out(u,g)
-        g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
-        g.class=="CubeSphere" ? update_location_cs!(u,𝑃) : nothing
-        g.class=="LatLonCap" ? update_location_llc!(u,𝑃) : nothing
+        𝑃.update_location!(u)
     end
 
     x,y = u[1:2]
@@ -146,7 +145,7 @@ function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     return du
 end
 
-function dxy_dt!(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+function dxy_dt!(du::Array{T,2},u::Array{T,2},𝑃::𝑃_MeshArray2D,tim) where T
     [dxy_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
