@@ -43,7 +43,7 @@ I=Individuals(I)
 Keyword cheatsheet:
 
 - 📌=`\\:pushpin:<tab>`,          🔴=`\\:red_circle:<tab>`, 🆔=`\\:id:<tab>`
-- 🚄=`\\:bullettrain_side:<tab>`, ∫=`\\int<tab>`,          🔧=`\\wrench<tab>`
+- 🚄=`\\:bullettrain_side:<tab>`, ∫=`\\int<tab>`,          🔧=`\\:wrench:<tab>`
 - 𝑃=`\\itP<tab>`,                 𝐷=`\\itD<tab>`,           𝑀=`\\itM<tab>`
 """
 Base.@kwdef struct Individuals{T,N}
@@ -52,10 +52,10 @@ Base.@kwdef struct Individuals{T,N}
    🆔   ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
    🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
    ∫   ::Function = solver_default #\int<tab>
-   🔧  ::Function = postprocess_default #\wrench<tab>
+   🔧  ::Function = postprocess_default #\:wrench:<tab>
    𝑃   ::NamedTuple = param_default #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
-   𝑀   ::NamedTuple = NamedTuple() #\itM<tab>vec
+   𝑀   ::NamedTuple = NamedTuple() #\itM<tab>
 end
 
 """
@@ -93,7 +93,7 @@ Displace simulated individuals continuously through space over time period 𝑇 
 
 - This is typically achieved by computing the cumulative integral of velocity experienced by each individual along its trajectory (∫ 🚄 dt).
 - The current default is `solve(prob,Euler(),dt=day)` but all solver options from the [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) package are available.
-- After this, `∫!` is also equiped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consiste in updating 📌 to be ready for continuing in a subsequent call to `∫!`.
+- After this, `∫!` is also equipped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consists of updating 📌 to be ready for continuing in a subsequent call to `∫!`.
 """
 function ∫!(𝐼::Individuals,𝑇::Tuple)
     @unpack 🚄,📌,𝑃, 🔧, 🆔, 🔴, ∫ = 𝐼

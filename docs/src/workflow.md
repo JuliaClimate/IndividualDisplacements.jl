@@ -1,6 +1,6 @@
 ## Scope / Goals
 
-A central goal of this package is to support scientific analysis of climate model output and observed drifts of e.g. plastics in the Ocean or chemical coumponds in the Atmosphere. To start, the package supports all types of gridded model output [MIT General Circulation Model](https://mitgcm.readthedocs.io/en/latest/?badge=latest) by exploiting the [MeshArrays.jl](https://github.com/JuliaClimate/MeshArrays.jl) package ([docs found here](https://juliaclimate.github.io/MeshArrays.jl/dev/)). The tool box in this package also provides functions to ingest trajectory data which have been collected by the [Ocean Drifting Buoy](https://doi.org/10.1002/2016JC011716) Program over the real Ocean ([movie](https://youtu.be/82HPnYBtoVo)) or computed by MITgcm.
+A central goal of this package is to support scientific analysis of climate model output and observed drifts of e.g. plastics in the Ocean or chemical compounds in the Atmosphere. To start, the package supports all types of gridded model output [MIT General Circulation Model](https://mitgcm.readthedocs.io/en/latest/?badge=latest) by exploiting the [MeshArrays.jl](https://github.com/JuliaClimate/MeshArrays.jl) package ([docs found here](https://juliaclimate.github.io/MeshArrays.jl/dev/)). The tool box in this package also provides functions to ingest trajectory data which have been collected by the [Ocean Drifting Buoy](https://doi.org/10.1002/2016JC011716) Program over the real Ocean ([movie](https://youtu.be/82HPnYBtoVo)) or computed by MITgcm.
 
 
 ## Typical Workflow
