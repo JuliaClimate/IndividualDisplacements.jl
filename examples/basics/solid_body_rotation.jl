@@ -47,7 +47,7 @@ u,v,w=simple_flow_field(Γ,np,nz);
 
 🚄 = dxyz_dt
 
-𝑄=𝑃_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0,19.95*2*pi])
+𝑄=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0,19.95*2*pi])
 
 solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
 
@@ -66,7 +66,7 @@ solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
 
 🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
 
-function postproc(sol,𝑄::FlowParameters;id=missing,𝑇=missing)
+function postproc(sol,𝑄::FlowFields;id=missing,𝑇=missing)
     df=postprocess_xy(sol,𝑄,id=id,𝑇=𝑇)
     #add third coordinate
     z=sol[3,:]

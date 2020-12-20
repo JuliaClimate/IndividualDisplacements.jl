@@ -5,7 +5,7 @@
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 using "exchanged" 𝑃.XC, 𝑃.YC via `add_lonlat!`
 """
-function postprocess_lonlat(sol,𝑃::Union{NamedTuple,FlowParameters}; id=missing, 𝑇=missing)
+function postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
@@ -74,7 +74,7 @@ end
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_xy(sol,𝑃::Union{NamedTuple,FlowParameters}; id=missing, 𝑇=missing)
+function postprocess_xy(sol,𝑃::FlowFields; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
@@ -131,7 +131,7 @@ function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
     tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
     𝐷 = merge(𝐷 , tmp)
 
-    𝑃=𝑃_MeshArray2D{Float64}(MeshArray(γ,Float64),MeshArray(γ,Float64),
+    𝑃=𝐹_MeshArray2D{Float64}(MeshArray(γ,Float64),MeshArray(γ,Float64),
     MeshArray(γ,Float64),MeshArray(γ,Float64),[-mon/2,mon/2],func)
 
     𝐷.🔄(𝑃,𝐷,0.0)
@@ -140,7 +140,7 @@ function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
 end
 
 """
-    update_𝑃!(𝑃::Union{NamedTuple,FlowParameters},t::Float64)
+    update_𝑃!(𝑃::Union{NamedTuple,FlowFields},t::Float64)
 
 Update input data (velocity arrays) and time period (array) inside 𝑃 (𝑃.u0[:], etc, and 𝑃.𝑇[:])
 based on the chosen time `t` (in `seconds`). 
@@ -148,7 +148,7 @@ based on the chosen time `t` (in `seconds`).
 _Note: for now, it is assumed that (1) input 𝑃.𝑇 is used to infer `dt` between consecutive velocity fields,
 (2) periodicity of 12 monthly records, (3) vertical 𝑃.k is selected -- but this could easily be generalized._ 
 """
-function update_𝑃!(𝑃::Union{NamedTuple,FlowParameters},𝐷::NamedTuple,t::Float64)
+function update_𝑃!(𝑃::Union{NamedTuple,FlowFields},𝐷::NamedTuple,t::Float64)
     dt=𝑃.𝑇[2]-𝑃.𝑇[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
