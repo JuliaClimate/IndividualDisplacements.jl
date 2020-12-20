@@ -159,6 +159,25 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z)
 end
 
 """
+    Individuals(𝐹::𝐹_MeshArray2D,x,y)
+
+"""
+function Individuals(𝐹::𝐹_MeshArray2D,x,y,f)
+    📌=permutedims([[x[i];y[i];f[i]] for i in eachindex(x)])
+
+    🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
+    🔧 = postprocess_xy
+
+    T=eltype(📌)
+    🆔=collect(1:size(📌,2))
+    
+    solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
+    #solv=solver_default
+
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=solv,🔧=🔧)    
+end
+
+"""
     ∫!(𝐼::Individuals,𝑇::Tuple)
 
 Displace simulated individuals continuously through space over time period 𝑇 starting from position 📌. 
