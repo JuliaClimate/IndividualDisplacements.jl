@@ -7,12 +7,17 @@ A central goal of this package is to support scientific analysis of climate mode
 
 As documented in the **examples**, the typical worflow is:
 
-1. set up the `Individuals` data structure
-1. displace them via `∫!`
-1. post-process / analyze / plot
-1. go back to `2` and continue
+1. set up `FlowFields`
+1. set up `Individuals`
+1. displace them (📌, 🚄, `∫!`)
+1. record and post-process (🔴, 🔧)
+1. go back to `2` and continue 
 
-The velocity interpolation funtions (🚄 used in step 2; documented below) interpolate gridded output to positions 📌. Steps `3` and `4` are optional. Step `2` also provides the option to post-process results recorded in 🔴 when `∫!` calls 🔧 before updating positions 📌. Since 🔴 is in the [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format, it is easily manipulated or plotted. Ingestion of time varying flow fields, three-dimensional ocean trajectory simulations, process oriented configurations, as well as plotting and data formats are further documented via the **examples**. 
+The velocity interpolation funtions (🚄 used in step 3; documented below) interpolate gridded output to positions 📌, and `∫!` integrates over time. 
+
+Steps `4` and `5` are optional. Step `3` also readily provides the option to post-process results recorded in 🔴 when `∫!` calls 🔧 before updating positions 📌. Since 🔴 is in the [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format, it is easily manipulated or plotted. 
+
+**See the examples** for more documentation regarding the ingestion of time varying flow fields, three-dimensional ocean trajectory simulations, process oriented configurations, as well as plotting and data formats. 
 
 ## Core Functions
 
