@@ -1,9 +1,17 @@
 
 ## Flow field parameters
 
-abstract type FlowParameters end
+"""
+    abstract type FlowFields
 
-struct 𝑃_Array2D{T} <: FlowParameters
+- 𝐹_Array2D
+- 𝐹_Array3D
+- 𝐹_Array2D
+- 𝐹_MeshArray3D
+"""
+abstract type FlowFields end
+
+struct 𝐹_Array2D{T} <: FlowFields
     u0::Array{T,2}
     u1::Array{T,2}
     v0::Array{T,2}
@@ -11,7 +19,7 @@ struct 𝑃_Array2D{T} <: FlowParameters
     𝑇::Array{T}
 end
 
-struct 𝑃_Array3D{T} <: FlowParameters
+struct 𝐹_Array3D{T} <: FlowFields
     u0::Array{T,3}
     u1::Array{T,3}
     v0::Array{T,3}
@@ -21,7 +29,7 @@ struct 𝑃_Array3D{T} <: FlowParameters
     𝑇::Array{T}
 end
 
-struct 𝑃_MeshArray2D{T} <: FlowParameters
+struct 𝐹_MeshArray2D{T} <: FlowFields
     u0::AbstractMeshArray{T,1}
     u1::AbstractMeshArray{T,1}
     v0::AbstractMeshArray{T,1}
@@ -30,7 +38,7 @@ struct 𝑃_MeshArray2D{T} <: FlowParameters
     update_location!::Function
 end
 
-struct 𝑃_MeshArray3D{T} <: FlowParameters
+struct 𝐹_MeshArray3D{T} <: FlowFields
     u0::AbstractMeshArray{T,2}
     u1::AbstractMeshArray{T,2}
     v0::AbstractMeshArray{T,2}
@@ -96,7 +104,7 @@ Base.@kwdef struct Individuals{T,N}
    🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
    ∫   ::Function = solver_default #\int<tab>
    🔧  ::Function = postprocess_default #\wrench<tab>
-   𝑃   ::Union{NamedTuple,FlowParameters} = param_default #\itP<tab>
+   𝑃   ::Union{NamedTuple,FlowFields} = param_default #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
    𝑀   ::NamedTuple = NamedTuple() #\itM<tab>vec
 end

@@ -47,7 +47,7 @@ end
 # ## 2.2 Solver And Analysis Setup
 #
 
-function my🚄(du::Array{T,2},u::Array{T,2},𝑃::𝑃_MeshArray3D,tim) where T
+function my🚄(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray3D,tim) where T
    nf=size(u,2)
    nx=360
    ny=160
@@ -69,7 +69,7 @@ function ∫(prob)
    return sol
 end
 
-function 🔧(sol,𝑃::𝑃_MeshArray3D;id=missing,𝑇=missing)
+function 🔧(sol,𝑃::𝐹_MeshArray3D;id=missing,𝑇=missing)
    df=postprocess_lonlat(sol,𝐷,id=id,𝑇=𝑇)
 
    #add year (convenience time axis for plotting)

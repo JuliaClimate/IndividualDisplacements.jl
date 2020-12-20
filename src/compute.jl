@@ -3,7 +3,7 @@ import Base: zero
 zero(tmp::Array) = zero.(tmp)
 
 """
-    dxyz_dt!(du,u,p::NamedTuple,tim)
+    dxyz_dt!(du,u,p::𝐹_MeshArray3D,tim)
 
 Interpolate velocity from gridded fields (3D; with halos) to position `u`
 (`x,y,z,fIndex`) to compute the derivative of position v time  `du_dt`.
@@ -20,7 +20,7 @@ prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,a
 true
 ```
 """
-function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝑃_MeshArray3D,tim) where T
+function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray3D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     dt>1.0 ? error("dt>1.0") : nothing
@@ -75,12 +75,12 @@ function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝑃_MeshArray3D,tim) where
     return du
 end
 
-function dxyz_dt!(du::Array{T,2},u::Array{T,2},𝑃::𝑃_MeshArray3D,tim) where T
+function dxyz_dt!(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray3D,tim) where T
     [dxyz_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
-    dxy_dt!(du,u,p::NamedTuple,tim)
+    dxy_dt!(du,u,p::𝐹_MeshArray2D,tim)
 
 Interpolate velocity from gridded fields (2D; with halos) to position `u`
 (`x,y,fIndex`) to compute the derivative of position v time  `du_dt`.
@@ -109,7 +109,7 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
 true
 ```
 """
-function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝑃_MeshArray2D,tim) where T
+function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray2D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     dt>1.0 ? error("dt>1.0") : nothing
@@ -145,12 +145,12 @@ function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝑃_MeshArray2D,tim) where 
     return du
 end
 
-function dxy_dt!(du::Array{T,2},u::Array{T,2},𝑃::𝑃_MeshArray2D,tim) where T
+function dxy_dt!(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray2D,tim) where T
     [dxy_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
-    dxyz_dt(du,u,𝑃::𝑃_Array3D,tim)
+    dxyz_dt(du,u,𝑃::𝐹_Array3D,tim)
 
 Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 (`x,y,z`) to compute the derivative of position v time  `du_dt`.
@@ -167,7 +167,7 @@ prod(isapprox.(𝐼.📌',ref,atol=1.0))
 true
 ```
 """
-function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::𝑃_Array3D,tim) where T
+function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array3D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
@@ -208,12 +208,12 @@ function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::𝑃_Array3D,tim) where T
     return du
 end
 
-function dxyz_dt(du::Array{T,2},u::Array{T,2},𝑃::𝑃_Array3D,tim) where T
+function dxyz_dt(du::Array{T,2},u::Array{T,2},𝑃::𝐹_Array3D,tim) where T
     [dxyz_dt(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
-    dxy_dt(du,u,𝑃::𝑃_Array2D,tim)
+    dxy_dt(du,u,𝑃::𝐹_Array2D,tim)
 
 Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 (`x,y`) to compute the derivative of position v time  `du_dt`.
@@ -230,7 +230,7 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=1.0))
 true
 ```
 """
-function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::𝑃_Array2D,tim) where T
+function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array2D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
@@ -261,7 +261,7 @@ function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::𝑃_Array2D,tim) where T
     return du
 end
 
-function dxy_dt(du::Array{T,2},u::Array{T,2},𝑃::𝑃_Array2D,tim) where T
+function dxy_dt(du::Array{T,2},u::Array{T,2},𝑃::𝐹_Array2D,tim) where T
     [dxy_dt(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
