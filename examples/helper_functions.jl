@@ -69,7 +69,7 @@ function setup_random_flow(;np=12,nq=18)
     return u,v,ϕ[1]
 end
 
-function setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
+function setup_F_MeshArray2D(U::Array{T,2},V::Array{T,2}) where T
     np,nq=size(U)
     Γ=simple_periodic_domain(np,nq)
     g=Γ["XC"].grid
@@ -77,11 +77,18 @@ function setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
     v=MeshArray(g,[V])
     #vel=dxy_dt
     (u,v)=exchange(u,v,1)
-    vel=dxy_dt!
     func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
 
-    𝑃=𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0.0,10.0],func)
+    𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0.0,10.0],func)
+end
+
+function old_setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
+    𝐹=setup_F_MeshArray2D(U,V)
+
+    np,nq=size(U)
     pp=postprocess_xy
+    vel=dxy_dt!
+
     isempty(X) ? X=np*rand(10) : nothing
     isempty(Y) ? Y=nq*rand(10) : nothing
 
@@ -90,7 +97,7 @@ function setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
     solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
     
     I=(position=xy,record=tr,velocity=vel,
-       integration=solv,postprocessing=pp,parameters=𝑃)
+       integration=solv,postprocessing=pp,parameters=𝐹)
 
     return Individuals(I)
 end
