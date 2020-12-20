@@ -47,7 +47,7 @@ fieldnames(typeof(𝑃))
 xy = init_global_randn(1000,𝐷)
 xy = permutedims([xy[:,i] for i in 1:size(xy,2)])
 
-function 🔧(sol,𝑃::𝑃_MeshArray2D;id=missing,𝑇=missing)
+function 🔧(sol,𝑃::𝐹_MeshArray2D;id=missing,𝑇=missing)
     df=postprocess_lonlat(sol,𝐷,id=id,𝑇=𝑇)
 end
  
