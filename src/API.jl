@@ -137,6 +137,27 @@ function Individuals(NT::NamedTuple)
     Individuals{T,ndims(📌)}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,𝑃=𝑃,𝐷=𝐷,𝑀=𝑀)    
 end
 
+
+"""
+    Individuals(𝐹::𝐹_Array3D,x,y,z)
+
+"""
+function Individuals(𝐹::𝐹_Array3D,x,y,z)
+    📌=permutedims([[x[i];y[i];z[i]] for i in eachindex(x)])
+
+    🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
+    function 🔧(sol,𝑄::FlowFields;id=missing,𝑇=missing)
+        df=postprocess_xy(sol,𝐹,id=id,𝑇=𝑇)
+        z=sol[3,:]
+        df.z=z[:]
+        return df
+    end
+    T=eltype(📌)
+    🆔=collect(1:size(📌,2))
+    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt,∫=solver_default,🔧=🔧)    
+end
+
 """
     ∫!(𝐼::Individuals,𝑇::Tuple)
 

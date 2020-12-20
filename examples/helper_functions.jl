@@ -11,11 +11,11 @@ Set up an idealized flow field which consists of
 plus a convergent term, plus a sinking term.
 
 ```
-Γ=simple_periodic_domain(12)
-u,v,w=simple_flow_field(Γ,12,4)
+u,v,w=simple_flow_field(12,4)
 ```
 """
-function simple_flow_field(Γ,np,nz)
+function simple_flow_field(np,nz)
+    Γ=simple_periodic_domain(np);
     γ=Γ["XC"].grid;
     
     #Solid-body rotation around central location ...
