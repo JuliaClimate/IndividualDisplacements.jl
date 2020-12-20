@@ -25,84 +25,88 @@ p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ### 1.2  Gridded Domain
-
-np,nz=16,4 #horizontal and vertical domain size
-Γ=simple_periodic_domain(np);
-
-#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ### 1.3 Velocity Fields
+# ### 1.2  Flow Fields
 #
-# Exercise: find `simple_flow_field` within `helper_functions.jl` and modify the 
+# The `simple_flow_field` function (defined in `helper_functions.jl`) defines a simple
+# three-dimensional flow field. Exercise: locate `simple_flow_field` and modify the 
 # flow field parameters (e.g. intensity and sign of the convergent term).
 
-u,v,w=simple_flow_field(Γ,np,nz);
+np,nz=16,4 #gridded domain size (horizontal and vertical)
 
-# ### 1.4 Velocity Function
-#
-# `🚄` relies only on parameters (velocity fields, grid, etc) 
-# contained in `𝑄` to compute velocity at the space-time position
-# of the individual. The solver (here: `solv`) can then integrate 
-# over time the result of `🚄` (see `OrdinaryDiffEq.jl` docs).
+u,v,w=simple_flow_field(np,nz) #staggered velocity arrays
 
-🚄 = dxyz_dt
-
-𝑄=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0,19.95*2*pi])
-
-solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
+𝐹=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0,19.95*2*pi]); #FlowFields data structure
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ### 1.5 Initial Position
+# ### 1.3 Initialize Individuals
 #
-# Here we set up just one individual in a three-dimensional space,
+# Let's just set up one individual at [np*1/3,np*1/3,nz*1/3] in the three-dimensional 
+# space where the flow fields have been configured
 
-📌=[np*1/3,np*1/3,nz*1/3]
+𝐼=Individuals(𝐹,np*1/3,np*1/3,nz*1/3)
+
+# The above `Individuals` constructor wraps up 𝐹, the initial position, and other needed components 
+# within 𝐼. 
+#
+# **Either jump to section 2** or let's break this down further to document the added components and 
+# highlight how one may override defaults that are selected by the above `Individuals` constructor.
+#
+# Initial position is 
+
+📌=[np*1/3,np*1/3,nz*1/3] 
 
 # and the data structure ([DataFrame](http://juliadata.github.io/DataFrames.jl/stable/)) 
-# to record properties along the individual's path accordingly. It is the postprocessing 
-# function's responsibility to provide the record. It is thus important that this 
-# intermediary (`postproc`) be consistent with the solver setup (`sol`) and 
-# the expected record format (`🔴`).
+# to record properties along the individual's path accordingly. 
 
 🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
 
-function postproc(sol,𝑄::FlowFields;id=missing,𝑇=missing)
-    df=postprocess_xy(sol,𝑄,id=id,𝑇=𝑇)
+# It is the postprocessing function's responsibility to provide the record. It is thus 
+# important that this intermediary (`postproc`) be consistent with the solver setup (`sol`) 
+# and the expected record format (`🔴`).
+
+function postproc(sol,𝐹::FlowFields;id=missing,𝑇=missing)
+    df=postprocess_xy(sol,𝐹,id=id,𝑇=𝑇)
     #add third coordinate
     z=sol[3,:]
     df.z=z[:]
     return df
 end
 
-#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 2 Trajectory Simulations
-#
+# The velocity function `🚄` relies only on flow fields obtained from
+# `𝐹` (which is defined above) to interpolate velocity at the specified
+# space-time position (e.g. those of individuals). The solver (here: `solv`) 
+# can then integrate over time the result of `🚄` (see `OrdinaryDiffEq.jl` docs).
+
+🚄 = dxyz_dt
+
+solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+
 # Now that every thing needed to carry out the computation is in place, 
 # we wrap up the problem configuration in a struct (`Individuals`) which 
 # links to the initial positions, flow fields, etc. all that will be 
-# necessary to compute trajectories over time (`∫!(𝐼,𝑇)`). Simple methods to
-# visualize the individual trajectory (plot or movie) are provided at the end.
-
-# ### 2.1 Setup Individuals
-#
+# necessary to compute trajectories over time (`∫!(𝐼,𝑇)`).
 
 #assemble as a NamedTuple:
 I=(position=📌,record=🔴,velocity=🚄,
-integration=solv,postprocessing=postproc,parameters=𝑄)
+integration=solv,postprocessing=postproc,parameters=𝐹)
 
 #construct Individuals from NamedTuple:
 𝐼=Individuals(I)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ### 2.2 Compute Trajectories
+# ## 2 Trajectory Simulations
 #
-# The `∫!` function call below returns the final positions & updates `𝐼.📌` accordingly. It also records properties observed along the trajectory in `𝐼.🔴`
+# The `∫!` function call below returns the final positions & updates `𝐼.📌` accordingly. It also records properties observed along the trajectory in `𝐼.🔴`. 
+# Simple methods to visualize the individual trajectory (plot or movie) are provided at the end.
+
+#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ### 2.1 Compute Trajectories
 
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ### 2.3 Visualize Trajectories
+# ### 2.2 Visualize Trajectories
 #
 # - define `myplot` convenience function
 # - generate animation using `myplot`
