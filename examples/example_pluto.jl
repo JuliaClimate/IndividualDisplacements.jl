@@ -22,9 +22,9 @@ begin
     include(joinpath(p,"../examples/example123.jl"))
     include(joinpath(p,"../examples/helper_functions.jl"))
     include(joinpath(p,"../examples/recipes_plots.jl"))
-	𝑃,Γ=OCCA_setup()	
+	𝑃,𝐷,Γ=OCCA_setup()	
 	tmp=(Γ = Γ, m = "OCCA")
-    𝑃=merge(𝑃,tmp)
+    𝐷=merge(𝐷,tmp)
 	✓ = "😃"
 	"$✓ Set up packages, gridded domain, etc"
 end
@@ -81,7 +81,9 @@ begin
 	               z=Float64[], t=Float64[], lon=Float64[], lat=Float64[])
 
 	function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
-	  df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
+	  df=postprocess_MeshArray(sol,𝑃,id=id,𝑇=𝑇)
+	  add_lonlat!(df,𝐷.XC,𝐷.YC)
+
 	  #add third coordinate
 	  z=sol[3,:,:]
 	  df.z=z[:]

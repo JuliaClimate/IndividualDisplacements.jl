@@ -70,7 +70,8 @@ function ∫(prob)
 end
 
 function 🔧(sol,𝑃::𝐹_MeshArray3D;id=missing,𝑇=missing)
-   df=postprocess_lonlat(sol,𝐷,id=id,𝑇=𝑇)
+   df=postprocess_MeshArray(sol,𝑃,id=id,𝑇=𝑇)
+   add_lonlat!(df,𝐷.XC,𝐷.YC)
 
    #add year (convenience time axis for plotting)
    df.year=df.t ./86400/365
