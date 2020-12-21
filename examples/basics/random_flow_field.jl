@@ -24,14 +24,18 @@
 
 using IndividualDisplacements, DataFrames
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/helper_functions.jl"))
+include(joinpath(p,"../examples/helper_functions.jl"));
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ## 2. Flow Field
+# ## 2. Flow Fields
 #
-# The `u,v` arrays below can be replaced with any other pair provided by the user.
-# A couple of important considerations, however:
 
+u,v,ϕ=setup_random_flow();
+
+# The above `u,v` arrays can be replaced with any other pair provided by the user.
+#
+# A couple of important considerations, however:
+#
 # - `u,v` are staggered on a C-grid; by `-0.5` grid point in direction `1` for `u` (`2` for `v`)
 #  from the grid cell center (0.5,0.5)
 # - `u,v` here derive from streamfunction `ϕ`, defined at the corner point, which ensures that 
@@ -43,8 +47,6 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 # v=(circshift(ϕ, (-1,0))-ϕ)
 # ```
 
-u,v,ϕ=setup_random_flow()
-
 # If user were to start with collocated velocity (`uC,vC` at the grid cell center) then
 # one can easily obtain the staggered velocity (`u,v`) as follows. These may contain both 
 # [rotational and divergent](https://en.wikipedia.org/wiki/Helmholtz_decomposition) components.
@@ -54,6 +56,11 @@ u,v,ϕ=setup_random_flow()
 # v=0.5*(circshift(vC, (1,0))+vC)
 # ```
 
+# A convenient way to set up the flow fields using the MeshArrays.jl package (which 
+# handles such staggered grids in general fashion) is to call `setup_F_MeshArray2D`
+
+𝐹=setup_F_MeshArray2D(u,v);
+
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Initialize Individuals
 #
@@ -61,13 +68,12 @@ u,v,ϕ=setup_random_flow()
 
 np,nq=size(u)
 x=np*(0. .+ 1.0*rand(1000))
-y=nq*(0. .+ 1.0*rand(1000));
+y=nq*(0. .+ 1.0*rand(1000))
+a=ones(size(x)); #subdomain array index (just 1 here)
 
-# The `setup_point_cloud` function then wraps everything in the `Individuals` data structure.
+# The following constructor function wraps everything in the `Individuals` data structure.
 
-𝐼=setup_point_cloud(u,v,X=x,Y=y)
-𝐼.𝑃.𝑇[2]=10.
-𝐼.🔴
+𝐼=Individuals(𝐹,x,y,a)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Compute Trajectories

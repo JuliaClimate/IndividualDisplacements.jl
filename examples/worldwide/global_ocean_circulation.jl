@@ -33,9 +33,9 @@ IndividualDisplacements.get_ecco_velocity_if_needed();
 # - read grid variables & velocities
 # - normalize velocities
 
-𝑃=setup_global_ocean(k=1,ny=2);
+𝑃,𝐷=setup_global_ocean(k=1,ny=2);
 
-keys(𝑃)
+fieldnames(typeof(𝑃))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Main Computation Loop
@@ -44,13 +44,8 @@ keys(𝑃)
 #
 # - initial particle positions randomly over Global Ocean
 
-xy = init_global_randn(1000,𝑃)
-xy = permutedims([xy[:,i] for i in 1:size(xy,2)])
-
-I=(position=xy,velocity=dxy_dt!,
-   postprocessing=postprocess_lonlat,parameters=𝑃)
-𝐼=Individuals(I)
-
+xy = init_global_randn(1000,𝐷)
+𝐼=Individuals(𝑃,xy[1,:],xy[2,:],xy[3,:])
 fieldnames(typeof(𝐼))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
@@ -58,34 +53,45 @@ fieldnames(typeof(𝐼))
 
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
+add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC);
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### 3.2 Iteration function example
 #
-# - `𝐼.𝑃.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
+# Here we customize the postprocessing function to add longitude and latitude (my🔧).
+
+function my🔧(sol,𝑃::𝐹_MeshArray2D;id=missing,𝑇=missing)
+    df=postprocess_MeshArray(sol,𝑃,id=id,𝑇=𝑇)
+    add_lonlat!(df,𝐷.XC,𝐷.YC)
+end
+
+𝐽=Individuals{eltype(𝐼.📌),ndims(𝐼.📌)}(𝑃=𝐼.𝑃,📌=𝐼.📌,🔴=𝐼.🔴,🆔=𝐼.🆔,🚄=𝐼.🚄,∫=𝐼.∫,🔧=my🔧)
+
+# In addition, `step!` is defined to provide additional flexibility around `∫!` :
+#
+# - `𝐷.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
 # - `reset_lonlat!(𝐼)` randomly selects a fraction (defined in `setup_global_ocean()`) of the particles and resets their positions before each integration period. This can maintain homogeneous coverage of the Global Ocean by particles.
-# - `∫!(𝐼,𝑇)` then solves for the individual trajectories over one month, after updating velocity fields (𝐼.u0 etc) if needed, and adds diagnostics to the DataFrame used to record / trace variables along the trajectory (𝐼.tr).
+# - `∫!(𝐼)` then solves for the individual trajectories over one month, after updating velocity fields (𝐼.u0 etc) if needed, and adds diagnostics to the DataFrame used to record / trace variables along the trajectory (𝐼.tr).
 
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
-    𝐼.𝑃.🔄(𝐼.𝑃,t_ϵ)
-    reset_lonlat!(𝐼)
-    𝑇=Tuple(𝐼.𝑃.𝑇)
-    ∫!(𝐼,𝑇)
+    𝐷.🔄(𝐼.𝑃,𝐷,t_ϵ)
+    reset_lonlat!(𝐼,𝐷)
+    ∫!(𝐼)
 end
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.3 Iterate For `ny*12` Months
 #
 
-[step!(𝐼) for y=1:1, m=1:1]
+[step!(𝐽) for y=1:1, m=1:1]
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.4 Compute summary statistics
 #
 # See [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) documentation for detail and additinal functionalities.
 
-gdf = groupby(𝐼.🔴, :ID)
+gdf = groupby(𝐽.🔴, :ID)
 sgdf= combine(gdf,nrow,:lat => mean)
 sgdf[rand(1:size(sgdf,1),4),:]
 
@@ -106,5 +112,5 @@ sgdf[rand(1:size(sgdf,1),4),:]
 #
 #```
 #include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/recipes_plots.jl"))
-#plot_end_points(𝐼,𝐼.𝑃.Γ)
+#plot_end_points(𝐽,𝐷.Γ)
 #```

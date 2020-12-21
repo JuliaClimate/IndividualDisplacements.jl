@@ -16,8 +16,9 @@ include("read.jl")
 include("update_locations.jl")
 
 export Individuals, ∫!, set_up_𝑃, update_𝑃!
+export FlowFields, 𝐹_Array3D, 𝐹_Array2D, 𝐹_MeshArray3D, 𝐹_MeshArray2D
 export dxy_dt!, dxy_dt, dxyz_dt!, dxyz_dt, dxy_dt_CyclicArray, dxy_dt_replay
-export postprocess_lonlat, add_lonlat!, postprocess_xy, interp_to_xy
+export postprocess_MeshArray, add_lonlat!, postprocess_xy, interp_to_xy
 export initialize_gridded, initialize_lonlat, randn_lonlat, interp_to_lonlat
 export read_drifters, read_mds, read_velocities
 

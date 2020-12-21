@@ -18,7 +18,7 @@ Convenience functions to initialize a simulation and posprocess the output are p
 ```@docs
 initialize_lonlat
 randn_lonlat
-postprocess_lonlat
+postprocess_MeshArray
 postprocess_xy
 ```
 

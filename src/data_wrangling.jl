@@ -1,11 +1,11 @@
 
 """
-    postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+    postprocess_MeshArray(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 using "exchanged" 𝑃.XC, 𝑃.YC via `add_lonlat!`
 """
-function postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
@@ -28,13 +28,12 @@ function postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
         nf=1
     end
 
-    𝑃.XC.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
+    𝑃.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
 
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
     t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
     
     df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
-    add_lonlat!(df,𝑃.XC,𝑃.YC)
     return df
 end
 
@@ -74,13 +73,14 @@ end
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_xy(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+function postprocess_xy(sol,𝑃::FlowFields; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
     nf=size(sol,2)
     nt=size(sol,3)
-    nx,ny=𝑃.ioSize[1:2]
+
+    isa(𝑃.u0,MeshArray) ? (nx,ny)=𝑃.u0.grid.ioSize[1:2] : (nx,ny)=size(𝑃.u0)[1:2]
     nd=length(size(sol))
 
     id=id*ones(1,size(sol,nd))
@@ -121,22 +121,25 @@ function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
     iDYC=1. ./Γ["DYC"]
     γ=Γ["XC"].grid
     mon=86400.0*365.0/12.0
-
-    𝑃 = (u0=MeshArray(γ,Float64), u1=MeshArray(γ,Float64),
-         v0=MeshArray(γ,Float64), v1=MeshArray(γ,Float64),
-         𝑇=[-mon/2,mon/2], 🔄 = update_𝑃!, pth=pth,
+    func=Γ["update_location!"]
+    
+    𝐷 = (🔄 = update_𝑃!, pth=pth,
          XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC,
          k=k, msk=Γ["hFacC"][:, k])
 
     tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
-    𝑃 = merge(𝑃 , tmp)
+    𝐷 = merge(𝐷 , tmp)
 
-    𝑃.🔄(𝑃,0.0)
-    return 𝑃
+    𝑃=𝐹_MeshArray2D{Float64}(MeshArray(γ,Float64),MeshArray(γ,Float64),
+    MeshArray(γ,Float64),MeshArray(γ,Float64),[-mon/2,mon/2],func)
+
+    𝐷.🔄(𝑃,𝐷,0.0)
+
+    return 𝑃,𝐷
 end
 
 """
-    update_𝑃!(𝑃::NamedTuple,t::Float64)
+    update_𝑃!(𝑃::Union{NamedTuple,FlowFields},t::Float64)
 
 Update input data (velocity arrays) and time period (array) inside 𝑃 (𝑃.u0[:], etc, and 𝑃.𝑇[:])
 based on the chosen time `t` (in `seconds`). 
@@ -144,7 +147,7 @@ based on the chosen time `t` (in `seconds`).
 _Note: for now, it is assumed that (1) input 𝑃.𝑇 is used to infer `dt` between consecutive velocity fields,
 (2) periodicity of 12 monthly records, (3) vertical 𝑃.k is selected -- but this could easily be generalized._ 
 """
-function update_𝑃!(𝑃::NamedTuple,t::Float64)
+function update_𝑃!(𝑃::Union{NamedTuple,FlowFields},𝐷::NamedTuple,t::Float64)
     dt=𝑃.𝑇[2]-𝑃.𝑇[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
@@ -157,16 +160,16 @@ function update_𝑃!(𝑃::NamedTuple,t::Float64)
     m1=mod(m1,12)
     m1==0 ? m1=12 : nothing
 
-    (U,V)=read_velocities(𝑃.u0.grid,m0,𝑃.pth)
-    u0=U[:,𝑃.k]; v0=V[:,𝑃.k]
+    (U,V)=read_velocities(𝑃.u0.grid,m0,𝐷.pth)
+    u0=U[:,𝐷.k]; v0=V[:,𝐷.k]
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
-    u0=u0.*𝑃.iDXC; v0=v0.*𝑃.iDYC; #normalize to grid units
+    u0=u0.*𝐷.iDXC; v0=v0.*𝐷.iDYC; #normalize to grid units
     (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
 
-    (U,V)=read_velocities(𝑃.u0.grid,m1,𝑃.pth)
-    u1=U[:,𝑃.k]; v1=V[:,𝑃.k]
+    (U,V)=read_velocities(𝑃.u0.grid,m1,𝐷.pth)
+    u1=U[:,𝐷.k]; v1=V[:,𝐷.k]
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
-    u1=u1.*𝑃.iDXC; v1=v1.*𝑃.iDYC; #normalize to grid units
+    u1=u1.*𝐷.iDXC; v1=v1.*𝐷.iDYC; #normalize to grid units
     (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
 
     𝑃.u0[:]=u0[:]
