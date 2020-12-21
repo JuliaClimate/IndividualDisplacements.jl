@@ -69,16 +69,17 @@ df=read_flt(dirIn,prec)
 tmp=df[df.ID .== 200, :]
 nSteps=Int32(tmp[end,:time]/3600)-2
 ref=transpose([tmp[1:nSteps,:lon] tmp[1:nSteps,:lat]])
-maxLon=80*5.e3
-maxLat=42*5.e3
+dx=5000.0
+maxLon=80*dx
+maxLat=42*dx
 for i=1:nSteps-1
     ref[1,i+1]-ref[1,i]>maxLon/2 ? ref[1,i+1:end]-=fill(maxLon,(nSteps-i)) : nothing
     ref[1,i+1]-ref[1,i]<-maxLon/2 ? ref[1,i+1:end]+=fill(maxLon,(nSteps-i)) : nothing
     ref[2,i+1]-ref[2,i]>maxLat/2 ? ref[2,i+1:end]-=fill(maxLat,(nSteps-i)) : nothing
     ref[2,i+1]-ref[2,i]<-maxLat/2 ? ref[2,i+1:end]+=fill(maxLat,(nSteps-i)) : nothing
 end
-ref=ref./𝑃.dx
-xy=[tmp[1,:lon];tmp[1,:lat]]./𝑃.dx
+ref=ref./dx
+xy=[tmp[1,:lon];tmp[1,:lat]]./dx
 return xy,df,ref,nSteps
 end
 
@@ -131,7 +132,6 @@ function example2_setup()
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
    Γ=merge(Γ,Dict("mskW" => mskW, "mskS" => mskS))
 
-   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, dx=Γ["dx"],
-        𝑇=[t0,t1], XC=Γ["XC"], YC=Γ["YC"], ioSize=(80,42))
+   𝑃=𝐹_Array2D{eltype(u0)}(u0[1], u1[1], v0[1], v1[1], [t0,t1])
    return 𝑃,Γ
 end

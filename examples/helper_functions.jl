@@ -11,11 +11,11 @@ Set up an idealized flow field which consists of
 plus a convergent term, plus a sinking term.
 
 ```
-Γ=simple_periodic_domain(12)
-u,v,w=simple_flow_field(Γ,12,4)
+u,v,w=simple_flow_field(12,4)
 ```
 """
-function simple_flow_field(Γ,np,nz)
+function simple_flow_field(np,nz)
+    Γ=simple_periodic_domain(np);
     γ=Γ["XC"].grid;
     
     #Solid-body rotation around central location ...
@@ -37,7 +37,7 @@ function simple_flow_field(Γ,np,nz)
     #Vertical velocity component w    
     w=fill(-0.01,MeshArray(γ,γ.ioPrec,nz));
     
-    return uu,vv,w
+    return write(uu),write(vv),write(w)
 end
     
 """
@@ -69,17 +69,26 @@ function setup_random_flow(;np=12,nq=18)
     return u,v,ϕ[1]
 end
 
-function setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
+function setup_F_MeshArray2D(U::Array{T,2},V::Array{T,2}) where T
     np,nq=size(U)
     Γ=simple_periodic_domain(np,nq)
-    u=MeshArray(Γ["XC"].grid,[U])
-    v=MeshArray(Γ["XC"].grid,[V])
+    g=Γ["XC"].grid
+    u=MeshArray(g,[U])
+    v=MeshArray(g,[V])
     #vel=dxy_dt
     (u,v)=exchange(u,v,1)
+    func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
+
+    𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0.0,10.0],func)
+end
+
+function old_setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
+    𝐹=setup_F_MeshArray2D(U,V)
+
+    np,nq=size(U)
+    pp=postprocess_xy
     vel=dxy_dt!
 
-    𝑃 = (u0=u, u1=u, v0=v, v1=v, 𝑇=[0.0,1.0], ioSize=Γ["XC"].grid.ioSize)
-    pp=postprocess_xy
     isempty(X) ? X=np*rand(10) : nothing
     isempty(Y) ? Y=nq*rand(10) : nothing
 
@@ -88,7 +97,7 @@ function setup_point_cloud(U::Array{T,2},V::Array{T,2};X=[],Y=[]) where T
     solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
     
     I=(position=xy,record=tr,velocity=vel,
-       integration=solv,postprocessing=pp,parameters=𝑃)
+       integration=solv,postprocessing=pp,parameters=𝐹)
 
     return Individuals(I)
 end
@@ -114,14 +123,17 @@ function setup_global_ocean(;k=1,ny=2)
   Γ=GridLoad(γ)
   Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
 
+  func=(u -> IndividualDisplacements.update_location_llc!(u,𝐷))
+  Γ=merge(Γ,Dict("update_location!" => func))
+
   #initialize u0,u1 etc
-  𝑃=set_up_𝑃(k,0.0,Γ,ECCOclim_path);
+  𝑃,𝐷=set_up_𝑃(k,0.0,Γ,ECCOclim_path);
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, Γ=Γ)
-  𝑃=merge(𝑃,tmp)
+  𝐷=merge(𝐷,tmp)
 
-  return 𝑃
+  return 𝑃,𝐷
 
 end
 
@@ -204,8 +216,12 @@ function OCCA_setup(;backward_in_time::Bool=false)
    n=length(Γ["RC"])
    n=10
 
+   g=Γ["XC"].grid
+   func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
+
    delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS","DXG","DYG","RAC","RAZ","RAS"]);
    backward_in_time ? s=-1.0 : s=1.0
+   s=Float32(s)
 
    function rd(filename, varname,n)
    fil = NetCDF.open(filename, varname)
@@ -273,12 +289,12 @@ function OCCA_setup(;backward_in_time::Bool=false)
     w[:,k]=tmpw
    end
 
-   𝑃 = (θ0=θ, θ1=θ, u0=u, u1=u, v0=v, v1=v, w0=w, w1=w, 𝑇=[t0,t1],
-   XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), 
-   RF=Γ["RF"], RC=Γ["RC"],
-   ioSize=(360,160,n))
+   𝑃=𝐹_MeshArray3D{eltype(u)}(u,u,v,v,w,w,[t0,t1],func)
 
-   return 𝑃,Γ
+   𝐷 = (θ0=θ, θ1=θ, XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), 
+   RF=Γ["RF"], RC=Γ["RC"],ioSize=(360,160,n))
+
+   return 𝑃,𝐷,Γ
 
 end
 
@@ -316,11 +332,11 @@ end
 
 Randomly select a fraction (𝐼.𝑃.frac) of the particles and reset their positions.
 """
-function reset_lonlat!(𝐼::Individuals)
+function reset_lonlat!(𝐼::Individuals,𝐷::NamedTuple)
     np=length(𝐼.🆔)
-    n_reset = Int(round(𝐼.𝑃.frac*np))
+    n_reset = Int(round(𝐷.frac*np))
     (lon, lat) = randn_lonlat(2*n_reset)
-    (v0, _) = initialize_lonlat(𝐼.𝑃.Γ, lon, lat; msk = 𝐼.𝑃.msk)
+    (v0, _) = initialize_lonlat(𝐷.Γ, lon, lat; msk = 𝐷.msk)
     n_reset=min(n_reset,size(v0,2))
     k_reset = rand(1:np, n_reset)
     v0 = permutedims([v0[:,i] for i in 1:size(v0,2)])

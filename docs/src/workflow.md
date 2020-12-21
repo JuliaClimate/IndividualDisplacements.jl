@@ -7,16 +7,22 @@ A central goal of this package is to support scientific analysis of climate mode
 
 As documented in the **examples**, the typical worflow is:
 
-1. set up the `Individuals` data structure
-1. displace them via `∫!`
-1. post-process / analyze / plot
-1. go back to `2` and continue
+1. set up `FlowFields`
+1. set up `Individuals`
+1. displace them (`∫!`, 🚄, 📌)
+1. record and post-process (🔴, 🔧)
+1. go back to `2` and continue 
 
-The velocity interpolation funtions (🚄 used in step 2; documented below) interpolate gridded output to positions 📌. Steps `3` and `4` are optional. Step `2` also provides the option to post-process results recorded in 🔴 when `∫!` calls 🔧 before updating positions 📌. Since 🔴 is in the [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format, it is easily manipulated or plotted. Ingestion of time varying flow fields, three-dimensional ocean trajectory simulations, process oriented configurations, as well as plotting and data formats are further documented via the **examples**. 
+Steps `1` and `2` are done via constructors documented below in the `Data Structures` section. 
+Step `3` and step `4` typically take place within the call to `∫!`. The latter can indeed readily post-process results recorded in 🔴 when `∫!` calls 🔧 before updating positions 📌. Since 🔴 is in the [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format, it is easily manipulated or plotted after the fact (step `4` per se). Step `5` is optional. 
+
+**See the examples** for more documentation regarding the ingestion of time varying flow fields, three-dimensional ocean trajectory simulations, process oriented configurations, as well as plotting and data formats. 
 
 ## Core Functions
 
-`∫!(𝐼,𝑇)` displaces individuals 𝐼 continuously over time period 𝑇 according to velocity function 🚄, temporal integration method / solver ∫, and post-processing workflow 🔧 (all embedded within 𝐼).
+The velocity interpolation funtions (🚄 used in step `3`; documented in the `Tool Box` section) interpolate flow fields to positions 📌, and `∫!` integrates the result forward in time. 
+
+`∫!(𝐼,𝑇)` displaces individuals 𝐼 continuously over time period 𝑇 according to velocity function 🚄, temporal integration method ∫, and post-processor 🔧 (all embedded within 𝐼).
 
 ```@docs
 ∫!
@@ -24,7 +30,7 @@ The velocity interpolation funtions (🚄 used in step 2; documented below) inte
 
 ## Data Structures
 
-The `Individuals` struct contains velocity fields (arrays), etc, and a record of properties diagnozed along the way.
+The `Individuals` struct contains a `FlowFields` struct (incl. e.g. arrays), initial positions for the individuals, and the other elements (see below) involved in `∫!(𝐼,𝑇)`.
 
 ```@autodocs
 Modules = [IndividualDisplacements]
