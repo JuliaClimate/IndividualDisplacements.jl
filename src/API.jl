@@ -5,14 +5,15 @@
     abstract type FlowFields
 
 Data structure that provide access to flow fields (on grids, arrays) which will be 
-used to interpolate velocities to individual locations later on. 
+used to interpolate velocities to individual locations later on (once embedded in
+an `Individuals` struct).
 
-Supported array types: 
+Supported array types / constructors: 
 
 - 𝐹_Array2D (u0,v0,u1,v1,𝑇)
 - 𝐹_Array3D (u0,v0,w0,u1,v1,w1,𝑇)
-- 𝐹_MeshArray2D (u0,v0,u1,v1,𝑇,update_location!)
-- 𝐹_MeshArray3D (u0,v0,w0,u1,v1,w1,𝑇,update_location!)
+- 𝐹_MeshArray2D (u0,v0,u1,v1,𝑇,update__location!)
+- 𝐹_MeshArray3D (u0,v0,w0,u1,v1,w1,𝑇,update__location!)
 
 See the documentation examples for more.
 
@@ -81,9 +82,9 @@ postprocess_default = (x->x)
 """
     struct Individuals{T}
 
-- Data:           📌 (position),   🔴(record),           🆔 (ID)
+- Data:           📌 (position),   🔴(record), 🆔 (ID), 𝑃 (`FlowFields`)
 - Functions:      🚄 (velocity),   ∫ (integration), 🔧(postprocessing)
-- NamedTuples:    𝑃  (parameters), 𝐷 (diagnostics),      𝑀 (metadata)
+- NamedTuples:    𝐷 (diagnostics),      𝑀 (metadata)
 
 The velocity function 🚄 typically computes velocity at an arbitrary position within the 
 chosen space-time domain (📌 to start) by interpolating gridded variables obtained from 𝑃.
@@ -150,6 +151,20 @@ function Individuals(NT::NamedTuple)
     Individuals{T,ndims(📌)}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,𝑃=𝑃,𝐷=𝐷,𝑀=𝑀)    
 end
 
+"""
+    Individuals(𝐹::𝐹_Array2D,x,y)
+
+"""
+function Individuals(𝐹::𝐹_Array2D,x,y)
+    📌=permutedims([[x[i];y[i]] for i in eachindex(x)])
+
+    🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
+    🔧 = postprocess_MeshArray
+    T=eltype(📌)
+    🆔=collect(1:size(📌,2))
+    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt,∫=solver_default,🔧=🔧)    
+end
 
 """
     Individuals(𝐹::𝐹_Array3D,x,y,z)
@@ -175,19 +190,38 @@ end
     Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
 
 """
-function Individuals(𝐹::𝐹_MeshArray2D,x,y,f)
-    📌=permutedims([[x[i];y[i];f[i]] for i in eachindex(x)])
+function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
+    📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], fid=Int64[], t=Float64[])
     🔧 = postprocess_MeshArray
 
     T=eltype(📌)
     🆔=collect(1:size(📌,2))
-    
-    solv(prob) = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
-    #solv=solver_default
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=solv,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=solver_default,🔧=🔧)    
+end
+
+"""
+    Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid)
+
+"""
+function Individuals(𝐹::𝐹_MeshArray3D,x,y,fid)
+    📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
+
+    🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], fid=Int64[], t=Float64[])
+    function 🔧(sol,𝑄::FlowFields;id=missing,𝑇=missing)
+        df=postprocess_MeshArray(sol,𝐹,id=id,𝑇=𝑇)
+        z=sol[3,:]
+        df.z=z[:]
+        return df
+    end
+
+    T=eltype(📌)
+    🆔=collect(1:size(📌,2))
+    ∫=solver_default
+
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt!,∫=∫,🔧=🔧)    
 end
 
 """
