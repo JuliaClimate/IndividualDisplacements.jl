@@ -1,4 +1,69 @@
 
+## Flow field parameters
+
+"""
+    abstract type FlowFields
+
+Data structure that provide access to flow fields (on grids, arrays) which will be 
+used to interpolate velocities to individual locations later on (once embedded in
+an `Individuals` struct).
+
+Supported array types / constructors: 
+
+- 𝐹_Array2D (u0,v0,u1,v1,𝑇)
+- 𝐹_Array3D (u0,v0,w0,u1,v1,w1,𝑇)
+- 𝐹_MeshArray2D (u0,v0,u1,v1,𝑇,update__location!)
+- 𝐹_MeshArray3D (u0,v0,w0,u1,v1,w1,𝑇,update__location!)
+
+See the documentation examples for more.
+
+```
+𝐹=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0.0,10.0])
+or
+𝐹=𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0.0,10.0],func)
+```
+"""
+abstract type FlowFields end
+
+struct 𝐹_Array2D{T} <: FlowFields
+    u0::Array{T,2}
+    u1::Array{T,2}
+    v0::Array{T,2}
+    v1::Array{T,2}
+    𝑇::Array{T}
+end
+
+struct 𝐹_Array3D{T} <: FlowFields
+    u0::Array{T,3}
+    u1::Array{T,3}
+    v0::Array{T,3}
+    v1::Array{T,3}
+    w0::Array{T,3}
+    w1::Array{T,3}
+    𝑇::Array{T}
+end
+
+struct 𝐹_MeshArray2D{T} <: FlowFields
+    u0::AbstractMeshArray{T,1}
+    u1::AbstractMeshArray{T,1}
+    v0::AbstractMeshArray{T,1}
+    v1::AbstractMeshArray{T,1}
+    𝑇::Array{T}
+    update_location!::Function
+end
+
+struct 𝐹_MeshArray3D{T} <: FlowFields
+    u0::AbstractMeshArray{T,2}
+    u1::AbstractMeshArray{T,2}
+    v0::AbstractMeshArray{T,2}
+    v1::AbstractMeshArray{T,2}
+    w0::AbstractMeshArray{T,2}
+    w1::AbstractMeshArray{T,2}
+    𝑇::Array{T}
+    update_location!::Function
+end
+
+
 """
     defaults for Individuals constructor
 """
@@ -17,9 +82,9 @@ postprocess_default = (x->x)
 """
     struct Individuals{T}
 
-- Data:           📌 (position),   🔴(record),           🆔 (ID)
+- Data:           📌 (position),   🔴(record), 🆔 (ID), 𝑃 (`FlowFields`)
 - Functions:      🚄 (velocity),   ∫ (integration), 🔧(postprocessing)
-- NamedTuples:    𝑃  (parameters), 𝐷 (diagnostics),      𝑀 (metadata)
+- NamedTuples:    𝐷 (diagnostics),      𝑀 (metadata)
 
 The velocity function 🚄 typically computes velocity at an arbitrary position within the 
 chosen space-time domain (📌 to start) by interpolating gridded variables obtained from 𝑃.
@@ -53,7 +118,7 @@ Base.@kwdef struct Individuals{T,N}
    🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
    ∫   ::Function = solver_default #\int<tab>
    🔧  ::Function = postprocess_default #\wrench<tab>
-   𝑃   ::NamedTuple = param_default #\itP<tab>
+   𝑃   ::Union{NamedTuple,FlowFields} = param_default #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
    𝑀   ::NamedTuple = NamedTuple() #\itM<tab>vec
 end
@@ -87,12 +152,85 @@ function Individuals(NT::NamedTuple)
 end
 
 """
+    Individuals(𝐹::𝐹_Array2D,x,y)
+
+"""
+function Individuals(𝐹::𝐹_Array2D,x,y)
+    📌=permutedims([[x[i];y[i]] for i in eachindex(x)])
+
+    🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
+    🔧 = postprocess_MeshArray
+    T=eltype(📌)
+    🆔=collect(1:size(📌,2))
+    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt,∫=solver_default,🔧=🔧)    
+end
+
+"""
+    Individuals(𝐹::𝐹_Array3D,x,y,z)
+
+"""
+function Individuals(𝐹::𝐹_Array3D,x,y,z)
+    📌=permutedims([[x[i];y[i];z[i]] for i in eachindex(x)])
+
+    🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
+    function 🔧(sol,𝑄::FlowFields;id=missing,𝑇=missing)
+        df=postprocess_xy(sol,𝐹,id=id,𝑇=𝑇)
+        z=sol[3,:]
+        df.z=z[:]
+        return df
+    end
+    T=eltype(📌)
+    🆔=collect(1:size(📌,2))
+    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt,∫=solver_default,🔧=🔧)    
+end
+
+"""
+    Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
+
+"""
+function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
+    📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
+
+    🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], fid=Int64[], t=Float64[])
+    🔧 = postprocess_MeshArray
+
+    T=eltype(📌)
+    🆔=collect(1:size(📌,2))
+
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=solver_default,🔧=🔧)    
+end
+
+"""
+    Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid)
+
+"""
+function Individuals(𝐹::𝐹_MeshArray3D,x,y,fid)
+    📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
+
+    🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], fid=Int64[], t=Float64[])
+    function 🔧(sol,𝑄::FlowFields;id=missing,𝑇=missing)
+        df=postprocess_MeshArray(sol,𝐹,id=id,𝑇=𝑇)
+        z=sol[3,:]
+        df.z=z[:]
+        return df
+    end
+
+    T=eltype(📌)
+    🆔=collect(1:size(📌,2))
+    ∫=solver_default
+
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt!,∫=∫,🔧=🔧)    
+end
+
+"""
     ∫!(𝐼::Individuals,𝑇::Tuple)
 
 Displace simulated individuals continuously through space over time period 𝑇 starting from position 📌. 
 
 - This is typically achieved by computing the cumulative integral of velocity experienced by each individual along its trajectory (∫ 🚄 dt).
-- The current default is `solve(prob,Euler(),dt=day)` but all solver options from the [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) package are available.
+- The current default is `solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)` but all solver options from the [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) package are available.
 - After this, `∫!` is also equiped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consiste in updating 📌 to be ready for continuing in a subsequent call to `∫!`.
 """
 function ∫!(𝐼::Individuals,𝑇::Tuple)
@@ -137,7 +275,7 @@ function Base.show(io::IO, 𝐼::Individuals) where {T}
     printstyled(io, "  🔧 function    = ",color=:normal)
     printstyled(io, "$(🔧)\n",color=:blue)
     printstyled(io, "  𝑃  details     = ",color=:normal)
-    printstyled(io, "$(keys(𝑃))\n",color=:blue)
+    printstyled(io, "$(fieldnames(typeof(𝑃)))\n",color=:blue)
   return
 end
 
@@ -153,4 +291,3 @@ function Base.diff(𝐼::Individuals)
     🔴_by_ID = groupby(𝐼.🔴, :ID)
     return combine(🔴_by_ID,nrow,:lat => f => :dlat,:lon => f => :dlon)
 end
-

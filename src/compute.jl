@@ -3,7 +3,7 @@ import Base: zero
 zero(tmp::Array) = zero.(tmp)
 
 """
-    dxyz_dt!(du,u,p::NamedTuple,tim)
+    dxyz_dt!(du,u,p::𝐹_MeshArray3D,tim)
 
 Interpolate velocity from gridded fields (3D; with halos) to position `u`
 (`x,y,z,fIndex`) to compute the derivative of position v time  `du_dt`.
@@ -20,7 +20,7 @@ prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,a
 true
 ```
 """
-function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
+function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray3D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     dt>1.0 ? error("dt>1.0") : nothing
@@ -28,9 +28,10 @@ function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     g=𝑃.u0.grid
     #
     while location_is_out(u,g)
-        g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
-        g.class=="CubeSphere" ? update_location_cs!(u,𝑃) : nothing
-        g.class=="LatLonCap" ? update_location_llc!(u,𝑃) : nothing
+#        g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
+#        g.class=="CubeSphere" ? update_location_cs!(u,𝑃) : nothing
+#        g.class=="LatLonCap" ? update_location_llc!(u,𝑃) : nothing
+         𝑃.update_location!(u)
     end
 
     x,y,z = u[1:3]
@@ -74,12 +75,12 @@ function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     return du
 end
 
-function dxyz_dt!(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+function dxyz_dt!(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray3D,tim) where T
     [dxyz_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
-    dxy_dt!(du,u,p::NamedTuple,tim)
+    dxy_dt!(du,u,p::𝐹_MeshArray2D,tim)
 
 Interpolate velocity from gridded fields (2D; with halos) to position `u`
 (`x,y,fIndex`) to compute the derivative of position v time  `du_dt`.
@@ -108,7 +109,7 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
 true
 ```
 """
-function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
+function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray2D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     dt>1.0 ? error("dt>1.0") : nothing
@@ -116,9 +117,7 @@ function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     g=𝑃.u0.grid
     #
     while location_is_out(u,g)
-        g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
-        g.class=="CubeSphere" ? update_location_cs!(u,𝑃) : nothing
-        g.class=="LatLonCap" ? update_location_llc!(u,𝑃) : nothing
+        𝑃.update_location!(u)
     end
 
     x,y = u[1:2]
@@ -146,12 +145,12 @@ function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     return du
 end
 
-function dxy_dt!(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+function dxy_dt!(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray2D,tim) where T
     [dxy_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
-    dxyz_dt(du,u,𝑃::NamedTuple,tim)
+    dxyz_dt(du,u,𝑃::𝐹_Array3D,tim)
 
 Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 (`x,y,z`) to compute the derivative of position v time  `du_dt`.
@@ -168,12 +167,12 @@ prod(isapprox.(𝐼.📌',ref,atol=1.0))
 true
 ```
 """
-function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
+function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array3D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
     x,y,z = u[1:3]
-    nx,ny,nz = 𝑃.ioSize
+    nx,ny,nz = size(𝑃.u0)
     x,y=[mod(x,nx),mod(y,ny)]
     z=mod(z,nz)
     #
@@ -191,30 +190,30 @@ function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     #z>=nz-1 ? (k_l,k_r)=(nz,1) : nothing
 
     #interpolate u to position and time
-    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0.f[1,k_c][i_w,j_c]+
-    dx*(1.0-dt)*𝑃.u0.f[1,k_c][i_e,j_c]+
-    (1.0-dx)*dt*𝑃.u1.f[1,k_c][i_w,j_c]+
-    dx*dt*𝑃.u1.f[1,k_c][i_e,j_c]
+    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0[i_w,j_c,k_c]+
+    dx*(1.0-dt)*𝑃.u0[i_e,j_c,k_c]+
+    (1.0-dx)*dt*𝑃.u1[i_w,j_c,k_c]+
+    dx*dt*𝑃.u1[i_e,j_c,k_c]
     #interpolate v to position and time
-    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0.f[1,k_c][i_c,j_s]+
-    dy*(1.0-dt)*𝑃.v0.f[1,k_c][i_c,j_n]+
-    (1.0-dy)*dt*𝑃.v1.f[1,k_c][i_c,j_s]+
-    dy*dt*𝑃.v1.f[1,k_c][i_c,j_n]
+    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0[i_c,j_s,k_c]+
+    dy*(1.0-dt)*𝑃.v0[i_c,j_n,k_c]+
+    (1.0-dy)*dt*𝑃.v1[i_c,j_s,k_c]+
+    dy*dt*𝑃.v1[i_c,j_n,k_c]
     #interpolate w to position and time
-    du[3]=(1.0-dz)*(1.0-dt)*𝑃.w0.f[1,k_l][i_c,j_c]+
-    dz*(1.0-dt)*𝑃.w0.f[1,k_r][i_c,j_c]+
-    (1.0-dz)*dt*𝑃.w1.f[1,k_l][i_c,j_c]+
-    dz*dt*𝑃.w1.f[1,k_r][i_c,j_c]
+    du[3]=(1.0-dz)*(1.0-dt)*𝑃.w0[i_c,j_c,k_l]+
+    dz*(1.0-dt)*𝑃.w0[i_c,j_c,k_r]+
+    (1.0-dz)*dt*𝑃.w1[i_c,j_c,k_l]+
+    dz*dt*𝑃.w1[i_c,j_c,k_r]
     #
     return du
 end
 
-function dxyz_dt(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+function dxyz_dt(du::Array{T,2},u::Array{T,2},𝑃::𝐹_Array3D,tim) where T
     [dxyz_dt(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
-    dxy_dt(du,u,𝑃::NamedTuple,tim)
+    dxy_dt(du,u,𝑃::𝐹_Array2D,tim)
 
 Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 (`x,y`) to compute the derivative of position v time  `du_dt`.
@@ -231,12 +230,12 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=1.0))
 true
 ```
 """
-function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
+function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array2D,tim) where T
     #compute positions in index units
     dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
     #
     x,y = u[1:2]
-    nx,ny=𝑃.ioSize
+    nx,ny=size(𝑃.u0)
     x,y=[mod(x,nx),mod(y,ny)]
     #
     dx,dy=[x - floor(x),y - floor(y)]
@@ -249,20 +248,20 @@ function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::NamedTuple,tim) where T
     j_s,j_n=[j_c j_c+1]
     y>=ny-1 ? (j_s,j_n)=(ny,1) : nothing
     #interpolate u to position and time
-    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0.f[1][i_w,j_c]+
-    dx*(1.0-dt)*𝑃.u0.f[1][i_e,j_c]+
-    (1.0-dx)*dt*𝑃.u1.f[1][i_w,j_c]+
-    dx*dt*𝑃.u1.f[1][i_e,j_c]
+    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0[i_w,j_c]+
+    dx*(1.0-dt)*𝑃.u0[i_e,j_c]+
+    (1.0-dx)*dt*𝑃.u1[i_w,j_c]+
+    dx*dt*𝑃.u1[i_e,j_c]
     #interpolate v to position and time
-    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0.f[1][i_c,j_s]+
-    dy*(1.0-dt)*𝑃.v0.f[1][i_c,j_n]+
-    (1.0-dy)*dt*𝑃.v1.f[1][i_c,j_s]+
-    dy*dt*𝑃.v1.f[1][i_c,j_n]
+    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0[i_c,j_s]+
+    dy*(1.0-dt)*𝑃.v0[i_c,j_n]+
+    (1.0-dy)*dt*𝑃.v1[i_c,j_s]+
+    dy*dt*𝑃.v1[i_c,j_n]
     #
     return du
 end
 
-function dxy_dt(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+function dxy_dt(du::Array{T,2},u::Array{T,2},𝑃::𝐹_Array2D,tim) where T
     [dxy_dt(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 

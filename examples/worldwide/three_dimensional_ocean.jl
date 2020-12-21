@@ -34,10 +34,10 @@ nam="OCCA"
 bck=false
 
 if nam=="OCCA"
-   𝑃,Γ=OCCA_setup(backward_in_time=bck)
+   𝑃,𝐷,Γ=OCCA_setup(backward_in_time=bck)
    🚄 =dxyz_dt!
 elseif nam=="LL90"
-   𝑃,Γ=example3_setup(backward_in_time=bck)
+   𝑃,𝐷,Γ=example3_setup(backward_in_time=bck)
    🚄 =dxy_dt
 else
    error("unknown example (nam parameter value)")
@@ -47,7 +47,7 @@ end
 # ## 2.2 Solver And Analysis Setup
 #
 
-function my🚄(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+function my🚄(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray3D,tim) where T
    nf=size(u,2)
    nx=360
    ny=160
@@ -61,7 +61,7 @@ function ∫(prob)
    sol=IndividualDisplacements.solver_default(prob)
    #sol=solve(prob,Euler(),dt=86400.0)
 
-   nx,ny=𝑃.ioSize[1:2]
+   nx,ny=𝑃.u0.grid.ioSize[1:2]
    nf=size(sol,2)
    nt=size(sol,3)
    [sol[1,i,j][1]=mod(sol[1,i,j][1],nx) for i in 1:nf, j in 1:nt]
@@ -69,8 +69,9 @@ function ∫(prob)
    return sol
 end
 
-function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
-   df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
+function 🔧(sol,𝑃::𝐹_MeshArray3D;id=missing,𝑇=missing)
+   df=postprocess_MeshArray(sol,𝑃,id=id,𝑇=𝑇)
+   add_lonlat!(df,𝐷.XC,𝐷.YC)
 
    #add year (convenience time axis for plotting)
    df.year=df.t ./86400/365
@@ -80,11 +81,11 @@ function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    nz=length(𝐼.𝑃.u1)
    df.k=min.(max.(k[:],Ref(0.0)),Ref(nz)) #level
    k=Int.(floor.(df.k)); w=(df.k-k); 
-   df.z=𝑃.RF[1 .+ k].*(1 .- w)+𝑃.RF[2 .+ k].*w #depth
+   df.z=𝐷.RF[1 .+ k].*(1 .- w)+𝐷.RF[2 .+ k].*w #depth
 
    #add one isotherm depth
-   θ=0.5*(𝑃.θ0+𝑃.θ1)
-   d=isosurface(θ,15,𝑃.RC)
+   θ=0.5*(𝐷.θ0+𝐷.θ1)
+   d=isosurface(θ,15,𝐷.RC)
    d[findall(isnan.(d))].=0.
    df.iso=interp_to_xy(df,exchange(d));
 
