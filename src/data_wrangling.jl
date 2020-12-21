@@ -1,11 +1,11 @@
 
 """
-    postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+    postprocess_MeshArray(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 using "exchanged" 𝑃.XC, 𝑃.YC via `add_lonlat!`
 """
-function postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
@@ -28,13 +28,12 @@ function postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
         nf=1
     end
 
-    𝑃.XC.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
+    𝑃.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
 
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
     t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
     
     df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
-    add_lonlat!(df,𝑃.XC,𝑃.YC)
     return df
 end
 

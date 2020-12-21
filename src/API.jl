@@ -4,10 +4,23 @@
 """
     abstract type FlowFields
 
-- 𝐹_Array2D
-- 𝐹_Array3D
-- 𝐹_Array2D
-- 𝐹_MeshArray3D
+Data structure that provide access to flow fields (on grids, arrays) which will be 
+used to interpolate velocities to individual locations later on. 
+
+Supported array types: 
+
+- 𝐹_Array2D (u0,v0,u1,v1,𝑇)
+- 𝐹_Array3D (u0,v0,w0,u1,v1,w1,𝑇)
+- 𝐹_MeshArray2D (u0,v0,u1,v1,𝑇,update_location!)
+- 𝐹_MeshArray3D (u0,v0,w0,u1,v1,w1,𝑇,update_location!)
+
+See the documentation examples for more.
+
+```
+𝐹=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0.0,10.0])
+or
+𝐹=𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0.0,10.0],func)
+```
 """
 abstract type FlowFields end
 
@@ -159,14 +172,14 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z)
 end
 
 """
-    Individuals(𝐹::𝐹_MeshArray2D,x,y)
+    Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
 
 """
 function Individuals(𝐹::𝐹_MeshArray2D,x,y,f)
     📌=permutedims([[x[i];y[i];f[i]] for i in eachindex(x)])
 
-    🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
-    🔧 = postprocess_xy
+    🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], fid=Int64[], t=Float64[])
+    🔧 = postprocess_MeshArray
 
     T=eltype(📌)
     🆔=collect(1:size(📌,2))
@@ -183,7 +196,7 @@ end
 Displace simulated individuals continuously through space over time period 𝑇 starting from position 📌. 
 
 - This is typically achieved by computing the cumulative integral of velocity experienced by each individual along its trajectory (∫ 🚄 dt).
-- The current default is `solve(prob,Euler(),dt=day)` but all solver options from the [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) package are available.
+- The current default is `solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)` but all solver options from the [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) package are available.
 - After this, `∫!` is also equiped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consiste in updating 📌 to be ready for continuing in a subsequent call to `∫!`.
 """
 function ∫!(𝐼::Individuals,𝑇::Tuple)
