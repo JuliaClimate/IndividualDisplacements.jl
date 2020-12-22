@@ -123,7 +123,7 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
    dlo=21. - Γ["XC"][1][21,1]
    dla=111. - Γ["YC"][1][1,111]
   
-   xy = permutedims([[lon[i]+dlo;lat[i]+dla;z_init;1.0] for i in eachindex(lon)])
+   xy = permutedims([Float32.([lon[i]+dlo;lat[i]+dla;z_init;1.0]) for i in eachindex(lon)])
    id=collect(1:size(xy,2))
 
    tr = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
