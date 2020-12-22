@@ -9,14 +9,14 @@ IndividualDisplacements.get_occa_velocity_if_needed();</code></pre><h2 id=".1-Oc
 bck=false
 
 if nam==&quot;OCCA&quot;
-   𝑃,Γ=OCCA_setup(backward_in_time=bck)
+   𝑃,𝐷,Γ=OCCA_setup(backward_in_time=bck)
    🚄 =dxyz_dt!
 elseif nam==&quot;LL90&quot;
-   𝑃,Γ=example3_setup(backward_in_time=bck)
+   𝑃,𝐷,Γ=example3_setup(backward_in_time=bck)
    🚄 =dxy_dt
 else
    error(&quot;unknown example (nam parameter value)&quot;)
-end</code></pre><pre class="documenter-example-output">dxyz_dt! (generic function with 2 methods)</pre><h2 id=".2-Solver-And-Analysis-Setup"><a class="docs-heading-anchor" href="#.2-Solver-And-Analysis-Setup">2.2 Solver And Analysis Setup</a><a id=".2-Solver-And-Analysis-Setup-1"></a><a class="docs-heading-anchor-permalink" href="#.2-Solver-And-Analysis-Setup" title="Permalink"></a></h2><pre><code class="language-julia">function my🚄(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
+end</code></pre><pre class="documenter-example-output">dxyz_dt! (generic function with 2 methods)</pre><h2 id=".2-Solver-And-Analysis-Setup"><a class="docs-heading-anchor" href="#.2-Solver-And-Analysis-Setup">2.2 Solver And Analysis Setup</a><a id=".2-Solver-And-Analysis-Setup-1"></a><a class="docs-heading-anchor-permalink" href="#.2-Solver-And-Analysis-Setup" title="Permalink"></a></h2><pre><code class="language-julia">function my🚄(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray3D,tim) where T
    nf=size(u,2)
    nx=360
    ny=160
@@ -30,7 +30,7 @@ function ∫(prob)
    sol=IndividualDisplacements.solver_default(prob)
    #sol=solve(prob,Euler(),dt=86400.0)
 
-   nx,ny=𝑃.ioSize[1:2]
+   nx,ny=𝑃.u0.grid.ioSize[1:2]
    nf=size(sol,2)
    nt=size(sol,3)
    [sol[1,i,j][1]=mod(sol[1,i,j][1],nx) for i in 1:nf, j in 1:nt]
@@ -38,8 +38,9 @@ function ∫(prob)
    return sol
 end
 
-function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
-   df=postprocess_lonlat(sol,𝑃,id=id,𝑇=𝑇)
+function 🔧(sol,𝑃::𝐹_MeshArray3D;id=missing,𝑇=missing)
+   df=postprocess_MeshArray(sol,𝑃,id=id,𝑇=𝑇)
+   add_lonlat!(df,𝐷.XC,𝐷.YC)
 
    #add year (convenience time axis for plotting)
    df.year=df.t ./86400/365
@@ -49,11 +50,11 @@ function 🔧(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
    nz=length(𝐼.𝑃.u1)
    df.k=min.(max.(k[:],Ref(0.0)),Ref(nz)) #level
    k=Int.(floor.(df.k)); w=(df.k-k);
-   df.z=𝑃.RF[1 .+ k].*(1 .- w)+𝑃.RF[2 .+ k].*w #depth
+   df.z=𝐷.RF[1 .+ k].*(1 .- w)+𝐷.RF[2 .+ k].*w #depth
 
    #add one isotherm depth
-   θ=0.5*(𝑃.θ0+𝑃.θ1)
-   d=isosurface(θ,15,𝑃.RC)
+   θ=0.5*(𝐷.θ0+𝐷.θ1)
+   d=isosurface(θ,15,𝐷.RC)
    d[findall(isnan.(d))].=0.
    df.iso=interp_to_xy(df,exchange(d));
 
@@ -107,13 +108,13 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
   🚄 function    = my🚄
   ∫  function    = ∫
   🔧 function    = 🔧
-  𝑃  details     = (:θ0, :θ1, :u0, :u1, :v0, :v1, :w0, :w1, :𝑇, :XC, :YC, :RF, :RC, :ioSize)
+  𝑃  details     = (:u0, :u1, :v0, :v1, :w0, :w1, :𝑇, :update_location!)
 </pre><h2 id=".1-Compute-Displacements"><a class="docs-heading-anchor" href="#.1-Compute-Displacements">3.1 Compute Displacements</a><a id=".1-Compute-Displacements-1"></a><a class="docs-heading-anchor-permalink" href="#.1-Compute-Displacements" title="Permalink"></a></h2><pre><code class="language-julia">𝑇=(0.0,10*86400.0)
 
 ∫!(𝐼,𝑇)</code></pre><pre class="documenter-example-output">1×100 Array{Array{Float64,1},2}:
- [21.2485, 110.772, 4.56007, 1.0]  …  [21.4037, 110.506, 4.56007, 1.0]</pre><h2 id=".2-Analyze-Results"><a class="docs-heading-anchor" href="#.2-Analyze-Results">3.2 Analyze Results</a><a id=".2-Analyze-Results-1"></a><a class="docs-heading-anchor-permalink" href="#.2-Analyze-Results" title="Permalink"></a></h2><p>The recorded simulation output, 🔴, is a in the <a href="https://juliadata.github.io/DataFrames.jl/latest/">DataFrames</a> tabular format, which is easily manipulated or plotted.</p><ul><li>either <code>Plots.jl</code>:</li></ul><pre><code class="language-julia">#include(joinpath(p,&quot;../examples/recipes_plots.jl&quot;))
+ [20.9977, 110.89, 4.55465, 1.0]  …  [21.0324, 110.876, 4.55624, 1.0]</pre><h2 id=".2-Analyze-Results"><a class="docs-heading-anchor" href="#.2-Analyze-Results">3.2 Analyze Results</a><a id=".2-Analyze-Results-1"></a><a class="docs-heading-anchor-permalink" href="#.2-Analyze-Results" title="Permalink"></a></h2><p>The recorded simulation output, 🔴, is a in the <a href="https://juliadata.github.io/DataFrames.jl/latest/">DataFrames</a> tabular format, which is easily manipulated or plotted.</p><ul><li>either <code>Plots.jl</code>:</li></ul><pre><code class="language-julia">#include(joinpath(p,&quot;../examples/recipes_plots.jl&quot;))
 ##PlotBasic(𝐼.🔴,100,90.0)
 #p=plot_end_points(𝐼,Γ)
 #display(p)</code></pre><ul><li>or <code>Makie.jl</code>:</li></ul><pre><code class="language-julia">#include(joinpath(p,&quot;../examples/recipes_Makie.jl&quot;))
 #p=PlotMakie(𝐼.🔴,100,180.);
-#display(p)</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../global_ocean_circulation/">« Global Climatology</a><a class="docs-footer-nextpage" href="../../basics/detailed_look/">Detailed Look »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 17 December 2020 20:33">Thursday 17 December 2020</span>. Using Julia version 1.5.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+#display(p)</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../global_ocean_circulation/">« Global Climatology</a><a class="docs-footer-nextpage" href="../../basics/detailed_look/">Detailed Look »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 22 December 2020 06:51">Tuesday 22 December 2020</span>. Using Julia version 1.5.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
