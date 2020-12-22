@@ -125,7 +125,7 @@ for i=1:nSteps
     dxy_dt_replay(du,[tmp[i,:lon],tmp[i,:lat]],tmp,tmp[i,:time])
     refu[i]=du[1]./dx
     refv[i]=du[2]./dx
-    dxy_dt(du,[tmp[i,:lon],tmp[i,:lat]]./dx,𝑃,tmp[i,:time])
+    dxy_dt(du,[tmp[i,:lon],tmp[i,:lat]]./dx,𝑃,Float64(tmp[i,:time]))
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
