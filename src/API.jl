@@ -118,7 +118,7 @@ Base.@kwdef struct Individuals{T,N}
    🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
    ∫   ::Function = solver_default #\int<tab>
    🔧  ::Function = postprocess_default #\wrench<tab>
-   𝑃   ::Union{NamedTuple,FlowFields} = param_default #\itP<tab>
+   𝑃   ::FlowFields = param_default #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
    𝑀   ::NamedTuple = NamedTuple() #\itM<tab>vec
 end
@@ -157,6 +157,7 @@ end
 """
 function Individuals(𝐹::𝐹_Array2D,x,y)
     📌=permutedims([[x[i];y[i]] for i in eachindex(x)])
+    length(📌)==1 ? 📌=📌[1] : nothing
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
     🔧 = postprocess_MeshArray
@@ -172,6 +173,7 @@ end
 """
 function Individuals(𝐹::𝐹_Array3D,x,y,z)
     📌=permutedims([[x[i];y[i];z[i]] for i in eachindex(x)])
+    length(📌)==1 ? 📌=📌[1] : nothing
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
     function 🔧(sol,𝑄::FlowFields;id=missing,𝑇=missing)
@@ -192,6 +194,7 @@ end
 """
 function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
     📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
+    length(📌)==1 ? 📌=📌[1] : nothing
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], fid=Int64[], t=Float64[])
     🔧 = postprocess_MeshArray
@@ -208,6 +211,7 @@ end
 """
 function Individuals(𝐹::𝐹_MeshArray3D,x,y,fid)
     📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
+    length(📌)==1 ? 📌=📌[1] : nothing
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], fid=Int64[], t=Float64[])
     function 🔧(sol,𝑄::FlowFields;id=missing,𝑇=missing)

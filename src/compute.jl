@@ -2,6 +2,18 @@
 import Base: zero
 zero(tmp::Array) = zero.(tmp)
 
+#needed to avoid allocations:
+Flo=Union{Float32,Float64}
+mydt(tim::Flo,𝑇::Array{Float32,1})=(tim-𝑇[1])/(𝑇[2]-𝑇[1])
+mydt(tim::Flo,𝑇::Array{Float64,1})=(tim-𝑇[1])/(𝑇[2]-𝑇[1])
+
+#needed to avoid allocations:
+fSize(f::Array{Tuple{Int,Int}},i::Int) = (f[i][1],f[i][2])
+fview(f::Array{Array{Float32,2},1},i::Int) = view(f[i],:,:)
+fview(f::Array{Array{Float64,2},1},i::Int) = view(f[i],:,:)
+fview(f::Array{Array{Float32,2},2},i::Int,j::Int) = view(f[i,j],:,:)
+fview(f::Array{Array{Float64,2},2},i::Int,j::Int) = view(f[i,j],:,:)
+
 """
     dxyz_dt!(du,u,p::𝐹_MeshArray3D,tim)
 
@@ -20,32 +32,29 @@ prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,a
 true
 ```
 """
-function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray3D,tim) where T
-    #compute positions in index units
-    dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
-    dt>1.0 ? error("dt>1.0") : nothing
-    dt<0.0 ? error("dt>0.0") : nothing
+function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray3D,tim::T) where T
+    dt=mydt(tim,𝑃.𝑇)
     g=𝑃.u0.grid
     #
     while location_is_out(u,g)
-#        g.class=="PeriodicDomain" ? update_location_dpdo!(u,g) : nothing
-#        g.class=="CubeSphere" ? update_location_cs!(u,𝑃) : nothing
-#        g.class=="LatLonCap" ? update_location_llc!(u,𝑃) : nothing
-         𝑃.update_location!(u)
+        𝑃.update_location!(u)
     end
 
-    x,y,z = u[1:3]
+    x=u[1]
+    y=u[2]
+    z=u[3]
     fIndex = Int(u[4])
-    nx,ny=g.fSize[fIndex]
+    (nx,ny)=fSize(g.fSize,fIndex)
     nz=size(𝑃.u0,2)
     #
-    dx,dy,dz=[x - floor(x),y - floor(y),z - floor(z)]
-    i_c,j_c = Int32.(floor.([x y])) .+ 2
-    k_c = Int32.(floor.(z)) .+ 1
+    (dx,dy,dz)=(x - floor(x),y - floor(y),z - floor(z))
+    i_c = Int32(floor(x)) + 2
+    j_c = Int32(floor(y)) + 2
+    k_c = Int32(floor(z)) + 1
     #
-    i_w,i_e=[i_c i_c+1]
-    j_s,j_n=[j_c j_c+1]
-    k_l,k_r=[k_c k_c+1]
+    (i_w,i_e)=(i_c,i_c+1)
+    (j_s,j_n)=(j_c,j_c+1)
+    (k_l,k_r)=(k_c,k_c+1)
     #
     k_c=min(k_c,nz)
     k_l=min(k_l,nz)
@@ -53,22 +62,30 @@ function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray3D,tim) where
     k_c=max(k_c,1)
     k_l=max(k_l,1)
     k_r=max(k_r,1)
+    #
+    onemdt=(1.0-dt)
+    onemdx=(1.0-dx)
+    onemdy=(1.0-dy)
+    onemdz=(1.0-dz)
     #interpolate u to position and time
-    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0.f[fIndex,k_c][i_w,j_c]+
-    dx*(1.0-dt)*𝑃.u0.f[fIndex,k_c][i_e,j_c]+
-    (1.0-dx)*dt*𝑃.u1.f[fIndex,k_c][i_w,j_c]+
-    dx*dt*𝑃.u1.f[fIndex,k_c][i_e,j_c]
+    u0=fview(𝑃.u0.f,fIndex,k_c)
+    u1=fview(𝑃.u1.f,fIndex,k_c)
+    du[1]=onemdx*onemdt*u0[i_w,j_c]+
+    dx*onemdt*u0[i_e,j_c]+
+    onemdx*dt*u1[i_w,j_c]+
+    dx*dt*u1[i_e,j_c]
     #interpolate v to position and time
-    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0.f[fIndex,k_c][i_c,j_s]+
-    dy*(1.0-dt)*𝑃.v0.f[fIndex,k_c][i_c,j_n]+
-    (1.0-dy)*dt*𝑃.v1.f[fIndex,k_c][i_c,j_s]+
-    dy*dt*𝑃.v1.f[fIndex,k_c][i_c,j_n]
+    v0=fview(𝑃.v0.f,fIndex,k_c)
+    v1=fview(𝑃.v1.f,fIndex,k_c)
+    du[2]=onemdy*onemdt*v0[i_c,j_s]+
+    dy*onemdt*v0[i_c,j_n]+
+    onemdy*dt*v1[i_c,j_s]+
+    dy*dt*v1[i_c,j_n]
     #interpolate w to position and time
-    du[3]=(1.0-dz)*(1.0-dt)*𝑃.w0.f[fIndex,k_l][i_c,j_c]+
-    dz*(1.0-dt)*𝑃.w0.f[fIndex,k_r][i_c,j_c]+
-    (1.0-dz)*dt*𝑃.w1.f[fIndex,k_l][i_c,j_c]+
+    du[3]=onemdz*onemdt*𝑃.w0.f[fIndex,k_l][i_c,j_c]+
+    dz*onemdt*𝑃.w0.f[fIndex,k_r][i_c,j_c]+
+    onemdz*dt*𝑃.w1.f[fIndex,k_l][i_c,j_c]+
     dz*dt*𝑃.w1.f[fIndex,k_r][i_c,j_c]
-    
     #leave face index unchanged
     du[4]=0.0
     #
@@ -111,34 +128,38 @@ true
 """
 function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray2D,tim) where T
     #compute positions in index units
-    dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
-    dt>1.0 ? error("dt>1.0") : nothing
-    dt<0.0 ? error("dt>0.0") : nothing
+    dt=mydt(tim,𝑃.𝑇)
     g=𝑃.u0.grid
     #
     while location_is_out(u,g)
         𝑃.update_location!(u)
     end
 
-    x,y = u[1:2]
+    x=u[1]
+    y=u[2]
     fIndex = Int(u[3])
-    nx,ny=g.fSize[fIndex]
+    (nx,ny)=fSize(g.fSize,fIndex)
     #
-    dx,dy=[x - floor(x),y - floor(y)]
-    i_c,j_c = Int32.(floor.([x y])) .+ 2
+    (dx,dy)=(x - floor(x),y - floor(y))
+    i_c = Int32(floor(x)) + 2
+    j_c = Int32(floor(y)) + 2
     #
-    i_w,i_e=[i_c i_c+1]
-    j_s,j_n=[j_c j_c+1]
+    (i_w,i_e)=(i_c,i_c+1)
+    (j_s,j_n)=(j_c,j_c+1)
     #interpolate u to position and time
-    du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0.f[fIndex][i_w,j_c]+
-    dx*(1.0-dt)*𝑃.u0.f[fIndex][i_e,j_c]+
-    (1.0-dx)*dt*𝑃.u1.f[fIndex][i_w,j_c]+
-    dx*dt*𝑃.u1.f[fIndex][i_e,j_c]
+    u0=fview(𝑃.u0.f,fIndex)
+    u1=fview(𝑃.u1.f,fIndex)
+    du[1]=(1.0-dx)*(1.0-dt)*u0[i_w,j_c]+
+    dx*(1.0-dt)*u0[i_e,j_c]+
+    (1.0-dx)*dt*u1[i_w,j_c]+
+    dx*dt*u1[i_e,j_c]
     #interpolate v to position and time
-    du[2]=(1.0-dy)*(1.0-dt)*𝑃.v0.f[fIndex][i_c,j_s]+
-    dy*(1.0-dt)*𝑃.v0.f[fIndex][i_c,j_n]+
-    (1.0-dy)*dt*𝑃.v1.f[fIndex][i_c,j_s]+
-    dy*dt*𝑃.v1.f[fIndex][i_c,j_n]
+    v0=fview(𝑃.v0.f,fIndex)
+    v1=fview(𝑃.v1.f,fIndex)
+    du[2]=(1.0-dy)*(1.0-dt)*v0[i_c,j_s]+
+    dy*(1.0-dt)*v0[i_c,j_n]+
+    (1.0-dy)*dt*v1[i_c,j_s]+
+    dy*dt*v1[i_c,j_n]
     #leave face index unchanged
     du[3]=0.0
     #
@@ -167,26 +188,32 @@ prod(isapprox.(𝐼.📌',ref,atol=1.0))
 true
 ```
 """
-function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array3D,tim) where T
+function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array3D,tim::T) where T
     #compute positions in index units
-    dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
+    dt=mydt(tim,𝑃.𝑇)
     #
-    x,y,z = u[1:3]
-    nx,ny,nz = size(𝑃.u0)
-    x,y=[mod(x,nx),mod(y,ny)]
-    z=mod(z,nz)
+    (nx,ny,nz) = size(𝑃.u0)
+    x=mod(u[1],nx)
+    y=mod(u[2],ny)
+    z=mod(u[3],nz)
     #
-    dx,dy,dz=[x - floor(x),y - floor(y),z - floor(z)]
-    i_c,j_c,k_c = Int32.(floor.([x y z])) .+ 1
+    dx=x - floor(x)
+    dy=y - floor(y)
+    dz=z - floor(z)
+    #
+    i_c = Int32(floor(x)) + 1
+    j_c = Int32(floor(y)) + 1
+    k_c = Int32(floor(z)) + 1
+    #
     i_c==0 ? i_c=nx : nothing
     j_c==0 ? j_c=ny : nothing
     #k_c==0 ? k_c=nz : nothing
     #
-    i_w,i_e=[i_c i_c+1]
+    (i_w,i_e)=(i_c,i_c+1)
     x>=nx-1 ? (i_w,i_e)=(nx,1) : nothing
-    j_s,j_n=[j_c j_c+1]
+    (j_s,j_n)=(j_c,j_c+1)
     y>=ny-1 ? (j_s,j_n)=(ny,1) : nothing
-    k_l,k_r=[k_c k_c+1]
+    (k_l,k_r)=(k_c,k_c+1)
     #z>=nz-1 ? (k_l,k_r)=(nz,1) : nothing
 
     #interpolate u to position and time
@@ -230,22 +257,25 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=1.0))
 true
 ```
 """
-function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array2D,tim) where T
-    #compute positions in index units
-    dt=(tim-𝑃.𝑇[1])/(𝑃.𝑇[2]-𝑃.𝑇[1])
+function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array2D,tim::T) where T
+    dt=mydt(tim,𝑃.𝑇)
     #
-    x,y = u[1:2]
-    nx,ny=size(𝑃.u0)
-    x,y=[mod(x,nx),mod(y,ny)]
+    (nx,ny) = size(𝑃.u0)
+    x=mod(u[1],nx)
+    y=mod(u[2],ny)
     #
-    dx,dy=[x - floor(x),y - floor(y)]
-    i_c,j_c = Int32.(floor.([x y])) .+ 1
+    dx=x - floor(x)
+    dy=y - floor(y)
+    #
+    i_c = Int32(floor(x)) + 1
+    j_c = Int32(floor(y)) + 1
+    #
     i_c==0 ? i_c=nx : nothing
     j_c==0 ? j_c=ny : nothing
     #
-    i_w,i_e=[i_c i_c+1]
+    (i_w,i_e)=(i_c,i_c+1)
     x>=nx-1 ? (i_w,i_e)=(nx,1) : nothing
-    j_s,j_n=[j_c j_c+1]
+    (j_s,j_n)=(j_c,j_c+1)
     y>=ny-1 ? (j_s,j_n)=(ny,1) : nothing
     #interpolate u to position and time
     du[1]=(1.0-dx)*(1.0-dt)*𝑃.u0[i_w,j_c]+
