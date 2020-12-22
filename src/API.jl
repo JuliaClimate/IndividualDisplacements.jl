@@ -118,7 +118,7 @@ Base.@kwdef struct Individuals{T,N}
    🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
    ∫   ::Function = solver_default #\int<tab>
    🔧  ::Function = postprocess_default #\wrench<tab>
-   𝑃   ::Union{NamedTuple,FlowFields} = param_default #\itP<tab>
+   𝑃   ::FlowFields = param_default #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
    𝑀   ::NamedTuple = NamedTuple() #\itM<tab>vec
 end
