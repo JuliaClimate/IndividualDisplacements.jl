@@ -32,7 +32,7 @@ prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,a
 true
 ```
 """
-function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray3D,tim::T) where T
+function dxyz_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray3D,tim) where T
     dt=mydt(tim,𝑃.𝑇)
     g=𝑃.u0.grid
     #
@@ -188,7 +188,7 @@ prod(isapprox.(𝐼.📌',ref,atol=1.0))
 true
 ```
 """
-function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array3D,tim::T) where T
+function dxyz_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array3D,tim) where T
     #compute positions in index units
     dt=mydt(tim,𝑃.𝑇)
     #
@@ -257,7 +257,7 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=1.0))
 true
 ```
 """
-function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array2D,tim::T) where T
+function dxy_dt(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array2D,tim) where T
     dt=mydt(tim,𝑃.𝑇)
     #
     (nx,ny) = size(𝑃.u0)
