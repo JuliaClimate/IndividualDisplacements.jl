@@ -58,7 +58,7 @@ end
 
 function ∫(prob)
    #sol=solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8,saveat=5*86400.0)
-   sol=IndividualDisplacements.solver_default(prob)
+   sol=IndividualDisplacements.default_solver(prob)
    #sol=solve(prob,Euler(),dt=86400.0)
 
    nx,ny=𝑃.u0.grid.ioSize[1:2]
