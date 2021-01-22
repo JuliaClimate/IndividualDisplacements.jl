@@ -1,9 +1,9 @@
 
 """
-    postprocess_MeshArray(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+    postprocess_MeshArray(sol,𝑃::FlowFields; id=missing, 𝑇=missing)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
-using "exchanged" 𝑃.XC, 𝑃.YC via `add_lonlat!`
+using "exchanged" 𝐷.XC, 𝐷.YC via `add_lonlat!`
 """
 function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
@@ -95,7 +95,7 @@ function postprocess_xy(sol,𝑃::FlowFields; id=missing, 𝑇=missing)
         y=mod.(sol[2,:],Ref(ny))
     end
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    #size(𝑃.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
+    #size(𝐷.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
     t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
     return DataFrame(ID=Int.(id[:]), t=t[:], x=x[:], y=y[:])
@@ -186,7 +186,7 @@ end
 Define initial condition (u0,du) as a subset of grid points
 """
 function initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
-    msk=𝑃.msk
+    msk=𝐷.msk
     uInitS = Array{Float64,2}(undef, 3, prod(msk.grid.ioSize))
 
     kk = 0
