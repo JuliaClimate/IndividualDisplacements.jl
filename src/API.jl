@@ -75,7 +75,7 @@ default_recorder = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
 default_postproc = (x->x)
 
 """
-    struct Individuals{T}
+    struct Individuals{T,N}
 
 - Data:           📌 (position),   🔴(record), 🆔 (ID), 𝑃 (`FlowFields`)
 - Functions:      🚄 (velocity),   ∫ (integration), 🔧(postprocessing)
