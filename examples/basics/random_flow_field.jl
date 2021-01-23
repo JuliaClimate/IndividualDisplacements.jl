@@ -30,7 +30,7 @@ include(joinpath(p,"../examples/helper_functions.jl"));
 # ## 2. Flow Fields
 #
 
-u,v,ϕ=setup_random_flow();
+u,v,ϕ=random_flow_field();
 
 # The above `u,v` arrays can be replaced with any other pair provided by the user.
 #
@@ -57,9 +57,9 @@ u,v,ϕ=setup_random_flow();
 # ```
 
 # A convenient way to set up the flow fields using the MeshArrays.jl package (which 
-# handles such staggered grids in general fashion) is to call `setup_F_MeshArray2D`
+# handles such staggered grids in general fashion) is to call `convert_to_FlowFields`
 
-𝐹=setup_F_MeshArray2D(u,v);
+𝐹=convert_to_FlowFields(u,v);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Initialize Individuals
