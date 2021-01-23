@@ -33,7 +33,7 @@ IndividualDisplacements.get_ecco_velocity_if_needed();
 # - read grid variables & velocities
 # - normalize velocities
 
-𝑃,𝐷=setup_global_ocean(k=1,ny=2);
+𝑃,𝐷=global_ocean_circulation(k=1,ny=2);
 
 fieldnames(typeof(𝑃))
 

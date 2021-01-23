@@ -30,24 +30,13 @@ IndividualDisplacements.get_occa_velocity_if_needed();
 # ## 2.1 Ocean Circulation Setup
 #
 
-nam="OCCA"
-bck=false
-
-if nam=="OCCA"
-   𝑃,𝐷,Γ=OCCA_setup(backward_in_time=bck)
-   🚄 =dxyz_dt!
-elseif nam=="LL90"
-   𝑃,𝐷,Γ=example3_setup(backward_in_time=bck)
-   🚄 =dxy_dt
-else
-   error("unknown example (nam parameter value)")
-end
+𝑃,𝐷,Γ=OCCA_FlowFields(backward_in_time=false)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2.2 Solver And Analysis Setup
 #
 
-function my🚄(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray3D,tim) where T
+function 🚄(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray3D,tim) where T
    nf=size(u,2)
    nx=360
    ny=160
@@ -130,7 +119,7 @@ function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000,
                   k=Float64[], z=Float64[], iso=Float64[], t=Float64[], 
                   lon=Float64[], lat=Float64[], year=Float64[], col=Symbol[])
 
-   I=(position=xy,record=deepcopy(tr),velocity=my🚄, integration=∫, 
+   I=(position=xy,record=deepcopy(tr),velocity=🚄, integration=∫, 
       postprocessing=🔧,parameters=𝑃)
    𝐼=Individuals(I)
 
