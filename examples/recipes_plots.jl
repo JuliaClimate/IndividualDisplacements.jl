@@ -1,6 +1,17 @@
 using Random, Plots, DataFrames, ColorSchemes
 
 """
+    plot(𝐼::Individuals)
+
+Plot the initial and final positions as scatter plot in x,y plane.
+"""
+function plot(𝐼::Individuals)
+    🔴_by_t = groupby(𝐼.🔴, :t)
+    scatter(🔴_by_t[1].x,🔴_by_t[1].y,c=:red,label="t0",marker = (:circle, stroke(0)))
+    scatter!(🔴_by_t[end].x,🔴_by_t[end].y,c=:blue,label="t1",marker = (:circle, stroke(0)))
+end
+
+"""
     PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
 
 Plot random subset of size nn trajectories.
@@ -135,15 +146,11 @@ function plot_end_points(𝐼::Individuals,Γ)
     ylims=extrema(la)
     plt=contourf(lo,la,dl,clims=(1.5,5),c = :ice, colorbar=false, xlims=xlims,ylims=ylims)
 
-    t=𝑃.𝑇[2]
-    df = 𝐼.🔴[ (𝐼.🔴.t.>t-1.0).&(𝐼.🔴.t.<=t) , :]
-    lo=deepcopy(df.lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-    scatter!(lo,df.lat,markersize=1.5,c=:red,leg=:none,marker = (:circle, stroke(0)))
-
-    t=0.0
-    df = 𝐼.🔴[ (𝐼.🔴.t.>t-1.0).&(𝐼.🔴.t.<=t) , :]
-    lo=deepcopy(df.lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-    scatter!(lo,df.lat,markersize=1.5,c=:yellow,leg=:none,marker = (:dot, stroke(0)))
+    🔴_by_t = groupby(𝐼.🔴, :t)
+    lo=deepcopy(🔴_by_t[1].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
+    scatter!(lo,🔴_by_t[1].lat,markersize=1.5,c=:red,leg=:none,marker = (:circle, stroke(0)))
+    lo=deepcopy(🔴_by_t[end].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
+    scatter!(lo,🔴_by_t[end].lat,markersize=1.5,c=:yellow,leg=:none,marker = (:dot, stroke(0)))
 
     return plt
 end
