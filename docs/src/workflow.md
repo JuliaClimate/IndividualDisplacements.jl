@@ -17,7 +17,16 @@ As documented in the **examples**, the typical worflow is:
 
 Steps `1` and `2` are done via data structures documented below. Both steps `3` and step `4` often take place within the call to `∫!`which can readily post-process results via 🔧 before recording them in 🔴 and finally updating positions 📌. Since 🔴 is in the [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format, it is easily manipulated, plotted, or saved after the fact (step `4` per se).
 
-**The examples** document simple methods to ingest time varying flow fields, three-dimensional ocean simulations, process oriented configurations, plotting tools, and data formats. For an overview of the examples, please refer to the **example guide**. The rest of this section is focused on the package's **core functions** and **data structures**.
+**The examples** document simple methods to ingest time varying flow fields, three-dimensional ocean simulations, process oriented configurations, plotting tools, and data formats. For an overview of the examples, please refer to the **example guide**. The rest of this section is focused on the package's **data structures** and **core functions**.
+
+## Data Structures
+
+The `Individuals` struct contains a `FlowFields` struct (incl. e.g. arrays), initial positions for the individuals, and the other elements (e.g. functions) involved in `∫!(𝐼,𝑇)` as documented hereafter.
+
+```@autodocs
+Modules = [IndividualDisplacements]
+Order   = [:type]
+```
 
 ## Core Functions
 
@@ -27,13 +36,4 @@ The velocity interpolation funtions (🚄 used in step `3`; documented in the `T
 
 ```@docs
 ∫!
-```
-
-## Data Structures
-
-The `Individuals` struct contains a `FlowFields` struct (incl. e.g. arrays), initial positions for the individuals, and the other elements (see below) involved in `∫!(𝐼,𝑇)`.
-
-```@autodocs
-Modules = [IndividualDisplacements]
-Order   = [:type]
 ```

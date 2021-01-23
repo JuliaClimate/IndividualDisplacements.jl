@@ -33,7 +33,7 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 
 np,nz=16,4 #gridded domain size (horizontal and vertical)
 
-u,v,w=simple_flow_field(np,nz) #staggered velocity arrays
+u,v,w=solid_body_rotation(np,nz) #staggered velocity arrays
 
 𝐹=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0,19.95*2*pi]); #FlowFields data structure
 
