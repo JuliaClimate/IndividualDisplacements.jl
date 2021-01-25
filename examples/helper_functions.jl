@@ -1,34 +1,7 @@
 
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
-p=dirname(pathof(MeshArrays))
-include(joinpath(p,"../examples/Demos.jl"))
+using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/flow_fields.jl"));
-    
-"""
-    convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
-
-Convert a pair of U,V arrays (staggered C-grid velocity field in 2D) to
-a `𝐹_MeshArray2D` struct ready for integration of individual displacements
-from time 0 to time t1.
-
-```
-_,u,v=random_flow_field()
-𝐹=convert_to_FlowFields(u,v,10.0)
-```
-"""
-function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
-    np,nq=size(U)
-    Γ=simple_periodic_domain(np,nq)
-
-    g=Γ["XC"].grid
-    u=MeshArray(g,[U])
-    v=MeshArray(g,[V])
-    (u,v)=exchange(u,v,1)
-    func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
-
-    𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0,t1],func)
-end
 
 """
     init_global_range(lons::Tuple = (-160.0, -150.0),lats::Tuple = (35.0, 45.0))

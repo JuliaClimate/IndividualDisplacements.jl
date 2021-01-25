@@ -22,7 +22,7 @@
 
 using IndividualDisplacements, DataFrames
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/helper_functions.jl"))
+include(joinpath(p,"../examples/flow_fields.jl"))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### 1.2  Flow Fields
@@ -78,12 +78,9 @@ end
 
 # The velocity function `🚄` relies only on flow fields obtained from
 # `𝐹` (which is defined above) to interpolate velocity at the specified
-# space-time position (e.g. those of individuals). The solver (here: `solv`) 
-# can then integrate over time the result of `🚄` (see `OrdinaryDiffEq.jl` docs).
+# space-time position (e.g. those of individuals). 
 
 🚄 = dxyz_dt
-
-solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 
 # Now that every thing needed to carry out the computation is in place, 
 # we wrap up the problem configuration in a struct (`Individuals`) which 
@@ -92,7 +89,7 @@ solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 
 #assemble as a NamedTuple:
 I=(position=📌,record=🔴,velocity=🚄,
-integration=solv,postprocessing=postproc,parameters=𝐹)
+postprocessing=postproc,parameters=𝐹)
 
 #construct Individuals from NamedTuple:
 𝐼=Individuals(I)
