@@ -1,5 +1,7 @@
 using Random, Plots, DataFrames, ColorSchemes
 
+import Plots: plot
+
 """
     plot(𝐼::Individuals)
 
