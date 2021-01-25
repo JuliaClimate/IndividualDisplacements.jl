@@ -43,17 +43,21 @@ u,v,w=solid_body_rotation(np,nz) #staggered velocity arrays
 # Let's just set up one individual at [np*1/3,np*1/3,nz*1/3] in the three-dimensional 
 # space where the flow fields have been configured
 
-𝐼=Individuals(𝐹,np*1/3,np*1/3,nz*1/3)
+(x,y,z)=(np*1/3,np*1/3,nz*1/3)
 
-# The above `Individuals` constructor wraps up 𝐹, the initial position, and other needed components 
-# within 𝐼. 
+𝐼=Individuals(𝐹,x,y,z)
+
+#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ### 1.4 A Closer Look (optional)
 #
-# **Either jump to section 2** or let's break this down further to document the added components and 
-# highlight how one may override defaults that are selected by the above `Individuals` constructor.
+# The above `Individuals` constructor wraps up 𝐹, the initial position, and other needed components 
+# within 𝐼. **At this point, you can either jump to section 2 or read through this section**
+# to learn more about how the details as needed e.g. if you wanted to overide default options 
+# that were selected for you by the section 1.3 constructor.
 #
 # Initial position is 
 
-📌=[np*1/3,np*1/3,nz*1/3] 
+📌=[x,y,z] 
 
 # and the data structure ([DataFrame](http://juliadata.github.io/DataFrames.jl/stable/)) 
 # to record properties along the individual's path accordingly. 

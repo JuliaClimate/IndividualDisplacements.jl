@@ -57,9 +57,10 @@ u,v,ϕ=random_flow_field();
 # ```
 
 # A convenient way to set up the flow fields using the MeshArrays.jl package (which 
-# handles such staggered grids in general fashion) is to call `convert_to_FlowFields`
+# handles such staggered grids in general fashion) is to call the `convert_to_FlowFields`
+# function with `u,v` arrays and time span as arguments.
 
-𝐹=convert_to_FlowFields(u,v);
+𝐹=convert_to_FlowFields(u,v,10.0);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Initialize Individuals

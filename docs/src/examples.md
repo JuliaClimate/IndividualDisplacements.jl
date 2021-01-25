@@ -21,7 +21,8 @@ The flow field consists of [rigid body rotation](https://en.wikipedia.org/wiki/R
 
 Here we illustrate (1) the simulation of an ensemble of particles and (2) how one simply goes from a velocity array to solving for trajectories using `IndividualDisplacements.jl`. 
 
-The included convenience function (`setup_point_cloud`) defines a grid based on input array dimensions, adds the initial condition and time range, and returns the `Individuals` data structure `𝐼`. All that is left to do at this stage is call `∫!(𝐼)`.
+The included convenience function (`convert_to_FlowFields`) defines a unit grid based on the velocity array size, adds a time range, and returns a `FlowFields`
+data structure `𝐹`. All that is left to do at this stage is to define initial conditions, put them together with `𝐹` within the `Individuals` data structure `𝐼`, and call `∫!(𝐼)`.
 
 The prototype for this example is based on a randomly generated flow field in a doubly periodic gridded domain. Exercises include the non-periodic domain case, statistics made easy via `DataFrames.jl`, and replacing the flow field with your own.
 
