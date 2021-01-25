@@ -30,33 +30,15 @@ IndividualDisplacements.get_occa_velocity_if_needed();
 # ## 2.1 Ocean Circulation Setup
 #
 
-𝑃,𝐷,Γ=OCCA_FlowFields(backward_in_time=false)
+𝑃,𝐷,Γ=OCCA_FlowFields(backward_in_time=false);
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 2.2 Solver And Analysis Setup
+# ## 2.2 Post-Processor Setup
 #
 
-function 🚄(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray3D,tim) where T
-   nf=size(u,2)
-   nx=360
-   ny=160
-   [u[1,i][1]=mod(u[1,i][1],nx) for i in 1:nf]
-   [u[1,i][2]=mod(u[1,i][2],ny) for i in 1:nf]
-   [dxyz_dt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
-end
-
-function ∫(prob)
-   #sol=solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8,saveat=5*86400.0)
-   sol=IndividualDisplacements.default_solver(prob)
-   #sol=solve(prob,Euler(),dt=86400.0)
-
-   nx,ny=𝑃.u0.grid.ioSize[1:2]
-   nf=size(sol,2)
-   nt=size(sol,3)
-   [sol[1,i,j][1]=mod(sol[1,i,j][1],nx) for i in 1:nf, j in 1:nt]
-   [sol[1,i,j][2]=mod(sol[1,i,j][2],ny) for i in 1:nf, j in 1:nt]
-   return sol
-end
+tr = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
+               k=Float64[], z=Float64[], iso=Float64[], t=Float64[], 
+               lon=Float64[], lat=Float64[], year=Float64[], col=Symbol[])
 
 function 🔧(sol,𝑃::𝐹_MeshArray3D;id=missing,𝑇=missing)
    df=postprocess_MeshArray(sol,𝑃,id=id,𝑇=𝑇)
@@ -89,46 +71,54 @@ function 🔧(sol,𝑃::𝐹_MeshArray3D;id=missing,𝑇=missing)
 end
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 2.3 Initialize Individuals
+# ## 2.3 Initialize Individual Positions
 #
 
 """
-    set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000, z_init=4.5, 
-               lon_rng=(-160.0,-150.0), lat_rng=(30.0,40.0))
+    initial_positions(Γ; nf=10000, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
 
-Set up `Individuals` data structure with `nf` particles moving within a near-global Ocean domain. 
+Randomly assign initial positions in longitude,latitude ranges. Positions are 
+expressed in, normalized, grid point units (x,y in the 0,nx and 0,ny range). 
+To convert from longitude,latitude here we take advantage of the regularity 
+of the 1 degree grid being used -- for a more general alternative, see 
+`initialize_lonlat()`.
 """
-function set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=10000, 
-      z_init=4.5, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
+function initial_positions(Γ; nf=10000, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
 
    lo0,lo1=lon_rng
    la0,la1=lat_rng
 
    lon=lo0 .+(lo1-lo0).*rand(nf)
    lat=la0 .+(la1-la0).*rand(nf)
-   #(xy,_)=initialize_lonlat(Γ,lon,lat)
-   #xy[3,:] .= z_init
-   #xy=cat(xy,ones(1,nf),dims=1)
-   dlo=21. - Γ["XC"][1][21,1]
-   dla=111. - Γ["YC"][1][1,111]
-  
-   xy = permutedims([Float32.([lon[i]+dlo;lat[i]+dla;z_init;1.0]) for i in eachindex(lon)])
-   id=collect(1:size(xy,2))
+   x=lon .+ (21. - Γ["XC"][1][21,1])
+   y=lat .+ (111. - Γ["YC"][1][1,111])
 
-   tr = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
-                  k=Float64[], z=Float64[], iso=Float64[], t=Float64[], 
-                  lon=Float64[], lat=Float64[], year=Float64[], col=Symbol[])
+   return x,y
+end
 
-   I=(position=xy,record=deepcopy(tr),velocity=🚄, integration=∫, 
-      postprocessing=🔧,parameters=𝑃)
+# ## 2.4 Individuals data structure
+#
+
+"""
+    set_up_individuals(𝑃,Γ,🔧; nf=10000, z_init=4.5, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
+
+Set up `Individuals` data structure with `nf` particles moving 
+on a regular 1 degree resolution grid covering most of the Globe.
+"""
+
+function set_up_individuals(𝑃,Γ,🔧; nf=10000,
+   z_init=4.5, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
+
+   (x,y)=initial_positions(Γ; nf, lon_rng, lat_rng)
+   xy = permutedims([Float32.([x[i];y[i];z_init;1.0]) for i in eachindex(x)])
+   I=(position=xy,record=deepcopy(tr),velocity=dxyz_dt!,postprocessing=🔧,parameters=𝑃)
    𝐼=Individuals(I)
-
    return 𝐼
 end
 
-set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫,🚄,🔧; nf=nf)
+set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,🔧; nf=nf)
 
-𝐼=set_up_individuals(𝑃,Γ,∫,🚄,🔧,nf=100)
+𝐼=set_up_individuals(𝑃,Γ,🔧,nf=100)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.1 Compute Displacements
@@ -146,8 +136,8 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,∫
 # - either `Plots.jl`:
 
 #!jl #include(joinpath(p,"../examples/recipes_plots.jl"))
-#!jl ##PlotBasic(𝐼.🔴,100,90.0)
-#!jl #p=plot_end_points(𝐼,Γ)
+#!jl #p=plot(𝐼)
+#!jl ##p=plot_end_points(𝐼,Γ)
 #!jl #display(p)
 
 # - or `Makie.jl`:
