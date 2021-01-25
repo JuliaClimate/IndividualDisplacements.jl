@@ -18,8 +18,7 @@
 # ## 1. Load Software
 #
 
-using IndividualDisplacements, DataFrames, OceanStateEstimation, NetCDF
-using MeshArrays, OrdinaryDiffEq
+using IndividualDisplacements, DataFrames
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example123.jl"))

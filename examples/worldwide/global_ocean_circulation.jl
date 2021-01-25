@@ -20,8 +20,7 @@
 # - packages + helper functions
 # - grid and velocity files
 
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
-using Statistics, DataFrames, MITgcmTools, OceanStateEstimation
+using IndividualDisplacements, DataFrames, Statistics
 
 include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
 IndividualDisplacements.get_ecco_velocity_if_needed();
