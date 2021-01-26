@@ -111,5 +111,5 @@ sgdf[rand(1:size(sgdf,1),4),:]
 #
 #```
 #include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/recipes_plots.jl"))
-#plot_end_points(𝐽,𝐷.Γ)
+#map(𝐼,OceanDepthLog(Γ))
 #```
