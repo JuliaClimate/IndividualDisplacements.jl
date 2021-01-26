@@ -1,6 +1,6 @@
 using Test, Documenter
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, OceanStateEstimation
-include(joinpath(dirname(pathof(IndividualDisplacements)),"../test/helper_functions.jl"))
+include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
 
 IndividualDisplacements.get_ecco_velocity_if_needed();
 IndividualDisplacements.get_occa_velocity_if_needed();

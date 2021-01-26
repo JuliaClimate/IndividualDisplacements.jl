@@ -20,8 +20,7 @@
 # - packages + helper functions
 # - grid and velocity files
 
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
-using Statistics, DataFrames, MITgcmTools, OceanStateEstimation
+using IndividualDisplacements, DataFrames, Statistics, CSV
 
 include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
 IndividualDisplacements.get_ecco_velocity_if_needed();
@@ -33,7 +32,7 @@ IndividualDisplacements.get_ecco_velocity_if_needed();
 # - read grid variables & velocities
 # - normalize velocities
 
-𝑃,𝐷=setup_global_ocean(k=1,ny=2);
+𝑃,𝐷=global_ocean_circulation(k=1,ny=2);
 
 fieldnames(typeof(𝑃))
 
@@ -44,8 +43,16 @@ fieldnames(typeof(𝑃))
 #
 # - initial particle positions randomly over Global Ocean
 
-xy = init_global_randn(1000,𝐷)
-𝐼=Individuals(𝑃,xy[1,:],xy[2,:],xy[3,:])
+np=100
+
+#xy = init_global_randn(np,𝐷)
+#df=DataFrame(x=xy[1,:],y=xy[2,:],f=xy[3,:])
+
+p=dirname(pathof(IndividualDisplacements))
+fil=joinpath(p,"../examples/worldwide/global_ocean_circulation.csv")
+df=DataFrame(CSV.File(fil))
+
+𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],df.f[1:np])
 fieldnames(typeof(𝐼))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
@@ -53,20 +60,10 @@ fieldnames(typeof(𝐼))
 
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
-add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC);
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### 3.2 Iteration function example
 #
-# Here we customize the postprocessing function to add longitude and latitude (my🔧).
-
-function my🔧(sol,𝑃::𝐹_MeshArray2D;id=missing,𝑇=missing)
-    df=postprocess_MeshArray(sol,𝑃,id=id,𝑇=𝑇)
-    add_lonlat!(df,𝐷.XC,𝐷.YC)
-end
-
-𝐽=Individuals{eltype(𝐼.📌),ndims(𝐼.📌)}(𝑃=𝐼.𝑃,📌=𝐼.📌,🔴=𝐼.🔴,🆔=𝐼.🆔,🚄=𝐼.🚄,∫=𝐼.∫,🔧=my🔧)
-
 # In addition, `step!` is defined to provide additional flexibility around `∫!` :
 #
 # - `𝐷.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
@@ -76,7 +73,7 @@ end
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐷.🔄(𝐼.𝑃,𝐷,t_ϵ)
-    reset_lonlat!(𝐼,𝐷)
+    #reset_lonlat!(𝐼,𝐷)
     ∫!(𝐼)
 end
 
@@ -84,14 +81,16 @@ end
 # ## 3.3 Iterate For `ny*12` Months
 #
 
-[step!(𝐽) for y=1:1, m=1:1]
+[step!(𝐼) for y=1:1, m=1:1]
+
+add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.4 Compute summary statistics
 #
 # See [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) documentation for detail and additinal functionalities.
 
-gdf = groupby(𝐽.🔴, :ID)
+gdf = groupby(𝐼.🔴, :ID)
 sgdf= combine(gdf,nrow,:lat => mean)
 sgdf[rand(1:size(sgdf,1),4),:]
 
