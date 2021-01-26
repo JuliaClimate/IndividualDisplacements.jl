@@ -21,7 +21,6 @@
 using IndividualDisplacements, DataFrames
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/example123.jl"))
 include(joinpath(p,"../examples/helper_functions.jl"))
 IndividualDisplacements.get_occa_velocity_if_needed();
 
@@ -106,7 +105,7 @@ on a regular 1 degree resolution grid covering most of the Globe.
 """
 
 function set_up_individuals(𝑃,Γ,🔧; nf=10000,
-   z_init=4.5, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
+   z_init=2.5, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
 
    (x,y)=initial_positions(Γ; nf, lon_rng, lat_rng)
    xy = permutedims([Float32.([x[i];y[i];z_init;1.0]) for i in eachindex(x)])

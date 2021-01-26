@@ -20,7 +20,7 @@
 # - packages + helper functions
 # - grid and velocity files
 
-using IndividualDisplacements, DataFrames, Statistics
+using IndividualDisplacements, DataFrames, Statistics, CSV
 
 include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
 IndividualDisplacements.get_ecco_velocity_if_needed();
@@ -90,7 +90,7 @@ add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC);
 #
 # See [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) documentation for detail and additinal functionalities.
 
-gdf = groupby(𝐽.🔴, :ID)
+gdf = groupby(𝐼.🔴, :ID)
 sgdf= combine(gdf,nrow,:lat => mean)
 sgdf[rand(1:size(sgdf,1),4),:]
 
