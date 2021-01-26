@@ -68,28 +68,36 @@ end
     defaults for Individuals constructor
 """
 
-day=86400.0
-mon=365/12*day
-OneMonth=[-0.5*mon,0.5*mon]
-
-solver_default(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
-#solver_default(prob) = solve(prob,Euler(),dt=day)
-param_default = ( 𝑇=OneMonth , 🔄=(x->x), u0=[], u1=[], v0=[], v1=[])
-rec_default = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[], 
-                        lon=Float64[], lat=Float64[], fid=Int[])
-postprocess_default = (x->x)
+default_solver(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+a=fill(0.0,1,1)
+default_flowfields = 𝐹_Array2D{Float64}(a,a,a,a,[0. 1.])
+default_recorder = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
+default_postproc = (x->x)
 
 """
-    struct Individuals{T}
+    struct Individuals{T,N}
 
 - Data:           📌 (position),   🔴(record), 🆔 (ID), 𝑃 (`FlowFields`)
 - Functions:      🚄 (velocity),   ∫ (integration), 🔧(postprocessing)
 - NamedTuples:    𝐷 (diagnostics),      𝑀 (metadata)
 
-The velocity function 🚄 typically computes velocity at an arbitrary position within the 
-chosen space-time domain (📌 to start) by interpolating gridded variables obtained from 𝑃.
+The velocity function 🚄 typically computes velocity at individual positions (📌 to start) within the 
+specified space-time domain by interpolating gridded variables (provided via 𝑃). Individual trajectories 
+are computed by integrating (∫) interpolated velocities through time. Normally, integration is done by 
+calling ∫! which updates 📌 at the end and records results in 🔴 via 🔧. Unicode cheatsheet:
 
-Default keyword constructor example:
+- 📌=`\\:pushpin:<tab>`,          🔴=`\\:red_circle:<tab>`, 🆔=`\\:id:<tab>`
+- 🚄=`\\:bullettrain_side:<tab>`, ∫=`\\int<tab>`,          🔧=`\\wrench<tab>`
+- 𝑃=`\\itP<tab>`,                 𝐷=`\\itD<tab>`,           𝑀=`\\itM<tab>`
+
+Simple constructors that use `FlowFields` to choose adequate defaults:
+
+- Individuals(𝐹::𝐹_Array2D,x,y)
+- Individuals(𝐹::𝐹_Array3D,x,y,z)
+- Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
+- Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid)
+
+Further customization is achievable via keyword constructors:
 
 ```
 df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
@@ -97,52 +105,35 @@ df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
 𝐼=Individuals(📌=zeros(3,2),🆔=collect(1:2),🔴=deepcopy(df))
 ```
 
-Plain text (or no-unicode) constructor example:
+Or via the plain text (or no-unicode) constructors:
 
 ```
 df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
 I=(position=zeros(3,2),ID=1:2,record=deepcopy(df))
 I=Individuals(I)
 ```
-
-Keyword cheatsheet:
-
-- 📌=`\\:pushpin:<tab>`,          🔴=`\\:red_circle:<tab>`, 🆔=`\\:id:<tab>`
-- 🚄=`\\:bullettrain_side:<tab>`, ∫=`\\int<tab>`,          🔧=`\\wrench<tab>`
-- 𝑃=`\\itP<tab>`,                 𝐷=`\\itD<tab>`,           𝑀=`\\itM<tab>`
 """
 Base.@kwdef struct Individuals{T,N}
    📌  ::Array{T,N} = Array{T,N}(undef, Tuple(Int.(zeros(1,N)))) #\:pushpin:<tab>
-   🔴  ::DataFrame = similar(rec_default) #\:red_circle:<tab>
+   🔴  ::DataFrame = similar(default_recorder) #\:red_circle:<tab>
    🆔   ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
    🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
-   ∫   ::Function = solver_default #\int<tab>
-   🔧  ::Function = postprocess_default #\wrench<tab>
-   𝑃   ::FlowFields = param_default #\itP<tab>
+   ∫   ::Function = default_solver #\int<tab>
+   🔧  ::Function = default_postproc #\wrench<tab>
+   𝑃   ::FlowFields = default_flowfields #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
    𝑀   ::NamedTuple = NamedTuple() #\itM<tab>vec
 end
 
-"""
-    Individuals(NT::NamedTuple)
-
-Constructor that uses a NamedTuple with only plain text keywords (i.e. no-unicode needed).
-
-```
-df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
-I=(position=zeros(3,2),ID=1:2,record=deepcopy(df))
-I=Individuals(I)
-```
-"""
 function Individuals(NT::NamedTuple)
 
     haskey(NT,:position) ? 📌=NT.position : 📌=Array{Float64,2}(undef, Tuple(Int.(zeros(1,2))))
-    haskey(NT,:record) ? 🔴=NT.record : 🔴=similar(rec_default)
+    haskey(NT,:record) ? 🔴=NT.record : 🔴=similar(default_recorder)
     haskey(NT,:ID) ? 🆔=NT.ID : 🆔=collect(1:size(📌,2))    
     haskey(NT,:velocity) ? 🚄=NT.velocity : 🚄=dxy_dt
-    haskey(NT,:integration) ? ∫=NT.integration : ∫=solver_default
-    haskey(NT,:postprocessing) ? 🔧=NT.postprocessing : 🔧=postprocess_default
-    haskey(NT,:parameters) ? 𝑃=NT.parameters : 𝑃=param_default
+    haskey(NT,:integration) ? ∫=NT.integration : ∫=default_solver
+    haskey(NT,:postprocessing) ? 🔧=NT.postprocessing : 🔧=default_postproc
+    haskey(NT,:parameters) ? 𝑃=NT.parameters : 𝑃=default_flowfields
     haskey(NT,:diagnostics) ? 𝐷=NT.diagnostics : 𝐷=NamedTuple()
     haskey(NT,:metadata) ? 𝑀=NT.metadata : 𝑀=NamedTuple()
     isa(📌,UnitRange) ? 📌=collect(📌) : nothing
@@ -151,10 +142,6 @@ function Individuals(NT::NamedTuple)
     Individuals{T,ndims(📌)}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,𝑃=𝑃,𝐷=𝐷,𝑀=𝑀)    
 end
 
-"""
-    Individuals(𝐹::𝐹_Array2D,x,y)
-
-"""
 function Individuals(𝐹::𝐹_Array2D,x,y)
     📌=permutedims([[x[i];y[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
@@ -164,13 +151,9 @@ function Individuals(𝐹::𝐹_Array2D,x,y)
     T=eltype(📌)
     🆔=collect(1:size(📌,2))
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt,∫=solver_default,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt,∫=default_solver,🔧=🔧)    
 end
 
-"""
-    Individuals(𝐹::𝐹_Array3D,x,y,z)
-
-"""
 function Individuals(𝐹::𝐹_Array3D,x,y,z)
     📌=permutedims([[x[i];y[i];z[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
@@ -185,13 +168,9 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z)
     T=eltype(📌)
     🆔=collect(1:size(📌,2))
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt,∫=solver_default,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt,∫=default_solver,🔧=🔧)    
 end
 
-"""
-    Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
-
-"""
 function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
     📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
@@ -202,13 +181,9 @@ function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
     T=eltype(📌)
     🆔=collect(1:size(📌,2))
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=solver_default,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=default_solver,🔧=🔧)    
 end
 
-"""
-    Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid)
-
-"""
 function Individuals(𝐹::𝐹_MeshArray3D,x,y,fid)
     📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
@@ -223,7 +198,7 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,fid)
 
     T=eltype(📌)
     🆔=collect(1:size(📌,2))
-    ∫=solver_default
+    ∫=default_solver
 
     Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt!,∫=∫,🔧=🔧)    
 end

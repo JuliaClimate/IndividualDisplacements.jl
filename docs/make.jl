@@ -35,7 +35,7 @@ pages(folder) = [joinpath(folder, f) for f in readdir(joinpath(src, folder)) if 
 p=pages("basics"); np=length(p)
 i=findall((occursin).("solid_body_rotation",p)); 
 j=findall((occursin).("random_flow_field",p)); 
-p_tu=[p[i];p[j]]
+p_tu=[p[j];p[i]]
 i=findall((occursin).("detailed_look",p)); 
 j=findall((occursin).("particle_cloud",p)); 
 p_mi=[p[i];p[j]]
