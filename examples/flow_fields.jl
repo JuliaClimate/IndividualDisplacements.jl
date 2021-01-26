@@ -117,7 +117,7 @@ function OCCA_FlowFields(;backward_in_time::Bool=false)
    γ=GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
    Γ=GridLoad(γ)
    n=length(Γ["RC"])
-   n=10
+   n=5
 
    g=Γ["XC"].grid
    func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
