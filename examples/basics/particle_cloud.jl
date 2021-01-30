@@ -46,9 +46,9 @@ I=(position=xy,record=deepcopy(tr),velocity=dxy_dt,
 
 #md 𝐼.🔴.lon=5000*𝐼.🔴.x
 #md 𝐼.🔴.lat=5000*𝐼.🔴.y
-#md plt=PlotBasic(𝐼.🔴,size(xy,2),100000.0)
+#md plt=plot_paths(𝐼.🔴,size(xy,2),100000.0)
 
 # Compare with trajectory output from `MITgcm`
 
 #df=read_flt(IndividualDisplacements.flt_example,Float32)
-#ref=PlotBasic(df,size(xy,2),100000.0)
+#ref=plot_paths(df,size(xy,2),100000.0)
