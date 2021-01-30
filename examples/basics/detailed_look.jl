@@ -35,7 +35,7 @@ dirIn=IndividualDisplacements.flt_example
 prec=Float32
 df=read_flt(dirIn,prec);
 
-#md plt=PlotBasic(df,300,100000.0)
+#md plt=plot_paths(df,300,100000.0)
 
 # ## 3. Read Gridded Variables
 #
