@@ -46,11 +46,11 @@ makedocs(
     pages = [
 		"Introduction" => "index.md",
         "User Guide" => "workflow.md",
+		"Tool Box" => "API.md",
         "Example Guide" => "examples.md",
         "Tutorial Examples" => p_tu, 
 		"Real Ocean Cases" => pages("worldwide"),
-        "MITgcm Examples" => p_mi, 
-		"Tool Box" => "API.md"],
+        "MITgcm Examples" => p_mi], 
     modules = [IndividualDisplacements]
 )
 
