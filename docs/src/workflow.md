@@ -28,12 +28,18 @@ Modules = [IndividualDisplacements]
 Order   = [:type]
 ```
 
-## Core Functions
-
-The velocity interpolation funtions (🚄 used in step `3`; documented in the `Tool Box` section) interpolate flow fields to positions 📌, and `∫!` integrates the result forward in time. 
+## Main Functions
 
 `∫!(𝐼,𝑇)` displaces individuals 𝐼 continuously over time period 𝑇 according to velocity function 🚄, temporal integration method ∫, and post-processor 🔧 (all embedded within 𝐼).
 
 ```@docs
 ∫!
 ```
+
+The velocity interpolation functions (🚄) carry out the central computation of this package -- interpolating gridded flow fields to individual positions 📌. It is normally called via `∫!` to integrate velocity 🚄 over a chosen time period. 
+
+- Velocity interpolation for several array and grid types.
+- Preprocessing and postprocessing methods.
+- I/O routines to read (write) results from (to) file.
+
+and other functionalities provided in `src/compute.jl` and `src/data_wrangling.jl` are further documented in the _Tool Box_ section.
