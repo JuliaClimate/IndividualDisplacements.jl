@@ -1,26 +1,63 @@
+"""
+    convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
+
+Convert a pair of U,V arrays (staggered C-grid velocity field in 2D) to
+a `𝐹_MeshArray2D` struct ready for integration of individual displacements
+from time `t0=0` to time `t1`.
+
+```
+_,u,v=random_flow_field()
+𝐹=convert_to_FlowFields(u,v,10.0)
+```
+"""
+function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
+    np,nq=size(U)
+    Γ=simple_periodic_domain(np,nq)
+
+    g=Γ["XC"].grid
+    u=MeshArray(g,[U])
+    v=MeshArray(g,[V])
+    (u,v)=exchange(u,v,1)
+    func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
+
+    𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0,t1],func)
+end
 
 """
-    postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+    postprocess_MeshArray(sol,𝑃::FlowFields; id=missing, 𝑇=missing)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
-using "exchanged" 𝑃.XC, 𝑃.YC via `add_lonlat!`
+using "exchanged" 𝐷.XC, 𝐷.YC via `add_lonlat!`
 """
-function postprocess_lonlat(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
-    id=id*ones(1,size(sol,3))
-    x=sol[1,:,:]
-    y=sol[2,:,:]
-    𝑃.XC.grid.nFaces>1 ? fIndex=sol[end,:,:] : fIndex=ones(size(x))
+    nd=length(size(sol))
+    nt=size(sol,nd)
+    nf=size(sol,nd-1)
+    id=id*ones(1,size(sol,nd))
+    if (size(sol,1)>1)&&(nd>2)
+        x=sol[1,:,:]
+        y=sol[2,:,:]
+        fIndex=sol[end,:,:]
+    elseif (nd>2)
+        x=[sol[1,i,j][1] for i in 1:nf, j in 1:nt]
+        y=[sol[1,i,j][2] for i in 1:nf, j in 1:nt]
+        fIndex=[sol[1,i,j][end] for i in 1:nf, j in 1:nt]
+    else
+        x=sol[1,:]
+        y=sol[2,:]
+        fIndex=sol[end,:]
+        nf=1
+    end
 
-    nf=size(sol,2)
-    nt=size(sol,3)
+    𝑃.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
+
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
     t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
-
+    
     df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
-    add_lonlat!(df,𝑃.XC,𝑃.YC)
     return df
 end
 
@@ -60,19 +97,29 @@ end
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_xy(sol,𝑃::NamedTuple; id=missing, 𝑇=missing)
+function postprocess_xy(sol,𝑃::FlowFields; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
     nf=size(sol,2)
     nt=size(sol,3)
-    nx,ny=𝑃.ioSize[1:2]
 
-    id=id*ones(1,size(sol,3))
-    x=mod.(sol[1,:,:],Ref(nx))
-    y=mod.(sol[2,:,:],Ref(ny))
+    isa(𝑃.u0,MeshArray) ? (nx,ny)=𝑃.u0.grid.ioSize[1:2] : (nx,ny)=size(𝑃.u0)[1:2]
+    nd=length(size(sol))
+
+    id=id*ones(1,size(sol,nd))
+    if (size(sol,1)>1)&&(nd>2)
+        x=mod.(sol[1,:,:],Ref(nx))
+        y=mod.(sol[2,:,:],Ref(ny))
+    elseif (nd>2)
+        x=[mod(sol[1,i,j][1],nx) for i in 1:nf, j in 1:nt]
+        y=[mod(sol[1,i,j][2],ny) for i in 1:nf, j in 1:nt]
+    else
+        x=mod.(sol[1,:],Ref(nx))
+        y=mod.(sol[2,:],Ref(ny))
+    end
     t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    #size(𝑃.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
+    #size(𝐷.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
     t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
     return DataFrame(ID=Int.(id[:]), t=t[:], x=x[:], y=y[:])
@@ -98,22 +145,25 @@ function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
     iDYC=1. ./Γ["DYC"]
     γ=Γ["XC"].grid
     mon=86400.0*365.0/12.0
-
-    𝑃 = (u0=MeshArray(γ,Float64), u1=MeshArray(γ,Float64),
-         v0=MeshArray(γ,Float64), v1=MeshArray(γ,Float64),
-         𝑇=[-mon/2,mon/2], 🔄 = update_𝑃!, pth=pth,
+    func=Γ["update_location!"]
+    
+    𝐷 = (🔄 = update_𝑃!, pth=pth,
          XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC,
          k=k, msk=Γ["hFacC"][:, k])
 
     tmp = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
-    𝑃 = merge(𝑃 , tmp)
+    𝐷 = merge(𝐷 , tmp)
 
-    𝑃.🔄(𝑃,0.0)
-    return 𝑃
+    𝑃=𝐹_MeshArray2D{Float64}(MeshArray(γ,Float64),MeshArray(γ,Float64),
+    MeshArray(γ,Float64),MeshArray(γ,Float64),[-mon/2,mon/2],func)
+
+    𝐷.🔄(𝑃,𝐷,0.0)
+
+    return 𝑃,𝐷
 end
 
 """
-    update_𝑃!(𝑃::NamedTuple,t::Float64)
+    update_𝑃!(𝑃::Union{NamedTuple,FlowFields},t::Float64)
 
 Update input data (velocity arrays) and time period (array) inside 𝑃 (𝑃.u0[:], etc, and 𝑃.𝑇[:])
 based on the chosen time `t` (in `seconds`). 
@@ -121,7 +171,7 @@ based on the chosen time `t` (in `seconds`).
 _Note: for now, it is assumed that (1) input 𝑃.𝑇 is used to infer `dt` between consecutive velocity fields,
 (2) periodicity of 12 monthly records, (3) vertical 𝑃.k is selected -- but this could easily be generalized._ 
 """
-function update_𝑃!(𝑃::NamedTuple,t::Float64)
+function update_𝑃!(𝑃::Union{NamedTuple,FlowFields},𝐷::NamedTuple,t::Float64)
     dt=𝑃.𝑇[2]-𝑃.𝑇[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
@@ -134,16 +184,16 @@ function update_𝑃!(𝑃::NamedTuple,t::Float64)
     m1=mod(m1,12)
     m1==0 ? m1=12 : nothing
 
-    (U,V)=read_velocities(𝑃.u0.grid,m0,𝑃.pth)
-    u0=U[:,𝑃.k]; v0=V[:,𝑃.k]
+    (U,V)=read_velocities(𝑃.u0.grid,m0,𝐷.pth)
+    u0=U[:,𝐷.k]; v0=V[:,𝐷.k]
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
-    u0=u0.*𝑃.iDXC; v0=v0.*𝑃.iDYC; #normalize to grid units
+    u0=u0.*𝐷.iDXC; v0=v0.*𝐷.iDYC; #normalize to grid units
     (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
 
-    (U,V)=read_velocities(𝑃.u0.grid,m1,𝑃.pth)
-    u1=U[:,𝑃.k]; v1=V[:,𝑃.k]
+    (U,V)=read_velocities(𝑃.u0.grid,m1,𝐷.pth)
+    u1=U[:,𝐷.k]; v1=V[:,𝐷.k]
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
-    u1=u1.*𝑃.iDXC; v1=v1.*𝑃.iDYC; #normalize to grid units
+    u1=u1.*𝐷.iDXC; v1=v1.*𝐷.iDYC; #normalize to grid units
     (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
 
     𝑃.u0[:]=u0[:]
@@ -160,7 +210,7 @@ end
 Define initial condition (u0,du) as a subset of grid points
 """
 function initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
-    msk=𝑃.msk
+    msk=𝐷.msk
     uInitS = Array{Float64,2}(undef, 3, prod(msk.grid.ioSize))
 
     kk = 0
@@ -227,23 +277,6 @@ end
 initialize_lonlat(Γ::Dict,lon::Float64,lat::Float64;msk=missing) = initialize_lonlat(Γ,[lon],[lat];msk=msk)
 
 """
-    reset_lonlat!(𝐼::Individuals)
-
-Randomly select a fraction (𝐼.𝑃.frac) of the particles and reset their positions.
-"""
-function reset_lonlat!(𝐼::Individuals)
-    np=length(𝐼.🆔)
-    n_reset = Int(round(𝐼.𝑃.frac*np))
-    (lon, lat) = randn_lonlat(2*n_reset)
-    (v0, _) = initialize_lonlat(𝐼.𝑃.Γ, lon, lat; msk = 𝐼.𝑃.msk)
-    n_reset=min(n_reset,size(v0,2))
-    k_reset = rand(1:np, n_reset)
-    𝐼.📌[:,k_reset].=v0[:,1:n_reset]
-    isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
-    𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
-end
-
-"""
     interp_to_lonlat
 
 Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps for plotting purposes).
@@ -270,7 +303,6 @@ function interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
     @unpack f,i,j,w,lon,lat = IntFac
     return reshape(Interpolate(X,f,i,j,w),size(lon))
 end
-
 
 """
     interp_to_xy(df::DataFrame,Zin)

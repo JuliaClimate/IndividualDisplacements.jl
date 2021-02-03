@@ -1,4 +1,16 @@
 """
+    location_is_out(u::AbstractArray{T,1},grid::gcmgrid)
+
+Test whether location (x,y,fIndex) is out of domain. If true then
+one typically needs to call update_location_cs! or update_location_dpdo!
+"""
+
+function location_is_out(u::AbstractArray{T,1},grid::gcmgrid) where T
+    u[1]<0|| u[1]> grid.fSize[Int(u[end])][1]|| 
+    u[2]<0|| u[2]> grid.fSize[Int(u[end])][2]
+end
+
+"""
     NeighborTileIndices_dpdo(ni::Int,nj::Int)
 
 List of W, E, S, N neighbor tile IDs in the case of a doubly
@@ -30,7 +42,7 @@ only works for the `cs` & `llc` grid types provided by `MeshArrays.jl`.
 """
 function update_location_cs!(u::Array{Float64,1},𝑃::NamedTuple)
     x,y = u[1:2]
-    fIndex = Int(u[3])
+    fIndex = Int(u[end])
     nx,ny=𝑃.XC.fSize[fIndex]
     if x<0||x>nx||y<0||y>ny
         j = 0
@@ -41,11 +53,13 @@ function update_location_cs!(u::Array{Float64,1},𝑃::NamedTuple)
         (x,y)=𝑃.RelocFunctions[j,fIndex](x,y)
         u[1]=x
         u[2]=y
-        u[3]=j
+        u[end]=j
     end
     #
     return u
 end
+
+update_location_llc!(u,𝑃) = update_location_cs!(u,𝑃)
 
 """
     update_location_dpdo!
@@ -53,7 +67,7 @@ end
 Update location (x,y,fIndex) when out of domain. Note: initially, this
 only works for the `dpdo` grid type provided by `MeshArrays.jl`.
 """
-function update_location_dpdo!(u::Array{Float64,1},grid::gcmgrid)
+function update_location_dpdo!(u::AbstractArray{T,1},grid::gcmgrid) where T
     x,y = u[1:2]
     fIndex = Int(u[3])
     #
