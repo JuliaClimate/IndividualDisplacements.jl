@@ -1,11 +1,24 @@
 using Random, Plots, DataFrames, ColorSchemes
 
-"""
-    PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
+import Plots: plot
 
-Plot random subset of size nn trajectories.
 """
-function PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
+    plot(𝐼::Individuals)
+
+Plot the initial and final positions as scatter plot in x,y plane.
+"""
+function plot(𝐼::Individuals)
+    🔴_by_t = groupby(𝐼.🔴, :t)
+    scatter(🔴_by_t[1].x,🔴_by_t[1].y,c=:red,label="t0",marker = (:circle, stroke(0)))
+    scatter!(🔴_by_t[end].x,🔴_by_t[end].y,c=:blue,label="t1",marker = (:circle, stroke(0)))
+end
+
+"""
+    plot_paths(df::DataFrame,nn::Integer,dMax::Float64=0.)
+
+Plot random subset of size nn trajectories / paths.
+"""
+function plot_paths(df::DataFrame,nn::Integer,dMax::Float64=0.)
    IDs = randperm(maximum(df.ID))
    COs=["w" "y" "g" "k"]
 
@@ -33,45 +46,21 @@ function PlotBasic(df::DataFrame,nn::Integer,dMax::Float64=0.)
 end
 
 """
-    scatter_subset(df,t)
+    scatter_zcolor(df,zc; cam=(0, 90))
 
 ```
-nf=size(u0,2)
-t=[ceil(i/nf) for i in 1:367*nf]
-df[!,:t]=2000 .+ 10/365 * t
-
-@gif for t in 2000:0.1:2016
-   scatter_subset(df,t)
-end
+df=groupby(𝐼.🔴, :t)
+scatter_zcolor(df[end],df[end].z)
 ```
 """
-function scatter_subset(df,t)
-    dt=0.25
-    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
-    scatter(df_t.lon,df_t.lat,markersize=2,
-    xlims=(-180.0,180.0),ylims=(-90.0,90.0))
-end
-
-"""
-    scatter_zcolor(df,t,zc; plt=plot(),cam=(0, 90))
-
-```
-t=maximum(df[!,:t])
-scatter_zcolor(df,t,df.z)
-```
-"""
-function scatter_zcolor(df,t,zc; plt=plot(),cam=(0, 90), dt=1.0)
+function scatter_zcolor(df,zc; cam=(0, 90))
     lo=extrema(df.lon); lo=round.(lo).+(-5.0,5.0)
     la=extrema(df.lat); la=round.(la).+(-5.0,5.0)
     de=extrema(zc); de=round.(de).+(-5.0,5.0)
 
-    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
-    zc_t = Float64.(zc[ (df.t.>t-dt).&(df.t.<=t)])
-
-    #fig=deepcopy(plt)
-    scatter(df_t.lon,df_t.lat,zc_t,zcolor = zc_t,
+    scatter(df.lon,df.lat,zc,zcolor = zc,
     markersize=2,markerstrokewidth=0.1,camera = cam,
-    xlims=lo,ylims=la,zlims=de,clims=de)
+    xlims=lo,ylims=la,zlims=de,clims=de,leg=false)
 end
 
 """
@@ -84,69 +73,58 @@ scatter_movie(𝐼,cam=(70, 70))
 ```
 """
 function scatter_movie(𝐼; cam=(0, 90))
-   df=𝐼.🔴
-   nf=maximum(df.ID)
-   nt=min(size(df,1)/nf,100)
-   dt=maximum(df.t)/(nt-1)
-   #println("nt="*"$nt"*"dt="*"$dt")
-   return @gif for t in 0:nt-1
-        scatter_zcolor(df,t*dt,df.z;cam=cam,dt=dt)
+    df=groupby(𝐼.🔴, :t)
+    return @gif for t in 1:length(df)
+        scatter_zcolor(df[t],df[t].z;cam=cam)
    end
 end
 
 """
-    phi_and_subset(Γ,ϕ,df,t,dt=5.0)
+    phi_scatter(ϕ,df)
 
 ```
-t=maximum(df[!,:t])
-phi_and_subset(Γ,ϕ,df,t)
+phi_scatter(ϕ,df)
 ```
 """
-function phi_and_subset(Γ,ϕ,df,t=missing,dt=5.0)
-    ismissing(t) ? t=maximum(df[!,:t]) : nothing
-    df_t = df[ (df.t.>t-dt).&(df.t.<=t) , :]
-    nx,ny=size(ϕ[1])
-    contourf(vec(Γ["XC"][1][:,1]),vec(Γ["YC"][1][1,:]),
-        transpose(ϕ[1]),c = :blues,linewidth = 0.1)
-    scatter!(df_t.x,df_t.y,markersize=2.0,c=:red,
-    xlims=(0,nx),ylims=(0,ny),leg=:none,marker = (:circle, stroke(0)))
+function phi_scatter(ϕ,df)
+    nx,ny=size(ϕ)
+    contourf(-0.5 .+ (1:nx),-0.5 .+ (1:ny),
+             transpose(ϕ),c = :blues,linewidth = 0.1)
+    scatter!(df.x,df.y,markersize=4.0,c=:red,marker = (:circle, stroke(0)),
+             xlims=(0,nx),ylims=(0,ny),leg=:none)
 end
 
 """
-    DL()
+    OceanDepthLog()
 
-Compute Ocean depth logarithm.
+Compute Ocean depth logarithm on regular grid.
 """
-function DL(Γ)
+function OceanDepthLog(Γ)
     lon=[i for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
     lat=[j for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
     DL=interp_to_lonlat(Γ["Depth"],Γ,lon,lat)
     DL[findall(DL.<0)].=0
     DL=transpose(log10.(DL))
     DL[findall((!isfinite).(DL))].=NaN
-    return lon[:,1],lat[1,:],DL
+    return (lon=lon[:,1],lat=lat[1,:],fld=DL,rng=(1.5,5))
 end
 
 """
-    plot_end_points(𝐼::Individuals,Γ)
+    map(𝐼::Individuals,background::NamedTuple)
 
 Plot initial and final positions, superimposed on a map of ocean depth log.
 """
-function plot_end_points(𝐼::Individuals,Γ)
-    lo,la,dl=DL(Γ)
-    xlims=extrema(lo)
-    ylims=extrema(la)
-    plt=contourf(lo,la,dl,clims=(1.5,5),c = :ice, colorbar=false, xlims=xlims,ylims=ylims)
+function map(𝐼::Individuals,𝐵::NamedTuple)
+    xlims=extrema(𝐵.lon)
+    ylims=extrema(𝐵.lat)
+    plt=contourf(𝐵.lon,𝐵.lat,𝐵.fld,clims=𝐵.rng,c = :ice, 
+    colorbar=false, xlims=xlims,ylims=ylims)
 
-    t=𝑃.𝑇[2]
-    df = 𝐼.🔴[ (𝐼.🔴.t.>t-1.0).&(𝐼.🔴.t.<=t) , :]
-    lo=deepcopy(df.lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-    scatter!(lo,df.lat,markersize=1.5,c=:red,leg=:none,marker = (:circle, stroke(0)))
-
-    t=0.0
-    df = 𝐼.🔴[ (𝐼.🔴.t.>t-1.0).&(𝐼.🔴.t.<=t) , :]
-    lo=deepcopy(df.lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-    scatter!(lo,df.lat,markersize=1.5,c=:yellow,leg=:none,marker = (:dot, stroke(0)))
+    🔴_by_t = groupby(𝐼.🔴, :t)
+    lo=deepcopy(🔴_by_t[1].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
+    scatter!(lo,🔴_by_t[1].lat,markersize=1.5,c=:red,leg=:none,marker = (:circle, stroke(0)))
+    lo=deepcopy(🔴_by_t[end].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
+    scatter!(lo,🔴_by_t[end].lat,markersize=1.5,c=:yellow,leg=:none,marker = (:dot, stroke(0)))
 
     return plt
 end
