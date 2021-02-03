@@ -20,102 +20,126 @@
 #
 # ### 1.1 Import Software
 
-using OrdinaryDiffEq, Plots, DataFrames
-using IndividualDisplacements, MeshArrays
+using IndividualDisplacements, DataFrames
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/flow_fields.jl"))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ### 1.2  Gridded Domain
+# ### 1.2  Flow Fields
+#
+# The `simple_flow_field` function (defined in `helper_functions.jl`) defines a simple
+# three-dimensional flow field. Exercise: locate `simple_flow_field` and modify the 
+# flow field parameters (e.g. intensity and sign of the convergent term).
 
-np,nz=16,4 #horizontal and vertical domain size
-Γ=simple_periodic_domain(np)
-γ=Γ["XC"].grid;
+np,nz=16,4 #gridded domain size (horizontal and vertical)
 
-#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ### 1.3 Velocity Fields
+u,v,w=solid_body_rotation(np,nz) #staggered velocity arrays
 
-#Solid-body rotation around central location ...
-i=Int(np/2+1)
-u=-(Γ["YG"].-Γ["YG"][1][i,i])
-v=(Γ["XG"].-Γ["XG"][1][i,i])
-
-#... plus a convergent term to / from central location
-d=-0.01
-u=u+d*(Γ["XG"].-Γ["XG"][1][i,i])
-v=v+d*(Γ["YG"].-Γ["YG"][1][i,i])
-
-#Replicate u,v in vertical dimension
-uu=MeshArray(γ,γ.ioPrec,nz)
-[uu[k]=u[1] for k=1:nz]
-vv=MeshArray(γ,γ.ioPrec,nz)
-[vv[k]=v[1] for k=1:nz]
-
-#Vertical velocity component w
-w=fill(1.0,MeshArray(γ,γ.ioPrec,nz));
+𝐹=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0,19.95*2*pi]); #FlowFields data structure
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ### 1.4 Initial Positions
+# ### 1.3 Initialize Individuals
+#
+# Let's just set up one individual at [np*1/3,np*1/3,nz*1/3] in the three-dimensional 
+# space where the flow fields have been configured
 
-📌=[np*1/3,np*1/3,nz*1/3]
+(x,y,z)=(np*1/3,np*1/3,nz*1/3)
+
+𝐼=Individuals(𝐹,x,y,z)
+
+#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ### 1.4 A Closer Look (optional)
+#
+# The above `Individuals` constructor wraps up 𝐹, the initial position, and other needed components 
+# within 𝐼. **At this point, you can either jump to section 2 or read through this section**
+# to learn more about how the details as needed e.g. if you wanted to overide default options 
+# that were selected for you by the section 1.3 constructor.
+#
+# Initial position is 
+
+📌=[x,y,z] 
+
+# and the data structure ([DataFrame](http://juliadata.github.io/DataFrames.jl/stable/)) 
+# to record properties along the individual's path accordingly. 
+
+🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
+
+# It is the postprocessing function's responsibility to provide the record. It is thus 
+# important that this intermediary (`postproc`) be consistent with the solver setup (`sol`) 
+# and the expected record format (`🔴`).
+
+function postproc(sol,𝐹::FlowFields;id=missing,𝑇=missing)
+    df=postprocess_xy(sol,𝐹,id=id,𝑇=𝑇)
+    #add third coordinate
+    z=sol[3,:]
+    df.z=z[:]
+    return df
+end
+
+# The velocity function `🚄` relies only on flow fields obtained from
+# `𝐹` (which is defined above) to interpolate velocity at the specified
+# space-time position (e.g. those of individuals). 
+
+🚄 = dxyz_dt
+
+# Now that every thing needed to carry out the computation is in place, 
+# we wrap up the problem configuration in a struct (`Individuals`) which 
+# links to the initial positions, flow fields, etc. all that will be 
+# necessary to compute trajectories over time (`∫!(𝐼,𝑇)`).
+
+#assemble as a NamedTuple:
+I=(position=📌,record=🔴,velocity=🚄,
+postprocessing=postproc,parameters=𝐹)
+
+#construct Individuals from NamedTuple:
+𝐼=Individuals(I)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2 Trajectory Simulations
 #
-# Here we turn our problem configuration in a struct (`Individuals`) which contains the initial positions, flow fields, and all that will be necesssary to compute trajectories over time (`∫!(𝐼,𝑇)`).
-#
-# ### 2.1 Setup Individuals
-#
-
-𝑃=(u0=uu, u1=uu, v0=vv, v1=vv,w0=0.0*w, w1=-0.01*w, 𝑇=[0,19.95*2*pi], ioSize=(np,np,nz))
-
-tr = DataFrame([fill(Int, 1) ; fill(Float64, 4)], [:ID, :x, :y, :z, :t])
-solv(prob) = solve(prob,Tsit5(),reltol=1e-8)
-
-function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
-    df=postprocess_xy(sol,𝑃,id=id,𝑇=𝑇)
-    #add third coordinate
-    z=sol[3,:,:]
-    df.z=z[:]
-    return df
- end
-
-𝐼 = Individuals{Float64}(📌=📌[:,:], 🔴=tr, 🆔=collect(1:size(📌,2)),
-                         🚄 = dxyz_dt, ∫ = solv, 🔧 = postproc, 𝑃=𝑃);
+# The `∫!` function call below returns the final positions & updates `𝐼.📌` accordingly. It also records properties observed along the trajectory in `𝐼.🔴`. 
+# Simple methods to visualize the individual trajectory (plot or movie) are provided at the end.
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ### 2.2 Compute Trajectories
-#
-# The `∫!` function call below returns the final positions & updates `𝐼.📌` accordingly. It also records properties observed along the trajectory in `𝐼.🔴`
+# ### 2.1 Compute Trajectories
 
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
-# ### 2.3 Visualize Trajectories
+# ### 2.2 Visualize Trajectories
 #
 # - define `myplot` convenience function
 # - generate animation using `myplot`
 # - single plot example using `myplot`
 
-myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
-    title="Solid body rotation / Spiral example",leg=false,
-    xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
+#md p=dirname(pathof(IndividualDisplacements))
+#md include(joinpath(p,"../examples/recipes_plots.jl"));
+#md nt=length(𝐼.🔴.x)
 
-#nb # %% {"slideshow": {"slide_type": "subslide"}}
-# Animation example:
-
-#!jl nt=length(𝐼.🔴.x)
-#!jl p=Int(ceil(nt/100))
-#!jl anim = @animate for i ∈ 1:p:nt
-#!jl     myplot(i)
-#!jl end
-
-#!jl pth=tempdir()*"/"
-#!jl gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
+#md myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
+#md     title="Solid body rotation / Spiral example",leg=false,
+#md     xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Single plot example:
 
-#!jl plt=myplot(nt)
-#!jl scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
-#!jl #scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
-#!jl scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
+#md plt=myplot(nt)
+#md scatter!(plt,[📌[1]],[📌[2]],[📌[3]])
+#md #scatter!(plt,[𝐼.🔴.x[end]],[𝐼.🔴.y[end]],[𝐼.🔴.z[end]])
+#md scatter!(plt,[𝐼.📌[1]],[𝐼.📌[2]],[𝐼.📌[3]])
+
+#nb # %% {"slideshow": {"slide_type": "subslide"}}
+# Animation example:
+
+#md p=Int(ceil(nt/100))
+#md anim = @animate for i ∈ 1:p:nt
+#md     myplot(i)
+#md end
+
+#md pth=tempdir()*"/"
+#md gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
+
+# Exercise: make the sinking velocity decrease with time 
+# (hint: it increases as specified above in the original notebook); 
+# change the number of times the particle goes around the origin; etc

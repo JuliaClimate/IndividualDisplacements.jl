@@ -46,7 +46,8 @@ function example2()
 
    𝑃.𝑇[:] = [0.0,nSteps*3600.0]
    solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
-   tr = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :x, :y, :t])
+
+   tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
    
    𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🚄 = dxy_dt, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
    𝑇=(0.0,𝐼.𝑃.𝑇[2])
@@ -61,24 +62,24 @@ example2_xy()
 Read MITgcm/pkg/flt output
 """
 function example2_xy(𝑃)
-p=dirname(pathof(IndividualDisplacements))
-dirIn=joinpath(p,"../examples/flt_example/")
+dirIn=IndividualDisplacements.flt_example
 prec=Float32
 df=read_flt(dirIn,prec)
 #
 tmp=df[df.ID .== 200, :]
 nSteps=Int32(tmp[end,:time]/3600)-2
 ref=transpose([tmp[1:nSteps,:lon] tmp[1:nSteps,:lat]])
-maxLon=80*5.e3
-maxLat=42*5.e3
+dx=5000.0
+maxLon=80*dx
+maxLat=42*dx
 for i=1:nSteps-1
     ref[1,i+1]-ref[1,i]>maxLon/2 ? ref[1,i+1:end]-=fill(maxLon,(nSteps-i)) : nothing
     ref[1,i+1]-ref[1,i]<-maxLon/2 ? ref[1,i+1:end]+=fill(maxLon,(nSteps-i)) : nothing
     ref[2,i+1]-ref[2,i]>maxLat/2 ? ref[2,i+1:end]-=fill(maxLat,(nSteps-i)) : nothing
     ref[2,i+1]-ref[2,i]<-maxLat/2 ? ref[2,i+1:end]+=fill(maxLat,(nSteps-i)) : nothing
 end
-ref=ref./𝑃.dx
-xy=[tmp[1,:lon];tmp[1,:lat]]./𝑃.dx
+ref=ref./dx
+xy=[tmp[1,:lon];tmp[1,:lat]]./dx
 return xy,df,ref,nSteps
 end
 
@@ -92,8 +93,7 @@ function example2_setup()
 
    ###### 1) Get gridded variables via MeshArrays.jl
 
-   p=dirname(pathof(IndividualDisplacements))
-   dirIn=joinpath(p,"../examples/flt_example/")
+   dirIn=IndividualDisplacements.flt_example
    γ=gcmgrid(dirIn,"PeriodicChannel",1,[(80,42)], [80 42], Float32, read, write)
    nr=8
 
@@ -132,7 +132,6 @@ function example2_setup()
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
    Γ=merge(Γ,Dict("mskW" => mskW, "mskS" => mskS))
 
-   𝑃 = (u0=u0, u1=u1, v0=v0, v1=v1, dx=Γ["dx"],
-        𝑇=[t0,t1], XC=Γ["XC"], YC=Γ["YC"], ioSize=(80,42))
+   𝑃=𝐹_Array2D{eltype(u0)}(u0[1], u1[1], v0[1], v1[1], [t0,t1])
    return 𝑃,Γ
 end

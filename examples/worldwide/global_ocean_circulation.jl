@@ -20,11 +20,10 @@
 # - packages + helper functions
 # - grid and velocity files
 
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
-using Statistics, DataFrames, MITgcmTools, OceanStateEstimation
+using IndividualDisplacements, DataFrames, Statistics, CSV
 
 include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
-get_llc90_grid_if_needed(); get_ecco_velocity_if_needed();
+IndividualDisplacements.get_ecco_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Set Up Parameters & Inputs
@@ -33,9 +32,9 @@ get_llc90_grid_if_needed(); get_ecco_velocity_if_needed();
 # - read grid variables & velocities
 # - normalize velocities
 
-𝑃=setup_global_ocean(k=1,ny=2);
+𝑃,𝐷=global_ocean_circulation(k=1,ny=2);
 
-keys(𝑃)
+fieldnames(typeof(𝑃))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Main Computation Loop
@@ -44,9 +43,16 @@ keys(𝑃)
 #
 # - initial particle positions randomly over Global Ocean
 
-xy=init_global_randn(1000,𝑃); id=collect(1:size(xy,2))
-𝐼 = Individuals{Float64}(📌=xy[:,:], 🆔=id, 🔧=postprocess_lonlat, 🚄 = dxy_dt!, 𝑃=𝑃)
+np=100
 
+#xy = init_global_randn(np,𝐷)
+#df=DataFrame(x=xy[1,:],y=xy[2,:],f=xy[3,:])
+
+p=dirname(pathof(IndividualDisplacements))
+fil=joinpath(p,"../examples/worldwide/global_ocean_circulation.csv")
+df=DataFrame(CSV.File(fil))
+
+𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],df.f[1:np])
 fieldnames(typeof(𝐼))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
@@ -58,23 +64,26 @@ fieldnames(typeof(𝐼))
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### 3.2 Iteration function example
 #
-# - `𝐼.𝑃.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
+# In addition, `step!` is defined to provide additional flexibility around `∫!` :
+#
+# - `𝐷.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
 # - `reset_lonlat!(𝐼)` randomly selects a fraction (defined in `setup_global_ocean()`) of the particles and resets their positions before each integration period. This can maintain homogeneous coverage of the Global Ocean by particles.
-# - `∫!(𝐼,𝑇)` then solves for the individual trajectories over one month, after updating velocity fields (𝐼.u0 etc) if needed, and adds diagnostics to the DataFrame used to record / trace variables along the trajectory (𝐼.tr).
+# - `∫!(𝐼)` then solves for the individual trajectories over one month, after updating velocity fields (𝐼.u0 etc) if needed, and adds diagnostics to the DataFrame used to record / trace variables along the trajectory (𝐼.tr).
 
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
-    𝐼.𝑃.🔄(𝐼.𝑃,t_ϵ)
-    reset_lonlat!(𝐼)
-    𝑇=Tuple(𝐼.𝑃.𝑇)
-    ∫!(𝐼,𝑇)
+    𝐷.🔄(𝐼.𝑃,𝐷,t_ϵ)
+    #reset_lonlat!(𝐼,𝐷)
+    ∫!(𝐼)
 end
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.3 Iterate For `ny*12` Months
 #
 
-[step!(𝐼) for y=1:2, m=1:12]
+[step!(𝐼) for y=1:1, m=1:1]
+
+add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC);
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.4 Compute summary statistics
@@ -102,5 +111,5 @@ sgdf[rand(1:size(sgdf,1),4),:]
 #
 #```
 #include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/recipes_plots.jl"))
-#plot_end_points(𝐼,𝐼.𝑃.Γ)
+#map(𝐼,OceanDepthLog(Γ))
 #```

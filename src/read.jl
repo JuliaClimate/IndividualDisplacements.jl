@@ -32,7 +32,8 @@ function read_drifters(fil::String;chnk=Inf,rng=(missing,missing))
    la=la[ii]
    ID=ID[ii]
 
-   df = DataFrame([fill(Int, 1) ; fill(Float64, 3)], [:ID, :lon, :lat, :t])
+   df = DataFrame(ID=Int[], lon=Float64[], lat=Float64[], t=Float64[])
+   
    !isinf(chnk) ? nn=Int(ceil(length(ii)/chnk)) : nn=1
    for jj=1:nn
       #println([jj nn])
@@ -150,4 +151,37 @@ function read_uvetc(k::Int,Γ::Dict,pth::String)
     tmp = (u0=u, u1=u, v0=v, v1=v, t0=t0, t1=t1, dt=dt, msk=msk, XC=XC, YC=YC)
 
     return merge(𝑃,tmp)
+end
+
+
+"""
+    get_ecco_velocity_if_needed()
+
+Download `MITgcm` transport output to `examples/nctiles_climatology` if needed
+"""
+function get_ecco_velocity_if_needed()
+    p=dirname(pathof(OceanStateEstimation))
+    lst=joinpath(p,"../examples/nctiles_climatology.csv")
+    pth=ECCOclim_path
+    !isdir(pth*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
+    !isdir(pth*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
+    !isdir(pth*"WVELMASS") ? get_from_dataverse(lst,"WVELMASS",pth) : nothing
+end
+
+"""
+    get_occa_velocity_if_needed()
+
+Download `MITgcm` transport output to `examples/OCCA_climatology` if needed
+"""
+function get_occa_velocity_if_needed()
+    p=dirname(pathof(OceanStateEstimation))
+    lst=joinpath(p,"../examples/OCCA_climatology.csv")
+    pth=OCCAclim_path
+    nams = ("DDuvel.0406clim.nc","DDvvel.0406clim.nc","DDwvel.0406clim.nc","DDtheta.0406clim.nc","DDsalt.0406clim.nc")
+    if !isfile("$pth"*"DDuvel.0406clim.nc") 
+        tmp=joinpath(pth,"tmp/")
+        !isdir(tmp) ? mkdir(tmp) : nothing
+        [get_from_dataverse(lst,nam,tmp) for nam in nams]
+        [mv(joinpath(tmp,nam,nam),joinpath(pth,nam)) for nam in nams]
+    end
 end
