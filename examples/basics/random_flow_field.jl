@@ -33,15 +33,16 @@ include(joinpath(p,"../examples/flow_fields.jl"));
 # and create the `FlowFields` data structure which will then be drive the 
 # individual displacement and trajectory computations
 
-nx=30
+nx=16
 dx= π/nx
 XC = dx*(collect(1:2*nx) .- 0.5)
 YC = dx*(collect(1:nx) .- 0.5)
 
+fac=0.1
 f(x, y) = sin(x) + cos(y) #streamfunction
-ϕ = [f(x, y) for x in XC,y in YC] #streamfunction
-uC = -[sin(y) for x in XC,y in YC] #dphi/dy at cell center
-vC = -[cos(x) for x in XC,y in YC]; #-dphi/dx at cell center
+ϕ = fac*[f(x, y) for x in XC,y in YC] #streamfunction
+uC = -fac*[sin(y) for x in XC,y in YC] #dphi/dy at cell center
+vC = -fac*[cos(x) for x in XC,y in YC]; #-dphi/dx at cell center
 
 # It should be noted that any uC, vC computed as done here may contain contain both 
 # [rotational and divergent](https://en.wikipedia.org/wiki/Helmholtz_decomposition)
@@ -75,7 +76,7 @@ v=0.5*(circshift(vC, (0,1))+vC) /dx #staggered v converted to grid point units (
 # periodic domain this is readily done via the `convert_to_FlowFields` function.
 #
 # ```
-# u,v,ϕ=random_flow_field()
+# #u,v,ϕ=random_flow_field()
 # #𝐹=𝐹_Array2D(u,u,v,v,[0.,10.])
 # 𝐹=convert_to_FlowFields(u,v,10.0);
 # ```
@@ -106,12 +107,17 @@ y=nq*(0.4 .+ 0.2*rand(100));
 
 𝐼=Individuals(𝐹,x,y)
 
-# Alternatively, if one uses `MeshArray` flow fields instead of plain `Array` flow fields then 
-# initial positions also include a subdomain array index -- all ones in our simple example.
+#nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
+# ## 3.1 Alternatives (optional)
 #
-
-a=ones(size(x))
-isa(𝐹,𝐹_MeshArray2D) ? 𝐼=Individuals(𝐹,x,y,a) : nothing
+# When using `MeshArray` flow fields instead of plain `Array` flow fields, initial
+# positions also include a subdomain array index (`a`;  all ones in our example).
+#
+# ```
+# a=ones(size(x))
+# #isa(𝐹,𝐹_MeshArray2D)
+# 𝐼=Individuals(𝐹,x,y,a)
+# ```
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 4. Compute Trajectories
