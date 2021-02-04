@@ -3,7 +3,7 @@
 #md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/detailed_look.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/detailed_look.ipynb)
 #
-# A more detailed Look at spatial interpolation, integration through time, and I/O. 
+# A more detailed look at spatial interpolation, integration through time, and I/O. 
 # For additional documentation e.g. see
 # [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
 # [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
