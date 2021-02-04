@@ -106,7 +106,7 @@ Interpolate velocity from gridded fields (2D; with halos) to position `u`
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/basics/random_flow_field.jl"))
-ref=[30. 15.]
+ref=size(u) ./2
 prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
 
 # output
