@@ -10,10 +10,10 @@ an `Individuals` struct).
 
 Supported array types / constructors: 
 
-- 𝐹_Array2D (u0,v0,u1,v1,𝑇)
-- 𝐹_Array3D (u0,v0,w0,u1,v1,w1,𝑇)
-- 𝐹_MeshArray2D (u0,v0,u1,v1,𝑇,update__location!)
-- 𝐹_MeshArray3D (u0,v0,w0,u1,v1,w1,𝑇,update__location!)
+- 𝐹_Array2D (u0,u1,v0,v1,𝑇)
+- 𝐹_Array3D (u0,u1,v0,v1,w0,w1,𝑇)
+- 𝐹_MeshArray2D (u0,u1,v0,v1,𝑇,update__location!)
+- 𝐹_MeshArray3D (u0,u1,v0,v1,w0,w1,𝑇,update__location!)
 
 See the documentation examples for more.
 
@@ -147,7 +147,7 @@ function Individuals(𝐹::𝐹_Array2D,x,y)
     length(📌)==1 ? 📌=📌[1] : nothing
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
-    🔧 = postprocess_MeshArray
+    🔧 = postprocess_xy
     T=eltype(📌)
     🆔=collect(1:size(📌,2))
     
