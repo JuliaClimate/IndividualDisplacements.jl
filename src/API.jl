@@ -4,24 +4,34 @@
 """
     abstract type FlowFields
 
-Data structure that provide access to flow fields (on grids, arrays) which will be 
+Data structure that provide access to flow fields (gridded as arrays) which will be 
 used to interpolate velocities to individual locations later on (once embedded in
-an `Individuals` struct).
+an `Individuals` struct). 
 
-Supported array types / constructors: 
+Following the C-grid convention also used in `MITgcm` (https://mitgcm.readthedocs.io) 
+flow fields are expected to be staggered as follows: grid cell i,j has its center located at i-1/2,j-1/2 while the
+corresponding `u[i,j]` (resp. `v[i,j]) is located at i-1,j-1/2 (resp. i-1/2,j-1). 
 
-- 𝐹_Array2D (u0,u1,v0,v1,𝑇)
-- 𝐹_Array3D (u0,u1,v0,v1,w0,w1,𝑇)
-- 𝐹_MeshArray2D (u0,u1,v0,v1,𝑇,update__location!)
-- 𝐹_MeshArray3D (u0,u1,v0,v1,w0,w1,𝑇,update__location!)
+Also by convention, velocity fields are expected to have been normalized to grid units (e.g. 1/s rather than m/s)
+before sending them to one of the supported `FlowFields` constructors (using either `Array` or `MeshArray`):
 
-See the documentation examples for more.
+```
+𝐹_Array2D (u0,u1,v0,v1,𝑇)
+𝐹_Array3D (u0,u1,v0,v1,w0,w1,𝑇)
+𝐹_MeshArray2D (u0,u1,v0,v1,𝑇,update_location!)
+𝐹_MeshArray3D (u0,u1,v0,v1,w0,w1,𝑇,update_location!)
+```
+
+For example, constructor calls may look like
 
 ```
 𝐹=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0.0,10.0])
 or
 𝐹=𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0.0,10.0],func)
 ```
+
+as shown in the online documentation examples.
+
 """
 abstract type FlowFields end
 
