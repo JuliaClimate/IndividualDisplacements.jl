@@ -126,6 +126,18 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
 
 true
 ```
+
+```jldoctest
+using IndividualDisplacements, Statistics
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/worldwide/global_ocean_circulation.jl"))
+ref=[78. 88.]
+prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
+
+# output
+
+true
+```
 """
 function dxy_dt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray2D,tim) where T
     #compute positions in index units
