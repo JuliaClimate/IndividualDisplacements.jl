@@ -105,20 +105,21 @@ Interpolate velocity from gridded fields (2D; with halos) to position `u`
 ```jldoctest
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/basics/random_flow_field.jl"))
+include(joinpath(p,"../examples/flow_fields.jl"));
+
+u,v,ϕ=random_flow_field()
+#𝐹=𝐹_Array2D(u,u,v,v,[0.,10.])
+𝐹=convert_to_FlowFields(u,v,10.0)
+
+np,nq=size(u)
+x=np*(0.4 .+ 0.2*rand(100))
+y=nq*(0.4 .+ 0.2*rand(100))
+
+a=ones(size(x))
+𝐼=Individuals(𝐹,x,y,a)
+∫!(𝐼)
+
 ref=size(u) ./2
-prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
-
-# output
-
-true
-```
-
-```jldoctest
-using IndividualDisplacements, Statistics
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/worldwide/global_ocean_circulation.jl"))
-ref=[78. 88.]
 prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
 
 # output
