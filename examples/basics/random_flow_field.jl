@@ -128,16 +128,20 @@ y=nq*(0.4 .+ 0.2*rand(100));
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 5. Plot Results
-#
-# For example, generate a simple animation:
 
 #md p=dirname(pathof(IndividualDisplacements))
 #md include(joinpath(p,"../examples/recipes_plots.jl"));
 
 #md 🔴_by_t = groupby(𝐼.🔴, :t)
-#md anim = @animate for t in eachindex(🔴_by_t)
-#md    phi_scatter(ϕ,🔴_by_t[t])
-#md end
+#md phi_scatter(ϕ,🔴_by_t[end])
 
-#md pth=tempdir()*"/"
-#md gif(anim, pth*"RandomFlow.gif", fps = 10)
+# Or to generate a simple animation:
+#
+# ```
+# anim = @animate for t in eachindex(🔴_by_t)
+#    phi_scatter(ϕ,🔴_by_t[t])
+# end
+#
+# pth=tempdir()*"/"
+# gif(anim, pth*"RandomFlow.gif", fps = 10)
+# ```

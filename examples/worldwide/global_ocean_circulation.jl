@@ -109,7 +109,7 @@ sgdf[rand(1:size(sgdf,1),4),:]
 # Or select a background map (e.g. `lon`, `lat`, and `DL=log10(bottom depth)`)
 # and a recipe to superimpose initial and final locations. Try:
 #
-#```
-#include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/recipes_plots.jl"))
-#map(𝐼,OceanDepthLog(Γ))
-#```
+# ```
+# include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/recipes_plots.jl"))
+# map(𝐼,OceanDepthLog(Γ))
+# ```
