@@ -44,10 +44,11 @@ df=read_flt(dirIn,prec);
 𝑃,Γ=example2_setup();
 
 # ## 4. Visualize Velocity Fields
-
-#md plt=heatmap(Γ["mskW"][1,1].*𝑃.u0,title="U at the start")
-
-#md plt=heatmap(Γ["mskW"][1,1].*𝑃.u1-𝑃.u0,title="U end - U start")
+#
+# ```
+# plt=heatmap(Γ["mskW"][1,1].*𝑃.u0,title="U at the start")
+# plt=heatmap(Γ["mskW"][1,1].*𝑃.u1-𝑃.u0,title="U end - U start")
+# ```
 
 # ## 5. Visualize Trajectories
 #
@@ -62,8 +63,8 @@ x=Γ["XG"].f[1][:,1]
 y=Γ["YC"].f[1][1,:]
 z=transpose(Γ["mskW"][1].*𝑃.u0);
 
-#md plt=contourf(x,y,z,c=:delta)
-#md plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
+# plt=contourf(x,y,z,c=:delta)
+# plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
 # Super-impose trajectory over velocity field (... then for v)
 
@@ -71,8 +72,8 @@ x=Γ["XC"].f[1][:,1]
 y=Γ["YG"].f[1][1,:]
 z=transpose(Γ["mskW"][1].*𝑃.v0);
 
-#md plt=contourf(x,y,z,c=:delta)
-#md plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
+# plt=contourf(x,y,z,c=:delta)
+# plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
 # ## 6. Interpolate Velocities
 
@@ -110,10 +111,10 @@ for i=1:100
     tmpv[i]=du[2]
 end
 
-#md plt=plot(tmpx,tmpu,label="u (interp)")
-#md plot!(Γ["YG"].f[1][1,1:10]./dx,𝑃.u0[1,1:10],marker=:o,label="u (C-grid)")
-#md plot!(tmpx,tmpv,label="v (interp)")
-#md plot!(Γ["YG"].f[1][1,1:10]./dx,𝑃.v0[1,1:10],marker=:o,label="v (C-grid)")
+# plt=plot(tmpx,tmpu,label="u (interp)")
+# plot!(Γ["YG"].f[1][1,1:10]./dx,𝑃.u0[1,1:10],marker=:o,label="u (C-grid)")
+# plot!(tmpx,tmpv,label="v (interp)")
+# plot!(Γ["YG"].f[1][1,1:10]./dx,𝑃.v0[1,1:10],marker=:o,label="v (C-grid)")
 
 # Compare recomputed velocities with those from `pkg/flt`
 
@@ -130,10 +131,10 @@ for i=1:nSteps
     tmpv[i]=du[2]
 end
 
-#md plt=plot(tmpu,label="u")
-#md plot!(tmpv,label="v")
-#md plot!(refu,label="u (ref)")
-#md plot!(refv,label="v (ref)")
+# plt=plot(tmpu,label="u")
+# plot!(tmpv,label="v")
+# plot!(refu,label="u (ref)")
+# plot!(refv,label="v (ref)")
 
 # ## 6. Compute Trajectories
 #
