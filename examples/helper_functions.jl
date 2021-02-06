@@ -4,32 +4,17 @@ p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/flow_fields.jl"));
 
 """
-    init_global_range(lons::Tuple = (-160.0, -150.0),lats::Tuple = (35.0, 45.0))
-
-Randomly distribute `np` points over a lon,la region, and 
-return position in grid index space (`i,j,subdomain`).
-"""
-function init_global_range(lons::Tuple = (-160.0, -150.0),lats::Tuple = (35.0, 45.0))
-    lo0, lo1 = lons #(-160.0, -150.0)
-    la0, la1 = lats #(35.0, 45.0)
-    np = 100
-    lon = lo0 .+ (lo1 - lo0) .* rand(np)
-    lat = la0 .+ (la1 - la0) .* rand(np)
-    (u0, _) = initialize_lonlat(Γ, lon, lat; msk = Γ["hFacC"][:, k])
-    id=collect(1:np)
-    return u0
-end
-
-"""
     init_global_randn(np ::Int , 𝑃::NamedTuple)
 
 Randomly distribute `np` points over the Earth, within `𝑃.msk` 
 region, and return position in grid index space (`i,j,subdomain`).
 """
 function init_global_randn(np ::Int , 𝑃::NamedTuple)
-    (lon, lat) = randn_lonlat(2*np)
-    (u0, _) = initialize_lonlat(𝑃.Γ, lon, lat; msk = 𝑃.msk)
-    u0[:,1:np]
+    (lon, lat) = randn_lonlat(maximum([2*np 10]))
+    (_,_,_,_,f,x,y)=InterpolationFactors(𝑃.Γ,lon,lat)
+    m=findall(f.!==0)
+    m=findall(nearest_to_xy(𝑃.msk,x[m],y[m],f[m]).==1.0)[1:np]
+    return permutedims([x[m] y[m] f[m]])
 end
 
 """
@@ -40,8 +25,7 @@ Randomly select a fraction (𝐼.𝑃.frac) of the particles and reset their pos
 function reset_lonlat!(𝐼::Individuals,𝐷::NamedTuple)
     np=length(𝐼.🆔)
     n_reset = Int(round(𝐷.frac*np))
-    (lon, lat) = randn_lonlat(2*n_reset)
-    (v0, _) = initialize_lonlat(𝐷.Γ, lon, lat; msk = 𝐷.msk)
+    v0=init_global_randn(n_reset , 𝐷)
     n_reset=min(n_reset,size(v0,2))
     k_reset = rand(1:np, n_reset)
     v0 = permutedims([v0[:,i] for i in 1:size(v0,2)])
