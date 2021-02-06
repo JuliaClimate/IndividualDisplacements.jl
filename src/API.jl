@@ -4,24 +4,34 @@
 """
     abstract type FlowFields
 
-Data structure that provide access to flow fields (on grids, arrays) which will be 
+Data structure that provide access to flow fields (gridded as arrays) which will be 
 used to interpolate velocities to individual locations later on (once embedded in
-an `Individuals` struct).
+an `Individuals` struct). 
 
-Supported array types / constructors: 
+Following the C-grid convention also used in `MITgcm` (https://mitgcm.readthedocs.io) 
+flow fields are expected to be staggered as follows: grid cell i,j has its center located at i-1/2,j-1/2 while the
+corresponding `u[i,j]` (resp. `v[i,j]) is located at i-1,j-1/2 (resp. i-1/2,j-1). 
 
-- 𝐹_Array2D (u0,v0,u1,v1,𝑇)
-- 𝐹_Array3D (u0,v0,w0,u1,v1,w1,𝑇)
-- 𝐹_MeshArray2D (u0,v0,u1,v1,𝑇,update__location!)
-- 𝐹_MeshArray3D (u0,v0,w0,u1,v1,w1,𝑇,update__location!)
+Also by convention, velocity fields are expected to have been normalized to grid units (e.g. 1/s rather than m/s)
+before sending them to one of the supported `FlowFields` constructors (using either `Array` or `MeshArray`):
 
-See the documentation examples for more.
+```
+𝐹_Array2D (u0,u1,v0,v1,𝑇)
+𝐹_Array3D (u0,u1,v0,v1,w0,w1,𝑇)
+𝐹_MeshArray2D (u0,u1,v0,v1,𝑇,update_location!)
+𝐹_MeshArray3D (u0,u1,v0,v1,w0,w1,𝑇,update_location!)
+```
+
+For example, constructor calls may look like
 
 ```
 𝐹=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0.0,10.0])
 or
 𝐹=𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0.0,10.0],func)
 ```
+
+as shown in the online documentation examples.
+
 """
 abstract type FlowFields end
 
@@ -87,7 +97,7 @@ are computed by integrating (∫) interpolated velocities through time. Normally
 calling ∫! which updates 📌 at the end and records results in 🔴 via 🔧. Unicode cheatsheet:
 
 - 📌=`\\:pushpin:<tab>`,          🔴=`\\:red_circle:<tab>`, 🆔=`\\:id:<tab>`
-- 🚄=`\\:bullettrain_side:<tab>`, ∫=`\\int<tab>`,          🔧=`\\wrench<tab>`
+- 🚄=`\\:bullettrain_side:<tab>`, ∫=`\\int<tab>`,          🔧=`\\:wrench:<tab>`
 - 𝑃=`\\itP<tab>`,                 𝐷=`\\itD<tab>`,           𝑀=`\\itM<tab>`
 
 Simple constructors that use `FlowFields` to choose adequate defaults:
@@ -119,10 +129,10 @@ Base.@kwdef struct Individuals{T,N}
    🆔   ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
    🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
    ∫   ::Function = default_solver #\int<tab>
-   🔧  ::Function = default_postproc #\wrench<tab>
+   🔧  ::Function = default_postproc #\:wrench:<tab>
    𝑃   ::FlowFields = default_flowfields #\itP<tab>
    𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
-   𝑀   ::NamedTuple = NamedTuple() #\itM<tab>vec
+   𝑀   ::NamedTuple = NamedTuple() #\itM<tab>
 end
 
 function Individuals(NT::NamedTuple)
@@ -147,7 +157,7 @@ function Individuals(𝐹::𝐹_Array2D,x,y)
     length(📌)==1 ? 📌=📌[1] : nothing
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
-    🔧 = postprocess_MeshArray
+    🔧 = postprocess_xy
     T=eltype(📌)
     🆔=collect(1:size(📌,2))
     
@@ -210,7 +220,7 @@ Displace simulated individuals continuously through space over time period 𝑇 
 
 - This is typically achieved by computing the cumulative integral of velocity experienced by each individual along its trajectory (∫ 🚄 dt).
 - The current default is `solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)` but all solver options from the [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) package are available.
-- After this, `∫!` is also equiped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consiste in updating 📌 to be ready for continuing in a subsequent call to `∫!`.
+- After this, `∫!` is also equipped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consists in updating 📌 to be ready for continuing in a subsequent call to `∫!`.
 """
 function ∫!(𝐼::Individuals,𝑇::Tuple)
     @unpack 🚄,📌,𝑃, 🔧, 🆔, 🔴, ∫ = 𝐼
