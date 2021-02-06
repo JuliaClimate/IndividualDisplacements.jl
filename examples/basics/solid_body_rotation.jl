@@ -1,4 +1,4 @@
-# # Single Particle
+# # Three Dimensions
 #
 #md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/solid_body_rotation.ipynb)
@@ -10,6 +10,10 @@
 # [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
+#
+# Exercise examples: 
+# - make the sinking velocity decrease with time (hint: it increases in the original notebook) 
+# - change the number of times the particle goes around the origin
 #
 # ![solid body rotation](https://github.com/JuliaClimate/IndividualDisplacements.jl/raw/master/examples/figs/SolidBodyRotation.gif)
 
@@ -110,8 +114,8 @@ postprocessing=postproc,parameters=𝐹)
 # ### 2.2 Visualize Trajectories
 #
 # - define `myplot` convenience function
-# - generate animation using `myplot`
 # - single plot example using `myplot`
+# - (generate animation using `myplot`)
 
 #md p=dirname(pathof(IndividualDisplacements))
 #md include(joinpath(p,"../examples/recipes_plots.jl"));
@@ -131,15 +135,14 @@ postprocessing=postproc,parameters=𝐹)
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}}
 # Animation example:
+#
+# ```
+# p=Int(ceil(nt/100))
+# anim = @animate for i ∈ 1:p:nt
+#     myplot(i)
+# end
+#
+# pth=tempdir()*"/"
+# gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
+# ```
 
-#md p=Int(ceil(nt/100))
-#md anim = @animate for i ∈ 1:p:nt
-#md     myplot(i)
-#md end
-
-#md pth=tempdir()*"/"
-#md gif(anim, pth*"SolidBodyRotation.gif", fps = 15)
-
-# Exercise: make the sinking velocity decrease with time 
-# (hint: it increases as specified above in the original notebook); 
-# change the number of times the particle goes around the origin; etc

@@ -129,16 +129,20 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,�
 # ## 3.2 Analyze Results
 #
 # The recorded simulation output, 🔴, is a in the [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format, which is easily manipulated or plotted.
-#
-# - either `Plots.jl`:
 
-#!jl #include(joinpath(p,"../examples/recipes_plots.jl"))
-#!jl #p=plot(𝐼)
-#!jl ##p=map(𝐼,OceanDepthLog(Γ))
-#!jl #display(p)
+# - either `Plots.jl`:
+#
+# ```
+# include(joinpath(p,"../examples/recipes_plots.jl"))
+# p=plot(𝐼)
+# #p=map(𝐼,OceanDepthLog(Γ))
+# display(p)
+# ```
 
 # - or `Makie.jl`:
-
-#!jl #include(joinpath(p,"../examples/recipes_Makie.jl"))
-#!jl #p=PlotMakie(𝐼.🔴,100,180.);
-#!jl #display(p)
+#
+# ```
+# include(joinpath(p,"../examples/recipes_Makie.jl"))
+# p=PlotMakie(𝐼.🔴,100,180.);
+# display(p)
+# ```
