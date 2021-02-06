@@ -2,6 +2,7 @@ language: julia
 os:
   - linux
 julia:
+  - nightly
   - 1.5
 notifications:
   email: false
@@ -31,5 +32,6 @@ jobs:
                                     IndividualDisplacements.get_ecco_velocity_if_needed();
                                     IndividualDisplacements.get_occa_velocity_if_needed();';
         - travis_wait 40 julia --project=docs/ docs/make.jl
+      after_success: skip        
   allow_failures:
     - julia: nightly
