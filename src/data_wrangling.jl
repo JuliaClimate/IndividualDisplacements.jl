@@ -126,44 +126,6 @@ function postprocess_xy(sol,𝑃::FlowFields; id=missing, 𝑇=missing)
 end
 
 """
-    initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
-
-Define initial condition (u0,du) as a subset of grid points
-"""
-function initialize_gridded(𝑃::NamedTuple,n_subset::Int=1)
-    msk=𝐷.msk
-    uInitS = Array{Float64,2}(undef, 3, prod(msk.grid.ioSize))
-
-    kk = 0
-    for fIndex = 1:length(msk.fSize)
-        nx, ny = msk.fSize[fIndex]
-        ii1 = 0.5:1.0:nx
-        ii2 = 0.5:1.0:ny
-        n1 = length(ii1)
-        n2 = length(ii2)
-        for i1 in eachindex(ii1)
-            for i2 in eachindex(ii2)
-                if msk[fIndex][Int(round(i1+0.5)),Int(round(i2+0.5))]
-                    kk += 1
-                    let kk = kk
-                        uInitS[1, kk] = ii1[i1]
-                        uInitS[2, kk] = ii2[i2]
-                        uInitS[3, kk] = fIndex
-                    end
-                end
-            end
-        end
-    end
-
-    uInitS=uInitS[:,1:kk]
-    du=fill(0.0,size(uInitS));
-
-    uInitS=uInitS[:,1:n_subset:end]
-    du=du[:,1:n_subset:end]
-    return uInitS,du
-end
-
-"""
     randn_lonlat(nn=1,seed=missing)
 
 Randomly distributed longitude, latitude positions on the sphere.
@@ -178,24 +140,18 @@ function randn_lonlat(nn=1;seed=missing)
 end
 
 """
-    initialize_lonlat(Γ,lon,lat ; msk=missing)
+    nearest_to_xy(α::MeshArray,x,y,f)
 
-Define initial condition (u0,du) in grid coordinates (Γ) from longitude
-& latitude vectors (lon,lat) optionally with a land mask (msk).
+Value of α at eachindex of the grid cell center nearest to `x,y` on subdomain array / facet `f`
 """
-function initialize_lonlat(Γ::Dict,lon::Array{Float64,1},lat::Array{Float64,1};msk=missing)
-    (f,i,j,w,j_f,j_x,j_y)=InterpolationFactors(Γ,lon,lat)
-    ii=findall( ((!isnan).(j_x)).&(j_f.!==0) )
-    if !ismissing(msk)
-        jj=[msk[Int(j_f[i]),1][ Int(round(j_x[i] .+ 0.5)), Int(round(j_y[i] .+ 0.5)) ] for i in ii]
-        ii=ii[findall(jj.>0.0)]
-    end
-    u0=Array(transpose([j_x[ii] j_y[ii] j_f[ii]]))
-    du=similar(u0)
-    return u0,du
-end
+nearest_to_xy(α::MeshArray,x,y,f) = [α[Int(f[i]),1][ Int(round(x[i] .+ 0.5)), Int(round(y[i] .+ 0.5)) ] for i in eachindex(x)]
 
-initialize_lonlat(Γ::Dict,lon::Float64,lat::Float64;msk=missing) = initialize_lonlat(Γ,[lon],[lat];msk=msk)
+"""
+    nearest_to_xy(α::Array,x,y)
+
+Value of α at eachindex of the grid cell center nearest to `x,y`
+"""
+nearest_to_xy(α::Array,x,y) = [α[ Int(round(x[i] .+ 0.5)), Int(round(y[i] .+ 0.5)) ] for i in eachindex(x)]
 
 """
     interp_to_lonlat
@@ -226,11 +182,11 @@ function interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
 end
 
 """
-    interp_to_xy(df::DataFrame,Zin)
+    interp_to_xy(df::DataFrame,Zin::MeshArray)
 
 Interpolate "exchanged" / "hallo-included" Zin to df[!,:x], df[!,:y] on df[!,:fid]
 """
-function interp_to_xy(df::DataFrame,Zin)
+function interp_to_xy(df::DataFrame,Zin::MeshArray)
     x=df[!,:x];
     y=df[!,:y];
     f=Int.(df[!,:fid]);
