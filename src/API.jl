@@ -194,8 +194,8 @@ function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
     Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=default_solver,🔧=🔧)    
 end
 
-function Individuals(𝐹::𝐹_MeshArray3D,x,y,fid)
-    📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
+function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid)
+    📌=permutedims([[x[i];y[i];z[i];fid[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], fid=Int64[], t=Float64[])
@@ -271,12 +271,13 @@ end
 function Base.similar(𝐼::Individuals)
     @unpack 🚄,📌,𝑃, 𝐷, 𝑀, 🔧, 🆔, 🔴, ∫ = 𝐼
     T = typeof(𝐼).parameters[1]
-    return Individuals{T}(📌=similar(📌),🔴=similar(🔴),🆔=similar(🆔),
+    N = ndims(𝐼.📌)
+    return Individuals{T,N}(📌=similar(📌),🔴=similar(🔴),🆔=similar(🆔),
                           🚄=🚄, ∫=∫, 🔧=🔧, 𝑃=𝑃, 𝐷=𝐷, 𝑀=𝑀)
 end
 
 function Base.diff(𝐼::Individuals)
     f(x)=last(x).-first(x)
     🔴_by_ID = groupby(𝐼.🔴, :ID)
-    return combine(🔴_by_ID,nrow,:lat => f => :dlat,:lon => f => :dlon)
+    return combine(🔴_by_ID,nrow,:x => f => :dx,:y => f => :dy)
 end
