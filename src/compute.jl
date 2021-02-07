@@ -315,6 +315,19 @@ Nearest neighbor (?) velocity from gridded fields (2D; NO halos but
 not needed when CyclicArrays is used to extend valid indice ranges).
 
 _notes:_ spatial interpolation & temporal interpolation are lacking
+
+```jldoctest
+using IndividualDisplacements, Statistics
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/example_CyclicArray.jl"))
+(x,y)=cyclicarray_example()
+ref=[270. 243.]
+prod(isapprox.([mean(x) mean(y)],ref,atol=1.0))
+
+# output
+
+true
+```
 """
 function dxy_dt_CyclicArray(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) where T
     np=size(du,2)
@@ -347,6 +360,17 @@ dxyz_dt(du,u,𝑃::Dict,tim) = dxyz_dt(du,u,dict_to_nt(𝑃),tim)
 
 Interpolate velocity from MITgcm float_trajectories output and return
 position increment `du`.
+
+```jldoctest
+using IndividualDisplacements, Statistics
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/basics/detailed_look.jl"))
+prod(isapprox.(sol[:,end],ref[:,end],atol=1.0))
+
+# output
+
+true
+```
 """
 function dxy_dt_replay(du,u,p::DataFrame,t)
     tt=t/3600.0
