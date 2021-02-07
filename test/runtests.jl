@@ -17,6 +17,16 @@ end
     @test prod(isapprox.(df[end-5:end,:x],12*(0.4:0.04:0.6).+4.0))
 end
 
+@testset "test3" begin
+    p=dirname(pathof(IndividualDisplacements))
+    include(joinpath(p,"../examples/basics/random_flow_field.jl"))
+    show(𝐼)
+    diff(𝐼)
+    size(𝐼)
+    𝐽=similar(𝐼)
+    @test isa(𝐽,Individuals)
+end
+
 @testset "doctests" begin
     doctest(IndividualDisplacements; manual = false)
 end
