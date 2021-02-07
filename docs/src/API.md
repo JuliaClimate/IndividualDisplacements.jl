@@ -13,13 +13,15 @@ dxy_dt_CyclicArray
 
 ## Setup And Postprocessing 
 
-Convenience functions to initialize a simulation and posprocess the output are provided. 
+Convenience functions to initialize a simulation and post-process the output are provided. 
 
 ```@docs
-initialize_lonlat
-randn_lonlat
-postprocess_MeshArray
 postprocess_xy
+postprocess_MeshArray
+randn_lonlat
+interp_to_lonlat
+interp_to_xy
+nearest_to_xy
 ```
 
 ## Read Output From File 
@@ -28,4 +30,6 @@ Trajectory simulated by the MITgcm or observed by the global drifter program can
 
 ```@docs
 read_drifters
+read_velocities
+read_mds
 ```
