@@ -22,6 +22,7 @@ randn_lonlat
 interp_to_lonlat
 interp_to_xy
 nearest_to_xy
+gcdist
 ```
 
 ## Read Output From File 

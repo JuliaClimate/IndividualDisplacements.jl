@@ -276,8 +276,30 @@ function Base.similar(𝐼::Individuals)
                           🚄=🚄, ∫=∫, 🔧=🔧, 𝑃=𝑃, 𝐷=𝐷, 𝑀=𝑀)
 end
 
+"""
+    Base.diff(𝐼::Individuals)
+
+Difference in grid unit coordinates (dx,dy) between final and initial positions.
+"""
 function Base.diff(𝐼::Individuals)
     f(x)=last(x).-first(x)
     🔴_by_ID = groupby(𝐼.🔴, :ID)
     return combine(🔴_by_ID,nrow,:x => f => :dx,:y => f => :dy)
 end
+
+"""
+    gcdist(𝐼::Individuals)
+
+Great circle distance (gcd in radians) between final and initial positions.
+"""
+function gcdist(𝐼::Individuals)
+    🔴_by_ID = groupby(𝐼.🔴, :ID)
+    tmp = combine(🔴_by_ID, 
+    :lon => first => :lo1,:lon => last => :lo2,
+    :lat => first => :la1,:lat => last => :la2)
+
+    gcdist(lo1,lo2,la1,la2) = acos(sind(la1)*sind(la2)+cosd(la1)*cosd(la2)*cosd(lo1-lo2))
+    tmp.gcd=[gcdist(tmp.lo1[i],tmp.lo2[i],tmp.la1[i],tmp.la2[i]) for i in 1:size(tmp,1)]
+    return tmp
+end
+
