@@ -158,17 +158,26 @@ nearest_to_xy(α::Array,x,y) = [α[ Int(round(x[i] .+ 0.5)), Int(round(y[i] .+ 0
 
 Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps for plotting purposes).
 
-```
-using MeshArrays, IndividualDisplacements
+```jldoctest
+using IndividualDisplacements
+p=dirname(pathof(IndividualDisplacements))
+include(joinpath(p,"../examples/helper_functions.jl"))
+𝑃,𝐷=global_ocean_circulation(k=1,ny=2);
 
-lon=[i for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
-lat=[j for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
-(f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
+lon=[i for i=20.:20.0:380., j=-70.:10.0:70.]
+lat=[j for i=20.:20.0:380., j=-70.:10.0:70.]
+(f,i,j,w,_,_,_)=InterpolationFactors(𝐷.Γ,vec(lon),vec(lat))
 IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)
 
-D=Γ["Depth"]
-tmp1=interp_to_lonlat(D,Γ,lon,lat)
-tmp2=interp_to_lonlat(D,IntFac)
+tmp1=interp_to_lonlat(𝐷.Γ["Depth"],𝐷.Γ,lon,lat)
+tmp2=interp_to_lonlat(𝐷.Γ["Depth"],IntFac)
+
+ref=[5896. 5896.]
+prod(isapprox.([maximum(tmp1) maximum(tmp2)],ref,atol=1.0))
+
+# output
+
+true
 ```
 """
 function interp_to_lonlat(X::MeshArray,Γ::Dict,lon,lat)
