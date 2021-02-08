@@ -151,3 +151,5 @@ set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,�
 
 (x,y,z,f)=𝐼.📌[1]
 𝐽=Individuals(𝐼.𝑃,x,y,z,f)
+diff(𝐼)
+gcdist(𝐼)
