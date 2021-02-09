@@ -14,6 +14,11 @@ function cyclicarray_example()
     prob = ODEProblem(dxy_dt_CyclicArray,uInit,tspan,𝑃)
     #sol = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
     sol = solve(prob,Euler(),dt=𝑃.dt)
+
+    x=[sol[1,i,end] for i in 1:length(x0)]
+    y=[sol[2,i,end] for i in 1:length(x0)]
+
+    return x,y
 end
 
 function cyclicarray_setup()
