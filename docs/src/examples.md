@@ -45,35 +45,29 @@ The flow field is based on a data-constrained, realistic, ocean model. The probl
 
 ## Running The Examples
 
-Running the examples requires `julia` and its relevant packages. Inputs get downloaded as needed upon running the examples. The first three steps below do this, and generate jupyter notebook versions of the examples (easy to rerun afterwards). Once everything is setup then user can just call examples directly in `julia` (i.e., skip to last step below).
+Running the examples requires `julia` and its relevant packages. Inputs get downloaded as needed upon running the examples. The following commands ought to run on either your local computer or e.g [here in the cloud](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/master).
 
-#### 1. Download the examples folder:
-
-```
-git clone https://github.com/JuliaClimate/IndividualDisplacements.jl
-julia --project=IndividualDisplacements.jl/docs/
-```
-
-#### 2. Get all needed packages and `IndividualDisplacements.jl`:
+Maybe the simplest option is to generate jupyter notebooks for all examples as part of the documentation build (see below). The generated notebooks should be easy to re-run afterwards. To generate and run the notebooks, start `julia` in the terminal or a jupyter notebook at the `IndividualDisplacements.jl/` folder. Then try:
 
 ```
 using Pkg
-Pkg.activate("IndividualDisplacements.jl/docs/")
+Pkg.activate("docs/")
 Pkg.instantiate()
-Pkg.add("IndividualDisplacements")
+Pkg.add(path="./")
+include("docs/make.jl")
 ```
-
-#### 3. Generate jupyter notebook using `Literate.jl`:
+ 
+Or alternatively, to generate notebooks with more detailed control:
 
 ```
 using Literate
-Literate.notebook("IndividualDisplacements.jl/examples/basics/solid_body_rotation.jl", ".", execute = true, documenter = false)
-Literate.notebook("IndividualDisplacements.jl/examples/worldwide/three_dimensional_ocean.jl", ".", execute = true, documenter = false)
+set1 = ["solid_body_rotation","random_flow_field","detailed_look","particle_cloud"]
+[Literate.notebook("examples/basics/"*i*".jl", ".", execute = true, documenter = false) for i in set1]
+set2 = ["global_ocean_circulation","three_dimensional_ocean"]
+[Literate.notebook("examples/worldwide/"*i*".jl", ".", execute = true, documenter = false) for i in set2]        
 ```
 
-And so on and so forth -- see documentation for a list of examples.
-
-#### 4. or alternatively, in the julia REPL:
+Or as another alternative one can simply run the julia source file:
 
 ```
 using IndividualDisplacements

@@ -158,7 +158,7 @@ sol[1:4]
 ref=transpose([tmp[1:nSteps,:lon] tmp[1:nSteps,:lat]])
 maxLon=80*5.e3
 maxLat=42*5.e3
-show(size(ref))
+#show(size(ref))
 for i=1:nSteps-1
     ref[1,i+1]-ref[1,i]>maxLon/2 ? ref[1,i+1:end]-=fill(maxLon,(nSteps-i)) : nothing
     ref[1,i+1]-ref[1,i]<-maxLon/2 ? ref[1,i+1:end]+=fill(maxLon,(nSteps-i)) : nothing

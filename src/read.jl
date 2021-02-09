@@ -117,44 +117,6 @@ function read_mds(filRoot::String,x::MeshArray)
 end
 
 """
-    read_uvetc(k::Int,Γ::Dict,pth::String)
-
-Define `uvetc` given the grid variables `Γ` and a vertical level choice `k`
-including velocities obtained from files in `pth`
-
-**deprecated: use set_up_𝑃 and update_𝑃! instead -- only still used in GlobalOceanNotebooks ?**
-"""
-function read_uvetc(k::Int,Γ::Dict,pth::String)
-    𝑃 = dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
-    Γ = dict_to_nt( Γ )
-    nt=12; msk=(Γ.hFacC[:,k] .> 0.) #select depth
-
-    u=0. ./Γ.DXC; v=0. ./Γ.DYC;
-    for t=1:nt
-        (U,V)=read_velocities(Γ.XC.grid,t,pth)
-        for i=1:size(u,1)
-            u[i]=u[i] + U[i,k]
-            v[i]=v[i] + V[i,k]
-        end
-    end
-    u=u ./ nt
-    v=v ./ nt #time average
-
-    u[findall(isnan.(u))]=0.0; v[findall(isnan.(v))]=0.0 #mask with 0s rather than NaNs
-    u=u./Γ.DXC; v=v./Γ.DYC; #normalize to grid units
-
-    (u,v)=exchange(u,v,1) #add 1 point at each edge for u and v
-    XC=exchange(Γ.XC) #add 1 lon point at each edge
-    YC=exchange(Γ.YC) #add 1 lat point at each edge
-
-    t0=0.0; t1=86400*366*10.0; dt=10*86400.0;
-    tmp = (u0=u, u1=u, v0=v, v1=v, t0=t0, t1=t1, dt=dt, msk=msk, XC=XC, YC=YC)
-
-    return merge(𝑃,tmp)
-end
-
-
-"""
     get_ecco_velocity_if_needed()
 
 Download `MITgcm` transport output to `examples/nctiles_climatology` if needed
