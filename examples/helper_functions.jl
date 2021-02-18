@@ -13,8 +13,8 @@ function init_global_randn(np ::Int , 𝑃::NamedTuple)
     (lon, lat) = randn_lonlat(maximum([2*np 10]))
     (_,_,_,_,f,x,y)=InterpolationFactors(𝑃.Γ,lon,lat)
     m=findall(f.!==0)
-    m=findall(nearest_to_xy(𝑃.msk,x[m],y[m],f[m]).==1.0)[1:np]
-    return permutedims([x[m] y[m] f[m]])
+    n=findall(nearest_to_xy(𝑃.msk,x[m],y[m],f[m]).==1.0)[1:np]
+    return permutedims([x[m[n]] y[m[n]] f[m[n]]])
 end
 
 """
@@ -30,6 +30,16 @@ function reset_lonlat!(𝐼::Individuals,𝐷::NamedTuple)
     k_reset = rand(1:np, n_reset)
     v0 = permutedims([v0[:,i] for i in 1:size(v0,2)])
     𝐼.📌[k_reset].=v0[1:n_reset]
+    isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
+    𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
+end
+
+function reset_xy!(𝐼::Individuals,𝐷::NamedTuple)
+    np=length(𝐼.🆔)
+    n_reset = Int(round(𝐷.frac*np))
+    k_reset = rand(1:np, n_reset)
+    l_reset = rand(1:np, n_reset)
+    𝐼.📌[k_reset]=permutedims([xy[:,l_reset[i]] for i in 1:n_reset])
     isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
     𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
 end
