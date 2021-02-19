@@ -128,6 +128,12 @@ function get_ecco_variable_if_needed(v::String)
     !isdir(pth*v) ? get_from_dataverse(lst,v,pth) : nothing
 end
 
+function get_ecco_velocity_if_needed()
+    get_ecco_variable_if_needed("UVELMASS")
+    get_ecco_variable_if_needed("VVELMASS")
+    get_ecco_variable_if_needed("WVELMASS")
+end
+
 """
     get_occa_velocity_if_needed()
 
