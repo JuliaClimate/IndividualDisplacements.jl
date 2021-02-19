@@ -23,16 +23,24 @@
 using IndividualDisplacements, DataFrames, Statistics, CSV
 
 include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
-IndividualDisplacements.get_ecco_velocity_if_needed();
+
+IndividualDisplacements.get_ecco_variable_if_needed("UVELMASS");
+IndividualDisplacements.get_ecco_variable_if_needed("VVELMASS");
+IndividualDisplacements.get_ecco_variable_if_needed("WVELMASS");
+IndividualDisplacements.get_ecco_variable_if_needed("THETA");
+IndividualDisplacements.get_ecco_variable_if_needed("SALT");
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Set Up Parameters & Inputs
 #
-# - select vertical level & duration in years
-# - read grid variables & velocities
-# - normalize velocities
+# - select vertical level (k=1 by default; k=0 for 3D) & duration in years (ny=2 by default)
+# - read grid variables
+# - return FlowFields (𝑃) and ancillary variables etc (𝐷) 
+# - read & normalize velocities (𝐷.🔄)
 
 𝑃,𝐷=global_ocean_circulation(k=1,ny=2);
+
+𝐷.🔄(𝑃,𝐷,0.0)
 
 fieldnames(typeof(𝑃))
 

@@ -72,17 +72,14 @@ end
 """
     set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
 
-Define the `𝑃` _parameter_ tuple given grid variables `Γ`, vertical level
-choice `k`, time `t` in `seconds`, and velocity fields obtained from
-files in `pth`.
-
-The two climatological months (`m0`,`m1`) that bracket time `t` are
-read to memory (e.g. months 12 & 1 then 1 & 2 and so on).
-
-_Note: the initial implementation approximates every month duration
-to 365 days / 12 months for simplicity._
+Define `FlowFields` data structure (𝑃) along with ancillary variables (𝐷)
+for the specified grid (`Γ` dictionnary), vertical level (`k`), and 
+file location (`pth`).
+    
+_Note: the initial implementation approximates month durations to 
+365 days / 12 months for simplicity and sets 𝑃.𝑇 to [-mon/2,mon/2]_
 """
-function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
+function set_up_FlowFields(k::Int,Γ::Dict,pth::String)
     XC=exchange(Γ["XC"]) #add 1 lon point at each edge
     YC=exchange(Γ["YC"]) #add 1 lat point at each edge
     iDXC=1. ./Γ["DXC"]
@@ -91,7 +88,7 @@ function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
     mon=86400.0*365.0/12.0
     func=Γ["update_location!"]
     
-    𝐷 = (🔄 = update_𝑃!, pth=pth,
+    𝐷 = (🔄 = update_FlowFields!, pth=pth,
          XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC,
          k=k, msk=Γ["hFacC"][:, k])
 
@@ -101,21 +98,20 @@ function set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
     𝑃=𝐹_MeshArray2D{Float64}(MeshArray(γ,Float64),MeshArray(γ,Float64),
     MeshArray(γ,Float64),MeshArray(γ,Float64),[-mon/2,mon/2],func)
 
-    𝐷.🔄(𝑃,𝐷,0.0)
-
     return 𝑃,𝐷
 end
 
 """
-    update_𝑃!(𝑃::Union{NamedTuple,FlowFields},t::Float64)
+    update_FlowFields!(𝑃::FlowFields,𝐷::NamedTuple,t::Float64)
 
-Update input data (velocity arrays) and time period (array) inside 𝑃 (𝑃.u0[:], etc, and 𝑃.𝑇[:])
-based on the chosen time `t` (in `seconds`). 
+Update flow field arrays (in 𝑃), 𝑃.𝑇, and ancillary variables (in 𝐷) 
+according to the chosen time `t` (in `seconds`). 
 
-_Note: for now, it is assumed that (1) input 𝑃.𝑇 is used to infer `dt` between consecutive velocity fields,
-(2) periodicity of 12 monthly records, (3) vertical 𝑃.k is selected -- but this could easily be generalized._ 
+_Note: for now, it is assumed that (1) the time interval `dt` between 
+consecutive records is diff(𝑃.𝑇), (2) monthly climatologies are used 
+with a periodicity of 12 months, (3) vertical 𝑃.k is selected_
 """
-function update_𝑃!(𝑃::Union{NamedTuple,FlowFields},𝐷::NamedTuple,t::Float64)
+function update_FlowFields!(𝑃::FlowFields,𝐷::NamedTuple,t::Float64)
     dt=𝑃.𝑇[2]-𝑃.𝑇[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
