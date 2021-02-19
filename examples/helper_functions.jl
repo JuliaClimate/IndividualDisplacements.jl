@@ -183,7 +183,7 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
     (U,V)=read_velocities(𝑃.u0.grid,m1,𝐷.pth)
     u1=U; v1=V
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
-    for k=1:50
+    for k=1:nr
         u1[:,k]=u1[:,k].*𝐷.iDXC; v1[:,k]=v1[:,k].*𝐷.iDYC; #normalize to grid units
         (tmpu,tmpv)=exchange(u1[:,k],v1[:,k],1) #add 1 point at each edge for u and v
         u1[:,k]=tmpu
