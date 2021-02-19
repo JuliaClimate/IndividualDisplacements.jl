@@ -28,11 +28,14 @@ IndividualDisplacements.get_ecco_velocity_if_needed();
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Set Up Parameters & Inputs
 #
-# - select vertical level & duration in years
-# - read grid variables & velocities
-# - normalize velocities
+# - select vertical level (k=1 by default; k=0 for 3D) & duration in years (ny=2 by default)
+# - read grid variables
+# - return FlowFields (𝑃) and ancillary variables etc (𝐷) 
+# - read & normalize velocities (𝐷.🔄)
 
 𝑃,𝐷=global_ocean_circulation(k=1,ny=2);
+
+𝐷.🔄(𝑃,𝐷,0.0)
 
 fieldnames(typeof(𝑃))
 
@@ -58,6 +61,7 @@ fieldnames(typeof(𝐼))
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # - initial integration from time 0 to 0.5 month
 
+📌ini=deepcopy(𝐼.📌)
 𝑇=(0.0,𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
@@ -67,13 +71,13 @@ fieldnames(typeof(𝐼))
 # In addition, `step!` is defined to provide additional flexibility around `∫!` :
 #
 # - `𝐷.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
-# - `reset_lonlat!(𝐼)` randomly selects a fraction (defined in `setup_global_ocean()`) of the particles and resets their positions before each integration period. This can maintain homogeneous coverage of the Global Ocean by particles.
+# - `reset_xy!(𝐼)` randomly selects a fraction (defined in `setup_global_ocean()`) of the particles and resets their positions before each integration period. This can maintain homogeneous coverage of the Global Ocean by particles.
 # - `∫!(𝐼)` then solves for the individual trajectories over one month, after updating velocity fields (𝐼.u0 etc) if needed, and adds diagnostics to the DataFrame used to record / trace variables along the trajectory (𝐼.tr).
 
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐷.🔄(𝐼.𝑃,𝐷,t_ϵ)
-    #reset_lonlat!(𝐼,𝐷)
+    #reset_📌!(𝐼,𝐷.frac,📌ini)
     ∫!(𝐼)
 end
 
