@@ -97,7 +97,7 @@ function global_ocean_circulation(;k=1,ny=2)
   Γ=merge(Γ,Dict("update_location!" => func))
 
   #initialize u0,u1 etc
-  𝑃,𝐷=set_up_𝑃(k,0.0,Γ,ECCOclim_path);
+  𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path);
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, Γ=Γ)
