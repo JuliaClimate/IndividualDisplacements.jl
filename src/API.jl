@@ -152,7 +152,7 @@ function Individuals(NT::NamedTuple)
     Individuals{T,ndims(📌)}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,𝑃=𝑃,𝐷=𝐷,𝑀=𝑀)    
 end
 
-function Individuals(𝐹::𝐹_Array2D,x,y, NT = NamedTuple())
+function Individuals(𝐹::𝐹_Array2D,x,y, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
     T=eltype(📌)
@@ -172,7 +172,7 @@ function Individuals(𝐹::𝐹_Array2D,x,y, NT = NamedTuple())
     Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt,∫=∫,🔧=🔧)    
 end
 
-function Individuals(𝐹::𝐹_Array3D,x,y,z, NT = NamedTuple())
+function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];z[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
     T=eltype(📌)
@@ -197,7 +197,7 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z, NT = NamedTuple())
     Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt,∫=∫,🔧=🔧)    
 end
 
-function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT = NamedTuple())
+function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
     T=eltype(📌)
@@ -217,7 +217,7 @@ function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT = NamedTuple())
     Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=∫,🔧=🔧)    
 end
 
-function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT = NamedTuple())
+function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];z[i];fid[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
     T=eltype(📌)
