@@ -23,12 +23,7 @@
 using IndividualDisplacements, DataFrames, Statistics, CSV
 
 include(joinpath(dirname(pathof(IndividualDisplacements)),"../examples/helper_functions.jl"))
-
-IndividualDisplacements.get_ecco_variable_if_needed("UVELMASS");
-IndividualDisplacements.get_ecco_variable_if_needed("VVELMASS");
-IndividualDisplacements.get_ecco_variable_if_needed("WVELMASS");
-IndividualDisplacements.get_ecco_variable_if_needed("THETA");
-IndividualDisplacements.get_ecco_variable_if_needed("SALT");
+IndividualDisplacements.get_ecco_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Set Up Parameters & Inputs
@@ -38,7 +33,7 @@ IndividualDisplacements.get_ecco_variable_if_needed("SALT");
 # - return FlowFields (𝑃) and ancillary variables etc (𝐷) 
 # - read & normalize velocities (𝐷.🔄)
 
-𝑃,𝐷=global_ocean_circulation(k=0,ny=2);
+𝑃,𝐷=global_ocean_circulation(k=1,ny=2);
 
 𝐷.🔄(𝑃,𝐷,0.0)
 
@@ -60,8 +55,7 @@ p=dirname(pathof(IndividualDisplacements))
 fil=joinpath(p,"../examples/worldwide/global_ocean_circulation.csv")
 df=DataFrame(CSV.File(fil))
 
-z0=4.5
-𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],fill(z0,np),df.f[1:np])
+𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],df.f[1:np])
 fieldnames(typeof(𝐼))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
@@ -83,7 +77,7 @@ fieldnames(typeof(𝐼))
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐷.🔄(𝐼.𝑃,𝐷,t_ϵ)
-    reset_📌!(𝐼,𝐷.frac,📌ini)
+    #reset_📌!(𝐼,𝐷.frac,📌ini)
     ∫!(𝐼)
 end
 
