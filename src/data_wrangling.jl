@@ -85,6 +85,31 @@ function add_lonlat!(df::DataFrame,XC,YC)
 end
 
 """
+    add_lonlat!(df::DataFrame,XC,YC,func::Function)
+
+Add lon & lat to dataframe using "exchanged" XC, YC after updating 
+subdomain indices (via func) if needed (location_is_out)
+"""
+function add_lonlat!(df::DataFrame,XC,YC,func::Function)
+    g=XC.grid
+    u=zeros(3)
+
+    for i in eachindex(df.lon)
+        u[:]=[df.x[i];df.y[i];df.fid[i]]
+        while location_is_out(u,g)
+            func(u)
+            df.x[i]=u[1]
+            df.y[i]=u[2]
+            df.fid[i]=u[3]
+        end
+    end
+
+    add_lonlat!(df,XC,YC)
+
+    return df
+end
+
+"""
     postprocess_xy()
 
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
