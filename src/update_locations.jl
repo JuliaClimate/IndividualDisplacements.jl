@@ -37,8 +37,8 @@ end
 """
     update_location_cs!
 
-Update location (x,y,fIndex) when out of domain. Note: initially, this
-only works for the `cs` & `llc` grid types provided by `MeshArrays.jl`.
+Update location (x,y,fIndex) when out of domain for cube sphere (cs) grid 
+as implemented by `MeshArrays.jl` (and MITgcm)
 """
 function update_location_cs!(u::Array{Float64,1},𝑃::NamedTuple)
     x,y = u[1:2]
@@ -59,7 +59,35 @@ function update_location_cs!(u::Array{Float64,1},𝑃::NamedTuple)
     return u
 end
 
-update_location_llc!(u,𝑃) = update_location_cs!(u,𝑃)
+"""
+    update_location_llc!
+
+Update location (x,y,fIndex) when out of domain for lat-lon-cap (llc) grid 
+as implemented by `MeshArrays.jl` (and MITgcm)
+"""
+function update_location_llc!(u::Array{Float64,1},𝑃::NamedTuple)
+    x,y = u[1:2]
+    fIndex = Int(u[end])
+    nx,ny=𝑃.XC.fSize[fIndex]
+    if y<0&&(fIndex==1||fIndex==2)
+        u[2]=eps(y)
+    elseif x>nx&&(fIndex==4||fIndex==5)
+        u[1]=nx-eps(x)
+    elseif x<0||x>nx||y<0||y>ny
+        j = 0
+        x<0 ? j=𝑃.aW[fIndex] : nothing
+        x>nx ? j=𝑃.aE[fIndex] : nothing
+        y<0 ? j=𝑃.aS[fIndex] : nothing
+        y>ny ? j=𝑃.aN[fIndex] : nothing
+        (x,y)=𝑃.RelocFunctions[j,fIndex](x,y)
+        u[1]=x
+        u[2]=y
+        u[end]=j
+    end
+    #
+    return u
+end
+
 
 """
     update_location_dpdo!
