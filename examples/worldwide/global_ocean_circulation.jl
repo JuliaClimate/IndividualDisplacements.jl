@@ -71,13 +71,13 @@ fieldnames(typeof(𝐼))
 # In addition, `step!` is defined to provide additional flexibility around `∫!` :
 #
 # - `𝐷.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
-# - `reset_xy!(𝐼)` randomly selects a fraction (defined in `setup_global_ocean()`) of the particles and resets their positions before each integration period. This can maintain homogeneous coverage of the Global Ocean by particles.
-# - `∫!(𝐼)` then solves for the individual trajectories over one month, after updating velocity fields (𝐼.u0 etc) if needed, and adds diagnostics to the DataFrame used to record / trace variables along the trajectory (𝐼.tr).
+# - `reset_📌!(𝐼)` randomly selects a fraction (`𝐷.frac`) of the particles and resets their positions before each integration period. This tends to maintain homogeneous coverage of the Global Ocean by particles.
+# - `∫!(𝐼)` then solves for the individual trajectories over one month, with updated velocity fields (𝐼.𝑃.u0 etc), and adds diagnostics to the DataFrame used to record variables along the trajectory (𝐼.🔴).
 
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐷.🔄(𝐼.𝑃,𝐷,t_ϵ)
-    #reset_📌!(𝐼,𝐷.frac,📌ini)
+    reset_📌!(𝐼,𝐷.frac,📌ini)
     ∫!(𝐼)
 end
 
