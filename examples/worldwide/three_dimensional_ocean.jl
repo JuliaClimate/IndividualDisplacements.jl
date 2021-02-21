@@ -125,7 +125,8 @@ df=DataFrame(:z => fill(kk,nf),:f => fill(1,nf))
 #
 # ```
 # include(joinpath(p,"../examples/recipes_Makie.jl"))
-# p=PlotMakie(𝐼.🔴,100,180.);
+# #p=plot(𝐼)
+# p=plot_paths(𝐼.🔴,100,180.);
 # display(p)
 # ```
 
