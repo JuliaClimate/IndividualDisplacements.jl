@@ -30,14 +30,35 @@ IndividualDisplacements.get_occa_velocity_if_needed();
 𝑃,𝐷,Γ=OCCA_FlowFields(backward_in_time=false);
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 2.2 Post-Processor Setup
+# ## 2.3 Initialize Individual Positions
 #
 
-tr = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
-               k=Float64[], z=Float64[], iso=Float64[], t=Float64[], 
-               lon=Float64[], lat=Float64[], year=Float64[], col=Symbol[])
+"""
+    initial_positions(Γ; nf=10000, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
 
-function 🔧(sol,𝑃::𝐹_MeshArray3D;id=missing,𝑇=missing)
+Randomly assign initial positions in longitude,latitude ranges. Positions are 
+expressed in, normalized, grid point units (x,y in the 0,nx and 0,ny range). 
+To convert from longitude,latitude here we take advantage of the regularity 
+of the 1 degree grid being used -- for a more general alternative, see the 
+global ocean example.
+"""
+function initial_positions(Γ::Dict, nf=10000, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
+   lon=lon_rng[1] .+(lon_rng[2]-lon_rng[1]).*rand(nf)
+   lat=lat_rng[1] .+(lat_rng[2]-lat_rng[1]).*rand(nf)
+   x=lon .+ (21. - Γ["XC"][1][21,1])
+   y=lat .+ (111. - Γ["YC"][1][1,111])
+   return x,y
+end
+
+#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
+# ## 2.3 Diagnostic / Post-Processing Setup
+#
+
+custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
+   k=Float64[], z=Float64[], iso=Float64[], t=Float64[], 
+   lon=Float64[], lat=Float64[], year=Float64[], col=Symbol[])
+
+function custom🔧(sol,𝑃::𝐹_MeshArray3D;id=missing,𝑇=missing)
    df=postprocess_MeshArray(sol,𝑃,id=id,𝑇=𝑇)
    add_lonlat!(df,𝐷.XC,𝐷.YC)
 
@@ -67,55 +88,16 @@ function 🔧(sol,𝑃::𝐹_MeshArray3D;id=missing,𝑇=missing)
    return df
 end
 
-#nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
-# ## 2.3 Initialize Individual Positions
+# ## 2.4 Individuals Data Structure
 #
+# Set up `Individuals` data structure with `nf` particles moving in 3D 
+# on a regular 1 degree resolution grid covering most of the Globe.
 
-"""
-    initial_positions(Γ; nf=10000, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
+nf=100; lo=(-160.0,-150.0); la=(30.0,40.0); kk=2.5; 
+df=DataFrame(:z => fill(kk,nf),:f => fill(1,nf))
+(df.x,df.y)=initial_positions(Γ, nf, lo, la)
 
-Randomly assign initial positions in longitude,latitude ranges. Positions are 
-expressed in, normalized, grid point units (x,y in the 0,nx and 0,ny range). 
-To convert from longitude,latitude here we take advantage of the regularity 
-of the 1 degree grid being used -- for a more general alternative, see 
-`initialize_lonlat()`.
-"""
-function initial_positions(Γ; nf=10000, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
-
-   lo0,lo1=lon_rng
-   la0,la1=lat_rng
-
-   lon=lo0 .+(lo1-lo0).*rand(nf)
-   lat=la0 .+(la1-la0).*rand(nf)
-   x=lon .+ (21. - Γ["XC"][1][21,1])
-   y=lat .+ (111. - Γ["YC"][1][1,111])
-
-   return x,y
-end
-
-# ## 2.4 Individuals data structure
-#
-
-"""
-    set_up_individuals(𝑃,Γ,🔧; nf=10000, z_init=4.5, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
-
-Set up `Individuals` data structure with `nf` particles moving 
-on a regular 1 degree resolution grid covering most of the Globe.
-"""
-
-function set_up_individuals(𝑃,Γ,🔧; nf=10000,
-   z_init=2.5, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
-
-   (x,y)=initial_positions(Γ; nf, lon_rng, lat_rng)
-   xy = permutedims([Float32.([x[i];y[i];z_init;1.0]) for i in eachindex(x)])
-   I=(position=xy,record=deepcopy(tr),velocity=dxyz_dt!,postprocessing=🔧,parameters=𝑃)
-   𝐼=Individuals(I)
-   return 𝐼
-end
-
-set_up_individuals(𝐼::Individuals; nf=10000) = set_up_individuals(𝑃,Γ,🔧; nf=nf)
-
-𝐼=set_up_individuals(𝑃,Γ,🔧,nf=100)
+𝐼=Individuals(𝑃,df.x,df.y,df.z,df.f,(🔴=custom🔴,🔧=custom🔧))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.1 Compute Displacements
