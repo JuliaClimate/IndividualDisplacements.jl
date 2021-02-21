@@ -1,10 +1,7 @@
 using MeshArrays, OceanStateEstimation, NetCDF
 
-module MeshArrays_Demos
-using MeshArrays
 p=dirname(pathof(MeshArrays))
 include(joinpath(p,"../examples/Demos.jl"))
-end
 
 """
     random_flow_field(;np=12,nq=18)
@@ -16,8 +13,9 @@ Set up a random flow field over a gridded domain of size np,nq
 ```
 """
 function random_flow_field(;np=12,nq=18)
+
 Γ=simple_periodic_domain(np,nq)
-(_,ϕ,_,_)=MeshArrays_Demos.demo2(Γ)
+(_,ϕ,_,_)=demo2(Γ)
 ϕ .*= 0.5
 
 #For the convergent / scalar potential case, ϕ is interpreted as being 
