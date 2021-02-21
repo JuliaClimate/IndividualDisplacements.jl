@@ -9,8 +9,14 @@ Plot the initial and final positions as scatter plot in x,y plane.
 """
 function plot(𝐼::Individuals)
     🔴_by_t = groupby(𝐼.🔴, :t)
-    scatter(🔴_by_t[1].x,🔴_by_t[1].y,c=:red,label="t0",marker = (:circle, stroke(0)))
-    scatter!(🔴_by_t[end].x,🔴_by_t[end].y,c=:blue,label="t1",marker = (:circle, stroke(0)))
+    if (sum(names(🔴_by_t).=="lon")==0)
+        fig=scatter(🔴_by_t[1].x,🔴_by_t[1].y,c=:red,label="t0",marker = (:circle, stroke(0)))
+        scatter!(🔴_by_t[end].x,🔴_by_t[end].y,c=:blue,label="t1",marker = (:circle, stroke(0)))
+    else
+        fig=scatter(🔴_by_t[1].lon,🔴_by_t[1].lat,c=:red,label="t0",marker = (:circle, stroke(0)))
+        scatter!(🔴_by_t[end].lon,🔴_by_t[end].lat,c=:blue,label="t1",marker = (:circle, stroke(0)))
+    end
+    return fig
 end
 
 """

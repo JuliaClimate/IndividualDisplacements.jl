@@ -2,11 +2,28 @@
 using Random, Makie, MeshArrays, DataFrames, ColorSchemes, Statistics
 
 """
-    PlotMakie(df::DataFrame,nn::Integer)
+    plot(𝐼::Individuals)
+
+Plot the initial and final positions as scatter plot in x,y plane.
+"""
+function plot(𝐼::Individuals)
+    🔴_by_t = groupby(𝐼.🔴, :t)
+    if sum(names(🔴_by_t).=="lon")==0
+        fig, ax, _ = scatter(🔴_by_t[1].x,🔴_by_t[1].y,color=:red,markersize=:2,linewidth=0.)
+            scatter!(🔴_by_t[end].x,🔴_by_t[end].y,color=:blue,markersize=:2,linewidth=0.)
+    else
+        fig, ax, _ = scatter(🔴_by_t[1].lon,🔴_by_t[1].lat,color=:red,markersize=:2)
+        scatter!(🔴_by_t[end].lon,🔴_by_t[end].lat,color=:blue,markersize=:2)
+    end
+    return fig
+end
+
+"""
+    plot_paths(df::DataFrame,nn::Integer)
 
 Plot random subset of size nn trajectories.
 """
-function PlotMakie(df::DataFrame,nn::Integer,dMax::Float64=0.)
+function plot_paths(df::DataFrame,nn::Integer,dMax::Float64=0.)
    IDs = randperm(maximum(df.ID))
    COs=[:gray76 :gold :limegreen :black]
 
