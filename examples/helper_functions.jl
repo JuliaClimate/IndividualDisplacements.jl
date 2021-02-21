@@ -11,9 +11,9 @@ region, and return position in grid index space (`i,j,subdomain`).
 """
 function init_global_randn(np ::Int , 𝑃::NamedTuple)
     (lon, lat) = randn_lonlat(maximum([2*np 10]))
-    (_,_,_,_,f,x,y)=InterpolationFactors(𝑃.Γ,lon,lat)
-    m=findall(f.!==0)
-    n=findall(nearest_to_xy(𝑃.msk,x[m],y[m],f[m]).==1.0)[1:np]
+    (_,_,_,_,f,x,y)=InterpolationFactors(𝐷.Γ,lon,lat)
+    m=findall( (f.!==0).*((!isnan).(x)) )
+    n=findall(nearest_to_xy(𝐷.msk,x[m],y[m],f[m]).==1.0)[1:np]
     return permutedims([x[m[n]] y[m[n]] f[m[n]]])
 end
 
