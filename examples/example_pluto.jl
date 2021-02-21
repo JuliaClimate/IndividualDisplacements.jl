@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.10
+# v0.12.20
 
 using Markdown
 using InteractiveUtils
@@ -15,14 +15,13 @@ end
 
 # ╔═╡ 747d446a-dfeb-11ea-3533-c9404fd41688
 begin
-	using IndividualDisplacements, Plots, NetCDF, OrdinaryDiffEq, DataFrames
-	using Statistics, StatsPlots, PlutoUI
+	using IndividualDisplacements, MeshArrays, DataFrames
+	using Statistics, PlutoUI, StatsPlots, OrdinaryDiffEq
 
 	p=dirname(pathof(IndividualDisplacements))
-    include(joinpath(p,"../examples/example123.jl"))
     include(joinpath(p,"../examples/helper_functions.jl"))
-    include(joinpath(p,"../examples/recipes_plots.jl"))
-	𝑃,𝐷,Γ=OCCA_setup()	
+    #include(joinpath(p,"../examples/recipes_plots.jl"))
+	𝑃,𝐷,Γ=OCCA_FlowFields()	
 	tmp=(Γ = Γ, m = "OCCA")
     𝐷=merge(𝐷,tmp)
 	✓ = "😃"
@@ -45,7 +44,7 @@ $(@bind npar NumberField(50:50:1000; default=100))
 
 # ╔═╡ 9c80e722-e70f-11ea-22a6-0be2e85f3b8b
 md"""time step (for plotting)= 
-$(@bind tt Slider(2:75; default=50, show_value=true))
+$(@bind tt Slider(1:26; default=13, show_value=true))
 """
 
 # ╔═╡ e25eee9e-dfee-11ea-2a4c-3946ccb63876
@@ -58,50 +57,36 @@ begin
 end
 
 # ╔═╡ f75fae30-dfee-11ea-18ef-259321acfa2f
-begin
-	day=86400.0
-	mon=365/12*day
-	solv(prob) = solve(prob,Euler(),dt=2*day)
-	
+begin	
 	lon=lo0 .+(lo1-lo0).*rand(n_part)
 	lat=la0 .+(la1-la0).*rand(n_part)
-	(xy,du)=initialize_lonlat(Γ,lon,lat)
-	xy[3,:] .= z_init
-	id=collect(1:size(xy,2))
+	(_,_,_,_,f,x,y)=InterpolationFactors(𝐷.Γ,lon,lat)
+    m=findall( (f.!==0).*((!isnan).(x)) )
+	df=DataFrame(x=x[m],y=y[m],f=f[m])
 	
-	function solv(prob)
-	  sol=solve(prob,Euler(),dt=10*86400.0)
-	  nx,ny=𝑃.ioSize[1:2]
-	  sol[1,:,:]=mod.(sol[1,:,:],nx)
-	  sol[2,:,:]=mod.(sol[2,:,:],ny)
-	  return sol
+	custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float32[], y=Float32[], 
+		z=Float32[], year=Float32[], t=Float32[])
+	function custom🔧(sol,𝐹::𝐹_MeshArray3D;id=missing,𝑇=missing)
+		df=postprocess_MeshArray(sol,𝐹,id=id,𝑇=𝑇)
+		z=[sol[1,i,j][3] for i in 1:size(sol,2), j in 1:size(sol,3)]
+		df.z=z[:]
+		df.year=df.t ./86400/365
+		return df
 	end
+	custom∫(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8,saveat=365/12*86400.0)
 	
-	tr = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
-	               z=Float64[], t=Float64[], lon=Float64[], lat=Float64[])
+	𝐼=Individuals(𝑃,df.x,df.y,fill(z_init,n_part),df.f,
+		(🔴=custom🔴,🔧=custom🔧,∫=custom∫))
 
-	function postproc(sol,𝑃::NamedTuple;id=missing,𝑇=missing)
-	  df=postprocess_MeshArray(sol,𝑃,id=id,𝑇=𝑇)
-	  add_lonlat!(df,𝐷.XC,𝐷.YC)
-
-	  #add third coordinate
-	  z=sol[3,:,:]
-	  df.z=z[:]
-	  #to plot e.g. Pacific Ocean transports, shift longitude convention?
-	  #df.lon[findall(df.lon .< 0.0 )] = df.lon[findall(df.lon .< 0.0 )] .+360.0
-	  return df
-	end
-	
 	"$✓ Set up Individuals"
 end
 
 # ╔═╡ 9ffe84c0-dff0-11ea-2726-8924892df73a
 begin
-	𝐼 = Individuals{Float64}(📌=deepcopy(xy), 🔴=deepcopy(tr), 🆔=id, 
-		                     🚄 = dxyz_dt, ∫ = solv, 🔧 = postproc, 𝑃=𝑃)
-	
 	𝑇=(0.0,𝐼.𝑃.𝑇[2])
 	∫!(𝐼,𝑇)
+	
+	add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC)
 	
 	🔴_by_ID = groupby(𝐼.🔴, :ID)
 	🔴_by_t = groupby(𝐼.🔴, :t)
@@ -118,7 +103,7 @@ end
 
 # ╔═╡ f65ddffa-e63a-11ea-34a6-2fa9284e98fa
 begin
-	mx=50.0
+	mx=20.0
 
 	#f(x)=x[tt]-x[1]
 	#f(x)=last(x).-first(x)
@@ -127,18 +112,17 @@ begin
 	g(x)=x[tt]
 	cdf = combine(🔴_by_ID,:dlat => g => :dlat,:dlon => g => :dlon)
 	
-	plt_hist=histogram2d(cdf.dlon,cdf.dlat,nbins = (10, 10),
-		xlims=(-mx,mx),ylims=(-mx,mx), colorbar=false)
+	plt_hist=histogram2d(cdf.dlon,cdf.dlat,nbins = (10, 10),colorbar=false)
 	#scatter(cdf.dlon,cdf.dlat,xlims=(-mx,mx),ylims=(-mx,mx))
 	"$✓ dlon, dlat histogram2d"
 end
 
 # ╔═╡ 7d52252e-e006-11ea-2632-df2af831b52f
 begin
-	x=vec(𝐼.𝑃.Γ["XC"][1][:,1])
-	y=vec(𝐼.𝑃.Γ["YC"][1][1,:])
-	z=transpose(log10.(𝐼.𝑃.Γ["Depth"][1]))
-	𝐵=(x = x, y = y, z = z)
+	xx=vec(𝐷.Γ["XC"][1][:,1])
+	yy=vec(𝐷.Γ["YC"][1][1,:])
+	zz=transpose(log10.(𝐷.Γ["Depth"][1]))
+	𝐵=(x = xx, y = yy, z = zz)
 	
 	𝐶(g::ColorGradient) = RGB[g[z] for z=LinRange(0,1,length(🔴_by_t))]
 	𝐶(t::Int) = 𝐶(cgrad(:inferno))[t]	
@@ -149,7 +133,7 @@ end
 begin
 	plt_dlat = @df 🔴_by_t[1] density(:dlat, leg = :none, colour = 𝐶(1), ylims=(0,0.5))
 	[@df 🔴_by_t[tt] density!(plt_dlat,:dlat, leg = :none, colour = 𝐶(tt)) for tt in 2:length(🔴_by_t)];
-	density!(plt_dlat,🔴_by_t[nt].dlat, leg = :none, colour = :cyan, linewidth=4)
+	density!(plt_dlat,🔴_by_t[tt].dlat, leg = :none, colour = :cyan, linewidth=4)
 	"$✓ dlat density"
 end
 
@@ -165,7 +149,7 @@ end
 
 # ╔═╡ a13d6ea6-dff1-11ea-0713-cb235e28cf79
 begin
-	plt_map=contourf(x,y,z,clims=(-.5,4.),c = :ice, 
+	plt_map=contourf(xx,yy,zz,clims=(-.5,4.),c = :ice, 
 		colorbar=false, xlims=(-180.0,180.0),ylims=(-90.0,90.0))
 	scatter!(plt_map,🔴_by_t[1].lon,🔴_by_t[1].lat,c=:gold,leg=:none,
 		markersize=2.0, marker = (:dot, stroke(0)) )

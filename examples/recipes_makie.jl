@@ -8,13 +8,16 @@ Plot random subset of size nn trajectories.
 """
 function PlotMakie(df::DataFrame,nn::Integer,dMax::Float64=0.)
    IDs = randperm(maximum(df.ID))
-   COs=[:gray76 :yellow2 :limegreen :black]
+   COs=[:gray76 :gold :limegreen :black]
 
    #scene=Scene(limits=FRect(0, 0, 40, 40),show_axis = false)
    #scene=Scene(limits=FRect(-185, -95, 370, 190),show_axis = false)
    scene=Scene(show_axis = false)
+   df_by_ID = groupby(df, :ID)
+   ID_list=[df_by_ID[i][1,:ID] for i in 1:length(df_by_ID)]
    for ii=1:nn
-      tmp=df[df.ID .== IDs[ii], :]
+      jj=findall(ID_list.==IDs[ii])[1]
+      tmp=df_by_ID[jj]
       if dMax > 0.
          d=abs.(diff(tmp[!,:lon]))
          jj=findall(d .> dMax)
@@ -24,7 +27,7 @@ function PlotMakie(df::DataFrame,nn::Integer,dMax::Float64=0.)
          tmp[jj,:lon].=NaN; tmp[jj,:lat].=NaN
       end
       CO=COs[mod(ii,4)+1]
-      Makie.lines!(scene,tmp[!,:lon],tmp[!,:lat],color=CO,linewidth=0.5)
+      Makie.lines!(scene,tmp[!,:lon],tmp[!,:lat],color=CO,linewidth=1.0)
    end
 
    return scene
@@ -43,7 +46,7 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 module ex3
     fil="../examples/worldwide/three_dimensional_ocean.jl"
     include(joinpath(Main.p,fil))
-    export set_up_individuals, Γ
+    export set_up_individuals, Γ, 𝐷
 end
 
 using .ex3
@@ -51,7 +54,7 @@ using .ex3
 𝑇=(0.0,2*𝐼.𝑃.𝑇[2])
 ∫!(𝐼,𝑇)
 
-θ=0.5*(𝐼.𝑃.θ0+𝐼.𝑃.θ1)
+θ=0.5*(𝐷.θ0+𝐷.θ1)
 scene = MakieBase(θ,2:2:28,Tiso=15)
 MakieScatterMovie(scene,𝐼.🔴,0:0.02:4,"tmp.mp4")
 ```
@@ -105,7 +108,7 @@ scene = MakieBase(θ,2:2:28;Tiso=15)
 _, threeD, twoD = MakieScatter(scene,🔴_by_t[end])
 ```
 """
-function MakieScatter(scene::Scene,df)
+function MakieScatter(scene,df)
 
     zmul=1/5
     nmax=100000
@@ -124,11 +127,11 @@ function MakieScatter(scene::Scene,df)
     cs[1:nt]=deepcopy(df[!, :col])
 
     Makie.scatter!(scene, xs, ys, zmul*zs, markersize = 500.0, 
-    show_axis = false, color=zs, colormap = :turbo, strokewidth=0.0)[end]
+    show_axis = false, color=zs, colormap = :turbo, strokewidth=0.0)
     threeD = scene[end]
  
     Makie.scatter!(scene, xs, ys, zmul*z0, markersize = 500.0, 
-    show_axis = false, color=cs, strokewidth=0.0)[end]
+    show_axis = false, color=cs, strokewidth=0.0)
     twoD = scene[end]
 
     return scene, threeD, twoD
@@ -177,11 +180,9 @@ function MakieBase(θ,T; Tiso=12, LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.
     #lookat=Vec3f0(maximum(lon)+60,mean(lat)-40,-0.1*dMax*zmul)
 
     scene=Scene(camera = cam3d!,colormap = :blues)
-    #scene.center = false # prevent scene from recentering on display
-    #update_cam!(scene, lookat, eyepos)
 
     #bottom
-    scene = Makie.contour!(scene,vec(lon[:,1]), vec(lat[1,:]), θbox[:,:,kMax], levels = T,
+    Makie.contour!(scene,vec(lon[:,1]), vec(lat[1,:]), θbox[:,:,kMax], levels = T,
     transformation = (:xy, -dMax*zmul), limits=lim, color=:black, linewidth = 2)#,show_axis = false)
 
     #sides
@@ -203,7 +204,7 @@ function MakieBase(θ,T; Tiso=12, LONin=140.:0.5:250.,LATin=10.:0.5:50.,DEPin=0.
     linewidth=0.25, color=bw(0.7))
 
     #xlabel!("lon"); ylabel!("lat"); zlabel!("$zmul x depth")
-    xlabel!(""); ylabel!(""); zlabel!("")
+    #xlabel!(""); ylabel!(""); zlabel!("")
 
     return scene
 end
