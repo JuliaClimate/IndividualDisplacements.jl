@@ -117,17 +117,21 @@ function read_mds(filRoot::String,x::MeshArray)
 end
 
 """
-    get_ecco_velocity_if_needed()
+    get_ecco_variable_if_needed(v::String)
 
-Download `MITgcm` transport output to `examples/nctiles_climatology` if needed
+Download ECCO output for variable `v` to `examples/nctiles_climatology` if needed
 """
-function get_ecco_velocity_if_needed()
+function get_ecco_variable_if_needed(v::String)
     p=dirname(pathof(OceanStateEstimation))
     lst=joinpath(p,"../examples/nctiles_climatology.csv")
     pth=ECCOclim_path
-    !isdir(pth*"UVELMASS") ? get_from_dataverse(lst,"UVELMASS",pth) : nothing
-    !isdir(pth*"VVELMASS") ? get_from_dataverse(lst,"VVELMASS",pth) : nothing
-    !isdir(pth*"WVELMASS") ? get_from_dataverse(lst,"WVELMASS",pth) : nothing
+    !isdir(pth*v) ? get_from_dataverse(lst,v,pth) : nothing
+end
+
+function get_ecco_velocity_if_needed()
+    get_ecco_variable_if_needed("UVELMASS")
+    get_ecco_variable_if_needed("VVELMASS")
+    get_ecco_variable_if_needed("WVELMASS")
 end
 
 """
