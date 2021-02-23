@@ -9,8 +9,14 @@ Plot the initial and final positions as scatter plot in x,y plane.
 """
 function plot(𝐼::Individuals)
     🔴_by_t = groupby(𝐼.🔴, :t)
-    scatter(🔴_by_t[1].x,🔴_by_t[1].y,c=:red,label="t0",marker = (:circle, stroke(0)))
-    scatter!(🔴_by_t[end].x,🔴_by_t[end].y,c=:blue,label="t1",marker = (:circle, stroke(0)))
+    if (sum(names(🔴_by_t).=="lon")==0)
+        fig=scatter(🔴_by_t[1].x,🔴_by_t[1].y,c=:red,label="t0",marker = (:circle, stroke(0)))
+        scatter!(🔴_by_t[end].x,🔴_by_t[end].y,c=:blue,label="t1",marker = (:circle, stroke(0)))
+    else
+        fig=scatter(🔴_by_t[1].lon,🔴_by_t[1].lat,c=:red,label="t0",marker = (:circle, stroke(0)))
+        scatter!(🔴_by_t[end].lon,🔴_by_t[end].lat,c=:blue,label="t1",marker = (:circle, stroke(0)))
+    end
+    return fig
 end
 
 """
@@ -100,8 +106,8 @@ end
 Compute Ocean depth logarithm on regular grid.
 """
 function OceanDepthLog(Γ)
-    lon=[i for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
-    lat=[j for i=19.5:1.0:379.5, j=-78.5:1.0:78.5]
+    lon=[i for i=20.:2.0:380., j=-79.:2.0:89.]
+    lat=[j for i=20.:2.0:380., j=-79.:2.0:89.]
     DL=interp_to_lonlat(Γ["Depth"],Γ,lon,lat)
     DL[findall(DL.<0)].=0
     DL=transpose(log10.(DL))
