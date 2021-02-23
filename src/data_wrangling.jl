@@ -67,26 +67,44 @@ end
 Add lon & lat to dataframe using "exchanged" XC, YC
 """
 function add_lonlat!(df::DataFrame,XC,YC)
-    x=df[!,:x];
-    y=df[!,:y];
-    f=Int.(df[!,:fid]);
-    dx,dy=(x - floor.(x) .+ 0.5,y - floor.(y) .+ 0.5);
-    i_c = Int32.(floor.(x)) .+ 1;
-    j_c = Int32.(floor.(y)) .+ 1;
+    x = cosd.(YC) * cosd.(XC)
+    y = cosd.(YC) * sind.(XC)
+    z = sind.(YC)
 
-    lon=zeros(length(x),4)
-    [lon[k,:]=XC[f[k]][i_c[k]:i_c[k]+1,j_c[k]:j_c[k]+1][:] for k in 1:length(i_c)]
-    lat=zeros(length(x),4)
-    [lat[k,:]=YC[f[k]][i_c[k]:i_c[k]+1,j_c[k]:j_c[k]+1][:] for k in 1:length(i_c)]
+    df.lon=0*df.x
+    df.lat=0*df.x
+    for i in eachindex(df.lon)
+        xx=interp_to_xy(df.x[i],df.y[i],df.fid[i],x)
+        yy=interp_to_xy(df.x[i],df.y[i],df.fid[i],y)
+        zz=interp_to_xy(df.x[i],df.y[i],df.fid[i],z)
+        df.lat[i] = asind(zz/sqrt(xx^2+yy^2+zz^2))
+        df.lon[i] = atand(yy, xx)
+    end
 
-    k=findall(vec(maximum(lon,dims=2)-minimum(lon,dims=2)) .> 180.0)
-    tmp=view(lon,k,:)
-    tmp[findall(tmp.<0.0)]=tmp[findall(tmp.<0.0)] .+ 360.0
+    return df
+end
 
-    df.lon=(1.0 .-dx).*(1.0 .-dy).*lon[:,1]+dx.*(1.0 .-dy).*lon[:,2] +
-         (1.0 .-dx).*dy.*lon[:,3]+dx.*dy.*lon[:,4]
-    df.lat=(1.0 .-dx).*(1.0 .-dy).*lat[:,1]+dx.*(1.0 .-dy).*lat[:,2] +
-         (1.0 .-dx).*dy.*lat[:,3]+dx.*dy.*lat[:,4]
+"""
+    add_lonlat!(df::DataFrame,XC,YC,func::Function)
+
+Add lon & lat to dataframe using "exchanged" XC, YC after updating 
+subdomain indices (via func) if needed (location_is_out)
+"""
+function add_lonlat!(df::DataFrame,XC,YC,func::Function)
+    g=XC.grid
+    u=zeros(3)
+
+    for i in eachindex(df.lon)
+        u[:]=[df.x[i];df.y[i];df.fid[i]]
+        while location_is_out(u,g)
+            func(u)
+            df.x[i]=u[1]
+            df.y[i]=u[2]
+            df.fid[i]=u[3]
+        end
+    end
+
+    add_lonlat!(df,XC,YC)
 
     return df
 end
@@ -208,4 +226,82 @@ function interp_to_xy(df::DataFrame,Zin::MeshArray)
 
     return (1.0 .-dx).*(1.0 .-dy).*Z[:,1]+dx.*(1.0 .-dy).*Z[:,2] +
            (1.0 .-dx).*dy.*Z[:,3]+dx.*dy.*Z[:,4]
+end
+
+function interp_to_xy(x,y,f,Zin::MeshArray)
+    dx,dy=(x - floor(x) + 0.5,y - floor(y) + 0.5)
+    i_c = Int(floor(x)) + 1
+    j_c = Int(floor(y)) + 1
+    ff=Int(f)
+
+    return (1.0-dx)*(1.0-dy)*Zin[ff][i_c,j_c] +
+    dx*(1.0-dy)*Zin[ff][i_c+1,j_c] +
+    (1.0-dx)*dy*Zin[ff][i_c,j_c+1] +
+    dx*dy*Zin[ff][i_c+1,j_c+1]
+end
+
+"""
+    stproj(XC,YC;XC0=0.0,YC0=90.0)
+
+Apply to XC,YC (longitude, latitude) the stereographic projection
+which would put XC0,YC0 (longitude, latitude) at x,y=0,0
+"""
+function stproj(XC,YC,XC0=0.0,YC0=90.0)
+
+# compute spherical coordinates:
+phi=pi/180*XC; theta=pi/180*(90-YC);
+phi0=pi/180*XC0; theta0=pi/180*(90-YC0);
+
+# compute cartesian coordinates:
+x=sin(theta)*cos(phi)
+y=sin(theta)*sin(phi)
+z=cos(theta)
+
+# bring chosen longitude to x>0,y=0:
+xx=cos(phi0)*x+sin(phi0)*y
+yy=-sin(phi0)*x+cos(phi0)*y
+zz=z
+# bring chosen point to South Pole:
+x=cos(theta0)*xx-sin(theta0)*zz
+y=yy
+z=sin(theta0)*xx+cos(theta0)*zz
+
+# stereographic projection from South Pole:
+xx=x/(1+z)
+yy=y/(1+z)
+
+return xx,yy
+end
+
+"""
+    stproj_inv(xx,yy;XC0=0.0,YC0=90.0)
+
+Apply to xx,yy (stereographic projection coordinates) the reverse 
+of the stereographic projection which puts XC0,YC0 (longitude, 
+latitude) at x,y=0,0
+"""
+function stproj_inv(xx,yy,XC0=0.0,YC0=90.0)
+    phi0=pi/180*XC0; theta0=pi/180*(90-YC0);
+
+    # Reverse stereographic projection from North Pole:
+    (x,y,z)=2*[xx yy (1-xx^2-yy^2)/2]./(1+xx^2+yy^2)
+
+    # bring chosen point back from South Pole:
+    xx=cos(theta0)*x+sin(theta0)*z
+    yy=y
+    zz=-sin(theta0)*x+cos(theta0)*z
+
+    # bring chosen longitude back from x>0,y=0:
+    x=cos(phi0)*xx-sin(phi0)*yy
+    y=sin(phi0)*xx+cos(phi0)*yy
+    z=zz
+
+    # compute spherical coordinates:
+    theta=atan(sqrt(x^2+y^2)/z)
+    phi=atan(y, x)
+    
+    XC=180/pi*phi
+    theta>=0 ? YC=90-180/pi*theta : YC=-90-180/pi*theta
+
+    return XC,YC
 end
