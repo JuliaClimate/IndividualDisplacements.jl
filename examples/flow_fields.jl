@@ -1,10 +1,7 @@
 using MeshArrays, OceanStateEstimation, NetCDF
 
-module MeshArrays_Demos
-using MeshArrays
 p=dirname(pathof(MeshArrays))
 include(joinpath(p,"../examples/Demos.jl"))
-end
 
 """
     random_flow_field(;np=12,nq=18)
@@ -16,8 +13,9 @@ Set up a random flow field over a gridded domain of size np,nq
 ```
 """
 function random_flow_field(;np=12,nq=18)
+
 Γ=simple_periodic_domain(np,nq)
-(_,ϕ,_,_)=MeshArrays_Demos.demo2(Γ)
+(_,ϕ,_,_)=demo2(Γ)
 ϕ .*= 0.5
 
 #For the convergent / scalar potential case, ϕ is interpreted as being 
@@ -97,7 +95,7 @@ function global_ocean_circulation(;k=1,ny=2)
   Γ=merge(Γ,Dict("update_location!" => func))
 
   #initialize u0,u1 etc
-  𝑃,𝐷=set_up_𝑃(k,0.0,Γ,ECCOclim_path);
+  𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path);
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, Γ=Γ)

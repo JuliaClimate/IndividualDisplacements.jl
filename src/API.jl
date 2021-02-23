@@ -152,63 +152,92 @@ function Individuals(NT::NamedTuple)
     Individuals{T,ndims(📌)}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,𝑃=𝑃,𝐷=𝐷,𝑀=𝑀)    
 end
 
-function Individuals(𝐹::𝐹_Array2D,x,y)
+function Individuals(𝐹::𝐹_Array2D,x,y, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
+    T=eltype(📌)
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
+    haskey(NT,:🔴) ? 🔴=NT.🔴 : nothing
+
     🔧 = postprocess_xy
-    T=eltype(📌)
+    haskey(NT,:🔧) ? 🔧=NT.🔧 : nothing
+
     🆔=collect(1:size(📌,2))
+    haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
+
+    ∫=default_solver
+    haskey(NT,:∫) ? ∫=NT.∫ : nothing
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt,∫=default_solver,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt,∫=∫,🔧=🔧)    
 end
 
-function Individuals(𝐹::𝐹_Array3D,x,y,z)
+function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];z[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
+    T=eltype(📌)
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
+    haskey(NT,:🔴) ? 🔴=NT.🔴 : nothing
+
     function 🔧(sol,𝑄::FlowFields;id=missing,𝑇=missing)
         df=postprocess_xy(sol,𝐹,id=id,𝑇=𝑇)
         z=sol[3,:]
         df.z=z[:]
         return df
     end
-    T=eltype(📌)
+    haskey(NT,:🔧) ? 🔧=NT.🔧 : nothing
+
     🆔=collect(1:size(📌,2))
+    haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
+
+    ∫=default_solver
+    haskey(NT,:∫) ? ∫=NT.∫ : nothing
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt,∫=default_solver,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt,∫=∫,🔧=🔧)    
 end
 
-function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
+function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
+    T=eltype(📌)
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], fid=Int64[], t=Float64[])
+    haskey(NT,:🔴) ? 🔴=NT.🔴 : nothing
+
     🔧 = postprocess_MeshArray
+    haskey(NT,:🔧) ? 🔧=NT.🔧 : nothing
 
-    T=eltype(📌)
     🆔=collect(1:size(📌,2))
+    haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=default_solver,🔧=🔧)    
+    ∫=default_solver
+    haskey(NT,:∫) ? ∫=NT.∫ : nothing
+
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=∫,🔧=🔧)    
 end
 
-function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid)
+function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];z[i];fid[i]] for i in eachindex(x)])
     length(📌)==1 ? 📌=📌[1] : nothing
+    T=eltype(📌)
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], fid=Int64[], t=Float64[])
+    haskey(NT,:🔴) ? 🔴=NT.🔴 : nothing
+
     function 🔧(sol,𝑄::FlowFields;id=missing,𝑇=missing)
         df=postprocess_MeshArray(sol,𝐹,id=id,𝑇=𝑇)
-        z=sol[3,:]
+        z=[sol[1,i,j][1] for i in 1:size(sol,2), j in 1:size(sol,3)]
         df.z=z[:]
         return df
     end
+    haskey(NT,:🔧) ? 🔧=NT.🔧 : nothing
 
-    T=eltype(📌)
     🆔=collect(1:size(📌,2))
+    haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
+
     ∫=default_solver
+    haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
     Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt!,∫=∫,🔧=🔧)    
 end
