@@ -57,6 +57,14 @@ At this stage, `IndividualDisplacements.jl` is considered production-ready, such
 
 The documentation of `IndividualDisplacements.jl` is also now considered sufficient for welcoming additional contributors. Integration with Julia packages developed in `JuliaClimate`, `JuliaOcean`, `JuliaGeo`, `JuliaStats`, `JuliaDynamics`, and other relevant organizations is thus expected to intensify moving forward.
 
+# Figures
+
+Reference from text using \autoref{fig:ocn} and Fig \autoref{fig:atm}
+
+![Ocean simulation example.\label{fig:ocn}](simulated_lagr_float03.png)
+
+![Atmosphere simulation example.\label{fig:atm}](simulated_atm_flow04.png){ width=20% }
+
 # Acknowledgements
 
 We acknowledge contributions from the open source community at large, the paper reviewers and journal editor, as well as developers of `Julia` and its packages upon which `IndividualDisplacements.jl` crucially depends. 
