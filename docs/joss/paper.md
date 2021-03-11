@@ -30,8 +30,7 @@ bibliography: paper.bib
 
 # Summary
 
-`IndividualDisplacements.jl` [@IndividualDisplacementsFeb2021] is focused on computation and analysis of individual displacements across the global climate system. _Individuals_ is used here as a generic term to represent points, particles, parcels, materials, etc that tend to be carried around the Earth by geophysical fluids (via oceanic currents or atmospheric flows for example). Their _displacements_, or trajectories, are computed by deriving pointwise velocities from flow fields provided by the user and integrating over time.
-
+`IndividualDisplacements.jl` [@IndividualDisplacementsFeb2021] is focused on computation and analysis of individual displacements across the global climate system. _Individuals_ is used here as a generic term to represent points, particles, parcels, materials, etc that tend to be carried around the Earth by geophysical fluids (via oceanic currents or atmospheric flows for example). Their _displacements_, or trajectories, are computed by deriving pointwise velocities from flow fields provided by the user and integrating over time (e.g., \autoref{fig:atm} and \autoref{fig:ocn}).
 
 This Julia package is notably aimed at the analysis of numerical models that simulate Oceanic and / or Atmospheric transport processes on staggered C-grids -- those most often used in both regional and global modeling. Inter-operability with global climate model grids like the cube-sphere and lat-lon-cap grid [e.g. see @gmd-8-3071-2015] is a key feature enabled by `MeshArrays.jl` ([JuliaCon 2018 (video link)](https://youtu.be/RDxAy_zSUvg) ; [@MeshArraysAugust2020]). The chosen approach also readily supports simpler grids (cartesian, spherical, curvilinear grids) often used in process-oriented models, regional models, or satellite data products.
 
@@ -56,6 +55,10 @@ The development of `IndividualDisplacements.jl` was motivated not just by our sc
 At this stage, `IndividualDisplacements.jl` is considered production-ready, such that we could immediately start transferring several ongoing research collaborations that use MITgcm and ECCO [e.g. @Rousselet2020], [@Forget2019] from fortran to Julia. Extension to other models may start with MERRA2 / MITgcm coupled model runs in the immediate future [@Strobach2020]. Other near-term applications could also include data assimilation to better simulate plastic garbage patches [@gmd-2020-385]. 
 
 The documentation of `IndividualDisplacements.jl` is also now considered sufficient for welcoming additional contributors. Integration with Julia packages developed in `JuliaClimate`, `JuliaOcean`, `JuliaGeo`, `JuliaStats`, `JuliaDynamics`, and other relevant organizations is thus expected to intensify moving forward.
+
+![Atmosphere simulation example. Hundred thousand particles are displaced by time-varying 2D flow fields provided by MITgcm on a cube-sphere grid [@MITgcm2020, via MITgcmTools.jl]. Particle colors show velocity while contours show temperature.\label{fig:atm}](simulated_atm_flow04.png){ width=80% }
+
+![Ocean simulation example. A particle is displaced (left panels) by time-varying 3D flow fields from a global ocean state estimate [@gmd-8-3071-2015, via OceanStateEstimation.jl]. Vertical profiles of temperature and salinity are recorded along the way (right panels).\label{fig:ocn}](simulated_lagr_float03.png){ width=80% }
 
 # Acknowledgements
 
