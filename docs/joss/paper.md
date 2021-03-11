@@ -30,8 +30,7 @@ bibliography: paper.bib
 
 # Summary
 
-`IndividualDisplacements.jl` [@IndividualDisplacementsFeb2021] is focused on computation and analysis of individual displacements across the global climate system. _Individuals_ is used here as a generic term to represent points, particles, parcels, materials, etc that tend to be carried around the Earth by geophysical fluids (via oceanic currents or atmospheric flows for example). Their _displacements_, or trajectories, are computed by deriving pointwise velocities from flow fields provided by the user and integrating over time.
-
+`IndividualDisplacements.jl` [@IndividualDisplacementsFeb2021] is focused on computation and analysis of individual displacements across the global climate system. _Individuals_ is used here as a generic term to represent points, particles, parcels, materials, etc that tend to be carried around the Earth by geophysical fluids (via oceanic currents or atmospheric flows for example). Their _displacements_, or trajectories, are computed by deriving pointwise velocities from flow fields provided by the user and integrating over time (e.g., \autoref{fig:atm} and \autoref{fig:ocn}).
 
 This Julia package is notably aimed at the analysis of numerical models that simulate Oceanic and / or Atmospheric transport processes on staggered C-grids -- those most often used in both regional and global modeling. Inter-operability with global climate model grids like the cube-sphere and lat-lon-cap grid [e.g. see @gmd-8-3071-2015] is a key feature enabled by `MeshArrays.jl` ([JuliaCon 2018 (video link)](https://youtu.be/RDxAy_zSUvg) ; [@MeshArraysAugust2020]). The chosen approach also readily supports simpler grids (cartesian, spherical, curvilinear grids) often used in process-oriented models, regional models, or satellite data products.
 
@@ -59,11 +58,9 @@ The documentation of `IndividualDisplacements.jl` is also now considered suffici
 
 # Figures
 
-Reference from text using \autoref{fig:ocn} and Fig \autoref{fig:atm}
+![Atmosphere simulation example. Hundred thousand particles are displaced by time-varying 2D flow field from a MITgcm simulation on a cube-sphere grid [@MITgcm2020, via MITgcmTools.jl]. Particle colors show velocity and contours show temperature.\label{fig:atm}](simulated_atm_flow04.png){ width=80% }
 
-![Ocean simulation example.\label{fig:ocn}](simulated_lagr_float03.png)
-
-![Atmosphere simulation example.\label{fig:atm}](simulated_atm_flow04.png){ width=20% }
+![Ocean simulation example. A particle is displaced by the 3D flow field (left panels) from a global ocean state estimate [@gmd-8-3071-2015, via OceanStateEstimation.jl]. Vertical profiles of temperature and salinity are recorded along the way (right panels).\label{fig:ocn}](simulated_lagr_float03.png){ width=80% }
 
 # Acknowledgements
 
