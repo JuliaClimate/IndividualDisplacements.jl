@@ -56,11 +56,9 @@ At this stage, `IndividualDisplacements.jl` is considered production-ready, such
 
 The documentation of `IndividualDisplacements.jl` is also now considered sufficient for welcoming additional contributors. Integration with Julia packages developed in `JuliaClimate`, `JuliaOcean`, `JuliaGeo`, `JuliaStats`, `JuliaDynamics`, and other relevant organizations is thus expected to intensify moving forward.
 
-# Figures
+![Atmosphere simulation example. Hundred thousand particles are displaced by time-varying 2D flow fields provided by MITgcm on a cube-sphere grid [@MITgcm2020, via MITgcmTools.jl]. Particle colors show velocity while contours show temperature.\label{fig:atm}](simulated_atm_flow04.png){ width=80% }
 
-![Atmosphere simulation example. Hundred thousand particles are displaced by time-varying 2D flow field from a MITgcm simulation on a cube-sphere grid [@MITgcm2020, via MITgcmTools.jl]. Particle colors show velocity and contours show temperature.\label{fig:atm}](simulated_atm_flow04.png){ width=80% }
-
-![Ocean simulation example. A particle is displaced by the 3D flow field (left panels) from a global ocean state estimate [@gmd-8-3071-2015, via OceanStateEstimation.jl]. Vertical profiles of temperature and salinity are recorded along the way (right panels).\label{fig:ocn}](simulated_lagr_float03.png){ width=80% }
+![Ocean simulation example. A particle is displaced (left panels) by time-varying 3D flow fields from a global ocean state estimate [@gmd-8-3071-2015, via OceanStateEstimation.jl]. Vertical profiles of temperature and salinity are recorded along the way (right panels).\label{fig:ocn}](simulated_lagr_float03.png){ width=80% }
 
 # Acknowledgements
 
