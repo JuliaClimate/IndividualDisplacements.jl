@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.20
+# v0.12.21
 
 using Markdown
 using InteractiveUtils
@@ -16,11 +16,10 @@ end
 # ╔═╡ 747d446a-dfeb-11ea-3533-c9404fd41688
 begin
 	using IndividualDisplacements, MeshArrays, DataFrames
-	using Statistics, PlutoUI, StatsPlots, OrdinaryDiffEq
+	using Statistics, PlutoUI, OrdinaryDiffEq, StatsPlots
 
 	p=dirname(pathof(IndividualDisplacements))
-    include(joinpath(p,"../examples/helper_functions.jl"))
-    #include(joinpath(p,"../examples/recipes_plots.jl"))
+    include(joinpath(p,"../examples/flow_fields.jl"))
 	𝑃,𝐷,Γ=OCCA_FlowFields()	
 	tmp=(Γ = Γ, m = "OCCA")
     𝐷=merge(𝐷,tmp)
