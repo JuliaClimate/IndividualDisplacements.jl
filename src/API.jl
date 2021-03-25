@@ -174,7 +174,7 @@ Base.@kwdef struct Individuals{T,N}
    📌  ::Array{T,N} = Array{T,N}(undef, Tuple(Int.(zeros(1,N)))) #\:pushpin:<tab>
    🔴  ::DataFrame = similar(default_recorder) #\:red_circle:<tab>
    🆔   ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
-   🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
+   🚄  ::Function = dxdt! #\:bullettrain_side:<tab>
    ∫   ::Function = default_solver #\int<tab>
    🔧  ::Function = default_postproc #\:wrench:<tab>
    𝑃   ::FlowFields = default_flowfields #\itP<tab>
@@ -187,7 +187,7 @@ function Individuals(NT::NamedTuple)
     haskey(NT,:position) ? 📌=NT.position : 📌=Array{Float64,2}(undef, Tuple(Int.(zeros(1,2))))
     haskey(NT,:record) ? 🔴=NT.record : 🔴=similar(default_recorder)
     haskey(NT,:ID) ? 🆔=NT.ID : 🆔=collect(1:size(📌,2))    
-    haskey(NT,:velocity) ? 🚄=NT.velocity : 🚄=dxy_dt
+    haskey(NT,:velocity) ? 🚄=NT.velocity : 🚄=dxdt!
     haskey(NT,:integration) ? ∫=NT.integration : ∫=default_solver
     haskey(NT,:postprocessing) ? 🔧=NT.postprocessing : 🔧=default_postproc
     haskey(NT,:parameters) ? 𝑃=NT.parameters : 𝑃=default_flowfields
@@ -216,7 +216,7 @@ function Individuals(𝐹::𝐹_Array2D,x,y, NT::NamedTuple = NamedTuple())
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt,∫=∫,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
 end
 
 function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
@@ -241,7 +241,7 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt,∫=∫,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
 end
 
 function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple())
@@ -261,7 +261,7 @@ function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=∫,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
 end
 
 function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTuple())
@@ -286,7 +286,7 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTup
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt!,∫=∫,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
 end
 
 """

@@ -49,7 +49,7 @@ function example2()
 
    tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
    
-   𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🚄 = dxy_dt, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
+   𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🚄 = dxdt!, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
    𝑇=(0.0,𝐼.𝑃.𝑇[2])
    ∫!(𝐼,𝑇)
 

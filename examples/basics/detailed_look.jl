@@ -89,7 +89,7 @@ tmpv=fill(0.0,100)
 tmpx=fill(0.0,100)
 for i=1:100
     tmpx[i]=500.0 *i./dx
-    dxy_dt(du,[tmpx[i];0.499./dx],𝑃,0.0)
+    dxdt!(du,[tmpx[i];0.499./dx],𝑃,0.0)
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
@@ -106,7 +106,7 @@ tmpv=fill(0.0,100)
 tmpy=fill(0.0,100)
 for i=1:100
     tmpy[i]=500.0 *i./dx
-    dxy_dt(du,[0.499./dx;tmpy[i]],𝑃,0.0)
+    dxdt!(du,[0.499./dx;tmpy[i]],𝑃,0.0)
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
@@ -126,7 +126,7 @@ for i=1:nSteps
     dxy_dt_replay(du,[tmp[i,:lon],tmp[i,:lat]],tmp,tmp[i,:time])
     refu[i]=du[1]./dx
     refv[i]=du[2]./dx
-    dxy_dt(du,[tmp[i,:lon],tmp[i,:lat]]./dx,𝑃,Float64(tmp[i,:time]))
+    dxdt!(du,[tmp[i,:lon],tmp[i,:lat]]./dx,𝑃,Float64(tmp[i,:time]))
     tmpu[i]=du[1]
     tmpv[i]=du[2]
 end
@@ -140,16 +140,16 @@ end
 #
 # Solve through time using `OrdinaryDiffEq.jl` with
 #
-# - `dxy_dt` is the function computing `dxy/dt`
+# - `dxdt!` is the function computing `d(position)/dt`
 # - `uInit` is the initial condition `u @ tspan[1]`
 # - `tspan` is the time interval
-# - `uvetc` are parameters for `dxy_dt`
+# - `𝑃` are parameters for `dxdt!`
 # - `Tsit5` is the time-stepping scheme
 # - `reltol` and `abstol` are tolerance parameters
 
 tspan = (0.0,nSteps*3600.0)
 #prob = ODEProblem(dxy_dt_replay,uInit,tspan,tmp)
-prob = ODEProblem(dxy_dt,uInit,tspan,𝑃)
+prob = ODEProblem(dxdt!,uInit,tspan,𝑃)
 sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 sol[1:4]
 
