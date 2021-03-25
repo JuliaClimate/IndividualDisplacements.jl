@@ -65,7 +65,7 @@ function solid_body_rotation(np,nz)
     [vv[k]=v[1] for k=1:nz]
     
     #Vertical velocity component w    
-    w=fill(-0.01,MeshArray(γ,γ.ioPrec,nz));
+    w=fill(-0.01,MeshArray(γ,γ.ioPrec,nz+1))
     
     return write(uu),write(vv),write(w)
 end
@@ -190,7 +190,7 @@ function OCCA_FlowFields(;backward_in_time::Bool=false)
     w[:,k]=tmpw
    end
 
-   𝑃=𝐹_MeshArray3D{eltype(u)}(u,u,v,v,w,w,[t0,t1],func)
+   𝑃=FlowFields(u,u,v,v,w,w,[t0,t1],func)
 
    𝐷 = (θ0=θ, θ1=θ, XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), 
    RF=Γ["RF"], RC=Γ["RC"],ioSize=(360,160,n))
@@ -225,7 +225,7 @@ function test1_setup()
     u0=u./dx; u1=u./dx
     v0=v./dx; v1=v./dx
 
-    𝑃=𝐹_Array2D{eltype(u)}(u0[1], u1[1], v0[1], v1[1], [t0,t1])
+    𝑃=FlowFields(u0[1], u1[1], v0[1], v1[1], [t0,t1])
     
     u0=[200000.0;0.0]./dx
     du=fill(0.0,2);
@@ -261,7 +261,7 @@ function test2_periodic_domain(np = 12, nq = 12)
     (u, v) = exchange(u, v, 1)
 
     f = (u -> IndividualDisplacements.update_location_dpdo!(u,Γ.XC.grid))
-    𝑃=𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0.0,400.0],f)
+    𝑃=FlowFields(u,u,v,v,[0.0,400.0],f)
 
     #initial conditions
     x0 = np * (0.4:0.04:0.6)
