@@ -31,9 +31,9 @@ solv(prob) = solve(prob,Tsit5(),reltol=1e-6,abstol=1e-6)
 tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
 
 #𝐼 = Individuals{Float64,2}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
-#                         🚄 = dxy_dt, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃);
+#                         🚄 = dxdt!, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃);
 
-I=(position=xy,record=deepcopy(tr),velocity=dxy_dt,
+I=(position=xy,record=deepcopy(tr),velocity=dxdt!,
    integration=solv,postprocessing=postprocess_xy,parameters=𝑃)
 𝐼=Individuals(I)
 
