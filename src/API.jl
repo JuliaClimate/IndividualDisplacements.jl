@@ -43,6 +43,12 @@ struct 𝐹_Array2D{T} <: FlowFields
     𝑇::Array{T}
 end
 
+function 𝐹_Array2D(u0::Array{T,2},u1::Array{T,2},
+    v0::Array{T,2},v1::Array{T,2},𝑇::Union{Array,Tuple}) where T
+    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+    𝐹_Array2D(u0,u1,v0,v1,𝑇)
+end
+
 struct 𝐹_Array3D{T} <: FlowFields
     u0::Array{T,3}
     u1::Array{T,3}
@@ -53,6 +59,12 @@ struct 𝐹_Array3D{T} <: FlowFields
     𝑇::Array{T}
 end
 
+function 𝐹_Array3D(u0::Array{T,3},u1::Array{T,3},v0::Array{T,3},v1::Array{T,3},
+    w0::Array{T,3},w1::Array{T,3},𝑇::Union{Array,Tuple}) where T
+    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+    𝐹_Array3D(u0,u1,v0,v1,w0,w1,𝑇)
+end
+
 struct 𝐹_MeshArray2D{T} <: FlowFields
     u0::AbstractMeshArray{T,1}
     u1::AbstractMeshArray{T,1}
@@ -60,6 +72,13 @@ struct 𝐹_MeshArray2D{T} <: FlowFields
     v1::AbstractMeshArray{T,1}
     𝑇::Array{T}
     update_location!::Function
+end
+
+function 𝐹_MeshArray2D(u0::AbstractMeshArray{T,1},u1::AbstractMeshArray{T,1},
+    v0::AbstractMeshArray{T,1},v1::AbstractMeshArray{T,1},
+    𝑇::Union{Array,Tuple},update_location!::Function) where T
+    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+    𝐹_MeshArray2D(u0,u1,v0,v1,𝑇,update_location!)
 end
 
 struct 𝐹_MeshArray3D{T} <: FlowFields
@@ -73,6 +92,13 @@ struct 𝐹_MeshArray3D{T} <: FlowFields
     update_location!::Function
 end
 
+function 𝐹_MeshArray3D(u0::AbstractMeshArray{T,2},u1::AbstractMeshArray{T,2},
+    v0::AbstractMeshArray{T,2},v1::AbstractMeshArray{T,2},
+    w0::AbstractMeshArray{T,2},w1::AbstractMeshArray{T,2},
+    𝑇::Union{Array,Tuple},update_location!::Function) where T
+    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+    𝐹_MeshArray3D(u0,u1,v0,v1,w0,w1,𝑇,update_location!)
+end
 
 """
     defaults for Individuals constructor
