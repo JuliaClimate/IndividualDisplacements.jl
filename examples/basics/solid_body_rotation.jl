@@ -84,7 +84,7 @@ end
 # `𝐹` (which is defined above) to interpolate velocity at the specified
 # space-time position (e.g. those of individuals). 
 
-🚄 = dxyz_dt
+🚄 = dxdt!
 
 # Now that every thing needed to carry out the computation is in place, 
 # we wrap up the problem configuration in a struct (`Individuals`) which 
