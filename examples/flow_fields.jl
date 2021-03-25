@@ -203,7 +203,7 @@ end
     test1_setup()
 
 Call `gcmgrid`, initialize a single point,
-rely on `dxy_dt`, and just output `sol` at the end.
+rely on `dxdt!`, and just output `sol` at the end.
 
 ```
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
@@ -229,7 +229,7 @@ function test1_setup()
     
     u0=[200000.0;0.0]./dx
     du=fill(0.0,2);
-    prob = ODEProblem(dxy_dt,u0,[0.0,2998*3600.0],𝑃)
+    prob = ODEProblem(dxdt!,u0,[0.0,2998*3600.0],𝑃)
     sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
 
     return 𝑃,sol
@@ -239,7 +239,7 @@ end
     test2_periodic_domain(np = 12, nq = 12)
 
 Call `simple_periodic_domain`, initialize 6x6 point cloud,
-rely on `dxy_dt!`, and call `postprocess_xy` at the end.
+rely on `dxdt!`, and call `postprocess_xy` at the end.
 
 ```
 using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
@@ -272,7 +272,7 @@ function test2_periodic_domain(np = 12, nq = 12)
     du=0*u0
     
     #solve for trajectories
-    prob = ODEProblem(dxy_dt!, u0, 𝑃.𝑇, 𝑃)
+    prob = ODEProblem(dxdt!, u0, 𝑃.𝑇, 𝑃)
     sol = solve(prob,Euler(),dt=0.1)
 
     return postprocess_xy(sol, 𝑃),𝑃
