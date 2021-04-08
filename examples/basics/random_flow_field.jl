@@ -55,7 +55,7 @@ vC = -fac*[cos(x) for x in XC,y in YC]; #-dphi/dx at cell center
 u=0.5*(circshift(uC, (1,0))+uC) /dx #staggered u converted to grid point units (m/s -> 1/s)
 v=0.5*(circshift(vC, (0,1))+vC) /dx #staggered v converted to grid point units (m/s -> 1/s)
 
-𝐹=𝐹_Array2D(u,u,v,v,[0.,10.])
+𝐹=FlowFields(u,u,v,v,[0.,10.])
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3. Initialize Individuals
@@ -105,7 +105,7 @@ phi_scatter(ϕ,🔴_by_t[end])
 # range. For example :
 #
 # ```
-# 𝐹=𝐹_Array2D(-u,u,-v,v,[0.,10.])
+# 𝐹=FlowFields(-u,u,-v,v,[0.,10.])
 # ```
 
 # It is often convenient to set up `FlowFields` using the MeshArrays.jl package, which 
@@ -114,7 +114,7 @@ phi_scatter(ϕ,🔴_by_t[end])
 #
 # ```
 # u,v,ϕ=random_flow_field()
-# #𝐹=𝐹_Array2D(u,u,v,v,[0.,10.])
+# #𝐹=FlowFields(u,u,v,v,[0.,10.])
 # 𝐹=convert_to_FlowFields(u,v,10.0);
 # ```
 

@@ -16,18 +16,17 @@ Also by convention, velocity fields are expected to have been normalized to grid
 before sending them to one of the supported `FlowFields` constructors (using either `Array` or `MeshArray`):
 
 ```
-𝐹_Array2D (u0,u1,v0,v1,𝑇)
-𝐹_Array3D (u0,u1,v0,v1,w0,w1,𝑇)
-𝐹_MeshArray2D (u0,u1,v0,v1,𝑇,update_location!)
-𝐹_MeshArray3D (u0,u1,v0,v1,w0,w1,𝑇,update_location!)
+𝐹_Array2D(u0,u1,v0,v1,𝑇)
+𝐹_Array3D(u0,u1,v0,v1,w0,w1,𝑇)
+𝐹_MeshArray2D(u0,u1,v0,v1,𝑇,update_location!)
+𝐹_MeshArray3D(u0,u1,v0,v1,w0,w1,𝑇,update_location!)
 ```
 
-For example, constructor calls may look like
+Using the `FlowFields` constructor which gets selected by the type of `u0` etc. For example :
 
 ```
-𝐹=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0.0,10.0])
-or
-𝐹=𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0.0,10.0],func)
+𝐹=FlowFields(u,u,v,v,0*w,1*w,[0.0,10.0])
+𝐹=FlowFields(u,u,v,v,[0.0,10.0],func)
 ```
 
 as shown in the online documentation examples.
@@ -43,6 +42,17 @@ struct 𝐹_Array2D{T} <: FlowFields
     𝑇::Array{T}
 end
 
+function FlowFields(u0::Array{T,2},u1::Array{T,2},
+    v0::Array{T,2},v1::Array{T,2},𝑇::Union{Array,Tuple}) where T
+    #test for type of 𝑇 and fix if needed
+    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+    #check array size concistency
+    tst=prod([(size(u0)==size(tmp)) for tmp in (u1,v0,v1)])
+    !tst ? error("inconsistent array sizes") : nothing
+    #call constructor
+    𝐹_Array2D(u0,u1,v0,v1,𝑇)
+end
+
 struct 𝐹_Array3D{T} <: FlowFields
     u0::Array{T,3}
     u1::Array{T,3}
@@ -53,6 +63,18 @@ struct 𝐹_Array3D{T} <: FlowFields
     𝑇::Array{T}
 end
 
+function FlowFields(u0::Array{T,3},u1::Array{T,3},v0::Array{T,3},v1::Array{T,3},
+    w0::Array{T,3},w1::Array{T,3},𝑇::Union{Array,Tuple}) where T
+    #test for type of 𝑇 and fix if needed
+    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+    #check array size concistency
+    tst=prod([(size(u0)==size(tmp)) for tmp in (u1,v0,v1)])
+    tst=tst*prod([(size(u0)==size(tmp).-(0,0,1)) for tmp in (w0,w1)])
+    !tst ? error("inconsistent array sizes") : nothing
+    #call constructor
+    𝐹_Array3D(u0,u1,v0,v1,w0,w1,𝑇)
+end
+
 struct 𝐹_MeshArray2D{T} <: FlowFields
     u0::AbstractMeshArray{T,1}
     u1::AbstractMeshArray{T,1}
@@ -60,6 +82,18 @@ struct 𝐹_MeshArray2D{T} <: FlowFields
     v1::AbstractMeshArray{T,1}
     𝑇::Array{T}
     update_location!::Function
+end
+
+function FlowFields(u0::AbstractMeshArray{T,1},u1::AbstractMeshArray{T,1},
+    v0::AbstractMeshArray{T,1},v1::AbstractMeshArray{T,1},
+    𝑇::Union{Array,Tuple},update_location!::Function) where T
+    #test for type of 𝑇 and fix if needed
+    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+    #check array size concistency
+    tst=prod([(size(u0)==size(tmp))*(u0.fSize==tmp.fSize) for tmp in (u1,v0,v1)])
+    !tst ? error("inconsistent array sizes") : nothing
+    #call constructor
+    𝐹_MeshArray2D(u0,u1,v0,v1,𝑇,update_location!)
 end
 
 struct 𝐹_MeshArray3D{T} <: FlowFields
@@ -73,6 +107,19 @@ struct 𝐹_MeshArray3D{T} <: FlowFields
     update_location!::Function
 end
 
+function FlowFields(u0::AbstractMeshArray{T,2},u1::AbstractMeshArray{T,2},
+    v0::AbstractMeshArray{T,2},v1::AbstractMeshArray{T,2},
+    w0::AbstractMeshArray{T,2},w1::AbstractMeshArray{T,2},
+    𝑇::Union{Array,Tuple},update_location!::Function) where T
+    #test for type of 𝑇 and fix if needed
+    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+    #check array size concistency
+    tst=prod([(size(u0)==size(tmp))*(u0.fSize==tmp.fSize) for tmp in (u1,v0,v1)])
+    tst=tst*prod([(size(u0)==size(tmp).-(0,1))*(u0.fSize==tmp.fSize) for tmp in (w0,w1)])
+    !tst ? error("inconsistent array sizes") : nothing
+    #call constructor
+    𝐹_MeshArray3D(u0,u1,v0,v1,w0,w1,𝑇,update_location!)
+end
 
 """
     defaults for Individuals constructor
@@ -127,7 +174,7 @@ Base.@kwdef struct Individuals{T,N}
    📌  ::Array{T,N} = Array{T,N}(undef, Tuple(Int.(zeros(1,N)))) #\:pushpin:<tab>
    🔴  ::DataFrame = similar(default_recorder) #\:red_circle:<tab>
    🆔   ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
-   🚄  ::Function = dxy_dt #\:bullettrain_side:<tab>
+   🚄  ::Function = dxdt! #\:bullettrain_side:<tab>
    ∫   ::Function = default_solver #\int<tab>
    🔧  ::Function = default_postproc #\:wrench:<tab>
    𝑃   ::FlowFields = default_flowfields #\itP<tab>
@@ -140,7 +187,7 @@ function Individuals(NT::NamedTuple)
     haskey(NT,:position) ? 📌=NT.position : 📌=Array{Float64,2}(undef, Tuple(Int.(zeros(1,2))))
     haskey(NT,:record) ? 🔴=NT.record : 🔴=similar(default_recorder)
     haskey(NT,:ID) ? 🆔=NT.ID : 🆔=collect(1:size(📌,2))    
-    haskey(NT,:velocity) ? 🚄=NT.velocity : 🚄=dxy_dt
+    haskey(NT,:velocity) ? 🚄=NT.velocity : 🚄=dxdt!
     haskey(NT,:integration) ? ∫=NT.integration : ∫=default_solver
     haskey(NT,:postprocessing) ? 🔧=NT.postprocessing : 🔧=default_postproc
     haskey(NT,:parameters) ? 𝑃=NT.parameters : 𝑃=default_flowfields
@@ -169,7 +216,7 @@ function Individuals(𝐹::𝐹_Array2D,x,y, NT::NamedTuple = NamedTuple())
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt,∫=∫,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
 end
 
 function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
@@ -194,7 +241,7 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt,∫=∫,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
 end
 
 function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple())
@@ -214,7 +261,7 @@ function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxy_dt!,∫=∫,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
 end
 
 function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTuple())
@@ -239,7 +286,7 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTup
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxyz_dt!,∫=∫,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
 end
 
 """
