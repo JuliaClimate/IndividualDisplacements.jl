@@ -1,9 +1,10 @@
 language: julia
 os:
   - linux
+  - osx
 julia:
+  - 1.6
   - nightly
-  - 1.5
 notifications:
   email: false
 
@@ -23,7 +24,7 @@ after_success:
 jobs:
   include:
     - stage: "Documentation"
-      julia: 1.5
+      julia: 1.6
       os: linux
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
