@@ -40,11 +40,11 @@ Internally, the package currently employs `OrdinaryDiffEq.jl` to integrate parti
 
 `IndividualDisplacements.jl` is also intended to facilitate research involving model-data comparison, data assimilation, or machine learning by providing basic interfaces to other displacement data sets. To start the package provides some support for ingesting (1) data collected in the field by the Global Ocean Drifter Program and Argo array of drifting buoys, and (2) trajectories simulated internally, _online_, by the MIT general circulation model.
 
+The examples folder, which is unit tested upon building the documentation hosted online for each code revision, already covers several common grid cases, two-dimensional and three-dimensional flows, steady-state and time-variable flows. It demonstrates interpolation and diagnostics methods, three plotting libraries, and two notebook systems. Minor parameter changes in these examples should suffice to start applying `IndividualDisplacements.jl` to any other MITgcm simulation of e.g. atmospheric or oceanic turbulence [@MITgcm2020].
+
 ![Atmosphere simulation example. Hundred thousand particles are displaced by time-varying 2D flow fields provided by MITgcm on a cube-sphere grid [@MITgcm2020, via MITgcmTools.jl]. Particle colors show velocity while contours show temperature.\label{fig:atm}](simulated_atm_flow04.png){ width=80% }
 
 ![Ocean simulation example. A particle is displaced (left panels) by time-varying 3D flow fields from a global ocean state estimate [@gmd-8-3071-2015, via OceanStateEstimation.jl]. Vertical profiles of temperature and salinity are recorded along the way (right panels).\label{fig:ocn}](simulated_lagr_float03.png){ width=80% }
-
-The examples folder, which is unit tested upon building the documentation hosted online for each code revision, already covers several common grid cases, two-dimensional and three-dimensional flows, steady-state and time-variable flows. It demonstrates interpolation and diagnostics methods, three plotting libraries, and two notebook systems. Minor parameter changes in these examples should suffice to start applying `IndividualDisplacements.jl` to any other MITgcm simulation of e.g. atmospheric or oceanic turbulence [@MITgcm2020].
 
 # Statement of need
 
