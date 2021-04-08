@@ -49,7 +49,7 @@ function example2()
 
    tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
    
-   𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🚄 = dxy_dt, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
+   𝐼 = Individuals{Float64}(📌=xy[:,:], 🔴=tr, 🚄 = dxdt!, ∫ = solv, 🔧 = postprocess_xy, 𝑃=𝑃)
    𝑇=(0.0,𝐼.𝑃.𝑇[2])
    ∫!(𝐼,𝑇)
 
@@ -132,6 +132,6 @@ function example2_setup()
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
    Γ=merge(Γ,Dict("mskW" => mskW, "mskS" => mskS))
 
-   𝑃=𝐹_Array2D{eltype(u0)}(u0[1], u1[1], v0[1], v1[1], [t0,t1])
+   𝑃=FlowFields(u0[1], u1[1], v0[1], v1[1], [t0,t1])
    return 𝑃,Γ
 end

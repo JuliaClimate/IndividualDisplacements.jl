@@ -39,7 +39,7 @@ np,nz=16,4 #gridded domain size (horizontal and vertical)
 
 u,v,w=solid_body_rotation(np,nz) #staggered velocity arrays
 
-𝐹=𝐹_Array3D{eltype(u)}(u,u,v,v,0*w,1*w,[0,19.95*2*pi]); #FlowFields data structure
+𝐹=FlowFields(u,u,v,v,0*w,1*w,[0,19.95*2*pi]); #FlowFields data structure
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ### 1.3 Initialize Individuals
@@ -84,7 +84,7 @@ end
 # `𝐹` (which is defined above) to interpolate velocity at the specified
 # space-time position (e.g. those of individuals). 
 
-🚄 = dxyz_dt
+🚄 = dxdt!
 
 # Now that every thing needed to carry out the computation is in place, 
 # we wrap up the problem configuration in a struct (`Individuals`) which 
