@@ -80,13 +80,13 @@ function set_up_FlowFields(k::Int,Γ::Dict,pth::String)
     if k==0
         msk=Γ["hFacC"]
         (_,nr)=size(msk)
-        𝑃=𝐹_MeshArray3D{Float64}(MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
+        𝑃=FlowFields(MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
         MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
         MeshArray(γ,Float64,nr+1),MeshArray(γ,Float64,nr+1),
         [-mon/2,mon/2],func)
     else
         msk=Γ["hFacC"][:, k]
-        𝑃=𝐹_MeshArray2D{Float64}(MeshArray(γ,Float64),MeshArray(γ,Float64),
+        𝑃=FlowFields(MeshArray(γ,Float64),MeshArray(γ,Float64),
         MeshArray(γ,Float64),MeshArray(γ,Float64),[-mon/2,mon/2],func)    
     end
     
