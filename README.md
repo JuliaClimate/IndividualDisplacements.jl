@@ -5,6 +5,7 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev)
 [![codecov](https://codecov.io/gh/JuliaClimate/IndividualDisplacements.jl/branch/master/graph/badge.svg?token=qgMClXyzVB)](https://codecov.io/gh/JuliaClimate/IndividualDisplacements.jl)
 
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.02813/status.svg)](https://doi.org/10.21105/joss.02813)
 [![DOI](https://zenodo.org/badge/208676176.svg)](https://zenodo.org/badge/latestdoi/208676176)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/JuliaClimate/IndividualDisplacements.jl/master)
 
