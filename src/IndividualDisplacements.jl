@@ -13,7 +13,6 @@ include("API.jl")
 include("compute.jl")
 include("data_wrangling.jl")
 include("read.jl")
-include("update_locations.jl")
 
 export Individuals, ∫!
 export FlowFields, convert_to_FlowFields
