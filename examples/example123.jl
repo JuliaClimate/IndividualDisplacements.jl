@@ -131,6 +131,8 @@ function example2_setup()
    mskS=read_mds(γ.path*"hFacS",MeshArray(γ,Float32,nr))
    mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
    Γ=merge(Γ,Dict("mskW" => mskW, "mskS" => mskS))
+   #convert to NamedTuple
+   Γ=(; zip(Symbol.(keys(Γ)), values(Γ))...)
 
    𝑃=FlowFields(u0[1], u1[1], v0[1], v1[1], [t0,t1])
    return 𝑃,Γ

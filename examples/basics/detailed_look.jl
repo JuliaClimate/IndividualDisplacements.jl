@@ -46,8 +46,8 @@ df=read_flt(dirIn,prec);
 # ## 4. Visualize Velocity Fields
 #
 # ```
-# plt=heatmap(Γ["mskW"][1,1].*𝑃.u0,title="U at the start")
-# plt=heatmap(Γ["mskW"][1,1].*𝑃.u1-𝑃.u0,title="U end - U start")
+# plt=heatmap(Γ.mskW[1,1].*𝑃.u0,title="U at the start")
+# plt=heatmap(Γ.mskW[1,1].*𝑃.u1-𝑃.u0,title="U end - U start")
 # ```
 
 # ## 5. Visualize Trajectories
@@ -59,25 +59,25 @@ tmp[1:4,:]
 
 # Super-impose trajectory over velocity field (first for u ...)
 
-x=Γ["XG"].f[1][:,1]
-y=Γ["YC"].f[1][1,:]
-z=transpose(Γ["mskW"][1].*𝑃.u0);
+x=Γ.XG.f[1][:,1]
+y=Γ.YC.f[1][1,:]
+z=transpose(Γ.mskW[1].*𝑃.u0);
 
 # plt=contourf(x,y,z,c=:delta)
 # plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
 # Super-impose trajectory over velocity field (... then for v)
 
-x=Γ["XC"].f[1][:,1]
-y=Γ["YG"].f[1][1,:]
-z=transpose(Γ["mskW"][1].*𝑃.v0);
+x=Γ.XC.f[1][:,1]
+y=Γ.YG.f[1][1,:]
+z=transpose(Γ.mskW[1].*𝑃.v0);
 
 # plt=contourf(x,y,z,c=:delta)
 # plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
 # ## 6. Interpolate Velocities
 
-dx=Γ["dx"]
+dx=Γ.dx
 uInit=[tmp[1,:lon];tmp[1,:lat]]./dx
 nSteps=Int32(tmp[end,:time]/3600)-2
 du=fill(0.0,2);
@@ -95,9 +95,9 @@ for i=1:100
 end
 
 #md plt=plot(tmpx,tmpu,label="u (interp)")
-#md plot!(Γ["XG"].f[1][1:10,1]./dx,𝑃.u0[1:10,1],marker=:o,label="u (C-grid)")
+#md plot!(Γ.XG.f[1][1:10,1]./dx,𝑃.u0[1:10,1],marker=:o,label="u (C-grid)")
 #md plot!(tmpx,tmpv,label="v (interp)")
-#md plot!(Γ["XG"].f[1][1:10,1]./dx,𝑃.v0[1:10,1],marker=:o,label="v (C-grid)")
+#md plot!(Γ.XG.f[1][1:10,1]./dx,𝑃.v0[1:10,1],marker=:o,label="v (C-grid)")
 
 # And similarly in the other direction
 
@@ -112,9 +112,9 @@ for i=1:100
 end
 
 # plt=plot(tmpx,tmpu,label="u (interp)")
-# plot!(Γ["YG"].f[1][1,1:10]./dx,𝑃.u0[1,1:10],marker=:o,label="u (C-grid)")
+# plot!(Γ.YG.f[1][1,1:10]./dx,𝑃.u0[1,1:10],marker=:o,label="u (C-grid)")
 # plot!(tmpx,tmpv,label="v (interp)")
-# plot!(Γ["YG"].f[1][1,1:10]./dx,𝑃.v0[1,1:10],marker=:o,label="v (C-grid)")
+# plot!(Γ.YG.f[1][1,1:10]./dx,𝑃.v0[1,1:10],marker=:o,label="v (C-grid)")
 
 # Compare recomputed velocities with those from `pkg/flt`
 
