@@ -39,7 +39,7 @@ end
     isosurface(θ,T,z)
 
 ```
-isosurface(𝐼.𝑃.θ0,15,Γ["RC"])
+isosurface(𝐼.𝑃.θ0,15,Γ.RC)
 ```    
 """
 function isosurface(θ,T,z)
@@ -49,17 +49,17 @@ function isosurface(θ,T,z)
         for k=1:nr-1
             i=findall(isnan.(d[j]).&(θ[j,k].>T).&(θ[j,k+1].<=T))
             a=(θ[j,k][i] .- T)./(θ[j,k][i] .- θ[j,k+1][i])
-            d[j][i]=(1 .- a).*Γ["RC"][k] + a.*Γ["RC"][k+1]
+            d[j][i]=(1 .- a).*Γ.RC[k] + a.*Γ.RC[k+1]
             i=findall(isnan.(d[j]).&(θ[j,k].<=T).&(θ[j,k+1].>T))
             a=(θ[j,k+1][i] .- T)./(θ[j,k+1][i] .- θ[j,k][i])
-            d[j][i]=(1 .- a).*Γ["RC"][k+1] + a.*Γ["RC"][k]
+            d[j][i]=(1 .- a).*Γ.RC[k+1] + a.*Γ.RC[k]
         end
     end
     return d
 end
 
 """
-    set_up_𝑃(k::Int,t::Float64,Γ::Dict,pth::String)
+    set_up_𝑃(k::Int,t::Float64,Γ::NamedTuple,pth::String)
 
 Define `FlowFields` data structure (𝑃) along with ancillary variables (𝐷)
 for the specified grid (`Γ` dictionnary), vertical level (`k`), and 
@@ -68,24 +68,24 @@ file location (`pth`).
 _Note: the initial implementation approximates month durations to 
 365 days / 12 months for simplicity and sets 𝑃.𝑇 to [-mon/2,mon/2]_
 """
-function set_up_FlowFields(k::Int,Γ::Dict,pth::String)
-    XC=exchange(Γ["XC"]) #add 1 lon point at each edge
-    YC=exchange(Γ["YC"]) #add 1 lat point at each edge
-    iDXC=1. ./Γ["DXC"]
-    iDYC=1. ./Γ["DYC"]
-    γ=Γ["XC"].grid
+function set_up_FlowFields(k::Int,Γ::NamedTuple,pth::String)
+    XC=exchange(Γ.XC) #add 1 lon point at each edge
+    YC=exchange(Γ.YC) #add 1 lat point at each edge
+    iDXC=1. ./Γ.DXC
+    iDYC=1. ./Γ.DYC
+    γ=Γ.XC.grid
     mon=86400.0*365.0/12.0
-    func=Γ["update_location!"]
+    func=Γ.update_location!
     
     if k==0
-        msk=Γ["hFacC"]
+        msk=Γ.hFacC
         (_,nr)=size(msk)
         𝑃=FlowFields(MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
         MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
         MeshArray(γ,Float64,nr+1),MeshArray(γ,Float64,nr+1),
         [-mon/2,mon/2],func)
     else
-        msk=Γ["hFacC"][:, k]
+        msk=Γ.hFacC[:, k]
         𝑃=FlowFields(MeshArray(γ,Float64),MeshArray(γ,Float64),
         MeshArray(γ,Float64),MeshArray(γ,Float64),[-mon/2,mon/2],func)    
     end
@@ -94,8 +94,7 @@ function set_up_FlowFields(k::Int,Γ::Dict,pth::String)
          XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC,
          k=k, msk=msk, θ0=similar(msk), θ1=similar(msk))
 
-    tmp = IndividualDisplacements.dict_to_nt(IndividualDisplacements.NeighborTileIndices_cs(Γ))
-    𝐷 = merge(𝐷 , tmp)
+    𝐷 = merge(𝐷 , NeighborTileIndices_cs(Γ))
 
     return 𝑃,𝐷
 end
@@ -166,7 +165,7 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
     m1=mod(m1,12)
     m1==0 ? m1=12 : nothing
 
-    (_,nr)=size(𝐷.Γ["hFacC"])
+    (_,nr)=size(𝐷.Γ.hFacC)
 
     (U,V)=read_velocities(𝑃.u0.grid,m0,𝐷.pth)
     u0=U; v0=V
@@ -198,9 +197,9 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
     𝑃.v1[:,:]=v1[:,:]
     for k=1:nr
         tmpw=exchange(-w0[:,k],1)
-        𝑃.w0[:,k]=tmpw./𝐷.Γ["DRC"][k]
+        𝑃.w0[:,k]=tmpw./𝐷.Γ.DRC[k]
         tmpw=exchange(-w1[:,k],1)
-        𝑃.w1[:,k]=tmpw./𝐷.Γ["DRC"][k]
+        𝑃.w1[:,k]=tmpw./𝐷.Γ.DRC[k]
     end
     𝑃.w0[:,1]=0*exchange(-w0[:,1],1)
     𝑃.w1[:,1]=0*exchange(-w1[:,1],1)

@@ -46,17 +46,17 @@ u,v,w=solid_body_rotation(12,4)
 """
 function solid_body_rotation(np,nz)
     Γ=simple_periodic_domain(np);
-    γ=Γ["XC"].grid;
+    γ=Γ.XC.grid;
     
     #Solid-body rotation around central location ...
     i=Int(np/2+1)
-    u=-(Γ["YG"].-Γ["YG"][1][i,i])
-    v=(Γ["XG"].-Γ["XG"][1][i,i])
+    u=-(Γ.YG.-Γ.YG[1][i,i])
+    v=(Γ.XG.-Γ.XG[1][i,i])
     
     #... plus a convergent term to / from central location
     d=-0.01
-    u=u+d*(Γ["XG"].-Γ["XG"][1][i,i])
-    v=v+d*(Γ["YG"].-Γ["YG"][1][i,i])
+    u=u+d*(Γ.XG.-Γ.XG[1][i,i])
+    v=v+d*(Γ.YG.-Γ.YG[1][i,i])
     
     #Replicate u,v in vertical dimension
     uu=MeshArray(γ,γ.ioPrec,nz)
@@ -89,10 +89,10 @@ function global_ocean_circulation(;k=1,ny=2)
   p=dirname(pathof(IndividualDisplacements))
   γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
   Γ=GridLoad(γ)
-  Γ=merge(Γ,IndividualDisplacements.NeighborTileIndices_cs(Γ))
+  Γ=merge(Γ,NeighborTileIndices_cs(Γ))
 
-  func=(u -> IndividualDisplacements.update_location_llc!(u,𝐷))
-  Γ=merge(Γ,Dict("update_location!" => func))
+  func=(u -> update_location_llc!(u,𝐷))
+  Γ=merge(Γ,(; update_location! = func))
 
   #initialize u0,u1 etc
   𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path);
@@ -108,19 +108,22 @@ end
 """
     OCCA_FlowFields(;backward_in_time::Bool=false)
 
-Define gridded variables and return result as Dictionary (`uvetc`).
+Define gridded variables and return result as NamedTuple
 """
 function OCCA_FlowFields(;backward_in_time::Bool=false)
 
    γ=GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
    Γ=GridLoad(γ)
-   n=length(Γ["RC"])
+   n=length(Γ.RC)
    n=5
 
-   g=Γ["XC"].grid
+   g=Γ.XC.grid
    func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
 
-   delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS","DXG","DYG","RAC","RAZ","RAS"]);
+   jj=[:hFacC, :hFacW, :hFacS, :DXG, :DYG, :RAC, :RAZ, :RAS]
+   ii=findall([!in(i,jj) for i in keys(Γ)])
+   Γ=(; zip(Symbol.(keys(Γ)[ii]), values(Γ)[ii])...)
+
    backward_in_time ? s=-1.0 : s=1.0
    s=Float32(s)
 
@@ -153,8 +156,8 @@ function OCCA_FlowFields(;backward_in_time::Bool=false)
 #   𝑆=read(rd(fileIn,"salt",n),MeshArray(γ,Float64,n))
 
    for i in eachindex(u)
-      u[i]=u[i]./Γ["DXC"][1]
-      v[i]=v[i]./Γ["DYC"][1]
+      u[i]=u[i]./Γ.DXC[1]
+      v[i]=v[i]./Γ.DYC[1]
    end
 
    for i in eachindex(u)
@@ -165,18 +168,18 @@ function OCCA_FlowFields(;backward_in_time::Bool=false)
    end
 
    for i in eachindex(w)
-      w[i]=w[i]./Γ["DRC"][min(i[2]+1,n)]
+      w[i]=w[i]./Γ.DRC[min(i[2]+1,n)]
       w[i]=circshift(w[i],[-180 0])
    end
 
-   tmpx=circshift(Γ["XC"][1],[-180 0])
+   tmpx=circshift(Γ.XC[1],[-180 0])
    tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
-   Γ["XC"][1]=tmpx
+   Γ.XC[1]=tmpx
 
-   tmpx=circshift(Γ["XG"][1],[-180 0])
+   tmpx=circshift(Γ.XG[1],[-180 0])
    tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
-   Γ["XG"][1]=tmpx
-   Γ["Depth"][1]=circshift(Γ["Depth"][1],[-180 0])
+   Γ.XG[1]=tmpx
+   Γ.Depth[1]=circshift(Γ.Depth[1],[-180 0])
 
    t0=0.0; t1=86400*366*2.0;
 
@@ -192,8 +195,8 @@ function OCCA_FlowFields(;backward_in_time::Bool=false)
 
    𝑃=FlowFields(u,u,v,v,w,w,[t0,t1],func)
 
-   𝐷 = (θ0=θ, θ1=θ, XC=exchange(Γ["XC"]), YC=exchange(Γ["YC"]), 
-   RF=Γ["RF"], RC=Γ["RC"],ioSize=(360,160,n))
+   𝐷 = (θ0=θ, θ1=θ, XC=exchange(Γ.XC), YC=exchange(Γ.YC), 
+   RF=Γ.RF, RC=Γ.RC,ioSize=(360,160,n))
 
    return 𝑃,𝐷,Γ
 
@@ -254,7 +257,6 @@ end
 function test2_periodic_domain(np = 12, nq = 12)
     #domain and time parameters
     Γ = simple_periodic_domain(np, nq)
-    Γ = IndividualDisplacements.dict_to_nt(Γ)
 
     u = 0.1 ./ Γ.DXC
     v = 0.3 ./ Γ.DYC

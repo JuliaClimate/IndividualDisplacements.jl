@@ -42,11 +42,11 @@ To convert from longitude,latitude here we take advantage of the regularity
 of the 1 degree grid being used -- for a more general alternative, see the 
 global ocean example.
 """
-function initial_positions(Γ::Dict, nf=10000, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
+function initial_positions(Γ::NamedTuple, nf=10000, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
    lon=lon_rng[1] .+(lon_rng[2]-lon_rng[1]).*rand(nf)
    lat=lat_rng[1] .+(lat_rng[2]-lat_rng[1]).*rand(nf)
-   x=lon .+ (21. - Γ["XC"][1][21,1])
-   y=lat .+ (111. - Γ["YC"][1][1,111])
+   x=lon .+ (21. - Γ.XC[1][21,1])
+   y=lat .+ (111. - Γ.YC[1][1,111])
    return x,y
 end
 
