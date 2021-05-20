@@ -120,7 +120,10 @@ function OCCA_FlowFields(;backward_in_time::Bool=false)
    g=Γ.XC.grid
    func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
 
-   #delete!.(Ref(Γ), ["hFacC", "hFacW", "hFacS","DXG","DYG","RAC","RAZ","RAS"]);
+   jj=[:hFacC, :hFacW, :hFacS, :DXG, :DYG, :RAC, :RAZ, :RAS]
+   ii=findall([!in(i,jj) for i in keys(Γ)])
+   Γ=(; zip(Symbol.(keys(Γ)[ii]), values(Γ)[ii])...)
+
    backward_in_time ? s=-1.0 : s=1.0
    s=Float32(s)
 
