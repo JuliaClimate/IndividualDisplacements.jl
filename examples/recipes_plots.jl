@@ -108,7 +108,7 @@ Compute Ocean depth logarithm on regular grid.
 function OceanDepthLog(Γ)
     lon=[i for i=20.:2.0:380., j=-79.:2.0:89.]
     lat=[j for i=20.:2.0:380., j=-79.:2.0:89.]
-    DL=interp_to_lonlat(Γ["Depth"],Γ,lon,lat)
+    DL=interp_to_lonlat(Γ.Depth,Γ,lon,lat)
     DL[findall(DL.<0)].=0
     DL=transpose(log10.(DL))
     DL[findall((!isfinite).(DL))].=NaN
