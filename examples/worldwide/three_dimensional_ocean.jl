@@ -27,7 +27,7 @@ IndividualDisplacements.get_occa_velocity_if_needed();
 # ## 2.1 Ocean Circulation Setup
 #
 
-𝑃,𝐷,Γ=OCCA_FlowFields(backward_in_time=false);
+𝑃,𝐷,Γ=OCCA_FlowFields(nmax=5);
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2.3 Initialize Individual Positions
