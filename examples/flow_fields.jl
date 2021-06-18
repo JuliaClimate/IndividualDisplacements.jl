@@ -106,16 +106,16 @@ function global_ocean_circulation(;k=1,ny=2)
 end
 
 """
-    OCCA_FlowFields(;backward_in_time::Bool=false)
+    OCCA_FlowFields(;backward_in_time::Bool=false,nmax=Inf)
 
 Define gridded variables and return result as NamedTuple
 """
-function OCCA_FlowFields(;backward_in_time::Bool=false)
+function OCCA_FlowFields(;backward_in_time::Bool=false,nmax=Inf)
 
    γ=GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
    Γ=GridLoad(γ)
    n=length(Γ.RC)
-   n=5
+   isfinite(nmax) ? n=min(n,Int(nmax)) : nothing
 
    g=Γ.XC.grid
    func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
