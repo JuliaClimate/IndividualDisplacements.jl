@@ -62,7 +62,8 @@ example2_xy()
 Read MITgcm/pkg/flt output
 """
 function example2_xy(𝑃)
-dirIn=IndividualDisplacements.flt_example
+IndividualDisplacements.flt_example_download()
+dirIn=IndividualDisplacements.flt_example_path
 prec=Float32
 df=read_flt(dirIn,prec)
 #
@@ -93,7 +94,8 @@ function example2_setup()
 
    ###### 1) Get gridded variables via MeshArrays.jl
 
-   dirIn=IndividualDisplacements.flt_example
+   IndividualDisplacements.flt_example_download()
+   dirIn=IndividualDisplacements.flt_example_path
    γ=gcmgrid(dirIn,"PeriodicChannel",1,[(80,42)], [80 42], Float32, read, write)
    nr=8
 

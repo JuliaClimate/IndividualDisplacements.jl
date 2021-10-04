@@ -50,5 +50,6 @@ I=(position=xy,record=deepcopy(tr),velocity=dxdt!,
 
 # Compare with trajectory output from `MITgcm`
 
-#df=read_flt(IndividualDisplacements.flt_example,Float32)
+#IndividualDisplacements.flt_example_download()
+#df=read_flt(IndividualDisplacements.flt_example_path,Float32)
 #ref=plot_paths(df,size(xy,2),100000.0)
