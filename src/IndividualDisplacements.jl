@@ -7,7 +7,8 @@ using CyclicArrays, MITgcmTools, OceanStateEstimation
 p=dirname(pathof(IndividualDisplacements))
 artifact_toml = joinpath(p, "../Artifacts.toml")
 flt_example_hash = artifact_hash("flt_example", artifact_toml)
-flt_example = joinpath(artifact_path(flt_example_hash)*"/","flt_example-1.0/")
+flt_example_path = joinpath(artifact_path(flt_example_hash)*"/","flt_example-1.0/")
+flt_example_download() = artifact"flt_example"
 
 include("API.jl")
 include("compute.jl")
