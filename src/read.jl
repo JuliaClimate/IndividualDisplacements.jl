@@ -116,38 +116,3 @@ function read_mds(filRoot::String,x::MeshArray)
    return x.grid.read(v00,x)
 end
 
-"""
-    get_ecco_variable_if_needed(v::String)
-
-Download ECCO output for variable `v` to `examples/nctiles_climatology` if needed
-"""
-function get_ecco_variable_if_needed(v::String)
-    p=dirname(pathof(OceanStateEstimation))
-    lst=joinpath(p,"../examples/nctiles_climatology.csv")
-    pth=ECCOclim_path
-    !isdir(pth*v) ? get_from_dataverse(lst,v,pth) : nothing
-end
-
-function get_ecco_velocity_if_needed()
-    get_ecco_variable_if_needed("UVELMASS")
-    get_ecco_variable_if_needed("VVELMASS")
-    get_ecco_variable_if_needed("WVELMASS")
-end
-
-"""
-    get_occa_velocity_if_needed()
-
-Download `MITgcm` transport output to `examples/OCCA_climatology` if needed
-"""
-function get_occa_velocity_if_needed()
-    p=dirname(pathof(OceanStateEstimation))
-    lst=joinpath(p,"../examples/OCCA_climatology.csv")
-    pth=OCCAclim_path
-    nams = ("DDuvel.0406clim.nc","DDvvel.0406clim.nc","DDwvel.0406clim.nc","DDtheta.0406clim.nc","DDsalt.0406clim.nc")
-    if !isfile("$pth"*"DDuvel.0406clim.nc") 
-        tmp=joinpath(pth,"tmp/")
-        !isdir(tmp) ? mkdir(tmp) : nothing
-        [get_from_dataverse(lst,nam,tmp) for nam in nams]
-        [mv(joinpath(tmp,nam,nam),joinpath(pth,nam)) for nam in nams]
-    end
-end

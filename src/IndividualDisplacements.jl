@@ -1,8 +1,8 @@
 module IndividualDisplacements
 
-using MeshArrays, OrdinaryDiffEq, DataFrames
+using MeshArrays, CyclicArrays, OrdinaryDiffEq, DataFrames
 using NetCDF, Dates, CFTime, CSV, UnPack, Random, Pkg.Artifacts
-using CyclicArrays, MITgcmTools, OceanStateEstimation
+using MITgcmTools
 
 p=dirname(pathof(IndividualDisplacements))
 artifact_toml = joinpath(p, "../Artifacts.toml")

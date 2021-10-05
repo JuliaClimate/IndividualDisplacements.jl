@@ -17,11 +17,12 @@
 # ## 1. Load Software
 #
 
-using IndividualDisplacements, DataFrames
+using IndividualDisplacements, OceanStateEstimation, DataFrames
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
-IndividualDisplacements.get_occa_velocity_if_needed();
+
+OceanStateEstimation.get_occa_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2.1 Ocean Circulation Setup
