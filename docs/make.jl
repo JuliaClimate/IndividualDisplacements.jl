@@ -1,9 +1,10 @@
 using Documenter, Literate
-using IndividualDisplacements
+using IndividualDisplacements, OceanStateEstimation
 
 #download data dependencies if needed
-IndividualDisplacements.get_ecco_velocity_if_needed();
-IndividualDisplacements.get_occa_velocity_if_needed();
+IndividualDisplacements.flt_example_download()
+OceanStateEstimation.get_ecco_velocity_if_needed();
+OceanStateEstimation.get_occa_velocity_if_needed();
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")
