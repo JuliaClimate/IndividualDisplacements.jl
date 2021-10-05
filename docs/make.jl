@@ -1,5 +1,5 @@
 using Documenter, Literate
-using IndividualDisplacements
+using IndividualDisplacements, OceanStateEstimation
 
 #download data dependencies if needed
 IndividualDisplacements.flt_example_download()
