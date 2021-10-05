@@ -77,17 +77,6 @@ function drifter_files()
 end   
 
 """
-    read_velocities(γ::gcmgrid,t::Int,pth::String)
-
-Read velocity components `u,v` from files in `pth`for time `t`
-"""
-function read_velocities(γ::gcmgrid,t::Int,pth::String)
-    u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
-    v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
-    return u,v
-end
-
-"""
     read_mds(filRoot::String,x::MeshArray)
 
 Read a gridded variable from 2x2 tile files. This is used

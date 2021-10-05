@@ -2,7 +2,6 @@ module IndividualDisplacements
 
 using MeshArrays, CyclicArrays, OrdinaryDiffEq, DataFrames
 using NetCDF, Dates, CFTime, CSV, UnPack, Random, Pkg.Artifacts
-using MITgcmTools
 
 p=dirname(pathof(IndividualDisplacements))
 artifact_toml = joinpath(p, "../Artifacts.toml")
@@ -22,6 +21,6 @@ export dxdt!, dxy_dt_CyclicArray, dxy_dt_replay
 export postprocess_MeshArray, add_lonlat!, postprocess_xy, interp_to_xy
 export nearest_to_xy, randn_lonlat, interp_to_lonlat
 export gcdist, stproj, stproj_inv
-export read_drifters, read_mds, read_velocities
+export read_drifters, read_mds
 
 end # module
