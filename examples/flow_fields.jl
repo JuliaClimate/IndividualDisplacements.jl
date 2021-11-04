@@ -99,7 +99,7 @@ function global_ocean_circulation(;k=1,ny=2)
   #read grid and set up connections between subdomains
   p=dirname(pathof(IndividualDisplacements))
   γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
-  Γ=GridLoad(γ)
+  Γ=GridLoad(γ;option="full")
   Γ=merge(Γ,NeighborTileIndices_cs(Γ))
 
   func=(u -> update_location_llc!(u,𝐷))
@@ -124,7 +124,7 @@ Define gridded variables and return result as NamedTuple
 function OCCA_FlowFields(;backward_in_time::Bool=false,nmax=Inf)
 
    γ=GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
-   Γ=GridLoad(γ)
+   Γ=GridLoad(γ;option="full")
    n=length(Γ.RC)
    isfinite(nmax) ? n=min(n,Int(nmax)) : nothing
 
