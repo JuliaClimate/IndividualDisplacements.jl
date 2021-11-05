@@ -28,7 +28,7 @@ include(joinpath(p,"../examples/helper_functions.jl"))
 # ## 2.1 Ocean Circulation Setup
 #
 
-𝑃,𝐷,Γ=OCCA_FlowFields(nmax=5);
+@suppress 𝑃,𝐷,Γ=OCCA_FlowFields(nmax=5);
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2.3 Initialize Individual Positions
