@@ -9,8 +9,8 @@ include(joinpath(p,"../examples/Demos.jl"))
 Read velocity components `u,v` from files in `pth`for time `t`
 """
 function read_velocities(γ::gcmgrid,t::Int,pth::String)
-    u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
-    v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
+    @suppress u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
+    @suppress v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
     return u,v
 end
 
@@ -109,7 +109,7 @@ function global_ocean_circulation(;k=1,ny=2)
   Γ=merge(Γ,(; update_location! = func))
 
   #initialize u0,u1 etc
-  @suppress 𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path);
+  𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path);
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, Γ=Γ)
