@@ -20,12 +20,12 @@
 # - packages + helper functions
 # - grid and velocity files
 
-using IndividualDisplacements, OceanStateEstimation, DataFrames, Statistics, CSV
+using IndividualDisplacements, OceanStateEstimation, DataFrames, Statistics, CSV, Suppressor
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/helper_functions.jl"))
 
-OceanStateEstimation.get_ecco_velocity_if_needed();
+@suppress OceanStateEstimation.get_ecco_velocity_if_needed();
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Set Up Parameters & Inputs
