@@ -6,18 +6,14 @@ using InteractiveUtils
 
 # ╔═╡ 192fc454-054c-4364-a9ed-1aa4969b612a
 begin
-	using IndividualDisplacements, DataFrames, MeshArrays, NetCDF
-	using OceanStateEstimation, MITgcmTools	
-	using Plots, ColorSchemes
+	using IndividualDisplacements, DataFrames, MeshArrays
+	using Plots, ColorSchemes, PlutoUI
 	
-	p=dirname(pathof(IndividualDisplacements))
-	include(joinpath(p,"../examples/flow_fields.jl"))
-
 	"done with loading packages"
 end
 
 # ╔═╡ 3e9d08f8-3ea1-11ec-262e-bb3d43960aec
-md"""# Simple Two Dimensional Flow Field
+md"""# Simple Two Dimensional Flow Fields
 
 Simulate trajectories of a particle cloud in a simple, two-dimensional, doubly-periodic, flow field. 
 
@@ -28,8 +24,11 @@ For additional documentation e.g. see :
 [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 """
 
+# ╔═╡ bb710e3c-9f38-4feb-a241-f624d2fca943
+TableOfContents()
+
 # ╔═╡ 023222b6-e2ac-43cd-be10-f5d9b7ce0124
-md"""## Define Flow Field
+md"""## Define A Flow Field
 
 Let's start with a simple, doubly periodic flow field defined by a streamfunction
 and create the `FlowFields` data structure which will then be drive the 
@@ -48,7 +47,7 @@ begin
 	ϕ = fac*[f(x, y) for x in XC,y in YC] #streamfunction
 	uC = -fac*[sin(y) for x in XC,y in YC] #dphi/dy at cell center
 	vC = -fac*[cos(x) for x in XC,y in YC] #-dphi/dx at cell center
-	"done with defining flow field"
+	"done with defining flow field at grid cell centers"
 end
 
 # ╔═╡ 96b1d76e-1563-4f90-b821-feb75baea771
@@ -64,7 +63,7 @@ begin
 	v=0.5*(circshift(vC, (0,1))+vC) /dx #staggered v converted to grid point units (m/s -> 1/s)
 	𝑇=(0.,10.)
 	𝐹=FlowFields(u,u,v,v,𝑇)
-	"done"
+	"done with staggered flow field definition"
 end
 
 # ╔═╡ 47c87570-ca36-468f-9b9d-5c41de490105
@@ -77,18 +76,23 @@ Here we initialize 100 particles within a subdomainand wraps everything in the `
 begin
 	np,nq=size(u)
 	x=np*(0.4 .+ 0.2*rand(100))
-	y=nq*(0.4 .+ 0.2*rand(100));
+	y=nq*(0.4 .+ 0.2*rand(100))
 	𝐼=Individuals(𝐹,x,y)
 end
 
 # ╔═╡ dffe1032-a247-4008-be22-692abcbe458a
 md"""## Compute Trajectories
 
-The time period is `𝐼.𝑃.𝑇` by default, unless `∫!(𝐼,𝑇)` is called instead.
+The time period is `𝐼.𝑃.𝑇` by default, unless `∫!(𝐼,𝑇)` is called instead as done below. 
+
+Note that the size of 🔴 is different from before -- this DataFrame is a record of the trajectories.
 """
 
 # ╔═╡ 28a3af5d-c1b3-4d95-8d06-034e1ad4f585
-∫!(𝐼,𝑇)
+begin
+	∫!(𝐼,𝑇)
+	𝐼
+end
 
 # ╔═╡ 6a6c82d8-b8d3-4a94-af6e-79039ceaa157
 md"""## Plot Results"""
@@ -146,7 +150,7 @@ begin
 end
 
 # ╔═╡ 67c39f1e-8aa5-4fad-a0b8-a7fca1b17c36
-md"""## Exercises: 
+md"""## Exercises
 
 - change the initial distribution of particles
 - increase the duration of the trajectories simulation
@@ -156,38 +160,72 @@ md"""## Exercises:
 """
 
 # ╔═╡ feb874c4-80dd-444f-beb5-90b90647d44d
-md"""## Extras :
+md"""## Extras
 
-It is often convenient to set up `FlowFields` using [MeshArrays.jl](https://juliaclimate.github.io/MeshArrays.jl/dev/), which can be done
-using `convert_to_FlowFields` for example.
-
-```
-u,v,ϕ=random_flow_field()
-𝐹=convert_to_FlowFields(u,v,10.0);
-```
-
-We should note that `u,v` derive from streamfunction `ϕ` which is defined at the corner point in `random_flow_field`. 
-
-Doing this ensures that the resulting `u,v` is non-divergent / purely-rotational over the C-grid domain. In brief:
+Instead of using the common `Array` type it can be advantageous to use [MeshArrays.jl](https://juliaclimate.github.io/MeshArrays.jl/dev/) which provides functionalities for staggered vector fields and gridded domain decomposition. The `convert_to_FlowFields` convenience function does the conversion for you. The only other difference from the `Array` case is the need to provide a vector of subdomain indices to `Individuals`. Here this is just a vector of ones since `convert_to_FlowFields` does not decompose the gridded domain.
 
 ```
-u=-(circshift(ϕ, (0,-1))-ϕ)
-v=(circshift(ϕ, (-1,0))-ϕ)
+𝐹=convert_to_FlowFields(u,v,10.0)
+𝐼=Individuals(𝐹,x,y,fill(1,length(x)))
 ```
 
-In contrast uC, vC computed as earlier in this example may contain contain both 
-[rotational and divergent](https://en.wikipedia.org/wiki/Helmholtz_decomposition)
-components -- if this were an important consideration, `MeshArrays.jl` provides 
-tools that can be used to e.g. ensure non-divergence. 
-
-When using `MeshArray` flow fields instead of plain `Array` flow fields, initial
-positions also include a subdomain array index (`a`;  all ones in our example).
+The `random_flow_field` function, found below, provides generates random flow fields that can be used instead of the analytical formulation used above. The "Rotational Component" option is most similar to what done in the original example.
 
 ```
-a=ones(size(x))
-𝐼=Individuals(𝐹,x,y,a)
+(U,V,Φ)=random_flow_field("Rotational Component";np=2*nx,nq=nx)
+F=convert_to_FlowFields(U,V,10.0)
+I=Individuals(F,x,y,fill(1,length(x)))
 ```
+
+The other option, "Divergent Component", generates a purely divergent flow field instead. Try it and should you notice a qualitatively different outcome in terms of trajectories.
+
+In general, user defined `uC, vC` fields may have both rotational and divergent components. [MeshArrays.jl](https://juliaclimate.github.io/MeshArrays.jl/dev/) provides an implementation of the [Helmholtz decomposition](https://en.wikipedia.org/wiki/Helmholtz_decomposition) to separate them out as sometimes needed.
 """
+
+# ╔═╡ ef8cbf8e-3e10-4615-9640-86cb8bc68288
+function random_flow_field(option::String;np=12,nq=18)
+
+	#define gridded domain
+	Γ=simple_periodic_domain(np,nq)
+	γ=Γ.XC.grid
+	Γ=UnitGrid(γ;option="full")
+
+    #initialize 2D field of random numbers
+    tmp1=randn(Float64,Tuple(γ.ioSize))
+    ϕ=γ.read(tmp1,MeshArray(γ,Float64))
+
+    #apply smoother
+    ϕ=smooth(ϕ,3*Γ.DXC,3*Γ.DYC,Γ);
+
+	#derive flow field
+	if option=="Divergent Component"
+		#For the convergent / scalar potential case, ϕ is interpreted as being 
+		#on center points -- hence the standard gradient function readily gives 
+		#what we need
+		(u,v)=gradient(ϕ,Γ) 
+		tmp=(u[1],v[1],ϕ[1])
+	elseif option=="Rotational Component"
+		#For the rotational / streamfunction case, ϕ is interpreted as being 
+		#on S/W corner points -- this is ok here since the grid is homegeneous, 
+		#and conveniently yields an adequate substitution u,v <- -v,u; but note
+		#that doing the same with gradient() would shift indices inconsistenly
+		u=-(circshift(ϕ[1], (0,-1))-ϕ[1])
+		v=(circshift(ϕ[1], (-1,0))-ϕ[1])
+		tmp=(u,v,ϕ[1])
+	else
+		error("non-recognized option")
+	end
+	return tmp[1],tmp[2],tmp[3]
+end
+
+# ╔═╡ e927ba74-2c88-493e-b25b-910e23a63045
+begin
+	(U,V,Φ)=random_flow_field("Rotational Component";np=2*nx,nq=nx)
+	F=convert_to_FlowFields(U,V,10.0)
+	I=Individuals(F,x,y,fill(1,length(x)))
+	∫!(I)
+	I
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -195,32 +233,28 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-MITgcmTools = "62725fbc-3a66-4df3-9000-e33e85b3a198"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
-NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
-OceanStateEstimation = "891f6deb-a4f5-4bc5-a2e3-1e8f649cdd2c"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 ColorSchemes = "~3.15.0"
 DataFrames = "~1.2.2"
 IndividualDisplacements = "~0.3.3"
-MITgcmTools = "~0.1.31"
 MeshArrays = "~0.2.26"
-NetCDF = "~0.11.3"
-OceanStateEstimation = "~0.1.15"
 Plots = "~1.23.5"
+PlutoUI = "~0.7.18"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-[[AWS]]
-deps = ["Base64", "Compat", "Dates", "Downloads", "GitHub", "HTTP", "IniFile", "JSON", "MbedTLS", "Mocking", "OrderedCollections", "Retry", "Sockets", "URIs", "UUIDs", "XMLDict"]
-git-tree-sha1 = "5052fc28bdd6f2501e86b8d063cfe7c82a094a36"
-uuid = "fbe9abb3-538b-5e4e-ba9e-bc94f4f92ebc"
-version = "1.70.0"
+[[AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "0ec322186e078db08ea3e7da5b8b2885c099b393"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.0"
 
 [[Adapt]]
 deps = ["LinearAlgebra"]
@@ -254,18 +288,6 @@ deps = ["Static"]
 git-tree-sha1 = "bc1317f71de8dce26ea67fcdf7eccc0d0693b75b"
 uuid = "62783981-4cbd-42fc-bca8-16325de8dc4b"
 version = "0.1.1"
-
-[[Blosc]]
-deps = ["Blosc_jll"]
-git-tree-sha1 = "217da19d6f3a94753e580a8bc241c7cbefd9281f"
-uuid = "a74b3585-a348-5f62-a45c-50e91977d574"
-version = "0.7.1"
-
-[[Blosc_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Lz4_jll", "Pkg", "Zlib_jll", "Zstd_jll"]
-git-tree-sha1 = "e747dac84f39c62aff6956651ec359686490134e"
-uuid = "0b7ba130-8d10-5ba8-a3d6-c5182647fed9"
-version = "1.21.0+0"
 
 [[Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -308,12 +330,6 @@ deps = ["Compat", "LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "f885e7e7c124f8c92650d61b9477b9ac2ee607dd"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 version = "1.11.1"
-
-[[ClimateModels]]
-deps = ["AWS", "CFTime", "CSV", "DataFrames", "Dates", "Downloads", "Git", "NetCDF", "OrderedCollections", "Pkg", "Statistics", "Suppressor", "TOML", "Test", "UUIDs", "Zarr"]
-git-tree-sha1 = "15ba5b736e675d5e79fe5ad0e7a8f67a286ffe31"
-uuid = "f6adb021-9183-4f40-84dc-8cea6f651bb0"
-version = "0.1.20"
 
 [[CloseOpenIntervals]]
 deps = ["ArrayInterface", "Static"]
@@ -491,17 +507,6 @@ git-tree-sha1 = "cb39752c2a1f83bbe0fda393c51c480a296042ad"
 uuid = "d4d017d3-3776-5f7e-afef-a10c40355c18"
 version = "1.10.1"
 
-[[ExprTools]]
-git-tree-sha1 = "b7e3d17636b348f005f11040025ae8c6f645fe92"
-uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
-version = "0.1.6"
-
-[[EzXML]]
-deps = ["Printf", "XML2_jll"]
-git-tree-sha1 = "0fa3b52a04a4e210aeb1626def9c90df3ae65268"
-uuid = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
-version = "1.1.0"
-
 [[FFMPEG]]
 deps = ["FFMPEG_jll"]
 git-tree-sha1 = "b57e3acbe22f8484b4b5ff66a7499717fe1a9cc8"
@@ -561,11 +566,6 @@ git-tree-sha1 = "8339d61043228fdd3eb658d86c926cb282ae72a8"
 uuid = "59287772-0a20-5a39-b81b-1366585eb4c0"
 version = "0.4.2"
 
-[[FortranFiles]]
-git-tree-sha1 = "f8cec967f151a65f03afd826650c6e91d8b1da16"
-uuid = "c58ffaec-ab22-586d-bfc5-781a99fd0b10"
-version = "0.6.0"
-
 [[ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions", "StaticArrays"]
 git-tree-sha1 = "ef3fec65f9db26fa2cf8f4133c697c5b7ce63c1d"
@@ -623,24 +623,6 @@ git-tree-sha1 = "8c14294a079216000a0bdca5ec5a447f073ddc9d"
 uuid = "78b55507-aeef-58d4-861c-77aaff3498b1"
 version = "0.20.1+7"
 
-[[Git]]
-deps = ["Git_jll"]
-git-tree-sha1 = "d7bffc3fe097e9589145493c08c41297b457e5d0"
-uuid = "d7ba0133-e1db-5d97-8f8c-041e4b3a1eb2"
-version = "1.2.1"
-
-[[GitHub]]
-deps = ["Base64", "Dates", "HTTP", "JSON", "MbedTLS", "Sockets", "SodiumSeal"]
-git-tree-sha1 = "c8594dff1ed76e232d8063b2a2555335900af6f3"
-uuid = "bc5e4493-9b4d-5f90-b8aa-2b2bcaad7a26"
-version = "5.7.0"
-
-[[Git_jll]]
-deps = ["Artifacts", "Expat_jll", "Gettext_jll", "JLLWrappers", "LibCURL_jll", "Libdl", "Libiconv_jll", "OpenSSL_jll", "PCRE2_jll", "Pkg", "Zlib_jll"]
-git-tree-sha1 = "33be385f3432a5a5b7f6965af9592d4407f3167f"
-uuid = "f8c6e375-362e-5223-8a59-34ff63f689eb"
-version = "2.31.0+0"
-
 [[Glib_jll]]
 deps = ["Artifacts", "Gettext_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Libiconv_jll", "Libmount_jll", "PCRE_jll", "Pkg", "Zlib_jll"]
 git-tree-sha1 = "04690cc5008b38ecbdfede949220bc7d9ba26397"
@@ -681,6 +663,23 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "3395d4d4aeb3c9d31f5929d32760d8baeee88aaf"
 uuid = "e33a78d0-f292-5ffc-b300-72abe9b543c8"
 version = "2.5.0+0"
+
+[[Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[HypertextLiteral]]
+git-tree-sha1 = "5efcf53d798efede8fee5b2c8b09284be359bf24"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.2"
+
+[[IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
 
 [[IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
@@ -907,18 +906,6 @@ git-tree-sha1 = "caaa2d3518fe6312327819cdd485a4258e52ece0"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
 version = "0.12.95"
 
-[[Lz4_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "5d494bc6e85c4c9b626ee0cab05daa4085486ab1"
-uuid = "5ced341a-0733-55b8-9ab6-a4889d929147"
-version = "1.9.3+0"
-
-[[MITgcmTools]]
-deps = ["ClimateModels", "DataFrames", "Dates", "LazyArtifacts", "MeshArrays", "NetCDF", "OrderedCollections", "Printf", "SparseArrays", "Suppressor", "UUIDs"]
-git-tree-sha1 = "32f697fca7f26636e4df369681f96b2c56f40992"
-uuid = "62725fbc-3a66-4df3-9000-e33e85b3a198"
-version = "0.1.31"
-
 [[MacroTools]]
 deps = ["Markdown", "Random"]
 git-tree-sha1 = "3d3e902b31198a27340d0bf00d6ac452866021cf"
@@ -963,12 +950,6 @@ version = "1.0.2"
 
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
-
-[[Mocking]]
-deps = ["Compat", "ExprTools"]
-git-tree-sha1 = "29714d0a7a8083bba8427a4fbfb00a540c681ce7"
-uuid = "78c3b35d-d492-501b-9361-3d52fe80e533"
-version = "0.7.3"
 
 [[MozillaCACerts_jll]]
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
@@ -1022,12 +1003,6 @@ git-tree-sha1 = "e9ffc92217b8709e0cf7b8808f6223a4a0936c95"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
 version = "0.3.11"
 
-[[OceanStateEstimation]]
-deps = ["Downloads", "FortranFiles", "LazyArtifacts", "MITgcmTools", "MeshArrays", "Statistics"]
-git-tree-sha1 = "360dc6984946dbd62d9fea096f4c99c34026f897"
-uuid = "891f6deb-a4f5-4bc5-a2e3-1e8f649cdd2c"
-version = "0.1.15"
-
 [[OffsetArrays]]
 deps = ["Adapt"]
 git-tree-sha1 = "043017e0bdeff61cfbb7afeb558ab29536bbb5ed"
@@ -1072,10 +1047,6 @@ deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExt
 git-tree-sha1 = "138a1578c523f7a4899dc8b31730cd6cf74c1ab0"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 version = "5.66.1"
-
-[[PCRE2_jll]]
-deps = ["Artifacts", "Libdl"]
-uuid = "efcefdf7-47ab-520b-bdef-62a2eaa19f15"
 
 [[PCRE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1128,6 +1099,12 @@ deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers"
 git-tree-sha1 = "7dc03c2b145168f5854085a16d054429d612b637"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.23.5"
+
+[[PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
+git-tree-sha1 = "57312c7ecad39566319ccf5aa717a20788eb8c1f"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.18"
 
 [[Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Requires", "Static", "StrideArraysCore", "ThreadingUtilities"]
@@ -1223,11 +1200,6 @@ git-tree-sha1 = "4036a3bd08ac7e968e27c203d45f5fff15020621"
 uuid = "ae029012-a4dd-5104-9daa-d747884805df"
 version = "1.1.3"
 
-[[Retry]]
-git-tree-sha1 = "41ac127cd281bb33e42aba46a9d3b25cd35fc6d5"
-uuid = "20febd7b-183b-5ae2-ac4a-720e7ce64774"
-version = "0.4.1"
-
 [[Rmath]]
 deps = ["Random", "Rmath_jll"]
 git-tree-sha1 = "bf3188feca147ce108c76ad82c2792c57abe7b1f"
@@ -1306,12 +1278,6 @@ version = "0.9.4"
 [[Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
-[[SodiumSeal]]
-deps = ["Base64", "Libdl", "libsodium_jll"]
-git-tree-sha1 = "80cef67d2953e33935b41c6ab0a178b9987b1c99"
-uuid = "2133526b-2bfb-4018-ac12-889fb3908a75"
-version = "0.1.1"
-
 [[SortingAlgorithms]]
 deps = ["DataStructures"]
 git-tree-sha1 = "b3363d7460f7d098ca0912c69b082f75625d7508"
@@ -1382,11 +1348,6 @@ version = "0.6.3"
 [[SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
 uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
-
-[[Suppressor]]
-git-tree-sha1 = "a819d77f31f83e5792a76081eee1ea6342ab8787"
-uuid = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
-version = "0.2.0"
 
 [[TOML]]
 deps = ["Dates"]
@@ -1500,12 +1461,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
 git-tree-sha1 = "1acf5bdf07aa0907e0a37d3718bb88d4b687b74a"
 uuid = "02c8fc9c-b97f-50b9-bbe4-9be30ff0a78a"
 version = "2.9.12+0"
-
-[[XMLDict]]
-deps = ["EzXML", "IterTools", "OrderedCollections"]
-git-tree-sha1 = "d9a3faf078210e477b291c79117676fca54da9dd"
-uuid = "228000da-037f-5747-90a9-8195ccbf91a5"
-version = "0.4.1"
 
 [[XSLT_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libgcrypt_jll", "Libgpg_error_jll", "Libiconv_jll", "Pkg", "XML2_jll", "Zlib_jll"]
@@ -1639,12 +1594,6 @@ git-tree-sha1 = "79c31e7844f6ecf779705fbc12146eb190b7d845"
 uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
 version = "1.4.0+3"
 
-[[Zarr]]
-deps = ["AWS", "Blosc", "CodecZlib", "DataStructures", "Dates", "DiskArrays", "HTTP", "JSON", "OffsetArrays", "Pkg"]
-git-tree-sha1 = "18ac3fd29790edeee42bfed5020b12ae61a029d0"
-uuid = "0a941bbe-ad1d-11e8-39d9-ab76183a1d99"
-version = "0.6.3"
-
 [[Zlib_jll]]
 deps = ["Libdl"]
 uuid = "83775a58-1f1d-513f-b197-d71354ab007a"
@@ -1678,12 +1627,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Zlib_jll"]
 git-tree-sha1 = "94d180a6d2b5e55e447e2d27a29ed04fe79eb30c"
 uuid = "b53b4c65-9356-5827-b1ea-8c7a1a84506f"
 version = "1.6.38+0"
-
-[[libsodium_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "848ab3d00fe39d6fbc2a8641048f8f272af1c51e"
-uuid = "a9144af2-ca23-56d9-984f-0d03f7b5ccf8"
-version = "1.0.20+0"
 
 [[libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll", "Pkg"]
@@ -1720,7 +1663,8 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╟─3e9d08f8-3ea1-11ec-262e-bb3d43960aec
-# ╠═192fc454-054c-4364-a9ed-1aa4969b612a
+# ╟─192fc454-054c-4364-a9ed-1aa4969b612a
+# ╟─bb710e3c-9f38-4feb-a241-f624d2fca943
 # ╟─023222b6-e2ac-43cd-be10-f5d9b7ce0124
 # ╠═a2c57844-080e-4598-bef5-4d5dfb740a63
 # ╟─96b1d76e-1563-4f90-b821-feb75baea771
@@ -1734,8 +1678,10 @@ version = "0.9.1+5"
 # ╟─0366f590-e132-4a7f-877b-2168566faf60
 # ╟─4a5d4cf9-faa3-45e1-85fa-50132f4836ec
 # ╟─c0f0c2c6-7d74-4e2a-87f7-d96971e234de
-# ╠═eb979c4c-549e-4912-aac8-e816c93017a1
+# ╟─eb979c4c-549e-4912-aac8-e816c93017a1
 # ╟─67c39f1e-8aa5-4fad-a0b8-a7fca1b17c36
 # ╟─feb874c4-80dd-444f-beb5-90b90647d44d
+# ╟─e927ba74-2c88-493e-b25b-910e23a63045
+# ╠═ef8cbf8e-3e10-4615-9640-86cb8bc68288
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
