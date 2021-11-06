@@ -314,12 +314,14 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
 
 end
 
+∫!(𝐼::Individuals,𝑇::Array) = ∫!(𝐼::Individuals,(𝑇[1],𝑇[2]))
+
 """
     ∫!(𝐼::Individuals)
 
 Call ∫!(𝐼::Individuals,𝐼.𝑃.𝑇)
 """
-∫!(𝐼::Individuals) = ∫!(𝐼::Individuals,(𝐼.𝑃.𝑇[1],𝐼.𝑃.𝑇[2]))
+∫!(𝐼::Individuals) = ∫!(𝐼::Individuals,𝐼.𝑃.𝑇)
 
 ## Convenience Methods (size,show,similar)
 
