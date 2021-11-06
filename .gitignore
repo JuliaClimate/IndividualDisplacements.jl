@@ -2,6 +2,8 @@
 .ipynb_checkpoints/
 Manifest.toml
 devel
+*/*.cov
+*/*/*.cov
 examples/.ipynb_checkpoints/
 examples/*.ipynb
 examples/*/*.ipynb
