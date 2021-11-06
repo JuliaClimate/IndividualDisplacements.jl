@@ -20,7 +20,7 @@ fview(f::Array{Array{Float64,2},2},i::Int,j::Int) = view(f[i,j],:,:)
 Interpolate velocity from gridded fields (3D; with halos) to position `u`
 (`x,y,z,fIndex`) to compute the derivative of position v time  `du_dt`.
 
-```jldoctest
+```jldoctest; output = false
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/worldwide/three_dimensional_ocean.jl"))
@@ -102,7 +102,7 @@ end
 Interpolate velocity from gridded fields (2D; with halos) to position `u`
 (`x,y,fIndex`) to compute the derivative of position v time  `du_dt`.
 
-```jldoctest
+```jldoctest; output = false
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/flow_fields.jl"));
@@ -127,7 +127,7 @@ prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
 true
 ```
 
-```jldoctest
+```jldoctest; output = false
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/worldwide/global_ocean_circulation.jl"))
@@ -189,7 +189,7 @@ end
 Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 (`x,y,z`) to compute the derivative of position v time  `du_dt`.
 
-```jldoctest
+```jldoctest; output = false
 using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/basics/solid_body_rotation.jl"))
@@ -258,7 +258,7 @@ end
 Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 (`x,y`) to compute the derivative of position v time  `du_dt`.
 
-```jldoctest
+```jldoctest; output = false
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/basics/particle_cloud.jl"))
@@ -316,7 +316,7 @@ not needed when CyclicArrays is used to extend valid indice ranges).
 
 _notes:_ spatial interpolation & temporal interpolation are lacking
 
-```jldoctest
+```jldoctest; output = false
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example_CyclicArray.jl"))
@@ -358,7 +358,7 @@ dxdt!(du,u,𝑃::Dict,tim) = dxdt!(du,u,dict_to_nt(𝑃),tim)
 Interpolate velocity from MITgcm float_trajectories output and return
 position increment `du`.
 
-```jldoctest
+```jldoctest; output = false
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/basics/detailed_look.jl"))
