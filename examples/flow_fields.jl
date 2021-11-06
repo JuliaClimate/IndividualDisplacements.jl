@@ -26,6 +26,8 @@ Set up a random flow field over a gridded domain of size np,nq
 function random_flow_field(;np=12,nq=18)
 
 Γ=simple_periodic_domain(np,nq)
+Γ = UnitGrid(Γ.XC.grid;option="full")
+
 (_,ϕ,_,_)=demo2(Γ)
 ϕ .*= 0.5
 
@@ -56,7 +58,8 @@ u,v,w=solid_body_rotation(12,4)
 ```
 """
 function solid_body_rotation(np,nz)
-    Γ=simple_periodic_domain(np);
+    Γ=simple_periodic_domain(np)
+    Γ = UnitGrid(Γ.XC.grid;option="full")
     γ=Γ.XC.grid;
     
     #Solid-body rotation around central location ...
@@ -99,7 +102,7 @@ function global_ocean_circulation(;k=1,ny=2)
   #read grid and set up connections between subdomains
   p=dirname(pathof(IndividualDisplacements))
   γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
-  Γ=GridLoad(γ)
+  Γ=GridLoad(γ;option="full")
   Γ=merge(Γ,NeighborTileIndices_cs(Γ))
 
   func=(u -> update_location_llc!(u,𝐷))
@@ -124,7 +127,7 @@ Define gridded variables and return result as NamedTuple
 function OCCA_FlowFields(;backward_in_time::Bool=false,nmax=Inf)
 
    γ=GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
-   Γ=GridLoad(γ)
+   Γ=GridLoad(γ;option="full")
    n=length(Γ.RC)
    isfinite(nmax) ? n=min(n,Int(nmax)) : nothing
 
@@ -268,6 +271,7 @@ end
 function test2_periodic_domain(np = 12, nq = 12)
     #domain and time parameters
     Γ = simple_periodic_domain(np, nq)
+    Γ = UnitGrid(Γ.XC.grid;option="full")
 
     u = 0.1 ./ Γ.DXC
     v = 0.3 ./ Γ.DYC
