@@ -5,7 +5,7 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 0fea38f6-2c9e-43c6-bfc1-267ff220a0cc
-using IndividualDisplacements, DataFrames, MeshArrays
+using IndividualDisplacements, DataFrames, MeshArrays, Plots, PlutoUI
 
 # ╔═╡ 5c7e4e72-3f69-11ec-258b-6bcfdc7b1d65
 md"""# Simple Three Dimensional Flow Field
@@ -24,6 +24,9 @@ For additional documentation e.g. see :
 - change the number of times the particle goes around the origin
 - flow field parameters (e.g. intensity and sign of the convergent term)
 """
+
+# ╔═╡ aadd082a-3ed9-41b7-ba5e-7c5f77d59508
+TableOfContents()
 
 # ╔═╡ 011c89a7-f3d1-4cea-b71a-3d6f96a1801c
 begin
@@ -71,7 +74,7 @@ begin
 	np,nz=16,4 #gridded domain size (horizontal and vertical)
 	u,v,w=solid_body_rotation(np,nz) #staggered velocity arrays
 	𝐹=FlowFields(u,u,v,v,0*w,1*w,[0,19.95*2*pi]); #FlowFields data structure
-	"done defining the flow field"
+	"Done with defining the flow fields."
 end
 
 # ╔═╡ bde49eaf-3747-4edf-b712-3ee6f08ffe20
@@ -82,15 +85,15 @@ Here just one individual is initialized at [np*1/3,np*1/3,nz*1/3] in the three-d
 # ╔═╡ c60a48e0-6f51-44b0-bd6e-332e04d2d332
 begin
 	(x,y,z)=(np*1/3,np*1/3,nz*1/3)
-	𝐽=Individuals(𝐹,x,y,z)
+	𝐼=Individuals(𝐹,x,y,z)
 end
 
 # ╔═╡ 45762eb1-7404-4524-8d1d-788a70f8f5ef
-md"""### 1.3 A Closer Look (optional)
+md"""### 1.3 A Closer Look
 
-The above `Individuals` constructor wraps up 𝐹, the initial position, and other needed components within 𝐼. **At this point, you can either jump to section 2 or read through this section**
+The above `Individuals` constructor wraps up 𝐹, the initial position, and other needed components within 𝐼. **At this point, you can either jump to section 2 or read through the next code cell**
 to learn more about how the details as needed e.g. if you wanted to overide default options 
-that were selected for you by the section 1.3 constructor.
+that were selected for you by the section 1.2 constructor.
 """
 
 # ╔═╡ b70d76d1-09f3-462a-b550-8fa51cb90c2c
@@ -132,18 +135,7 @@ begin
 	postprocessing=postproc,parameters=𝐹)
 	
 	#construct Individuals from NamedTuple:
-	𝐼=Individuals(I)
-end
-
-# ╔═╡ 127cac64-8755-4643-8d99-433795aca44a
-begin
-	using Plots
-	
-	nt=length(𝐼.🔴.x)
-	
-	myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
-	     title="Solid body rotation / Spiral example",leg=false,
-	     xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
+	𝐽=Individuals(I)
 end
 
 # ╔═╡ 8cc54cc2-5284-40b1-9a30-0ad6f725053f
@@ -169,6 +161,15 @@ md"""### 2.2 Visualize Trajectories
 - (generate animation using `myplot`)
 """
 
+# ╔═╡ 127cac64-8755-4643-8d99-433795aca44a
+begin
+	nt=length(𝐼.🔴.x)
+	
+	myplot(i)=plot(𝐼.🔴.x[1:i],𝐼.🔴.y[1:i],𝐼.🔴.z[1:i],linewidth=2,arrow = 2,
+	     title="Solid body rotation / Spiral example",leg=false,
+	     xaxis="x",yaxis="y",zaxis="z",xlims=(0,np),ylims=(0,np));
+end
+
 # ╔═╡ 250d011e-57db-4d80-b16e-dbc28fec9fba
 begin
 	plt=myplot(nt)
@@ -178,16 +179,16 @@ begin
 end
 
 # ╔═╡ a0bf6d10-5d42-481b-8720-dadd3f727e8b
-md"""### Animation example"""
+md"""### 2.3 Animation example"""
 
 # ╔═╡ 4b96502a-fcdb-47ae-8764-c8f144aa28f3
 begin
-	p=Int(ceil(nt/100))
+	p=Int(ceil(nt/50))
 	anim = @animate for i ∈ 1:p:nt
 	    myplot(i)
 	end
 	fil=joinpath(tempdir(),"SolidBodyRotation.gif")
-	gif(anim, fil, fps = 15)
+	gif(anim, fil, fps = 10)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -197,17 +198,25 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 DataFrames = "~1.2.2"
 IndividualDisplacements = "~0.3.3"
 MeshArrays = "~0.2.26"
 Plots = "~1.23.5"
+PlutoUI = "~0.7.18"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
+
+[[AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "0ec322186e078db08ea3e7da5b8b2885c099b393"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.0"
 
 [[Adapt]]
 deps = ["LinearAlgebra"]
@@ -629,6 +638,23 @@ git-tree-sha1 = "3395d4d4aeb3c9d31f5929d32760d8baeee88aaf"
 uuid = "e33a78d0-f292-5ffc-b300-72abe9b543c8"
 version = "2.5.0+0"
 
+[[Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[HypertextLiteral]]
+git-tree-sha1 = "5efcf53d798efede8fee5b2c8b09284be359bf24"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.2"
+
+[[IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
+
 [[IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
 uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
@@ -1041,6 +1067,12 @@ deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers"
 git-tree-sha1 = "7dc03c2b145168f5854085a16d054429d612b637"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.23.5"
+
+[[PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
+git-tree-sha1 = "57312c7ecad39566319ccf5aa717a20788eb8c1f"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.18"
 
 [[Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Requires", "Static", "StrideArraysCore", "ThreadingUtilities"]
@@ -1600,12 +1632,13 @@ version = "0.9.1+5"
 # ╔═╡ Cell order:
 # ╟─5c7e4e72-3f69-11ec-258b-6bcfdc7b1d65
 # ╠═0fea38f6-2c9e-43c6-bfc1-267ff220a0cc
+# ╟─aadd082a-3ed9-41b7-ba5e-7c5f77d59508
 # ╟─011c89a7-f3d1-4cea-b71a-3d6f96a1801c
-# ╟─2200503c-605c-4dfd-878f-ffea2431f7ba
+# ╠═2200503c-605c-4dfd-878f-ffea2431f7ba
 # ╟─bde49eaf-3747-4edf-b712-3ee6f08ffe20
-# ╟─c60a48e0-6f51-44b0-bd6e-332e04d2d332
+# ╠═c60a48e0-6f51-44b0-bd6e-332e04d2d332
 # ╟─45762eb1-7404-4524-8d1d-788a70f8f5ef
-# ╠═b70d76d1-09f3-462a-b550-8fa51cb90c2c
+# ╟─b70d76d1-09f3-462a-b550-8fa51cb90c2c
 # ╟─8cc54cc2-5284-40b1-9a30-0ad6f725053f
 # ╠═503c8702-df0b-4495-8245-4ba6608431e3
 # ╟─32a8b0ee-e61d-495b-ba53-56a6c6126950
