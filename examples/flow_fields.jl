@@ -1,8 +1,5 @@
 using MeshArrays, OceanStateEstimation, MITgcmTools, NetCDF
 
-p=dirname(pathof(MeshArrays))
-include(joinpath(p,"../examples/Demos.jl"))
-
 """
     read_velocities(γ::gcmgrid,t::Int,pth::String)
 

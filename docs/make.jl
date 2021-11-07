@@ -1,4 +1,4 @@
-using Documenter, Literate
+using Documenter, Literate, PlutoSliderServer
 using IndividualDisplacements, OceanStateEstimation
 
 #download data dependencies if needed
@@ -14,9 +14,8 @@ notebooks = joinpath(src, "notebooks")
 execute = true # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
 
-lst1 = ["solid_body_rotation","random_flow_field","detailed_look","particle_cloud","global_ocean_circulation","three_dimensional_ocean"]
-lst2 = ["solid_body_rotation","random_flow_field","detailed_look","particle_cloud","global_ocean_circulation","three_dimensional_ocean"]
-#lst2 = ["none"]
+lst1 = ["detailed_look","particle_cloud","global_ocean_circulation","three_dimensional_ocean"]
+lst2 = ["detailed_look","particle_cloud","global_ocean_circulation","three_dimensional_ocean"]
 tst1(x) = !isempty(lst1) && Bool(sum(isequal.(x, lst1)))
 tst2(x) = !isempty(lst2) && Bool(sum(isequal.(x, lst2)))
 
@@ -34,9 +33,6 @@ ismd(f) = splitext(f)[2] == ".md"
 pages(folder) = [joinpath(folder, f) for f in readdir(joinpath(src, folder)) if ismd(f)]
 
 p=pages("basics"); np=length(p)
-i=findall((occursin).("solid_body_rotation",p)); 
-j=findall((occursin).("random_flow_field",p)); 
-p_tu=[p[j];p[i]]
 i=findall((occursin).("detailed_look",p)); 
 j=findall((occursin).("particle_cloud",p)); 
 p_mi=[p[i];p[j]]
@@ -47,13 +43,21 @@ makedocs(
     pages = [
 		"Introduction" => "index.md",
         "User Guide" => "workflow.md",
-		"Tool Box" => "API.md",
-        "Example Guide" => "examples.md",
-        "Tutorial Examples" => p_tu, 
-		"Real Ocean Cases" => pages("worldwide"),
-        "MITgcm Examples" => p_mi], 
+        "Examples" => "examples.md", 
+		"Tool Box" => "API.md"],
+        doctest = false,
     modules = [IndividualDisplacements]
 )
+
+pth = joinpath(@__DIR__, "build","examples")
+lst=("solid_body_rotation.jl","random_flow_field.jl")
+for i in lst
+    fil_in=joinpath(@__DIR__,"..","examples","basics",i)
+    fil_out=joinpath(pth,i[1:end-2]*"html")
+    PlutoSliderServer.export_notebook(fil_in)
+    mv(fil_in[1:end-2]*"html",fil_out)
+    #cp(fil_in[1:end-2]*"html",fil_out)
+end
 
 # Documenter can also automatically deploy documentation to gh-pages.
 # See "Hosting Documentation" and deploydocs() in the Documenter manual

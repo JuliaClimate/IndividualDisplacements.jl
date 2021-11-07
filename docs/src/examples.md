@@ -1,6 +1,5 @@
-## Summary
 
-The four examples outlined below form a tutorial of sort, and thus complement the rest of the package documentation. The corresponing data wrangling examples in `flow_fields.jl` define grids and ingest velocity fields. They hopefully provide a useful jumping off point in order to configure `IndividualDisplacements.jl` for new problems.
+The four examples outlined below form a tutorial of sorts, and thus complement the rest of the package documentation. They rely on `flow_fields.jl` to define grids and ingest velocity fields. The main goal is to provide a useful jumping off point in order to configure `IndividualDisplacements.jl` for new problems.
 
 Output is in [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format which comes with powerful and convenient analysis methods. Plotting results in space and time can be done as in `recipes_plots.jl`, `recipes_makie.jl`, and `recipes_pyplot.jl` -- see the examples.
 
