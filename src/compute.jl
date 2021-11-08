@@ -236,7 +236,7 @@ Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 ```jldoctest; output = false
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/basics/particle_cloud.jl"))
+include(joinpath(p,"../examples/jupyter/particle_cloud.jl"))
 ref=[29.381183342468674  19.890831699436823]
 prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=1.0))
 
@@ -336,7 +336,7 @@ position increment `du`.
 ```jldoctest; output = false
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/basics/detailed_look.jl"))
+include(joinpath(p,"../examples/jupyter/detailed_look.jl"))
 prod(isapprox.(sol[:,end],ref[:,end],atol=1.0))
 
 # output

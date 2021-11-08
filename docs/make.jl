@@ -8,7 +8,7 @@ OceanStateEstimation.get_occa_velocity_if_needed();
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")
-lit = joinpath(@__DIR__, "../examples/")
+lit = joinpath(@__DIR__, "../examples/jupyter/")
 notebooks = joinpath(src, "notebooks")
 
 execute = true # Set to true for executing notebooks and documenter!
@@ -31,11 +31,6 @@ end
 # Documentation structure
 ismd(f) = splitext(f)[2] == ".md"
 pages(folder) = [joinpath(folder, f) for f in readdir(joinpath(src, folder)) if ismd(f)]
-
-p=pages("basics"); np=length(p)
-i=findall((occursin).("detailed_look",p)); 
-j=findall((occursin).("particle_cloud",p)); 
-p_mi=[p[i];p[j]]
 
 makedocs(
     sitename = "IndividualDisplacements",

@@ -7,7 +7,8 @@ using InteractiveUtils
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
 	using IndividualDisplacements, OceanStateEstimation, DataFrames, Statistics, CSV
-	using MeshArrays, MITgcmTools, NetCDF, NCTiles, Plots
+	using MeshArrays, MITgcmTools, NetCDF, Plots
+	"done with loading packages"
 end
 
 # ╔═╡ c9e9faa8-f5f0-479c-bc85-877ff7114883
@@ -49,8 +50,8 @@ md"""## 2. `FlowFields` Data Structure
 The following parameters are used:
 
 - select vertical level (k=1 by default; k=0 for 3D)
-- _select duration in years (ny=2 by default)_
-- read grid variables
+- select duration in years (ny=1, nm=1 by default)
+- read and process grid variables
 - return FlowFields (𝑃) and ancillary variables etc (𝐷) 
 - read & normalize velocities (𝐷.🔄)
 """
@@ -290,8 +291,11 @@ end
 begin
 	#func=(u -> update_location_llc!(u,𝐷))
 	#Γ=merge(Γ,(; update_location! = func))
-	
-	k=0
+
+	ny=1
+	nm=1
+	k=1
+
 	𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path)
 
 	#add parameters for use in reset! and grid variables
@@ -301,6 +305,9 @@ begin
 	
 	𝐷.🔄(𝑃,𝐷,0.0)
 end
+
+# ╔═╡ 0f95fbfb-49d9-4ebe-9cc9-fd69507d7492
+k
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
@@ -322,6 +329,9 @@ begin
 	fieldnames(typeof(𝐼))
 end
 
+# ╔═╡ 1495fda9-e46b-424e-922a-3b823f3fe200
+𝐼
+
 # ╔═╡ cc7cb4a8-86ea-42b0-bbb9-ca78469ad4ad
 df
 
@@ -332,9 +342,6 @@ begin
 	∫!(𝐼,𝑇)
 	✔1="done"
 end
-
-# ╔═╡ 1495fda9-e46b-424e-922a-3b823f3fe200
-𝐼
 
 # ╔═╡ c57f60b8-cec6-4ef0-bb63-0201c18c9ece
 """
@@ -364,7 +371,7 @@ end
 # ╔═╡ 1044c5aa-1a56-45b6-a4c6-63d24eea878d
 begin
 	✔1
-	[step!(𝐼) for y=1:1, m=1:1]
+	[step!(𝐼) for y=1:ny, m=1:nm]
 	add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC)
 	✔2="done"
 end
@@ -419,7 +426,6 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 MITgcmTools = "62725fbc-3a66-4df3-9000-e33e85b3a198"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
-NCTiles = "4c1fdd90-559f-11e9-1abf-07ceafc4ffc0"
 NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
 OceanStateEstimation = "891f6deb-a4f5-4bc5-a2e3-1e8f649cdd2c"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
@@ -431,7 +437,6 @@ DataFrames = "~1.2.2"
 IndividualDisplacements = "~0.3.3"
 MITgcmTools = "~0.1.31"
 MeshArrays = "~0.2.26"
-NCTiles = "~0.1.14"
 NetCDF = "~0.11.3"
 OceanStateEstimation = "~0.1.15"
 Plots = "~1.23.5"
@@ -1203,18 +1208,6 @@ git-tree-sha1 = "c6190f9a7fc5d9d5915ab29f2134421b12d24a68"
 uuid = "46d2c3a1-f734-5fdb-9937-b9b9aeba4221"
 version = "0.2.2"
 
-[[NCDatasets]]
-deps = ["CFTime", "DataStructures", "Dates", "NetCDF_jll", "Printf"]
-git-tree-sha1 = "5da406d9624f25909a6f556bd8d5c1deaa189ee6"
-uuid = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
-version = "0.11.7"
-
-[[NCTiles]]
-deps = ["Dates", "LazyArtifacts", "MeshArrays", "NCDatasets", "NetCDF", "Pkg", "Printf"]
-git-tree-sha1 = "18ba0d2f5b36151de92c7243bbdf293f108d0315"
-uuid = "4c1fdd90-559f-11e9-1abf-07ceafc4ffc0"
-version = "0.1.14"
-
 [[NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
 git-tree-sha1 = "50310f934e55e5ca3912fb941dec199b49ca9b68"
@@ -1957,16 +1950,17 @@ version = "0.9.1+5"
 
 # ╔═╡ Cell order:
 # ╟─c9e9faa8-f5f0-479c-bc85-877ff7114883
-# ╠═104ce9b0-3fd1-11ec-3eff-3b029552e3d9
+# ╟─104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 # ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
 # ╟─07e65622-3698-4dd8-b718-83588e116e58
+# ╠═0f95fbfb-49d9-4ebe-9cc9-fd69507d7492
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
 # ╟─218b9beb-68f2-4498-a96d-08e0719b4cff
 # ╟─f1215951-2eb2-490b-875a-91c1205b8f63
 # ╟─f727992f-b72a-45bc-93f1-cc8daf89af0f
+# ╟─1495fda9-e46b-424e-922a-3b823f3fe200
 # ╟─cc7cb4a8-86ea-42b0-bbb9-ca78469ad4ad
 # ╟─a3e45927-5d53-42be-b7b7-489d6e7a6fe5
-# ╠═1495fda9-e46b-424e-922a-3b823f3fe200
 # ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
 # ╟─a2375720-f599-43b9-a7fb-af17956309b6
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
