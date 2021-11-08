@@ -45,7 +45,7 @@ makedocs(
 )
 
 pth = joinpath(@__DIR__, "build","examples")
-lst=("solid_body_rotation.jl","random_flow_field.jl")
+lst=("solid_body_rotation.jl","random_flow_field.jl","global_ocean_circulation.jl","three_dimensional_ocean.jl")
 for i in lst
     fil_in=joinpath(@__DIR__,"..","examples","basics",i)
     fil_out=joinpath(pth,i[1:end-2]*"html")

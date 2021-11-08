@@ -27,7 +27,7 @@ The flow field consists of [rigid body rotation](https://en.wikipedia.org/wiki/R
 
 ## Global Ocean Circulation
 
-[notebook (html)](https://juliaclimate.github.io/IndividualDisplacements.jl/dev/worldwide/global_ocean_circulation/index.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/worldwide/global_ocean_circulation.jl)
+[notebook (html)](../global_ocean_circulation/index.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/worldwide/global_ocean_circulation.jl)
 
 A simulation of floating particles over the Global Ocean which illustrates (1) using time variable velocity fields, (2) global connections, (3) particle re-seeding, and (4) output statistics. 
 
@@ -37,7 +37,7 @@ The flow field is based on a data-constrained ocean model solution. The problem 
 
 ## Three Dimensional Pathways
 
-[notebook (html)](https://juliaclimate.github.io/IndividualDisplacements.jl/dev/worldwide/three_dimensional_ocean/index.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/worldwide/three_dimensional_ocean.jl)
+[notebook (html)](../three_dimensional_ocean/index.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/worldwide/three_dimensional_ocean.jl)
 
 A simulation of particles that follow the three-dimensional ocean circulation. This example illustrates (1) the 3D case in a relatistic configuration, (2) tracking the advent or origin of a water patch, and (3) multifacted visualizations in 3D.
 
@@ -47,9 +47,9 @@ The flow field is based on a data-constrained, realistic, ocean model. The probl
 
 ## MITgcm Examples
 
-- Particle cloud : [notebook (html)](https://juliaclimate.github.io/IndividualDisplacements.jl/dev/basics/particle_cloud/index.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/basics/particle_cloud.jl)
+- Particle cloud : [notebook (html)](../particle_cloud/index.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/basics/particle_cloud.jl)
 
-- Detailed look : [notebook (html)](https://juliaclimate.github.io/IndividualDisplacements.jl/dev/basics/detailed_look/index.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/basics/detailed_look.jl)
+- Detailed look : [notebook (html)](../detailed_look/index.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/basics/detailed_look.jl)
 
 ## Running The Examples
 
