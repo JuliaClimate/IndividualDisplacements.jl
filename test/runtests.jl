@@ -22,7 +22,7 @@ end
 
 @testset "test3" begin
     p=dirname(pathof(IndividualDisplacements))
-    include(joinpath(p,"../examples/basics/random_flow_field.jl"))
+    include(joinpath(p,"../examples/jupyter/random_flow_field.jl"))
 
     show(𝐼)
     diff(𝐼)
