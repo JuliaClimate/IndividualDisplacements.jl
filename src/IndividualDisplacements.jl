@@ -1,7 +1,7 @@
 module IndividualDisplacements
 
 using MeshArrays, CyclicArrays, OrdinaryDiffEq, DataFrames
-using NetCDF, Dates, CFTime, CSV, UnPack, Random, Pkg.Artifacts
+using NetCDF, Dates, CFTime, CSV, UnPack, Random, LazyArtifacts
 
 p=dirname(pathof(IndividualDisplacements))
 artifact_toml = joinpath(p, "../Artifacts.toml")
