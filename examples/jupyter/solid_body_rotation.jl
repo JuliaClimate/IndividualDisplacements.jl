@@ -26,7 +26,7 @@
 
 using IndividualDisplacements, DataFrames
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/flow_fields.jl"))
+include(joinpath(p,"../examples/jupyter/flow_fields.jl"))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### 1.2  Flow Fields

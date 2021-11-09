@@ -15,8 +15,8 @@
 
 using IndividualDisplacements, OrdinaryDiffEq, Statistics
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/recipes_plots.jl"))
-include(joinpath(p,"../examples/example123.jl"));
+include(joinpath(p,"../examples/jupyter/recipes_plots.jl"))
+include(joinpath(p,"../examples/jupyter/example123.jl"));
 
 # ## 2. Setup Problem
 

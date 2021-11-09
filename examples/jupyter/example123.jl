@@ -1,6 +1,35 @@
 using IndividualDisplacements, MeshArrays, MITgcmTools, OrdinaryDiffEq, Statistics
 
 """
+    read_mds(filRoot::String,x::MeshArray)
+
+Read a gridded variable from 2x2 tile files. This is used
+in `example2_setup()` with `flt_example/`
+"""
+function read_mds(filRoot::String,x::MeshArray)
+   prec=eltype(x)
+   prec==Float64 ? reclen=8 : reclen=4;
+
+   (n1,n2)=Int64.(x.grid.ioSize ./ 2);
+   fil=filRoot*".001.001.data"
+   tmp1=stat(fil);
+   n3=Int64(tmp1.size/n1/n2/reclen);
+
+   v00=x.grid.write(x)
+   for ii=1:2; for jj=1:2;
+      fid = open(filRoot*".00$ii.00$jj.data")
+      fld = Array{prec,1}(undef,(n1*n2*n3))
+      read!(fid,fld)
+      fld = hton.(fld)
+
+      n3>1 ? s=(n1,n2,n3) : s=(n1,n2)
+      v00[1+(ii-1)*n1:ii*n1,1+(jj-1)*n2:jj*n2,:]=reshape(fld,s)
+   end; end;
+
+   return x.grid.read(v00,x)
+end
+
+"""
     example1()
 
 Pre-computed global ocean case. Here we just re-read data from a file produced

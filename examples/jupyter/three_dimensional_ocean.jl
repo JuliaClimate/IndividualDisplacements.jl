@@ -20,7 +20,7 @@
 using IndividualDisplacements, OceanStateEstimation, DataFrames
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/helper_functions.jl"))
+include(joinpath(p,"../examples/jupyter/helper_functions.jl"))
 
 OceanStateEstimation.get_occa_velocity_if_needed();
 

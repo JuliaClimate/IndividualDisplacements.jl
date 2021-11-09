@@ -24,7 +24,7 @@
 
 using IndividualDisplacements, DataFrames
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/flow_fields.jl"));
+include(joinpath(p,"../examples/jupyter/flow_fields.jl"));
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 2. Flow Fields
@@ -81,7 +81,7 @@ y=nq*(0.4 .+ 0.2*rand(100));
 # ## 5. Plot Results
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/recipes_plots.jl"));
+include(joinpath(p,"../examples/jupyter/recipes_plots.jl"));
 
 🔴_by_t = groupby(𝐼.🔴, :t)
 phi_scatter(ϕ,🔴_by_t[end])
