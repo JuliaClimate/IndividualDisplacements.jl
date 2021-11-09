@@ -46,8 +46,9 @@ makedocs(
 
 pth = joinpath(@__DIR__, "build","examples")
 lst=("solid_body_rotation.jl","random_flow_field.jl","global_ocean_circulation.jl","three_dimensional_ocean.jl")
-for i in lst
-    fil_in=joinpath(@__DIR__,"..","examples","basics",i)
+pth=("basics","basics","worldwide","worldwide")
+for ii in 1:length(lst)
+    fil_in=joinpath(@__DIR__,"..",pth[ii],lst[ii])
     fil_out=joinpath(pth,i[1:end-2]*"html")
     PlutoSliderServer.export_notebook(fil_in)
     mv(fil_in[1:end-2]*"html",fil_out)
