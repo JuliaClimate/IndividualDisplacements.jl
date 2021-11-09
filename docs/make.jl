@@ -44,12 +44,13 @@ makedocs(
     modules = [IndividualDisplacements]
 )
 
-pth = joinpath(@__DIR__, "build","examples")
+pth_in = joinpath(@__DIR__, "..","examples")
+pth_out = joinpath(@__DIR__, "build","examples")
 lst=("solid_body_rotation.jl","random_flow_field.jl","global_ocean_circulation.jl","three_dimensional_ocean.jl")
-pth=("basics","basics","worldwide","worldwide")
+subpth=("basics","basics","worldwide","worldwide")
 for ii in 1:length(lst)
-    fil_in=joinpath(@__DIR__,"..",pth[ii],lst[ii])
-    fil_out=joinpath(pth,i[1:end-2]*"html")
+    fil_in=joinpath(pth_in,subpth[ii],lst[ii])
+    fil_out=joinpath(pth_out,lst[ii][1:end-2]*"html")
     PlutoSliderServer.export_notebook(fil_in)
     mv(fil_in[1:end-2]*"html",fil_out)
     #cp(fil_in[1:end-2]*"html",fil_out)
