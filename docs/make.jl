@@ -1,5 +1,6 @@
 using Documenter, Literate, PlutoSliderServer
 using IndividualDisplacements, OceanStateEstimation
+import CairoMakie as Mkie
 
 #download data dependencies if needed
 IndividualDisplacements.flt_example_download()

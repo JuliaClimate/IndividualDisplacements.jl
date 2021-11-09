@@ -123,11 +123,15 @@ end
 
 # ╔═╡ 818b516f-c7ee-4da7-9954-8303c978bbd4
 begin
-	fil=joinpath(tempdir(),"movie1.mp4")
-	Mkie.record(fig,fil, 1:10:nt; framerate = 20) do t
-		time[] = t
+	if false
+		fil=joinpath(tempdir(),"random_flow_field.jl.mp4")
+		Mkie.record(fig,fil, 1:10:nt; framerate = 20) do t
+			time[] = t
+		end
+		LocalResource(fil)
+	else
+		"try code in this cell to generate animation"
 	end
-	LocalResource(fil)
 end
 
 # ╔═╡ 67c39f1e-8aa5-4fad-a0b8-a7fca1b17c36

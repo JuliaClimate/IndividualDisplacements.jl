@@ -5,7 +5,11 @@ using Markdown
 using InteractiveUtils
 
 # ╔═╡ 0fea38f6-2c9e-43c6-bfc1-267ff220a0cc
-using IndividualDisplacements, DataFrames, MeshArrays, PlutoUI, CairoMakie
+begin
+	using IndividualDisplacements, DataFrames, MeshArrays, PlutoUI
+	import CairoMakie as Mkie
+	"done with loading packages"
+end
 
 # ╔═╡ 5c7e4e72-3f69-11ec-258b-6bcfdc7b1d65
 md"""# Simple Three Dimensional Flow Field
@@ -160,18 +164,18 @@ md"""### 2.2 Visualize Trajectory"""
 begin
 	nt=length(𝐼.🔴.x)
 	
-	time = Node(nt)
-	xx=@lift( [𝐼.🔴.x[1:$time];fill(NaN,nt-$time)] )
-	yy=@lift( [𝐼.🔴.y[1:$time];fill(NaN,nt-$time)] )
-	zz=@lift( [𝐼.🔴.z[1:$time];fill(NaN,nt-$time)] )
+	time = Mkie.Node(nt)
+	xx=Mkie.@lift( [𝐼.🔴.x[1:$time];fill(NaN,nt-$time)] )
+	yy=Mkie.@lift( [𝐼.🔴.y[1:$time];fill(NaN,nt-$time)] )
+	zz=Mkie.@lift( [𝐼.🔴.z[1:$time];fill(NaN,nt-$time)] )
 	
-	set_theme!(theme_light())
-	f=Figure(resolution = (900, 600))
-	a = Axis3(f[1, 1],xlabel="x",ylabel="y",zlabel="z",
+	Mkie.set_theme!(Mkie.theme_light())
+	f=Mkie.Figure(resolution = (900, 600))
+	a = Mkie.Axis3(f[1, 1],xlabel="x",ylabel="y",zlabel="z",
 		title="Solid body rotation / Spiral example")		
-	CairoMakie.lines!(a,xx,yy,zz,linewidth=1.0,color=:black)
-	CairoMakie.scatter!(a,[𝐼.🔴.x[1]],[𝐼.🔴.y[1]],[𝐼.🔴.z[1]],color=:red)
-	CairoMakie.scatter!(a,[𝐼.🔴.x[nt]],[𝐼.🔴.y[nt]],[𝐼.🔴.z[nt]],color=:green)
+	Mkie.lines!(a,xx,yy,zz,linewidth=1.0,color=:black)
+	Mkie.scatter!(a,[𝐼.🔴.x[1]],[𝐼.🔴.y[1]],[𝐼.🔴.z[1]],color=:red)
+	Mkie.scatter!(a,[𝐼.🔴.x[nt]],[𝐼.🔴.y[nt]],[𝐼.🔴.z[nt]],color=:green)
 
 	f
 end
@@ -189,15 +193,19 @@ md"""### 2.3 Animation example"""
 
 # ╔═╡ 2b8ee43d-1225-4475-91c9-161cf612bfb2
 begin
-	p=Int(ceil(nt/50))
-	tt=1:p:nt
-	tt=tt.+(nt-maximum(tt))
-
-	fil=joinpath(tempdir(),"movie.mp4")
-	record(f,fil, tt; framerate = 20) do t
-		time[] = t
+	if false
+		p=Int(ceil(nt/50))
+		tt=1:p:nt
+		tt=tt.+(nt-maximum(tt))
+	
+		fil=joinpath(tempdir(),"solid_body_rotation.mp4")
+		Mkie.record(f,fil, tt; framerate = 20) do t
+			time[] = t
+		end
+		LocalResource(fil)
+	else
+		"""try code in this cell to generate animation"""
 	end
-	LocalResource(fil)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -347,6 +355,12 @@ deps = ["Compat", "LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "f885e7e7c124f8c92650d61b9477b9ac2ee607dd"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 version = "1.11.1"
+
+[[ChangesOfVariables]]
+deps = ["LinearAlgebra", "Test"]
+git-tree-sha1 = "9a1d594397670492219635b35a3d830b04730d62"
+uuid = "9e997f8a-9a97-42d5-a9f1-ce6bfc15e2c0"
+version = "0.1.1"
 
 [[CloseOpenIntervals]]
 deps = ["ArrayInterface", "Static"]
@@ -585,9 +599,9 @@ version = "1.11.2"
 
 [[FilePathsBase]]
 deps = ["Dates", "Mmap", "Printf", "Test", "UUIDs"]
-git-tree-sha1 = "d962b5a47b6d191dbcd8ae0db841bc70a05a3f5b"
+git-tree-sha1 = "5440c1d26aa29ca9ea848559216e5ee5f16a8627"
 uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
-version = "0.9.13"
+version = "0.9.14"
 
 [[FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
@@ -736,9 +750,9 @@ uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
 version = "0.0.4"
 
 [[HypertextLiteral]]
-git-tree-sha1 = "5efcf53d798efede8fee5b2c8b09284be359bf24"
+git-tree-sha1 = "2b078b5a615c6c0396c77810d92ee8c6f470d238"
 uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
-version = "0.9.2"
+version = "0.9.3"
 
 [[IOCapture]]
 deps = ["Logging", "Random"]
@@ -815,9 +829,9 @@ version = "0.5.3"
 
 [[InverseFunctions]]
 deps = ["Test"]
-git-tree-sha1 = "f0c6489b12d28fb4c2103073ec7452f3423bd308"
+git-tree-sha1 = "a7254c0acd8e62f1ac75ad24d5db43f5f19f3c65"
 uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
-version = "0.1.1"
+version = "0.1.2"
 
 [[InvertedIndices]]
 git-tree-sha1 = "bee5f1ef5bf65df56bdd2e40447590b272a5471f"
@@ -974,10 +988,10 @@ deps = ["Libdl"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[LogExpFunctions]]
-deps = ["ChainRulesCore", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
-git-tree-sha1 = "6193c3815f13ba1b78a51ce391db8be016ae9214"
+deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
+git-tree-sha1 = "be9eef9f9d78cecb6f262f3c10da151a6c5ab827"
 uuid = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
-version = "0.3.4"
+version = "0.3.5"
 
 [[Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
@@ -1178,9 +1192,9 @@ version = "1.4.1"
 
 [[OrdinaryDiffEq]]
 deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastClosures", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "138a1578c523f7a4899dc8b31730cd6cf74c1ab0"
+git-tree-sha1 = "6f76c887ddfd3f2a018ef1ee00a17b46bcf4886e"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "5.66.1"
+version = "5.67.0"
 
 [[PCRE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1766,12 +1780,12 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─5c7e4e72-3f69-11ec-258b-6bcfdc7b1d65
-# ╠═0fea38f6-2c9e-43c6-bfc1-267ff220a0cc
+# ╟─0fea38f6-2c9e-43c6-bfc1-267ff220a0cc
 # ╟─aadd082a-3ed9-41b7-ba5e-7c5f77d59508
 # ╟─011c89a7-f3d1-4cea-b71a-3d6f96a1801c
 # ╠═2200503c-605c-4dfd-878f-ffea2431f7ba
 # ╟─bde49eaf-3747-4edf-b712-3ee6f08ffe20
-# ╟─c60a48e0-6f51-44b0-bd6e-332e04d2d332
+# ╠═c60a48e0-6f51-44b0-bd6e-332e04d2d332
 # ╟─45762eb1-7404-4524-8d1d-788a70f8f5ef
 # ╟─b70d76d1-09f3-462a-b550-8fa51cb90c2c
 # ╟─8cc54cc2-5284-40b1-9a30-0ad6f725053f
