@@ -15,8 +15,8 @@ notebooks = joinpath(src, "notebooks")
 execute = true # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
 
-lst1 = ["detailed_look","particle_cloud","global_ocean_circulation","three_dimensional_ocean"]
-lst2 = ["detailed_look","particle_cloud","global_ocean_circulation","three_dimensional_ocean"]
+lst1 = ["detailed_look","particle_cloud"]
+lst2 = ["detailed_look","particle_cloud"]
 tst1(x) = !isempty(lst1) && Bool(sum(isequal.(x, lst1)))
 tst2(x) = !isempty(lst2) && Bool(sum(isequal.(x, lst2)))
 
@@ -47,8 +47,9 @@ makedocs(
 
 pth_in = joinpath(@__DIR__, "..","examples")
 pth_out = joinpath(@__DIR__, "build","examples")
-lst=("solid_body_rotation.jl","random_flow_field.jl","global_ocean_circulation.jl","three_dimensional_ocean.jl")
-subpth=("basics","basics","worldwide","worldwide")
+lst=("solid_body_rotation.jl","random_flow_field.jl","interactive_UI.jl",
+     "global_ocean_circulation.jl","three_dimensional_ocean.jl")
+subpth=("basics","basics","worldwide","worldwide","worldwide")
 for ii in 1:length(lst)
     fil_in=joinpath(pth_in,subpth[ii],lst[ii])
     fil_out=joinpath(pth_out,lst[ii][1:end-2]*"html")
