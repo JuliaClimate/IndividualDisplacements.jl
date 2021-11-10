@@ -179,7 +179,7 @@ Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps fo
 ```jldoctest
 using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/helper_functions.jl"))
+include(joinpath(p,"../examples/jupyter/helper_functions.jl"))
 𝑃,𝐷=global_ocean_circulation(k=1,ny=2);
 
 lon=[i for i=20.:20.0:380., j=-70.:10.0:70.]

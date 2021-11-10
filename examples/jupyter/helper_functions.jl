@@ -1,7 +1,7 @@
 
 using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/flow_fields.jl"));
+include(joinpath(p,"../examples/jupyter/flow_fields.jl"));
 
 """
     init_global_randn(np ::Int , 𝑃::NamedTuple)

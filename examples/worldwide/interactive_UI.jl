@@ -4,442 +4,277 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
-begin
-	using IndividualDisplacements, OceanStateEstimation, DataFrames, Statistics, CSV
-	using MeshArrays, MITgcmTools, NetCDF, Plots
-	"done with loading packages"
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        el
+    end
 end
 
-# ╔═╡ c9e9faa8-f5f0-479c-bc85-877ff7114883
-md"""# Global Climatology
+# ╔═╡ 747d446a-dfeb-11ea-3533-c9404fd41688
+begin
+	using IndividualDisplacements, MeshArrays, DataFrames, OceanStateEstimation
+	using Statistics, PlutoUI, OrdinaryDiffEq, StatsPlots, NetCDF
+	✓ = "😃"
+	"$✓ Set up packages"
+end
 
-Advect particles with climatological monthly mean flow at selected depth level
-(e.g. `k=10` for 95 m) from a global ocean state estimate ([ECCO v4 r2](https://eccov4.readthedocs.io/en/latest/) ; see also <https://ecco-group.org>)
-which is here repeated for `ny` years. For additional documentation e.g. see :
-[1](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
-[2](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
-[3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
-[4](https://en.wikipedia.org/wiki/Displacement_(vector))
-
-[![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
+# ╔═╡ bf19d29c-e70e-11ea-0153-d3a49981d56c
+md"""longitude,latitude of South West corner =
+$(@bind lon0 NumberField(-180.0:10:180.0; default=0.0))
+,
+$(@bind lat0 NumberField(-90.0:5:90.0; default=-50.0))
 """
 
-# ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
-md"""## 1. Grid and Velocity Files"""
+# ╔═╡ 4935fd46-e70f-11ea-386c-f9c444a20644
+md"""depth level (integer), set size (nb of particles) =
+$(@bind klev NumberField(1:10; default=5))
+,
+$(@bind npar NumberField(50:50:1000; default=100))
+""" 
 
-# ╔═╡ 07e65622-3698-4dd8-b718-83588e116e58
+# ╔═╡ 9c80e722-e70f-11ea-22a6-0be2e85f3b8b
+md"""time step (for plotting)= 
+$(@bind tt Slider(1:26; default=13, show_value=true))
+"""
+
+# ╔═╡ e25eee9e-dfee-11ea-2a4c-3946ccb63876
 begin
-	#pth1=dirname(pathof(IndividualDisplacements))
-	#include(joinpath(pth1,"../examples/helper_functions.jl"))
+	lo0=lon0; lo1=lo0+5
+	la0=lat0; la1=la0+5
+	z_init=klev
+	n_part=npar
+	(particles=n_part,longitudes=(lo0,lo1),latitudes=(la0,la1),level=z_init,plot_time=tt)
+end
+
+# ╔═╡ 87c5e5d4-c343-49fb-bc7e-6b2c0e647a38
+function OCCA_FlowFields(;backward_in_time::Bool=false,nmax=Inf)
+
+   γ=GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
+   Γ=GridLoad(γ;option="full")
+   n=length(Γ.RC)
+   isfinite(nmax) ? n=min(n,Int(nmax)) : nothing
+
+   g=Γ.XC.grid
+   func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
+
+   jj=[:hFacC, :hFacW, :hFacS, :DXG, :DYG, :RAC, :RAZ, :RAS]
+   ii=findall([!in(i,jj) for i in keys(Γ)])
+   Γ=(; zip(Symbol.(keys(Γ)[ii]), values(Γ)[ii])...)
+
+   backward_in_time ? s=-1.0 : s=1.0
+   s=Float32(s)
+
+   function rd(filename, varname,n)
+   fil = NetCDF.open(filename, varname)
+   siz = size(fil)
+   tmp = zeros(siz[1:2]...,n)
+   [tmp .+= fil[:,:,1:n,t] for t=1:12]
+   tmp ./= 12.0
+   tmp[findall(tmp.<-1e22)] .= 0.0
+   return tmp
+   end
+
+   fileIn=OCCAclim_path*"DDuvel.0406clim.nc"
+   u=s*read(rd(fileIn,"u",n),MeshArray(γ,Float32,n))
+
+   fileIn=OCCAclim_path*"DDvvel.0406clim.nc"
+   v=s*read(rd(fileIn,"v",n),MeshArray(γ,Float32,n))
+
+   fileIn=OCCAclim_path*"DDwvel.0406clim.nc"
+   w=s*rd(fileIn,"w",n)
+   w=-cat(w,zeros(360, 160),dims=3)
+   w[:,:,1] .=0.0
+   w=read(w,MeshArray(γ,Float32,n+1))
+
+   fileIn=OCCAclim_path*"DDtheta.0406clim.nc"
+   θ=read(rd(fileIn,"theta",n),MeshArray(γ,Float32,n))
+
+#   fileIn=OCCAclim_path*"DDsalt.0406clim.nc"
+#   𝑆=read(rd(fileIn,"salt",n),MeshArray(γ,Float64,n))
+
+   for i in eachindex(u)
+      u[i]=u[i]./Γ.DXC[1]
+      v[i]=v[i]./Γ.DYC[1]
+   end
+
+   for i in eachindex(u)
+      u[i]=circshift(u[i],[-180 0])
+      v[i]=circshift(v[i],[-180 0])
+      θ[i]=circshift(θ[i],[-180 0])
+#      𝑆[i]=circshift(𝑆[i],[-180 0])
+   end
+
+   for i in eachindex(w)
+      w[i]=w[i]./Γ.DRC[min(i[2]+1,n)]
+      w[i]=circshift(w[i],[-180 0])
+   end
+
+   tmpx=circshift(Γ.XC[1],[-180 0])
+   tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
+   Γ.XC[1]=tmpx
+
+   tmpx=circshift(Γ.XG[1],[-180 0])
+   tmpx[1:180,:]=tmpx[1:180,:] .- 360.0
+   Γ.XG[1]=tmpx
+   Γ.Depth[1]=circshift(Γ.Depth[1],[-180 0])
+
+   t0=0.0; t1=86400*366*2.0;
+
+   for k=1:n
+    (tmpu,tmpv)=exchange(u[:,k],v[:,k],1)
+    u[:,k]=tmpu
+    v[:,k]=tmpv
+   end
+   for k=1:n+1
+    tmpw=exchange(w[:,k],1)
+    w[:,k]=tmpw
+   end
+
+   𝑃=FlowFields(u,u,v,v,w,w,[t0,t1],func)
+
+   𝐷 = (θ0=θ, θ1=θ, XC=exchange(Γ.XC), YC=exchange(Γ.YC), 
+   RF=Γ.RF, RC=Γ.RC,ioSize=(360,160,n))
+
+   return 𝑃,𝐷,Γ
+
+end
+
+# ╔═╡ 1811955d-618d-49e3-9f81-63195e2632fe
+begin
+	𝑃,𝐷,Γ=OCCA_FlowFields(nmax=5)
+	tmp=(Γ = Γ, m = "OCCA")
+    𝐷=merge(𝐷,tmp)
+	"$✓ Set up gridded domain"
+end
+
+# ╔═╡ f75fae30-dfee-11ea-18ef-259321acfa2f
+begin	
+	lon=lo0 .+(lo1-lo0).*rand(n_part)
+	lat=la0 .+(la1-la0).*rand(n_part)
+	(_,_,_,_,f,x,y)=InterpolationFactors(𝐷.Γ,lon,lat)
+    m=findall( (f.!==0).*((!isnan).(x)) )
+	df=DataFrame(x=x[m],y=y[m],f=f[m])
 	
-	OceanStateEstimation.get_ecco_velocity_if_needed();
-	γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
-	Γ=GridLoad(γ;option="full")
-	Γ=merge(Γ,NeighborTileIndices_cs(Γ))
-
-	func=(u -> update_location_llc!(u,Γ))
-	Γ=merge(Γ,(; update_location! = func))
-
-	"Done with Grid and Velocity Files"
-end
-
-# ╔═╡ 94ca10ae-6a8a-4038-ace0-07d7d9026712
-md"""## 2. `FlowFields` Data Structure
-
-The following parameters are used:
-
-- select vertical level (k=1 by default; k=0 for 3D)
-- select duration in years (ny=1, nm=1 by default)
-- read and process grid variables
-- return FlowFields (𝑃) and ancillary variables etc (𝐷) 
-- read & normalize velocities (𝐷.🔄)
-"""
-
-# ╔═╡ f1215951-2eb2-490b-875a-91c1205b8f63
-md"""## 3. Main Computation Loop
-
-### 3.1 initial particle positions randomly over Global Ocean
-### 3.2 initial integration from time 0 to 0.5 month
-"""
-
-# ╔═╡ 6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
-md""" ### 3.2 Iteration function example
-
-In addition, `step!` is defined to provide additional flexibility around `∫!` :
-
-- `𝐷.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
-- `reset_📌!(𝐼)` randomly selects a fraction (`𝐷.frac`) of the particles and resets their positions before each integration period. This tends to maintain homogeneous coverage of the Global Ocean by particles.
-- `∫!(𝐼)` then solves for the individual trajectories over one month, with updated velocity fields (𝐼.𝑃.u0 etc), and adds diagnostics to the DataFrame used to record variables along the trajectory (𝐼.🔴).
-"""
-
-# ╔═╡ 7efadea7-4542-40cf-893a-40a75e9c52be
-md"""### 3.3 Iterate For `ny*12` Months"""
-
-# ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
-md"""## 3.4 Compute summary statistics
-
-See [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) documentation for detail and additinal functionalities.
-"""
-
-# ╔═╡ 4b887e2f-7505-4db2-8784-400a786fba10
-begin
-	function CalcIntFac(Γ)
-	    lon=[i for i=20.:2.0:380., j=-79.:2.0:89.]
-	    lat=[j for i=20.:2.0:380., j=-79.:2.0:89.]
-		(f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
-		IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)	
+	custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float32[], y=Float32[], 
+		z=Float32[], year=Float32[], t=Float32[])
+	function custom🔧(sol,𝐹::𝐹_MeshArray3D;id=missing,𝑇=missing)
+		df=postprocess_MeshArray(sol,𝐹,id=id,𝑇=𝑇)
+		z=[sol[1,i,j][3] for i in 1:size(sol,2), j in 1:size(sol,3)]
+		df.z=z[:]
+		df.year=df.t ./86400/365
+		return df
 	end
-	IntFac=CalcIntFac(Γ)
-	"Done with interoikation coefficients for map"
+	custom∫(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8,saveat=365/12*86400.0)
+	
+	𝐼=Individuals(𝑃,df.x,df.y,fill(z_init,n_part),df.f,
+		(🔴=custom🔴,🔧=custom🔧,∫=custom∫))
+
+	"$✓ Set up Individuals"
 end
 
-# ╔═╡ af74c6c8-1859-4fdf-ae2b-5af8dccdee60
-"""
-    OceanDepthLog(Γ,IntFac)
-
-Compute Ocean depth logarithm on regular grid.
-"""
-function OceanDepthLog(Γ,IntFac)
-#    lon=[i for i=20.:2.0:380., j=-79.:2.0:89.]
-#    lat=[j for i=20.:2.0:380., j=-79.:2.0:89.]
-	DL=interp_to_lonlat(Γ.Depth,IntFac)
-	DL[findall(DL.<0)].=0
-    DL=transpose(log10.(DL))
-    DL[findall((!isfinite).(DL))].=NaN
-    return DL
-#	return (lon=lon[:,1],lat=lat[1,:],fld=DL,rng=(1.5,5))
-end
-
-# ╔═╡ 14f7eadb-9ac4-41cd-b773-8b17d0e69a2c
-"""
-    read_velocities(γ::gcmgrid,t::Int,pth::String)
-
-Read velocity components `u,v` from files in `pth`for time `t`
-"""
-function read_velocities(γ::gcmgrid,t::Int,pth::String)
-    u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
-    v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
-    return u,v
-end
-
-# ╔═╡ 11ea0fe5-b713-453f-ab66-77c75fd74ea4
+# ╔═╡ 9ffe84c0-dff0-11ea-2726-8924892df73a
 begin
-	"""
-	    update_FlowFields!(𝑃::𝐹_MeshArray2D,𝐷::NamedTuple,t::Float64)
-	
-	Update flow field arrays (in 𝑃), 𝑃.𝑇, and ancillary variables (in 𝐷) 
-	according to the chosen time `t` (in `seconds`). 
-	
-	_Note: for now, it is assumed that (1) the time interval `dt` between 
-	consecutive records is diff(𝑃.𝑇), (2) monthly climatologies are used 
-	with a periodicity of 12 months, (3) vertical 𝑃.k is selected_
-	"""
-	function update_FlowFields!(𝑃::𝐹_MeshArray2D,𝐷::NamedTuple,t::Float64)
-	    dt=𝑃.𝑇[2]-𝑃.𝑇[1]
-	
-	    m0=Int(floor((t+dt/2.0)/dt))
-	    m1=m0+1
-	    t0=m0*dt-dt/2.0
-	    t1=m1*dt-dt/2.0
-	
-	    m0=mod(m0,12)
-	    m0==0 ? m0=12 : nothing
-	    m1=mod(m1,12)
-	    m1==0 ? m1=12 : nothing
-	
-	    (U,V)=read_velocities(𝑃.u0.grid,m0,𝐷.pth)
-	    u0=U[:,𝐷.k]; v0=V[:,𝐷.k]
-	    u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
-	    u0=u0.*𝐷.iDXC; v0=v0.*𝐷.iDYC; #normalize to grid units
-	    (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
-	
-	    (U,V)=read_velocities(𝑃.u0.grid,m1,𝐷.pth)
-	    u1=U[:,𝐷.k]; v1=V[:,𝐷.k]
-	    u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
-	    u1=u1.*𝐷.iDXC; v1=v1.*𝐷.iDYC; #normalize to grid units
-	    (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
-	
-	    𝑃.u0[:]=u0[:]
-	    𝑃.u1[:]=u1[:]
-	    𝑃.v0[:]=v0[:]
-	    𝑃.v1[:]=v1[:]
-	    𝑃.𝑇[:]=[t0,t1]
-	
-	end
-end
-
-# ╔═╡ b9b561f8-da40-423a-a7e0-2bf9eafc6e57
-
-"""
-    update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
-
-Update flow field arrays (in 𝑃), 𝑃.𝑇, and ancillary variables (in 𝐷) 
-according to the chosen time `t` (in `seconds`). 
-
-_Note: for now, it is assumed that (1) the time interval `dt` between 
-consecutive records is diff(𝑃.𝑇), (2) monthly climatologies are used 
-with a periodicity of 12 months, (3) vertical 𝑃.k is selected_
-"""
-function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
-    dt=𝑃.𝑇[2]-𝑃.𝑇[1]
-
-    m0=Int(floor((t+dt/2.0)/dt))
-    m1=m0+1
-    t0=m0*dt-dt/2.0
-    t1=m1*dt-dt/2.0
-
-    m0=mod(m0,12)
-    m0==0 ? m0=12 : nothing
-    m1=mod(m1,12)
-    m1==0 ? m1=12 : nothing
-
-    (_,nr)=size(𝐷.Γ.hFacC)
-
-    (U,V)=read_velocities(𝑃.u0.grid,m0,𝐷.pth)
-    u0=U; v0=V
-    u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
-    for k=1:nr
-        u0[:,k]=u0[:,k].*𝐷.iDXC; v0[:,k]=v0[:,k].*𝐷.iDYC; #normalize to grid units
-        (tmpu,tmpv)=exchange(u0[:,k],v0[:,k],1) #add 1 point at each edge for u and v
-        u0[:,k]=tmpu
-        v0[:,k]=tmpv
-    end
-    w0=read_nctiles(𝐷.pth*"WVELMASS/WVELMASS","WVELMASS",𝑃.u0.grid,I=(:,:,:,m0))
-    w0[findall(isnan.(w0))]=0.0 #mask with 0s rather than NaNs
-
-    (U,V)=read_velocities(𝑃.u0.grid,m1,𝐷.pth)
-    u1=U; v1=V
-    u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
-    for k=1:nr
-        u1[:,k]=u1[:,k].*𝐷.iDXC; v1[:,k]=v1[:,k].*𝐷.iDYC; #normalize to grid units
-        (tmpu,tmpv)=exchange(u1[:,k],v1[:,k],1) #add 1 point at each edge for u and v
-        u1[:,k]=tmpu
-        v1[:,k]=tmpv
-    end
-    w1=read_nctiles(𝐷.pth*"WVELMASS/WVELMASS","WVELMASS",𝑃.u0.grid,I=(:,:,:,m1))
-    w1[findall(isnan.(w1))]=0.0 #mask with 0s rather than NaNs
-
-    𝑃.u0[:,:]=u0[:,:]
-    𝑃.u1[:,:]=u1[:,:]
-    𝑃.v0[:,:]=v0[:,:]
-    𝑃.v1[:,:]=v1[:,:]
-    for k=1:nr
-        tmpw=exchange(-w0[:,k],1)
-        𝑃.w0[:,k]=tmpw./𝐷.Γ.DRC[k]
-        tmpw=exchange(-w1[:,k],1)
-        𝑃.w1[:,k]=tmpw./𝐷.Γ.DRC[k]
-    end
-    𝑃.w0[:,1]=0*exchange(-w0[:,1],1)
-    𝑃.w1[:,1]=0*exchange(-w1[:,1],1)
-    𝑃.w0[:,nr+1]=0*exchange(-w0[:,1],1)
-    𝑃.w1[:,nr+1]=0*exchange(-w1[:,1],1)
-
-    #θ0=read_nctiles(𝐷.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m0))
-    #θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
-    #𝐷.θ0[:,:]=θ0[:,:]
-
-    #θ1=read_nctiles(𝐷.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m1))
-    #θ1[findall(isnan.(θ1))]=0.0 #mask with 0s rather than NaNs
-    #𝐷.θ1[:,:]=θ1[:,:]
-
-    𝑃.𝑇[:]=[t0,t1]
-end
-
-# ╔═╡ d466146a-f5b2-41c7-9415-da4a24a61209
-"""
-    set_up_FlowFields(k::Int,Γ::NamedTuple,pth::String)
-
-Define `FlowFields` data structure (𝑃) for the specified grid (`Γ` dictionary), 
-vertical level (`k`), and  file location (`pth`).
-
-_Note: the initial implementation approximates month durations to 
-365 days / 12 months for simplicity and sets 𝑃.𝑇 to [-mon/2,mon/2]_
-"""
-function set_up_FlowFields(k::Int,Γ::NamedTuple,pth::String)
-    XC=exchange(Γ.XC) #add 1 lon point at each edge
-    YC=exchange(Γ.YC) #add 1 lat point at each edge
-    iDXC=1. ./Γ.DXC
-    iDYC=1. ./Γ.DYC
-    γ=Γ.XC.grid
-    mon=86400.0*365.0/12.0
-    func=Γ.update_location!
-
-    if k==0
-        msk=Γ.hFacC
-        (_,nr)=size(msk)
-        𝑃=FlowFields(MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
-        MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
-        MeshArray(γ,Float64,nr+1),MeshArray(γ,Float64,nr+1),
-        [-mon/2,mon/2],func)
-    else
-        msk=Γ.hFacC[:, k]
-        𝑃=FlowFields(MeshArray(γ,Float64),MeshArray(γ,Float64),
-        MeshArray(γ,Float64),MeshArray(γ,Float64),[-mon/2,mon/2],func)    
-    end
-
-	𝐷 = (🔄 = update_FlowFields!, pth=pth,
-	 XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC, 
-	 k=k, msk=msk, θ0=similar(msk), θ1=similar(msk))
-
-    𝐷 = merge(𝐷 , NeighborTileIndices_cs(Γ))
-    
-    return 𝑃,𝐷
-end
-
-# ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
-begin
-	#func=(u -> update_location_llc!(u,𝐷))
-	#Γ=merge(Γ,(; update_location! = func))
-
-	ny=1
-	nm=1
-	k=1
-
-	𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path)
-
-	#add parameters for use in reset! and grid variables
-    frac=0.01 #fraction of the particles reset per month (0.05 for k<=10)
-	tmp=(frac=frac, Γ=Γ)
-	𝐷=merge(𝐷,tmp)
-	
-	𝐷.🔄(𝑃,𝐷,0.0)
-end
-
-# ╔═╡ 0f95fbfb-49d9-4ebe-9cc9-fd69507d7492
-k
-
-# ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
-begin
-	np=500
-	
-	#xy = init_global_randn(np,𝐷)
-	#df=DataFrame(x=xy[1,:],y=xy[2,:],f=xy[3,:])
-	
-	p=dirname(pathof(IndividualDisplacements))
-	fil=joinpath(p,"../examples/worldwide/global_ocean_circulation.csv")
-	df=DataFrame(CSV.File(fil))
-
-	if !(k==0)
-		𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],df.f[1:np])
-	else
-		kk=2.5
-		𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],fill(kk,np),df.f[1:np])
-	end
-	fieldnames(typeof(𝐼))
-end
-
-# ╔═╡ 1495fda9-e46b-424e-922a-3b823f3fe200
-𝐼
-
-# ╔═╡ cc7cb4a8-86ea-42b0-bbb9-ca78469ad4ad
-df
-
-# ╔═╡ a3e45927-5d53-42be-b7b7-489d6e7a6fe5
-begin
-	📌ini=deepcopy(𝐼.📌)
 	𝑇=(0.0,𝐼.𝑃.𝑇[2])
 	∫!(𝐼,𝑇)
-	✔1="done"
-end
-
-# ╔═╡ c57f60b8-cec6-4ef0-bb63-0201c18c9ece
-"""
-    reset_📌!(𝐼::Individuals,frac::Number,📌::Array)
-
-Randomly select a fraction (frac) of the particles and reset 
-their positions (𝐼.📌) to a random subset of the specificed 📌.
-"""
-function reset_📌!(𝐼::Individuals,frac::Number,📌::Array)
-    np=length(𝐼.🆔)
-    n_reset = Int(round(𝐷.frac*np))
-    k_reset = rand(1:np, n_reset)
-    l_reset = rand(1:np, n_reset)
-    𝐼.📌[k_reset]=deepcopy(📌[l_reset])
-    isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
-    𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
-end
-
-# ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
-function step!(𝐼::Individuals)
-    t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
-    𝐷.🔄(𝐼.𝑃,𝐷,t_ϵ)
-    reset_📌!(𝐼,𝐷.frac,📌ini)
-    ∫!(𝐼)
-end
-
-# ╔═╡ 1044c5aa-1a56-45b6-a4c6-63d24eea878d
-begin
-	✔1
-	[step!(𝐼) for y=1:ny, m=1:nm]
+	
 	add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC)
-	✔2="done"
+	
+	🔴_by_ID = groupby(𝐼.🔴, :ID)
+	🔴_by_t = groupby(𝐼.🔴, :t)
+	
+	ff(x) = x[1]
+	tmp1=combine(🔴_by_ID,:lon => ff => :lo,:lat => ff => :la)
+	𝐼.🔴.dlon=𝐼.🔴.lon - tmp1.lo[𝐼.🔴.ID]
+	𝐼.🔴.dlat=𝐼.🔴.lat - tmp1.la[𝐼.🔴.ID]
+	
+	nt=length(unique(𝐼.🔴.t))
+
+	"$✓ ∫!(𝐼,𝑇) etc"
 end
 
-# ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
+# ╔═╡ f65ddffa-e63a-11ea-34a6-2fa9284e98fa
 begin
-	✔2
-	gdf = groupby(𝐼.🔴, :ID)
-	sgdf= combine(gdf,nrow,:lat => mean)
+	mx=20.0
+
+	#f(x)=x[tt]-x[1]
+	#f(x)=last(x).-first(x)
+	#cdf = combine(🔴_by_ID,nrow,:lat => f => :dlat,:lon => f => :dlon)
+
+	g(x)=x[tt]
+	cdf = combine(🔴_by_ID,:dlat => g => :dlat,:dlon => g => :dlon)
+	
+	plt_hist=histogram2d(cdf.dlon,cdf.dlat,nbins = (10, 10),colorbar=false)
+	#scatter(cdf.dlon,cdf.dlat,xlims=(-mx,mx),ylims=(-mx,mx))
+	"$✓ dlon, dlat histogram2d"
 end
 
-# ╔═╡ e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
+# ╔═╡ 7d52252e-e006-11ea-2632-df2af831b52f
 begin
-	fig=plot(;xlims=(-180,180),ylims=(-90,90),legend=:none)
-	p!(x,y)=scatter!(fig,x,y,markersize=1.1,markerstrokewidth=0)
-	[p!(gdf[i].lon,gdf[i].lat) for i in rand(collect(1:length(gdf)),10)]
-	fig
+	xx=vec(𝐷.Γ.XC[1][:,1])
+	yy=vec(𝐷.Γ.YC[1][1,:])
+	zz=transpose(log10.(𝐷.Γ.Depth[1]))
+	𝐵=(x = xx, y = yy, z = zz)
+	
+	𝐶(g::ColorGradient) = RGB[g[z] for z=LinRange(0,1,length(🔴_by_t))]
+	𝐶(t::Int) = 𝐶(cgrad(:inferno))[t]	
+	"$✓ Set up plotting"
 end
 
-# ╔═╡ 4a7ba3ff-449a-44e1-ad10-1de15a6d31cc
-"""
-    map(𝐼::Individuals,background::NamedTuple)
-
-Plot initial and final positions, superimposed on a map of ocean depth log.
-"""
-function map(𝐼::Individuals,𝐵::NamedTuple)
-    xlims=extrema(𝐵.lon)
-    ylims=extrema(𝐵.lat)
-    plt=contourf(𝐵.lon,𝐵.lat,𝐵.fld,clims=𝐵.rng,c = :ice, 
-    colorbar=false, xlims=xlims,ylims=ylims)
-
-    🔴_by_t = groupby(𝐼.🔴, :t)
-    lo=deepcopy(🔴_by_t[1].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-    scatter!(lo,🔴_by_t[1].lat,markersize=2.5,c=:red,leg=:none,marker = (:circle, stroke(0)))
-    lo=deepcopy(🔴_by_t[end].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-    scatter!(lo,🔴_by_t[end].lat,markersize=2.5,c=:yellow,leg=:none,marker = (:dot, stroke(0)))
-
-    return plt
-end
-
-# ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
+# ╔═╡ 0b12cf52-e6e3-11ea-1a01-dd0c49c9e641
 begin
-	DL=(lon=IntFac.lon[:,1],lat=IntFac.lat[1,:],fld=OceanDepthLog(Γ,IntFac),rng=(1.5,5))
-	map(𝐼,DL)
+	plt_dlat = @df 🔴_by_t[1] density(:dlat, leg = :none, colour = 𝐶(1), ylims=(0,0.5))
+	[@df 🔴_by_t[tt] density!(plt_dlat,:dlat, leg = :none, colour = 𝐶(tt)) for tt in 2:length(🔴_by_t)];
+	density!(plt_dlat,🔴_by_t[tt].dlat, leg = :none, colour = :cyan, linewidth=4)
+	"$✓ dlat density"
+end
+
+# ╔═╡ 6f70033a-e6cc-11ea-373e-6dcbaaa53d15
+begin
+	#clims=extrema(:t)
+	#@df 𝐼.🔴 density(:lon, group = (:t), leg = :none, palette = cgrad(:ice))
+	plt_dlon = @df 🔴_by_t[1] density(:dlon, leg = :none, colour = 𝐶(1), ylims=(0,0.5))
+	[@df 🔴_by_t[tt] density!(plt_dlon,:dlon, leg = :none, colour = 𝐶(tt)) for tt in 2:length(🔴_by_t)];
+	density!(plt_dlon,🔴_by_t[tt].dlon, leg = :none, colour = :cyan, linewidth=4)
+	"$✓ dlon density"
+end
+
+# ╔═╡ a13d6ea6-dff1-11ea-0713-cb235e28cf79
+begin
+	plt_map=contourf(xx,yy,zz,clims=(-.5,4.),c = :ice, 
+		colorbar=false, xlims=(-180.0,180.0),ylims=(-90.0,90.0))
+	scatter!(plt_map,🔴_by_t[1].lon,🔴_by_t[1].lat,c=:gold,leg=:none,
+		markersize=2.0, marker = (:dot, stroke(0)) )
+	scatter!(plt_map,🔴_by_t[tt].lon,🔴_by_t[tt].lat,c=:red,leg=:none,
+		markersize=2.0, marker = (:dot, stroke(0)) )
+	
+	plot(plt_map,plt_hist,plt_dlon,plt_dlat)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-MITgcmTools = "62725fbc-3a66-4df3-9000-e33e85b3a198"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
 NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
 OceanStateEstimation = "891f6deb-a4f5-4bc5-a2e3-1e8f649cdd2c"
-Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 
 [compat]
-CSV = "~0.9.10"
 DataFrames = "~1.2.2"
 IndividualDisplacements = "~0.3.3"
-MITgcmTools = "~0.1.31"
 MeshArrays = "~0.2.26"
 NetCDF = "~0.11.3"
 OceanStateEstimation = "~0.1.15"
-Plots = "~1.23.5"
+OrdinaryDiffEq = "~5.66.1"
+PlutoUI = "~0.7.18"
+StatsPlots = "~0.14.28"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -451,6 +286,18 @@ deps = ["Base64", "Compat", "Dates", "Downloads", "GitHub", "HTTP", "IniFile", "
 git-tree-sha1 = "5052fc28bdd6f2501e86b8d063cfe7c82a094a36"
 uuid = "fbe9abb3-538b-5e4e-ba9e-bc94f4f92ebc"
 version = "1.70.0"
+
+[[AbstractFFTs]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "485ee0867925449198280d4af84bdb46a2a404d0"
+uuid = "621f4979-c628-5d54-868e-fcf4e3e8185c"
+version = "1.0.1"
+
+[[AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "0ec322186e078db08ea3e7da5b8b2885c099b393"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.1.0"
 
 [[Adapt]]
 deps = ["LinearAlgebra"]
@@ -467,6 +314,18 @@ git-tree-sha1 = "f87e559f87a45bece9c9ed97458d3afe98b1ebb9"
 uuid = "ec485272-7323-5ecc-a04f-4719b315124d"
 version = "0.1.0"
 
+[[Arpack]]
+deps = ["Arpack_jll", "Libdl", "LinearAlgebra"]
+git-tree-sha1 = "2ff92b71ba1747c5fdd541f8fc87736d82f40ec9"
+uuid = "7d9fca2a-8960-54d3-9f78-7d1dccf2cb97"
+version = "0.4.0"
+
+[[Arpack_jll]]
+deps = ["Libdl", "OpenBLAS_jll", "Pkg"]
+git-tree-sha1 = "e214a9b9bd1b4e1b4f15b22c0994862b66af7ff7"
+uuid = "68821587-b530-5797-8361-c406ea357684"
+version = "3.5.0+3"
+
 [[ArrayInterface]]
 deps = ["Compat", "IfElse", "LinearAlgebra", "Requires", "SparseArrays", "Static"]
 git-tree-sha1 = "e527b258413e0c6d4f66ade574744c94edef81f8"
@@ -475,6 +334,12 @@ version = "3.1.40"
 
 [[Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+
+[[AxisAlgorithms]]
+deps = ["LinearAlgebra", "Random", "SparseArrays", "WoodburyMatrices"]
+git-tree-sha1 = "66771c8d21c8ff5e3a93379480a2307ac36863f7"
+uuid = "13072b0f-2c55-5437-9ae7-d433b7a33950"
+version = "1.0.1"
 
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -550,6 +415,12 @@ deps = ["ArrayInterface", "Static"]
 git-tree-sha1 = "7b8f09d58294dc8aa13d91a8544b37c8a1dcbc06"
 uuid = "fb6a15b2-703c-40df-9091-08a04967cfa9"
 version = "0.1.4"
+
+[[Clustering]]
+deps = ["Distances", "LinearAlgebra", "NearestNeighbors", "Printf", "SparseArrays", "Statistics", "StatsBase"]
+git-tree-sha1 = "75479b7df4167267d75294d14b58244695beb2ac"
+uuid = "aaaa29a8-35af-508c-8bc3-b662a17a0fe5"
+version = "0.14.2"
 
 [[CodecZlib]]
 deps = ["TranscodingStreams", "Zlib_jll"]
@@ -645,6 +516,12 @@ version = "0.18.10"
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
 uuid = "e2d170a0-9d28-54be-80f0-106bbe20a464"
 version = "1.0.0"
+
+[[DataValues]]
+deps = ["DataValueInterfaces", "Dates"]
+git-tree-sha1 = "d88a19299eba280a6d062e135a43f00323ae70bf"
+uuid = "e7dc6d0d-1eca-5fa6-8ad6-5aecde8b7ea5"
+version = "0.4.13"
 
 [[Dates]]
 deps = ["Printf"]
@@ -743,6 +620,18 @@ deps = ["Artifacts", "Bzip2_jll", "FreeType2_jll", "FriBidi_jll", "JLLWrappers",
 git-tree-sha1 = "3cc57ad0a213808473eafef4845a74766242e05f"
 uuid = "b22a6f82-2f65-5046-a5b2-351ab43fb4e5"
 version = "4.3.1+4"
+
+[[FFTW]]
+deps = ["AbstractFFTs", "FFTW_jll", "LinearAlgebra", "MKL_jll", "Preferences", "Reexport"]
+git-tree-sha1 = "463cb335fa22c4ebacfd1faba5fde14edb80d96c"
+uuid = "7a1cc6ca-52ef-59f5-83cd-3a7055c09341"
+version = "1.4.5"
+
+[[FFTW_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "c6033cc3892d0ef5bb9cd29b7f2f0331ea5184ea"
+uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
+version = "3.3.10+0"
 
 [[FastBroadcast]]
 deps = ["LinearAlgebra", "Polyester", "Static"]
@@ -912,6 +801,23 @@ git-tree-sha1 = "3395d4d4aeb3c9d31f5929d32760d8baeee88aaf"
 uuid = "e33a78d0-f292-5ffc-b300-72abe9b543c8"
 version = "2.5.0+0"
 
+[[Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "8d511d5b81240fc8e6802386302675bdf47737b9"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.4"
+
+[[HypertextLiteral]]
+git-tree-sha1 = "5efcf53d798efede8fee5b2c8b09284be359bf24"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.2"
+
+[[IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "f7be53659ab06ddc986428d3a9dcc95f6fa6705a"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.2"
+
 [[IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
 uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
@@ -940,9 +846,21 @@ git-tree-sha1 = "19cb49649f8c41de7fea32d089d37de917b553da"
 uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
 version = "1.0.1"
 
+[[IntelOpenMP_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
+git-tree-sha1 = "d979e54b71da82f3a65b62553da4fc3d18c9004c"
+uuid = "1d5cc7b8-4909-519e-a0f8-d0f5ad9712d0"
+version = "2018.0.3+2"
+
 [[InteractiveUtils]]
 deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+
+[[Interpolations]]
+deps = ["AxisAlgorithms", "ChainRulesCore", "LinearAlgebra", "OffsetArrays", "Random", "Ratios", "Requires", "SharedArrays", "SparseArrays", "StaticArrays", "WoodburyMatrices"]
+git-tree-sha1 = "61aa005707ea2cebf47c8d780da8dc9bc4e0c512"
+uuid = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
+version = "0.13.4"
 
 [[InverseFunctions]]
 deps = ["Test"]
@@ -993,6 +911,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "d735490ac75c5cb9f1b00d8b5509c11984dc6943"
 uuid = "aacddb02-875f-59d6-b918-886e6ef4fbf8"
 version = "2.1.0+0"
+
+[[KernelDensity]]
+deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
+git-tree-sha1 = "591e8dc09ad18386189610acafb970032c519707"
+uuid = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
+version = "0.6.3"
 
 [[LAME_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1149,6 +1073,12 @@ git-tree-sha1 = "32f697fca7f26636e4df369681f96b2c56f40992"
 uuid = "62725fbc-3a66-4df3-9000-e33e85b3a198"
 version = "0.1.31"
 
+[[MKL_jll]]
+deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
+git-tree-sha1 = "5455aef09b40e5020e1520f551fa3135040d4ed0"
+uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
+version = "2021.1.1+2"
+
 [[MacroTools]]
 deps = ["Markdown", "Random"]
 git-tree-sha1 = "3d3e902b31198a27340d0bf00d6ac452866021cf"
@@ -1208,6 +1138,12 @@ git-tree-sha1 = "c6190f9a7fc5d9d5915ab29f2134421b12d24a68"
 uuid = "46d2c3a1-f734-5fdb-9937-b9b9aeba4221"
 version = "0.2.2"
 
+[[MultivariateStats]]
+deps = ["Arpack", "LinearAlgebra", "SparseArrays", "Statistics", "StatsBase"]
+git-tree-sha1 = "8d958ff1854b166003238fe191ec34b9d592860a"
+uuid = "6f286f6a-111f-5878-ab1e-185364afe411"
+version = "0.8.0"
+
 [[NLSolversBase]]
 deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
 git-tree-sha1 = "50310f934e55e5ca3912fb941dec199b49ca9b68"
@@ -1252,6 +1188,11 @@ git-tree-sha1 = "e9ffc92217b8709e0cf7b8808f6223a4a0936c95"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
 version = "0.3.11"
 
+[[Observables]]
+git-tree-sha1 = "fe29afdef3d0c4a8286128d4e45cc50621b1e43d"
+uuid = "510215fc-4207-5dde-b226-833fc4488ee2"
+version = "0.4.0"
+
 [[OceanStateEstimation]]
 deps = ["Downloads", "FortranFiles", "LazyArtifacts", "MITgcmTools", "MeshArrays", "Statistics"]
 git-tree-sha1 = "360dc6984946dbd62d9fea096f4c99c34026f897"
@@ -1269,6 +1210,10 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "7937eda4681660b4d6aeeecc2f7e1c81c8ee4e2f"
 uuid = "e7412a2a-1a6e-54c0-be00-318e2571c051"
 version = "1.3.5+0"
+
+[[OpenBLAS_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
+uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
 
 [[OpenLibm_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1299,9 +1244,9 @@ version = "1.4.1"
 
 [[OrdinaryDiffEq]]
 deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastClosures", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "6f76c887ddfd3f2a018ef1ee00a17b46bcf4886e"
+git-tree-sha1 = "138a1578c523f7a4899dc8b31730cd6cf74c1ab0"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "5.67.0"
+version = "5.66.1"
 
 [[PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1358,6 +1303,12 @@ deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers"
 git-tree-sha1 = "7dc03c2b145168f5854085a16d054429d612b637"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.23.5"
+
+[[PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
+git-tree-sha1 = "57312c7ecad39566319ccf5aa717a20788eb8c1f"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.18"
 
 [[Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Requires", "Static", "StrideArraysCore", "ThreadingUtilities"]
@@ -1418,6 +1369,12 @@ uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 [[Random]]
 deps = ["Serialization"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[[Ratios]]
+deps = ["Requires"]
+git-tree-sha1 = "01d341f502250e81f6fec0afe662aa861392a3aa"
+uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
+version = "0.4.2"
 
 [[RecipesBase]]
 git-tree-sha1 = "44a75aa7a527910ee3d1751d1f0e4148698add9e"
@@ -1597,6 +1554,12 @@ git-tree-sha1 = "95072ef1a22b057b1e80f73c2a89ad238ae4cfff"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.9.12"
 
+[[StatsPlots]]
+deps = ["Clustering", "DataStructures", "DataValues", "Distributions", "Interpolations", "KernelDensity", "LinearAlgebra", "MultivariateStats", "Observables", "Plots", "RecipesBase", "RecipesPipeline", "Reexport", "StatsBase", "TableOperations", "Tables", "Widgets"]
+git-tree-sha1 = "eb007bb78d8a46ab98cd14188e3cec139a4476cf"
+uuid = "f3b207a7-027a-5e70-b257-86293d7955fd"
+version = "0.14.28"
+
 [[StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "Requires", "SIMDTypes", "Static", "ThreadingUtilities"]
 git-tree-sha1 = "f081c3c985849f4263fd0ed13e51feceed4ccc79"
@@ -1621,6 +1584,12 @@ version = "0.2.0"
 [[TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+
+[[TableOperations]]
+deps = ["SentinelArrays", "Tables", "Test"]
+git-tree-sha1 = "e383c87cf2a1dc41fa30c093b2a19877c83e1bc1"
+uuid = "ab02a1b2-a7df-11e8-156e-fb1833f50b87"
+version = "1.2.0"
 
 [[TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
@@ -1724,6 +1693,18 @@ deps = ["DataAPI", "InlineStrings", "Parsers"]
 git-tree-sha1 = "c69f9da3ff2f4f02e811c3323c22e5dfcb584cfa"
 uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
 version = "1.4.1"
+
+[[Widgets]]
+deps = ["Colors", "Dates", "Observables", "OrderedCollections"]
+git-tree-sha1 = "80661f59d28714632132c73779f8becc19a113f2"
+uuid = "cc8bc4a8-27d6-5769-a93b-9d913e69aa62"
+version = "0.6.4"
+
+[[WoodburyMatrices]]
+deps = ["LinearAlgebra", "SparseArrays"]
+git-tree-sha1 = "de67fa59e33ad156a590055375a30b23c40299d3"
+uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
+version = "0.5.5"
 
 [[XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
@@ -1949,33 +1930,19 @@ version = "0.9.1+5"
 """
 
 # ╔═╡ Cell order:
-# ╟─c9e9faa8-f5f0-479c-bc85-877ff7114883
-# ╟─104ce9b0-3fd1-11ec-3eff-3b029552e3d9
-# ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
-# ╟─07e65622-3698-4dd8-b718-83588e116e58
-# ╠═0f95fbfb-49d9-4ebe-9cc9-fd69507d7492
-# ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
-# ╟─218b9beb-68f2-4498-a96d-08e0719b4cff
-# ╟─f1215951-2eb2-490b-875a-91c1205b8f63
-# ╟─f727992f-b72a-45bc-93f1-cc8daf89af0f
-# ╟─1495fda9-e46b-424e-922a-3b823f3fe200
-# ╟─cc7cb4a8-86ea-42b0-bbb9-ca78469ad4ad
-# ╟─a3e45927-5d53-42be-b7b7-489d6e7a6fe5
-# ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
-# ╟─a2375720-f599-43b9-a7fb-af17956309b6
-# ╟─7efadea7-4542-40cf-893a-40a75e9c52be
-# ╟─1044c5aa-1a56-45b6-a4c6-63d24eea878d
-# ╟─15077957-64d5-46a5-8a87-a76ad619cf38
-# ╟─6e43a2af-bf01-4f42-a4ba-1874a8cf4885
-# ╟─e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
-# ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
-# ╟─4b887e2f-7505-4db2-8784-400a786fba10
-# ╟─af74c6c8-1859-4fdf-ae2b-5af8dccdee60
-# ╟─d466146a-f5b2-41c7-9415-da4a24a61209
-# ╟─11ea0fe5-b713-453f-ab66-77c75fd74ea4
-# ╟─b9b561f8-da40-423a-a7e0-2bf9eafc6e57
-# ╟─14f7eadb-9ac4-41cd-b773-8b17d0e69a2c
-# ╟─c57f60b8-cec6-4ef0-bb63-0201c18c9ece
-# ╟─4a7ba3ff-449a-44e1-ad10-1de15a6d31cc
+# ╟─bf19d29c-e70e-11ea-0153-d3a49981d56c
+# ╟─4935fd46-e70f-11ea-386c-f9c444a20644
+# ╟─9c80e722-e70f-11ea-22a6-0be2e85f3b8b
+# ╟─e25eee9e-dfee-11ea-2a4c-3946ccb63876
+# ╟─a13d6ea6-dff1-11ea-0713-cb235e28cf79
+# ╟─f65ddffa-e63a-11ea-34a6-2fa9284e98fa
+# ╟─0b12cf52-e6e3-11ea-1a01-dd0c49c9e641
+# ╟─6f70033a-e6cc-11ea-373e-6dcbaaa53d15
+# ╟─9ffe84c0-dff0-11ea-2726-8924892df73a
+# ╟─7d52252e-e006-11ea-2632-df2af831b52f
+# ╟─f75fae30-dfee-11ea-18ef-259321acfa2f
+# ╟─747d446a-dfeb-11ea-3533-c9404fd41688
+# ╟─1811955d-618d-49e3-9f81-63195e2632fe
+# ╟─87c5e5d4-c343-49fb-bc7e-6b2c0e647a38
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

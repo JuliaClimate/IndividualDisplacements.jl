@@ -1,5 +1,6 @@
-using Documenter, Literate
+using Documenter, Literate, PlutoSliderServer
 using IndividualDisplacements, OceanStateEstimation
+import CairoMakie as Mkie
 
 #download data dependencies if needed
 IndividualDisplacements.flt_example_download()
@@ -8,15 +9,14 @@ OceanStateEstimation.get_occa_velocity_if_needed();
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")
-lit = joinpath(@__DIR__, "../examples/")
+lit = joinpath(@__DIR__, "../examples/jupyter/")
 notebooks = joinpath(src, "notebooks")
 
 execute = true # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
 
-lst1 = ["solid_body_rotation","random_flow_field","detailed_look","particle_cloud","global_ocean_circulation","three_dimensional_ocean"]
-lst2 = ["solid_body_rotation","random_flow_field","detailed_look","particle_cloud","global_ocean_circulation","three_dimensional_ocean"]
-#lst2 = ["none"]
+lst1 = ["detailed_look","particle_cloud"]
+lst2 = ["detailed_look","particle_cloud"]
 tst1(x) = !isempty(lst1) && Bool(sum(isequal.(x, lst1)))
 tst2(x) = !isempty(lst2) && Bool(sum(isequal.(x, lst2)))
 
@@ -33,27 +33,30 @@ end
 ismd(f) = splitext(f)[2] == ".md"
 pages(folder) = [joinpath(folder, f) for f in readdir(joinpath(src, folder)) if ismd(f)]
 
-p=pages("basics"); np=length(p)
-i=findall((occursin).("solid_body_rotation",p)); 
-j=findall((occursin).("random_flow_field",p)); 
-p_tu=[p[j];p[i]]
-i=findall((occursin).("detailed_look",p)); 
-j=findall((occursin).("particle_cloud",p)); 
-p_mi=[p[i];p[j]]
-
 makedocs(
     sitename = "IndividualDisplacements",
     format = Documenter.HTML(),
     pages = [
 		"Introduction" => "index.md",
         "User Guide" => "workflow.md",
-		"Tool Box" => "API.md",
-        "Example Guide" => "examples.md",
-        "Tutorial Examples" => p_tu, 
-		"Real Ocean Cases" => pages("worldwide"),
-        "MITgcm Examples" => p_mi], 
+        "Examples" => "examples.md", 
+		"Tool Box" => "API.md"],
+        doctest = false,
     modules = [IndividualDisplacements]
 )
+
+pth_in = joinpath(@__DIR__, "..","examples")
+pth_out = joinpath(@__DIR__, "build","examples")
+lst=("solid_body_rotation.jl","random_flow_field.jl","interactive_UI.jl",
+     "global_ocean_circulation.jl","three_dimensional_ocean.jl")
+subpth=("basics","basics","worldwide","worldwide","worldwide")
+for ii in 1:length(lst)
+    fil_in=joinpath(pth_in,subpth[ii],lst[ii])
+    fil_out=joinpath(pth_out,lst[ii][1:end-2]*"html")
+    PlutoSliderServer.export_notebook(fil_in)
+    mv(fil_in[1:end-2]*"html",fil_out)
+    #cp(fil_in[1:end-2]*"html",fil_out)
+end
 
 # Documenter can also automatically deploy documentation to gh-pages.
 # See "Hosting Documentation" and deploydocs() in the Documenter manual

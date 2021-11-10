@@ -1,8 +1,5 @@
 using MeshArrays, OceanStateEstimation, MITgcmTools, NetCDF
 
-p=dirname(pathof(MeshArrays))
-include(joinpath(p,"../examples/Demos.jl"))
-
 """
     read_velocities(γ::gcmgrid,t::Int,pth::String)
 
@@ -12,38 +9,6 @@ function read_velocities(γ::gcmgrid,t::Int,pth::String)
     u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
     v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
     return u,v
-end
-
-"""
-    random_flow_field(;np=12,nq=18)
-
-Set up a random flow field over a gridded domain of size np,nq
-
-```
-ϕ,u,v=random_flow_field()
-```
-"""
-function random_flow_field(;np=12,nq=18)
-
-Γ=simple_periodic_domain(np,nq)
-Γ = UnitGrid(Γ.XC.grid;option="full")
-
-(_,ϕ,_,_)=demo2(Γ)
-ϕ .*= 0.5
-
-#For the convergent / scalar potential case, ϕ is interpreted as being 
-#on center points -- hence the standard gradient function readily gives 
-#what we need
-#(u,v)=gradient(ϕ,Γ) 
-#return u[1],v[1],ϕ[1]
-
-#For the rotational / streamfunction case, ϕ is interpreted as being 
-#on S/W corner points -- this is ok since the grid is homegeneous, 
-#and conveniently yields an adequate substitution u,v <- -v,u; but note
-#that doing the same with gradient() would shift indices inconsistenly
-u=-(circshift(ϕ[1], (0,-1))-ϕ[1])
-v=(circshift(ϕ[1], (-1,0))-ϕ[1])
-return u,v,ϕ[1]
 end
 
 """

@@ -23,9 +23,9 @@
 
 using IndividualDisplacements, OrdinaryDiffEq, DataFrames, MITgcmTools
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/recipes_plots.jl"))
-include(joinpath(p,"../examples/example123.jl"))
-include(joinpath(p,"../examples/helper_functions.jl"));
+include(joinpath(p,"../examples/jupyter/recipes_plots.jl"))
+include(joinpath(p,"../examples/jupyter/example123.jl"))
+include(joinpath(p,"../examples/jupyter/helper_functions.jl"))
 
 # ## 2. Read Trajectory Output
 #
