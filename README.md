@@ -1,9 +1,8 @@
 # IndividualDisplacements.jl
 
-[![Travis Build Status](https://travis-ci.com/JuliaClimate/IndividualDisplacements.jl.svg?branch=master)](https://travis-ci.com/JuliaClimate/IndividualDisplacements.jl)
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaClimate.github.io/IndividualDisplacements.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev)
 [![codecov](https://codecov.io/gh/JuliaClimate/IndividualDisplacements.jl/branch/master/graph/badge.svg?token=qgMClXyzVB)](https://codecov.io/gh/JuliaClimate/IndividualDisplacements.jl)
+[![CI](https://github.com/JuliaClimate/IndividualDisplacements.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaClimate/IndividualDisplacements.jl/actions/workflows/ci.yml)
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.02813/status.svg)](https://doi.org/10.21105/joss.02813)
 [![DOI](https://zenodo.org/badge/208676176.svg)](https://zenodo.org/badge/latestdoi/208676176)
