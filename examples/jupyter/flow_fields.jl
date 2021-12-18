@@ -70,7 +70,7 @@ function global_ocean_circulation(;k=1,ny=2)
   Γ=GridLoad(γ;option="full")
   Γ=merge(Γ,MeshArrays.NeighborTileIndices_cs(Γ))
 
-  func=(u -> update_location_llc!(u,𝐷))
+  func=(u -> MeshArrays.update_location_llc!(u,𝐷))
   Γ=merge(Γ,(; update_location! = func))
 
   #initialize u0,u1 etc
@@ -97,7 +97,7 @@ function OCCA_FlowFields(;backward_in_time::Bool=false,nmax=Inf)
    isfinite(nmax) ? n=min(n,Int(nmax)) : nothing
 
    g=Γ.XC.grid
-   func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
+   func=(u -> MeshArrays.update_location_dpdo!(u,g))
 
    jj=[:hFacC, :hFacW, :hFacS, :DXG, :DYG, :RAC, :RAZ, :RAS]
    ii=findall([!in(i,jj) for i in keys(Γ)])
@@ -242,7 +242,7 @@ function test2_periodic_domain(np = 12, nq = 12)
     v = 0.3 ./ Γ.DYC
     (u, v) = exchange(u, v, 1)
 
-    f = (u -> IndividualDisplacements.update_location_dpdo!(u,Γ.XC.grid))
+    f = (u -> MeshArrays.update_location_dpdo!(u,Γ.XC.grid))
     𝑃=FlowFields(u,u,v,v,[0.0,400.0],f)
 
     #initial conditions
