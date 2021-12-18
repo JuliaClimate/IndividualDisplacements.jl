@@ -94,7 +94,7 @@ function set_up_FlowFields(k::Int,Γ::NamedTuple,pth::String)
          XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC,
          k=k, msk=msk, θ0=similar(msk), θ1=similar(msk))
 
-    𝐷 = merge(𝐷 , NeighborTileIndices_cs(Γ))
+    𝐷 = merge(𝐷 , MeshArrays.NeighborTileIndices_cs(Γ))
 
     return 𝑃,𝐷
 end

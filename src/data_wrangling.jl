@@ -18,7 +18,7 @@ function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
     u=MeshArray(g,[U])
     v=MeshArray(g,[V])
     (u,v)=exchange(u,v,1)
-    func=(u -> IndividualDisplacements.update_location_dpdo!(u,g))
+    func=(u -> MeshArrays.update_location_dpdo!(u,g))
 
     𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0,t1],func)
 end
@@ -88,7 +88,7 @@ end
     add_lonlat!(df::DataFrame,XC,YC,func::Function)
 
 Add lon & lat to dataframe using "exchanged" XC, YC after updating 
-subdomain indices (via func) if needed (location_is_out)
+subdomain indices (via func) if needed (MeshArrays.location_is_out)
 """
 function add_lonlat!(df::DataFrame,XC,YC,func::Function)
     g=XC.grid
@@ -96,7 +96,7 @@ function add_lonlat!(df::DataFrame,XC,YC,func::Function)
 
     for i in eachindex(df.lon)
         u[:]=[df.x[i];df.y[i];df.fid[i]]
-        while location_is_out(u,g)
+        while MeshArrays.location_is_out(u,g)
             func(u)
             df.x[i]=u[1]
             df.y[i]=u[2]

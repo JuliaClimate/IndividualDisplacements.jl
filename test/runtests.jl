@@ -5,6 +5,7 @@ OceanStateEstimation.get_ecco_velocity_if_needed()
 OceanStateEstimation.get_occa_velocity_if_needed()
 GridLoad(GridSpec("LatLonCap",MeshArrays.GRID_LLC90))
 GridLoad(GridSpec("PeriodicChannel",MeshArrays.GRID_LL360))
+IndividualDisplacements.flt_example_download()
 
 @testset "test3" begin
     p=dirname(pathof(IndividualDisplacements))
