@@ -158,9 +158,9 @@ function example2_setup()
    ## Visualize velocity fields
 
    mskW=read_mds(γ.path*"hFacW",MeshArray(γ,Float32,nr))
-   mskW=1.0 .+ 0.0 * mask(mskW[:,kk],NaN,0.0)
+   mskW=1.0 .+ 0.0 * MeshArrays.mask(mskW[:,kk],NaN,0.0)
    mskS=read_mds(γ.path*"hFacS",MeshArray(γ,Float32,nr))
-   mskS=1.0 .+ 0.0 * mask(mskS[:,kk],NaN,0.0)
+   mskS=1.0 .+ 0.0 * MeshArrays.mask(mskS[:,kk],NaN,0.0)
    Γ=merge(Γ,Dict("mskW" => mskW, "mskS" => mskS))
    #convert to NamedTuple
    Γ=(; zip(Symbol.(keys(Γ)), values(Γ))...)
