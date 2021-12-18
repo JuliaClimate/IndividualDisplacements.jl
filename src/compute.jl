@@ -36,7 +36,7 @@ function dxdt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray3D,tim) where T
     dt=mydt(tim,𝑃.𝑇)
     g=𝑃.u0.grid
     #
-    while location_is_out(u,g)
+    while MeshArrays.location_is_out(u,g)
         𝑃.update_location!(u)
     end
 
@@ -119,7 +119,7 @@ function dxdt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray2D,tim) where T
     dt=mydt(tim,𝑃.𝑇)
     g=𝑃.u0.grid
     #
-    while location_is_out(u,g)
+    while MeshArrays.location_is_out(u,g)
         𝑃.update_location!(u)
     end
 
