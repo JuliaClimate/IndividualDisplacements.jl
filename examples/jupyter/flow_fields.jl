@@ -68,7 +68,7 @@ function global_ocean_circulation(;k=1,ny=2)
   p=dirname(pathof(IndividualDisplacements))
   γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
   Γ=GridLoad(γ;option="full")
-  Γ=merge(Γ,NeighborTileIndices_cs(Γ))
+  Γ=merge(Γ,MeshArrays.NeighborTileIndices_cs(Γ))
 
   func=(u -> update_location_llc!(u,𝐷))
   Γ=merge(Γ,(; update_location! = func))
