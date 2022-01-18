@@ -113,7 +113,7 @@ function FlowFields(u0::AbstractMeshArray{T,2},u1::AbstractMeshArray{T,2},
     𝑇::Union{Array,Tuple},update_location!::Function) where T
     #test for type of 𝑇 and fix if needed
     isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
-    #check array size concistency
+    #check array size consistency
     tst=prod([(size(u0)==size(tmp))*(u0.fSize==tmp.fSize) for tmp in (u1,v0,v1)])
     tst=tst*prod([(size(u0)==size(tmp).-(0,1))*(u0.fSize==tmp.fSize) for tmp in (w0,w1)])
     !tst ? error("inconsistent array sizes") : nothing
