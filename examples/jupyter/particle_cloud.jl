@@ -13,7 +13,8 @@
 
 # ## 1. Import Software
 
-using IndividualDisplacements, OrdinaryDiffEq, Statistics
+using IndividualDisplacements, Statistics
+import IndividualDisplacements.OrdinaryDiffEq as OrdinaryDiffEq
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/recipes_plots.jl"))
 include(joinpath(p,"../examples/jupyter/example123.jl"));
@@ -27,7 +28,7 @@ x=vec([x-0.5 for x in ii1, y in ii2])
 y=vec([y-0.5 for x in ii1, y in ii2])
 xy = permutedims([[x[i];y[i];1.0] for i in eachindex(x)])
 
-solv(prob) = solve(prob,Tsit5(),reltol=1e-6,abstol=1e-6)
+solv(prob) = OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.Tsit5(),reltol=1e-6,abstol=1e-6)
 tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
 
 #𝐼 = Individuals{Float64,2}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),

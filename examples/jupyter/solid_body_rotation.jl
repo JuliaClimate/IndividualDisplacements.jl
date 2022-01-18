@@ -24,7 +24,8 @@
 #
 # ### 1.1 Import Software
 
-using IndividualDisplacements, DataFrames
+using IndividualDisplacements
+import IndividualDisplacements.DataFrames: DataFrame
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/flow_fields.jl"))
 

@@ -21,7 +21,9 @@
 
 # ## 1. Import Software
 
-using IndividualDisplacements, OrdinaryDiffEq, DataFrames, MITgcmTools
+using IndividualDisplacements, MITgcmTools
+import IndividualDisplacements.OrdinaryDiffEq as OrdinaryDiffEq
+import IndividualDisplacements.DataFrames as DataFrames
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/recipes_plots.jl"))
 include(joinpath(p,"../examples/jupyter/example123.jl"))
@@ -149,9 +151,9 @@ end
 # - `reltol` and `abstol` are tolerance parameters
 
 tspan = (0.0,nSteps*3600.0)
-#prob = ODEProblem(dxy_dt_replay,uInit,tspan,tmp)
-prob = ODEProblem(dxdt!,uInit,tspan,𝑃)
-sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+#prob = OrdinaryDiffEq.ODEProblem(dxy_dt_replay,uInit,tspan,tmp)
+prob = OrdinaryDiffEq.ODEProblem(dxdt!,uInit,tspan,𝑃)
+sol = OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.Tsit5(),reltol=1e-8,abstol=1e-8)
 sol[1:4]
 
 # Compare recomputed trajectories with originals from `MITgcm/pkg/flt`

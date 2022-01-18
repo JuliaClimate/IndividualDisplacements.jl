@@ -1,4 +1,5 @@
-using IndividualDisplacements, MeshArrays, MITgcmTools, OrdinaryDiffEq, Statistics
+using IndividualDisplacements, MeshArrays, MITgcmTools, Statistics
+import IndividualDisplacements.OrdinaryDiffEq as OrdinaryDiffEq
 
 """
     read_mds(filRoot::String,x::MeshArray)
@@ -74,7 +75,7 @@ function example2()
    (xy,df,ref,nSteps)=example2_xy(𝑃)
 
    𝑃.𝑇[:] = [0.0,nSteps*3600.0]
-   solv(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+   solv(prob) = OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.Tsit5(),reltol=1e-8,abstol=1e-8)
 
    tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
    

@@ -20,7 +20,10 @@
 # - packages + helper functions
 # - grid and velocity files
 
-using IndividualDisplacements, OceanStateEstimation, DataFrames, Statistics, CSV
+using IndividualDisplacements, OceanStateEstimation, Statistics
+
+import IndividualDisplacements.DataFrames: DataFrame, groupby, combine, nrow
+import IndividualDisplacements.CSV as CSV
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/helper_functions.jl"))

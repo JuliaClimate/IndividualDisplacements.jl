@@ -1,5 +1,6 @@
 
-using Random, Makie, MeshArrays, DataFrames, ColorSchemes, Statistics
+using Makie, MeshArrays, ColorSchemes, Statistics
+import IndividualDisplacements.DataFrames: DataFrame, groupby
 
 """
     plot(𝐼::Individuals)
@@ -24,7 +25,7 @@ end
 Plot random subset of size nn trajectories.
 """
 function plot_paths(df::DataFrame,nn::Integer,dMax::Float64=0.)
-   IDs = randperm(maximum(df.ID))
+   IDs = IndividualDisplacements.randperm(maximum(df.ID))
    COs=[:gray76 :gold :limegreen :black]
 
    #scene=Scene(limits=FRect(0, 0, 40, 40),show_axis = false)
