@@ -91,7 +91,7 @@ begin
 		IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)	
 	end
 	IntFac=CalcIntFac(Γ)
-	"Done with interoikation coefficients for map"
+	"Done with interpolation coefficients for map"
 end
 
 # ╔═╡ af74c6c8-1859-4fdf-ae2b-5af8dccdee60
@@ -390,11 +390,11 @@ end
 
 # ╔═╡ 4a7ba3ff-449a-44e1-ad10-1de15a6d31cc
 """
-    map(𝐼::Individuals,background::NamedTuple)
+    globalmap(𝐼::Individuals,background::NamedTuple)
 
-Plot initial and final positions, superimposed on a map of ocean depth log.
+Plot initial and final positions, superimposed on a globalmap of ocean depth log.
 """
-function map(𝐼::Individuals,𝐵::NamedTuple)
+function globalmap(𝐼::Individuals,𝐵::NamedTuple)
     xlims=extrema(𝐵.lon)
     ylims=extrema(𝐵.lat)
     plt=contourf(𝐵.lon,𝐵.lat,𝐵.fld,clims=𝐵.rng,c = :ice, 
@@ -412,7 +412,7 @@ end
 # ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
 begin
 	DL=(lon=IntFac.lon[:,1],lat=IntFac.lat[1,:],fld=OceanDepthLog(Γ,IntFac),rng=(1.5,5))
-	map(𝐼,DL)
+	globalmap(𝐼,DL)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -516,7 +516,7 @@ uuid = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
 version = "0.1.6"
 
 [[deps.CSV]]
-deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "SentinelArrays", "Tables", "Unicode", "WeakRefStrings"]
+deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mglobalmap", "Parsers", "PooledArrays", "SentinelArrays", "Tables", "Unicode", "WeakRefStrings"]
 git-tree-sha1 = "49f14b6c56a2da47608fe30aed711b5882264d7a"
 uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 version = "0.9.11"
