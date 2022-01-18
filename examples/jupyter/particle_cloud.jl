@@ -16,7 +16,7 @@
 using IndividualDisplacements, Statistics
 
 import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5
-import Individuals.DataFrames: DataFrame
+import IndividualDisplacements.DataFrames: DataFrame
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/example123.jl"));
