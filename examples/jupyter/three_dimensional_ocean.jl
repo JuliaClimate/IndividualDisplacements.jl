@@ -17,7 +17,8 @@
 # ## 1. Load Software
 #
 
-using IndividualDisplacements, OceanStateEstimation, DataFrames
+using IndividualDisplacements, OceanStateEstimation
+import IndividualDisplacements.DataFrames: DataFrame
 
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/helper_functions.jl"))

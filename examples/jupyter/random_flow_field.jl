@@ -22,7 +22,8 @@
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 1. Import Software
 
-using IndividualDisplacements, DataFrames
+using IndividualDisplacements
+import IndividualDisplacements.DataFrames as DataFrames
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/flow_fields.jl"));
 
@@ -79,12 +80,14 @@ y=nq*(0.4 .+ 0.2*rand(100));
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 5. Plot Results
-
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/recipes_plots.jl"));
-
-🔴_by_t = groupby(𝐼.🔴, :t)
-phi_scatter(ϕ,🔴_by_t[end])
+#
+# ```
+# p=dirname(pathof(IndividualDisplacements))
+# include(joinpath(p,"../examples/jupyter/recipes_plots.jl"));
+# 
+# 🔴_by_t = groupby(𝐼.🔴, :t)
+# phi_scatter(ϕ,🔴_by_t[end])
+# ```
 
 # Or to generate a simple animation:
 #

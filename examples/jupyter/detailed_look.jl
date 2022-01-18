@@ -21,11 +21,13 @@
 
 # ## 1. Import Software
 
-using IndividualDisplacements, OrdinaryDiffEq, DataFrames, MITgcmTools
+using IndividualDisplacements, MITgcmTools
+import IndividualDisplacements.OrdinaryDiffEq as OrdinaryDiffEq
+import IndividualDisplacements.DataFrames as DataFrames
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/recipes_plots.jl"))
 include(joinpath(p,"../examples/jupyter/example123.jl"))
 include(joinpath(p,"../examples/jupyter/helper_functions.jl"))
+#md include(joinpath(p,"../examples/jupyter/recipes_plots.jl"))
 
 # ## 2. Read Trajectory Output
 #
@@ -64,8 +66,8 @@ x=Γ.XG.f[1][:,1]
 y=Γ.YC.f[1][1,:]
 z=transpose(Γ.mskW[1].*𝑃.u0);
 
-# plt=contourf(x,y,z,c=:delta)
-# plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
+#md plt=contourf(x,y,z,c=:delta)
+#md plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
 # Super-impose trajectory over velocity field (... then for v)
 
@@ -73,8 +75,8 @@ x=Γ.XC.f[1][:,1]
 y=Γ.YG.f[1][1,:]
 z=transpose(Γ.mskW[1].*𝑃.v0);
 
-# plt=contourf(x,y,z,c=:delta)
-# plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
+#md plt=contourf(x,y,z,c=:delta)
+#md plot!(tmp[:,:lon],tmp[:,:lat],c=:red,w=4,leg=false)
 
 # ## 6. Interpolate Velocities
 
@@ -112,10 +114,10 @@ for i=1:100
     tmpv[i]=du[2]
 end
 
-# plt=plot(tmpx,tmpu,label="u (interp)")
-# plot!(Γ.YG.f[1][1,1:10]./dx,𝑃.u0[1,1:10],marker=:o,label="u (C-grid)")
-# plot!(tmpx,tmpv,label="v (interp)")
-# plot!(Γ.YG.f[1][1,1:10]./dx,𝑃.v0[1,1:10],marker=:o,label="v (C-grid)")
+#md plt=plot(tmpx,tmpu,label="u (interp)")
+#md plot!(Γ.YG.f[1][1,1:10]./dx,𝑃.u0[1,1:10],marker=:o,label="u (C-grid)")
+#md plot!(tmpx,tmpv,label="v (interp)")
+#md plot!(Γ.YG.f[1][1,1:10]./dx,𝑃.v0[1,1:10],marker=:o,label="v (C-grid)")
 
 # Compare recomputed velocities with those from `pkg/flt`
 
@@ -132,10 +134,10 @@ for i=1:nSteps
     tmpv[i]=du[2]
 end
 
-# plt=plot(tmpu,label="u")
-# plot!(tmpv,label="v")
-# plot!(refu,label="u (ref)")
-# plot!(refv,label="v (ref)")
+#md plt=plot(tmpu,label="u")
+#md plot!(tmpv,label="v")
+#md plot!(refu,label="u (ref)")
+#md plot!(refv,label="v (ref)")
 
 # ## 6. Compute Trajectories
 #
@@ -149,9 +151,9 @@ end
 # - `reltol` and `abstol` are tolerance parameters
 
 tspan = (0.0,nSteps*3600.0)
-#prob = ODEProblem(dxy_dt_replay,uInit,tspan,tmp)
-prob = ODEProblem(dxdt!,uInit,tspan,𝑃)
-sol = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+#prob = OrdinaryDiffEq.ODEProblem(dxy_dt_replay,uInit,tspan,tmp)
+prob = OrdinaryDiffEq.ODEProblem(dxdt!,uInit,tspan,𝑃)
+sol = OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.Tsit5(),reltol=1e-8,abstol=1e-8)
 sol[1:4]
 
 # Compare recomputed trajectories with originals from `MITgcm/pkg/flt`

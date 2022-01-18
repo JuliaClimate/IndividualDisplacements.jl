@@ -1,6 +1,3 @@
-#needed within OrdinaryDiffEq somehow:
-import Base: zero
-zero(tmp::Array) = zero.(tmp)
 
 #needed to avoid allocations:
 Flo=Union{Float32,Float64}

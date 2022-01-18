@@ -1,4 +1,5 @@
-using MeshArrays, OceanStateEstimation, MITgcmTools, NetCDF
+using MeshArrays, OceanStateEstimation, MITgcmTools
+import IndividualDisplacements.NetCDF as NetCDF
 
 """
     read_velocities(γ::gcmgrid,t::Int,pth::String)
@@ -188,7 +189,8 @@ Call `gcmgrid`, initialize a single point,
 rely on `dxdt!`, and just output `sol` at the end.
 
 ```
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
+using IndividualDisplacements, MeshArrays
+import IndividualDisplacements.OrdinaryDiffEq: ODEProblem, solve, Tsit5
 𝑃,sol=test1_setup()
 ```
 """
@@ -224,7 +226,9 @@ Call `simple_periodic_domain`, initialize 6x6 point cloud,
 rely on `dxdt!`, and call `postprocess_xy` at the end.
 
 ```
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq
+using IndividualDisplacements, MeshArrays
+import IndividualDisplacements.OrdinaryDiffEq: ODEProblem, solve, Euler
+
 df,𝑃=test2_periodic_domain()
 
 using Plots
