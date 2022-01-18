@@ -11,7 +11,7 @@ src = joinpath(@__DIR__, "src/")
 lit = joinpath(@__DIR__, "../examples/jupyter/")
 notebooks = joinpath(src, "notebooks")
 
-execute = true # Set to true for executing notebooks and documenter!
+execute = false # Set to true for executing notebooks and documenter!
 nb = true      # Set to true to generate the notebooks
 
 lst1 = ["detailed_look","particle_cloud"]
