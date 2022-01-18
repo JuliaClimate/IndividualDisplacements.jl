@@ -1,10 +1,11 @@
 using Test, Documenter
-using IndividualDisplacements, MeshArrays, OrdinaryDiffEq, OceanStateEstimation
+using IndividualDisplacements, OceanStateEstimation
+import IndividualDisplacements.MeshArrays as MeshArrays
 
 OceanStateEstimation.get_ecco_velocity_if_needed()
 OceanStateEstimation.get_occa_velocity_if_needed()
-GridLoad(GridSpec("LatLonCap",MeshArrays.GRID_LLC90))
-GridLoad(GridSpec("PeriodicChannel",MeshArrays.GRID_LL360))
+MeshArrays.GridLoad(MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90))
+MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360))
 IndividualDisplacements.flt_example_download()
 
 @testset "test3" begin

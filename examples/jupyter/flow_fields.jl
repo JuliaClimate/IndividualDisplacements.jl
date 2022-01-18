@@ -1,4 +1,5 @@
-using MeshArrays, OceanStateEstimation, MITgcmTools, NetCDF
+using MeshArrays, OceanStateEstimation, MITgcmTools
+import IndividualDisplacements.NetCDF as NetCDF
 
 """
     read_velocities(γ::gcmgrid,t::Int,pth::String)

@@ -1,5 +1,7 @@
 
-using CyclicArrays, OrdinaryDiffEq, IndividualDisplacements
+using IndividualDisplacements
+import IndividualDisplacements.CyclicArrays as CyclicArrays
+import IndividualDisplacements.OrdinaryDiffEq as OrdinaryDiffEq 
 
 function cyclicarray_example()
     𝑃=cyclicarray_setup()
@@ -11,9 +13,9 @@ function cyclicarray_example()
     N=1500
     tspan = (0.0,N*𝑃.dt)
 
-    prob = ODEProblem(dxy_dt_CyclicArray,uInit,tspan,𝑃)
-    #sol = solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
-    sol = solve(prob,Euler(),dt=𝑃.dt)
+    prob = OrdinaryDiffEq.ODEProblem(dxy_dt_CyclicArray,uInit,tspan,𝑃)
+    #sol = OrdinaryDiffEq.solve(prob,Tsit5(),reltol=1e-5,abstol=1e-5)
+    sol = OrdinaryDiffEq.solve(prob,OrdinaryDiffEq.Euler(),dt=𝑃.dt)
 
     x=[sol[1,i,end] for i in 1:length(x0)]
     y=[sol[2,i,end] for i in 1:length(x0)]
@@ -31,7 +33,7 @@ function cyclicarray_setup()
     faces[1,2,1,:]=[1,2,2,0];
     faces[1,2,2,:]=[1,2,1,0];
 
-    g=CyclicArray(faces);
+    g=CyclicArrays.CyclicArray(faces);
 
     ind=range(1, 360, length = 360)
     x = y = ind/180*pi
@@ -42,9 +44,9 @@ function cyclicarray_setup()
 
     F=f.(Y,X)
 
-    phi=CyclicArray(F,g)
-    xg=CyclicArray(repeat(ind, 1, length(x))',g)
-    yg=CyclicArray(repeat(ind, 1, length(x)),g)
+    phi=CyclicArrays.CyclicArray(F,g)
+    xg=CyclicArrays.CyclicArray(repeat(ind, 1, length(x))',g)
+    yg=CyclicArrays.CyclicArray(repeat(ind, 1, length(x)),g)
     u=diff(phi,dims=2)
     v=-diff(phi,dims=1)
 
