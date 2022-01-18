@@ -6,7 +6,9 @@ using InteractiveUtils
 
 # ╔═╡ 192fc454-054c-4364-a9ed-1aa4969b612a
 begin
-	using IndividualDisplacements, DataFrames, MeshArrays, PlutoUI
+	using IndividualDisplacements, PlutoUI
+	import IndividualDisplacements.DataFrames as DataFrames
+	import IndividualDisplacements.MeshArrays as MeshArrays
 	import CairoMakie as Mkie
 
 	"done with loading packages"
@@ -25,7 +27,7 @@ For additional documentation e.g. see :
 """
 
 # ╔═╡ bb710e3c-9f38-4feb-a241-f624d2fca943
-TableOfContents()
+#TableOfContents()
 
 # ╔═╡ 023222b6-e2ac-43cd-be10-f5d9b7ce0124
 md"""## Define A Flow Field
@@ -99,10 +101,10 @@ md"""## Plot Results"""
 
 # ╔═╡ 22dde07e-95e1-4a49-a3a1-fba7702dd74d
 begin
-	🔴_by_t = groupby(𝐼.🔴, :t)
+	🔴_by_t = DataFrames.groupby(𝐼.🔴, :t)
 	nt=length(🔴_by_t)
 
-	time = Mkie.Node(nt)
+	time = Mkie.Observable(nt)
 	xp=Mkie.@lift( 🔴_by_t[$time].x )
 	yp=Mkie.@lift( 🔴_by_t[$time].y )
 
@@ -171,13 +173,13 @@ In general, user defined `uC, vC` fields may have both rotational and divergent 
 function random_flow_field(option::String;np=12,nq=18)
 
 	#define gridded domain
-	Γ=simple_periodic_domain(np,nq)
+	Γ=MeshArrays.simple_periodic_domain(np,nq)
 	γ=Γ.XC.grid
-	Γ=UnitGrid(γ;option="full")
+	Γ=MeshArrays.UnitGrid(γ;option="full")
 
     #initialize 2D field of random numbers
     tmp1=randn(Float64,Tuple(γ.ioSize))
-    ϕ=γ.read(tmp1,MeshArray(γ,Float64))
+    ϕ=γ.read(tmp1,MeshArrays.MeshArray(γ,Float64))
 
     #apply smoother
     ϕ=MeshArrays.smooth(ϕ,3*Γ.DXC,3*Γ.DYC,Γ);
@@ -187,7 +189,7 @@ function random_flow_field(option::String;np=12,nq=18)
 		#For the convergent / scalar potential case, ϕ is interpreted as being 
 		#on center points -- hence the standard gradient function readily gives 
 		#what we need
-		(u,v)=gradient(ϕ,Γ) 
+		(u,v)=MeshArrays.gradient(ϕ,Γ) 
 		tmp=(u[1],v[1],ϕ[1])
 	elseif option=="Rotational Component"
 		#For the rotational / streamfunction case, ϕ is interpreted as being 

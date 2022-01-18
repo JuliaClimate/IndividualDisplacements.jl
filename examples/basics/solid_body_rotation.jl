@@ -164,7 +164,7 @@ md"""### 2.2 Visualize Trajectory"""
 begin
 	nt=length(𝐼.🔴.x)
 	
-	time = Mkie.Node(nt)
+	time = Mkie.Observable(nt)
 	xx=Mkie.@lift( [𝐼.🔴.x[1:$time];fill(NaN,nt-$time)] )
 	yy=Mkie.@lift( [𝐼.🔴.y[1:$time];fill(NaN,nt-$time)] )
 	zz=Mkie.@lift( [𝐼.🔴.z[1:$time];fill(NaN,nt-$time)] )
