@@ -215,8 +215,11 @@ function Individuals(𝐹::𝐹_Array2D,x,y, NT::NamedTuple = NamedTuple())
 
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
+
+    𝐷=NamedTuple()
+    haskey(NT,:𝐷) ? 𝐷=NT.𝐷 : nothing
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,𝐷=𝐷)
 end
 
 function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
@@ -240,8 +243,11 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
 
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
+
+    𝐷=NamedTuple()
+    haskey(NT,:𝐷) ? 𝐷=NT.𝐷 : nothing
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,𝐷=𝐷)
 end
 
 function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple())
@@ -261,7 +267,10 @@ function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
+    𝐷=NamedTuple()
+    haskey(NT,:𝐷) ? 𝐷=NT.𝐷 : nothing
+
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,𝐷=𝐷)
 end
 
 function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTuple())
@@ -286,7 +295,10 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTup
     ∫=default_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧)    
+    𝐷=NamedTuple()
+    haskey(NT,:𝐷) ? 𝐷=NT.𝐷 : nothing
+
+    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,𝐷=𝐷)
 end
 
 """
