@@ -6,8 +6,12 @@ using InteractiveUtils
 
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
-	using IndividualDisplacements, OceanStateEstimation, DataFrames, Statistics, CSV
-	using MeshArrays, MITgcmTools, NetCDF, Plots, PlutoUI
+	using IndividualDisplacements, OceanStateEstimation, MITgcmTools, Statistics
+	using Plots, PlutoUI
+	import IndividualDisplacements.DataFrames: DataFrame, groupby, combine, nrow
+	import IndividualDisplacements.CSV as CSV
+	import IndividualDisplacements.MeshArrays as MeshArrays
+	import IndividualDisplacements.NetCDF as NetCDF
 	"done with loading packages"
 end
 
@@ -37,8 +41,8 @@ begin
 	#include(joinpath(pth1,"../examples/helper_functions.jl"))
 	
 	OceanStateEstimation.get_ecco_velocity_if_needed();
-	γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
-	Γ=GridLoad(γ;option="full")
+	γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
+	Γ=MeshArrays.GridLoad(γ;option="full")
 	Γ=merge(Γ,MeshArrays.NeighborTileIndices_cs(Γ))
 
 	func=(u -> MeshArrays.update_location_llc!(u,Γ))
@@ -93,7 +97,7 @@ begin
 	function CalcIntFac(Γ)
 	    lon=[i for i=20.:2.0:380., j=-79.:2.0:89.]
 	    lat=[j for i=20.:2.0:380., j=-79.:2.0:89.]
-		(f,i,j,w,_,_,_)=InterpolationFactors(Γ,vec(lon),vec(lat))
+		(f,i,j,w,_,_,_)=MeshArrays.InterpolationFactors(Γ,vec(lon),vec(lat))
 		IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)	
 	end
 	IntFac=CalcIntFac(Γ)
@@ -126,7 +130,7 @@ end
 
 Read velocity components `u,v` from files in `pth`for time `t`
 """
-function read_velocities(γ::gcmgrid,t::Int,pth::String)
+function read_velocities(γ::MeshArrays.gcmgrid,t::Int,pth::String)
     u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
     v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
     return u,v
@@ -161,13 +165,13 @@ begin
 	    u0=U[:,𝐷.k]; v0=V[:,𝐷.k]
 	    u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
 	    u0=u0.*𝐷.iDXC; v0=v0.*𝐷.iDYC; #normalize to grid units
-	    (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
+	    (u0,v0)=MeshArrays.exchange(u0,v0,1) #add 1 point at each edge for u and v
 	
 	    (U,V)=read_velocities(𝑃.u0.grid,m1,𝐷.pth)
 	    u1=U[:,𝐷.k]; v1=V[:,𝐷.k]
 	    u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
 	    u1=u1.*𝐷.iDXC; v1=v1.*𝐷.iDYC; #normalize to grid units
-	    (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
+	    (u1,v1)=MeshArrays.exchange(u1,v1,1) #add 1 point at each edge for u and v
 	
 	    𝑃.u0[:]=u0[:]
 	    𝑃.u1[:]=u1[:]
@@ -210,7 +214,7 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
     for k=1:nr
         u0[:,k]=u0[:,k].*𝐷.iDXC; v0[:,k]=v0[:,k].*𝐷.iDYC; #normalize to grid units
-        (tmpu,tmpv)=exchange(u0[:,k],v0[:,k],1) #add 1 point at each edge for u and v
+        (tmpu,tmpv)=MeshArrays.(u0[:,k],v0[:,k],1) #add 1 point at each edge for u and v
         u0[:,k]=tmpu
         v0[:,k]=tmpv
     end
@@ -222,7 +226,7 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
     for k=1:nr
         u1[:,k]=u1[:,k].*𝐷.iDXC; v1[:,k]=v1[:,k].*𝐷.iDYC; #normalize to grid units
-        (tmpu,tmpv)=exchange(u1[:,k],v1[:,k],1) #add 1 point at each edge for u and v
+        (tmpu,tmpv)=MeshArrays.exchange(u1[:,k],v1[:,k],1) #add 1 point at each edge for u and v
         u1[:,k]=tmpu
         v1[:,k]=tmpv
     end
@@ -234,15 +238,15 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
     𝑃.v0[:,:]=v0[:,:]
     𝑃.v1[:,:]=v1[:,:]
     for k=1:nr
-        tmpw=exchange(-w0[:,k],1)
+        tmpw=MeshArrays.exchange(-w0[:,k],1)
         𝑃.w0[:,k]=tmpw./𝐷.Γ.DRC[k]
-        tmpw=exchange(-w1[:,k],1)
+        tmpw=MeshArrays.exchange(-w1[:,k],1)
         𝑃.w1[:,k]=tmpw./𝐷.Γ.DRC[k]
     end
-    𝑃.w0[:,1]=0*exchange(-w0[:,1],1)
-    𝑃.w1[:,1]=0*exchange(-w1[:,1],1)
-    𝑃.w0[:,nr+1]=0*exchange(-w0[:,1],1)
-    𝑃.w1[:,nr+1]=0*exchange(-w1[:,1],1)
+    𝑃.w0[:,1]=0*MeshArrays.exchange(-w0[:,1],1)
+    𝑃.w1[:,1]=0*MeshArrays.exchange(-w1[:,1],1)
+    𝑃.w0[:,nr+1]=0*MeshArrays.exchange(-w0[:,1],1)
+    𝑃.w1[:,nr+1]=0*MeshArrays.exchange(-w1[:,1],1)
 
     #θ0=read_nctiles(𝐷.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m0))
     #θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
@@ -266,8 +270,8 @@ _Note: the initial implementation approximates month durations to
 365 days / 12 months for simplicity and sets 𝑃.𝑇 to [-mon/2,mon/2]_
 """
 function set_up_FlowFields(k::Int,Γ::NamedTuple,pth::String)
-    XC=exchange(Γ.XC) #add 1 lon point at each edge
-    YC=exchange(Γ.YC) #add 1 lat point at each edge
+    XC=MeshArrays.exchange(Γ.XC) #add 1 lon point at each edge
+    YC=MeshArrays.exchange(Γ.YC) #add 1 lat point at each edge
     iDXC=1. ./Γ.DXC
     iDYC=1. ./Γ.DYC
     γ=Γ.XC.grid
@@ -277,14 +281,14 @@ function set_up_FlowFields(k::Int,Γ::NamedTuple,pth::String)
     if k==0
         msk=Γ.hFacC
         (_,nr)=size(msk)
-        𝑃=FlowFields(MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
-        MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
-        MeshArray(γ,Float64,nr+1),MeshArray(γ,Float64,nr+1),
+        𝑃=FlowFields(MeshArrays.MeshArray(γ,Float64,nr),MeshArrays.MeshArray(γ,Float64,nr),
+        MeshArrays.MeshArray(γ,Float64,nr),MeshArrays.MeshArray(γ,Float64,nr),
+        MeshArrays.MeshArray(γ,Float64,nr+1),MeshArrays.MeshArray(γ,Float64,nr+1),
         [-mon/2,mon/2],func)
     else
         msk=Γ.hFacC[:, k]
-        𝑃=FlowFields(MeshArray(γ,Float64),MeshArray(γ,Float64),
-        MeshArray(γ,Float64),MeshArray(γ,Float64),[-mon/2,mon/2],func)    
+        𝑃=FlowFields(MeshArrays.MeshArray(γ,Float64),MeshArrays.MeshArray(γ,Float64),
+        MeshArrays.MeshArray(γ,Float64),MeshArrays.MeshArray(γ,Float64),[-mon/2,mon/2],func)    
     end
 
 	𝐷 = (🔄 = update_FlowFields!, pth=pth,
@@ -448,24 +452,16 @@ end
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 MITgcmTools = "62725fbc-3a66-4df3-9000-e33e85b3a198"
-MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
-NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
 OceanStateEstimation = "891f6deb-a4f5-4bc5-a2e3-1e8f649cdd2c"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-CSV = "~0.9.11"
-DataFrames = "~1.3.0"
 IndividualDisplacements = "~0.3.5"
-MITgcmTools = "~0.1.32"
-MeshArrays = "~0.2.31"
-NetCDF = "~0.11.3"
+MITgcmTools = "~0.2.0"
 OceanStateEstimation = "~0.2.0"
 Plots = "~1.25.2"
 PlutoUI = "~0.7.30"
@@ -1242,9 +1238,9 @@ version = "1.9.3+0"
 
 [[deps.MITgcmTools]]
 deps = ["Artifacts", "ClimateModels", "DataFrames", "Dates", "LazyArtifacts", "MeshArrays", "NetCDF", "OrderedCollections", "Printf", "SparseArrays", "Suppressor", "UUIDs"]
-git-tree-sha1 = "85fd18c07803b16af3e317e9568d526f5ca61853"
+git-tree-sha1 = "e7bffd8a9892408d4be7927897450e84c58b950a"
 uuid = "62725fbc-3a66-4df3-9000-e33e85b3a198"
-version = "0.1.32"
+version = "0.2.0"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -2043,9 +2039,9 @@ version = "1.0.20+0"
 
 [[deps.libvorbis_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Ogg_jll", "Pkg"]
-git-tree-sha1 = "c45f4e40e7aafe9d086379e5578947ec8b95a8fb"
+git-tree-sha1 = "b910cb81ef3fe6e78bf6acee440bda86fd6ae00c"
 uuid = "f27f6e37-5d2b-51aa-960f-b287f2bc3b7a"
-version = "1.3.7+0"
+version = "1.3.7+1"
 
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -2092,7 +2088,7 @@ version = "0.9.1+5"
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
 # ╟─1044c5aa-1a56-45b6-a4c6-63d24eea878d
 # ╟─15077957-64d5-46a5-8a87-a76ad619cf38
-# ╠═6e43a2af-bf01-4f42-a4ba-1874a8cf4885
+# ╟─6e43a2af-bf01-4f42-a4ba-1874a8cf4885
 # ╟─c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
 # ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
 # ╟─4b887e2f-7505-4db2-8784-400a786fba10
