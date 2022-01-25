@@ -230,8 +230,8 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
     haskey(NT,:🔴) ? 🔴=NT.🔴 : nothing
 
-    function 🔧(sol,𝑄::FlowFields;id=missing,𝑇=missing)
-        df=postprocess_xy(sol,𝐹,id=id,𝑇=𝑇)
+    function 🔧(sol,𝐹::𝐹_Array3D,𝐷::NamedTuple;id=missing,𝑇=missing)
+        df=postprocess_xy(sol,𝐹,𝐷,id=id,𝑇=𝑇)
         z=sol[3,:]
         df.z=z[:]
         return df
@@ -281,8 +281,8 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTup
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], fid=Int64[], t=Float64[])
     haskey(NT,:🔴) ? 🔴=NT.🔴 : nothing
 
-    function 🔧(sol,𝑄::FlowFields;id=missing,𝑇=missing)
-        df=postprocess_MeshArray(sol,𝐹,id=id,𝑇=𝑇)
+    function 🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=missing)
+        df=postprocess_MeshArray(sol,𝐹,𝐷,id=id,𝑇=𝑇)
         z=[sol[1,i,j][1] for i in 1:size(sol,2), j in 1:size(sol,3)]
         df.z=z[:]
         return df
@@ -311,12 +311,12 @@ Displace simulated individuals continuously through space over time period 𝑇 
 - After this, `∫!` is also equipped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consists in updating 📌 to be ready for continuing in a subsequent call to `∫!`.
 """
 function ∫!(𝐼::Individuals,𝑇::Tuple)
-    @unpack 🚄,📌,𝑃, 🔧, 🆔, 🔴, ∫ = 𝐼
+    @unpack 🚄,📌,𝑃, 𝐷, 🔧, 🆔, 🔴, ∫ = 𝐼
 
     prob = ODEProblem(🚄,📌, 𝑇 ,𝑃)
     sol = ∫(prob)
 
-    tmp = 🔧(sol,𝑃, id=🆔, 𝑇=𝑇)
+    tmp = 🔧(sol,𝑃,𝐷, id=🆔, 𝑇=𝑇)
 
     isempty(🔴) ? np =0 : np=length(🆔)
     append!(🔴,tmp[np+1:end,:])
