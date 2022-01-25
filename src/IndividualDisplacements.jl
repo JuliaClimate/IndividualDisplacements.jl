@@ -31,6 +31,5 @@ export dxdt!, dxy_dt_CyclicArray, dxy_dt_replay
 export postprocess_MeshArray, add_lonlat!, postprocess_xy, interp_to_xy
 export nearest_to_xy, randn_lonlat, interp_to_lonlat
 export gcdist, stproj, stproj_inv
-export read_drifters
 
 end # module
