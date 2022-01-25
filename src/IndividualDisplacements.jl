@@ -22,7 +22,6 @@ abs2_and_sum(x::Matrix{Vector{Float64}},y::Matrix{Vector{Float64}}) =
 include("API.jl")
 include("compute.jl")
 include("data_wrangling.jl")
-include("read.jl")
 
 export Individuals, ∫!
 export FlowFields, convert_to_FlowFields
@@ -31,6 +30,5 @@ export dxdt!, dxy_dt_CyclicArray, dxy_dt_replay
 export postprocess_MeshArray, add_lonlat!, postprocess_xy, interp_to_xy
 export nearest_to_xy, randn_lonlat, interp_to_lonlat
 export gcdist, stproj, stproj_inv
-export read_drifters
 
 end # module

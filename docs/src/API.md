@@ -22,12 +22,6 @@ nearest_to_xy
 gcdist
 ```
 
-## Read Output From File 
+## Read External Files
 
-Trajectory simulated by the MITgcm or observed by the global drifter program can be read from file using, respectively `MITgcmTools.read_flt` or  `read_drifters`.
-
-```@docs
-read_drifters
-read_velocities
-read_mds
-```
+Trajectory simulated by the [MITgcm](https://mitgcm.readthedocs.io/en/latest/?badge=latest) or observed by the [global drifter program](https://www.aoml.noaa.gov/phod/gdp/index.php) can be read from file using, respectively `MITgcmTools.read_flt` (from [MITgcmTools.jl](https://gaelforget.github.io/MITgcmTools.jl/dev/)) or  `OceanRobots.drifters_hourly_read` (from [OceanRobots.jl](https://gaelforget.github.io/OceanRobots.jl/dev/)).

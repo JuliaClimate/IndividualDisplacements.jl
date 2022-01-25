@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.5
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -40,7 +40,8 @@ begin
 	#pth1=dirname(pathof(IndividualDisplacements))
 	#include(joinpath(pth1,"../examples/helper_functions.jl"))
 	
-	OceanStateEstimation.get_ecco_velocity_if_needed();
+	OceanStateEstimation.get_ecco_velocity_if_needed()
+
 	γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
 	Γ=MeshArrays.GridLoad(γ;option="full")
 	Γ=merge(Γ,MeshArrays.NeighborTileIndices_cs(Γ))
@@ -63,6 +64,14 @@ The following parameters are used:
 - read & normalize velocities (𝐷.🔄)
 """
 
+# ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
+begin	
+	ny=1 #number of years
+	nm=1 #number of months
+	k=1 #vertical level (or 0 for 3D)
+	np=500 #number of particles
+end
+
 # ╔═╡ f1215951-2eb2-490b-875a-91c1205b8f63
 md"""## 3. Main Computation Loop
 
@@ -75,8 +84,8 @@ md""" ### 3.2 Iteration function example
 
 In addition, `step!` is defined to provide additional flexibility around `∫!` :
 
-- `𝐷.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
-- `reset_📌!(𝐼)` randomly selects a fraction (`𝐷.frac`) of the particles and resets their positions before each integration period. This tends to maintain homogeneous coverage of the Global Ocean by particles.
+- `𝐼.𝐷.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
+- `reset_📌!(𝐼,📌)` randomly selects a fraction, `𝐼.𝐷.frac`, of the particles and resets their positions 𝐼.📌 to a random subset of 📌, before each integration period. Doing this tends to maintain homogeneous coverage of the Global Ocean by particles.
 - `∫!(𝐼)` then solves for the individual trajectories over one month, with updated velocity fields (𝐼.𝑃.u0 etc), and adds diagnostics to the DataFrame used to record variables along the trajectory (𝐼.🔴).
 """
 
@@ -177,6 +186,7 @@ begin
 	    𝑃.u1[:]=u1[:]
 	    𝑃.v0[:]=v0[:]
 	    𝑃.v1[:]=v1[:]
+
 	    𝑃.𝑇[:]=[t0,t1]
 	
 	end
@@ -248,14 +258,6 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
     𝑃.w0[:,nr+1]=0*MeshArrays.exchange(-w0[:,1],1)
     𝑃.w1[:,nr+1]=0*MeshArrays.exchange(-w1[:,1],1)
 
-    #θ0=read_nctiles(𝐷.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m0))
-    #θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
-    #𝐷.θ0[:,:]=θ0[:,:]
-
-    #θ1=read_nctiles(𝐷.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m1))
-    #θ1[findall(isnan.(θ1))]=0.0 #mask with 0s rather than NaNs
-    #𝐷.θ1[:,:]=θ1[:,:]
-
     𝑃.𝑇[:]=[t0,t1]
 end
 
@@ -279,49 +281,44 @@ function set_up_FlowFields(k::Int,Γ::NamedTuple,pth::String)
     func=Γ.update_location!
 
     if k==0
-        msk=Γ.hFacC
+        msk=1.0*(Γ.hFacC .> 0.0)
         (_,nr)=size(msk)
+        exmsk=similar(msk)
+        for k=1:nr
+            exmsk[:,k]=MeshArrays.exchange(msk[:,k])
+        end
         𝑃=FlowFields(MeshArrays.MeshArray(γ,Float64,nr),MeshArrays.MeshArray(γ,Float64,nr),
         MeshArrays.MeshArray(γ,Float64,nr),MeshArrays.MeshArray(γ,Float64,nr),
         MeshArrays.MeshArray(γ,Float64,nr+1),MeshArrays.MeshArray(γ,Float64,nr+1),
         [-mon/2,mon/2],func)
     else
-        msk=Γ.hFacC[:, k]
+        msk=1.0*(Γ.hFacC[:, k] .> 0.0)
+        exmsk=MeshArrays.exchange(msk)
         𝑃=FlowFields(MeshArrays.MeshArray(γ,Float64),MeshArrays.MeshArray(γ,Float64),
         MeshArrays.MeshArray(γ,Float64),MeshArrays.MeshArray(γ,Float64),[-mon/2,mon/2],func)    
     end
 
 	𝐷 = (🔄 = update_FlowFields!, pth=pth,
 	 XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC, 
-	 k=k, msk=msk, θ0=similar(msk), θ1=similar(msk))
+	 k=k, msk=msk, exmsk=exmsk)
 
+	#add parameters related to gridded domain decomposition
     𝐷 = merge(𝐷 , MeshArrays.NeighborTileIndices_cs(Γ))
-    
-    return 𝑃,𝐷
-end
 
-# ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
-begin
-	#func=(u -> update_location_llc!(u,𝐷))
-	#Γ=merge(Γ,(; update_location! = func))
-
-	ny=1
-	nm=1
-	k=1
-
-	𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path)
-
-	#add parameters for use in reset! and grid variables
+	#add frac parameter (used in reset!) and grid variables
     frac=0.01 #fraction of the particles reset per month (0.05 for k<=10)
 	tmp=(frac=frac, Γ=Γ)
 	𝐷=merge(𝐷,tmp)
 	
+	#initialize flow field etc arrays
 	𝐷.🔄(𝑃,𝐷,0.0)
+	
+    return 𝑃,𝐷
 end
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
-	np=500
+	𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path)
 	
 	#xy = init_global_randn(np,𝐷)
 	#df=DataFrame(x=xy[1,:],y=xy[2,:],f=xy[3,:])
@@ -331,10 +328,10 @@ begin
 	df=DataFrame(CSV.File(fil))
 
 	if !(k==0)
-		𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],df.f[1:np])
+		𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],df.f[1:np],(𝐷=𝐷,))
 	else
 		kk=2.5
-		𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],fill(kk,np),df.f[1:np])
+		𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],fill(kk,np),df.f[1:np],(𝐷=𝐷,))
 	end
 	fieldnames(typeof(𝐼))
 end
@@ -355,14 +352,14 @@ end
 
 # ╔═╡ c57f60b8-cec6-4ef0-bb63-0201c18c9ece
 """
-    reset_📌!(𝐼::Individuals,frac::Number,📌::Array)
+    reset_📌!(𝐼::Individuals,📌::Array)
 
-Randomly select a fraction (frac) of the particles and reset 
-their positions (𝐼.📌) to a random subset of the specificed 📌.
+Randomly select a fraction (𝐼.𝐷.frac) of the particles and reset 
+their positions (𝐼.📌) to a random subset of the specified 📌.
 """
-function reset_📌!(𝐼::Individuals,frac::Number,📌::Array)
+function reset_📌!(𝐼::Individuals,📌::Array)
     np=length(𝐼.🆔)
-    n_reset = Int(round(𝐷.frac*np))
+    n_reset = Int(round(𝐼.𝐷.frac*np))
     k_reset = rand(1:np, n_reset)
     l_reset = rand(1:np, n_reset)
     𝐼.📌[k_reset]=deepcopy(📌[l_reset])
@@ -373,8 +370,8 @@ end
 # ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
-    𝐷.🔄(𝐼.𝑃,𝐷,t_ϵ)
-    reset_📌!(𝐼,𝐷.frac,📌ini)
+    𝐼.𝐷.🔄(𝐼.𝑃,𝐼.𝐷,t_ϵ)
+    reset_📌!(𝐼,📌ini)
     ∫!(𝐼)
 end
 
@@ -382,7 +379,7 @@ end
 begin
 	✔1
 	[step!(𝐼) for y=1:ny, m=1:nm]
-	add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC)
+	add_lonlat!(𝐼.🔴,𝐼.𝐷.XC,𝐼.𝐷.YC)
 	✔2="done"
 end
 
@@ -460,11 +457,11 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-IndividualDisplacements = "~0.3.5"
-MITgcmTools = "~0.2.0"
+IndividualDisplacements = "~0.3.7"
+MITgcmTools = "~0.2.1"
 OceanStateEstimation = "~0.2.0"
-Plots = "~1.25.2"
-PlutoUI = "~0.7.30"
+Plots = "~1.25.6"
+PlutoUI = "~0.7.32"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -476,9 +473,9 @@ manifest_format = "2.0"
 
 [[deps.AWS]]
 deps = ["Base64", "Compat", "Dates", "Downloads", "GitHub", "HTTP", "IniFile", "JSON", "MbedTLS", "Mocking", "OrderedCollections", "Retry", "Sockets", "URIs", "UUIDs", "XMLDict"]
-git-tree-sha1 = "82e9580aff0d2c1703f4bf38a9de79e927f252f9"
+git-tree-sha1 = "07d944e4d9946c2061f97c1564d1b7ae8ea8f189"
 uuid = "fbe9abb3-538b-5e4e-ba9e-bc94f4f92ebc"
-version = "1.74.0"
+version = "1.61.0"
 
 [[deps.AbstractPlutoDingetjes]]
 deps = ["Pkg"]
@@ -569,9 +566,9 @@ version = "1.0.0"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "6e39c91fb4b84dcb870813c91674bdebb9145895"
+git-tree-sha1 = "54fc4400de6e5c3e27be6047da2ef6ba355511f8"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.11.5"
+version = "1.11.6"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
@@ -581,9 +578,9 @@ version = "0.1.2"
 
 [[deps.ClimateModels]]
 deps = ["AWS", "CFTime", "CSV", "DataFrames", "Dates", "Downloads", "Git", "NetCDF", "OrderedCollections", "Pkg", "Statistics", "Suppressor", "TOML", "Test", "UUIDs", "Zarr"]
-git-tree-sha1 = "15ba5b736e675d5e79fe5ad0e7a8f67a286ffe31"
+git-tree-sha1 = "7e9ebc6da08f73d6fc16e7805245ec03b7efc3fd"
 uuid = "f6adb021-9183-4f40-84dc-8cea6f651bb0"
-version = "0.1.20"
+version = "0.2.2"
 
 [[deps.CloseOpenIntervals]]
 deps = ["ArrayInterface", "Static"]
@@ -649,9 +646,9 @@ uuid = "d38c429a-6771-53c6-b99e-75d170b6e991"
 version = "0.5.7"
 
 [[deps.Crayons]]
-git-tree-sha1 = "b618084b49e78985ffa8422f32b9838e397b9fc2"
+git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
 uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
-version = "4.1.0"
+version = "4.1.1"
 
 [[deps.CyclicArrays]]
 git-tree-sha1 = "4ab3cb8563aceca605a543a19aacaf09c6781dd3"
@@ -671,9 +668,9 @@ version = "1.9.0"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "cfdfef912b7f93e4b848e80b9befdf9e331bc05a"
+git-tree-sha1 = "ae02104e835f219b8930c7664b8012c93475c340"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "1.3.1"
+version = "1.3.2"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -702,9 +699,9 @@ version = "0.4.0"
 
 [[deps.DiffEqBase]]
 deps = ["ArrayInterface", "ChainRulesCore", "DEDataArrays", "DataStructures", "Distributions", "DocStringExtensions", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "IterativeSolvers", "LabelledArrays", "LinearAlgebra", "Logging", "MuladdMacro", "NonlinearSolve", "Parameters", "PreallocationTools", "Printf", "RecursiveArrayTools", "RecursiveFactorization", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "StaticArrays", "Statistics", "SuiteSparse", "ZygoteRules"]
-git-tree-sha1 = "15e43e11701b8c0b6250d7996b5768751f5a10c2"
+git-tree-sha1 = "267a78994dacb3ade0da2bf8907c1d824ae3b668"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.81.0"
+version = "6.81.1"
 
 [[deps.DiffResults]]
 deps = ["StaticArrays"]
@@ -719,9 +716,9 @@ uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
 version = "1.9.0"
 
 [[deps.DiskArrays]]
-git-tree-sha1 = "cfca3b5d0df57f6315b5187482ab8eae4a5beb0e"
+git-tree-sha1 = "eea012149f3aaae4663da3b686f493fa4afad7ad"
 uuid = "3c3547ce-8d99-4f5e-a174-61eb10b00ae3"
-version = "0.2.13"
+version = "0.3.0"
 
 [[deps.Distances]]
 deps = ["LinearAlgebra", "SparseArrays", "Statistics", "StatsAPI"]
@@ -735,9 +732,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "08f8555cb66936b871dcfdad09a4f89e754181db"
+git-tree-sha1 = "5863b0b10512ed4add2b5ec07e335dc6121065a5"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.40"
+version = "0.25.41"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -768,9 +765,9 @@ uuid = "d4d017d3-3776-5f7e-afef-a10c40355c18"
 version = "1.11.0"
 
 [[deps.ExprTools]]
-git-tree-sha1 = "24565044e60bc48a7562e75bcf14f084901dc0b6"
+git-tree-sha1 = "56559bbef6ca5ea0c0818fa5c90320398a6fbf8d"
 uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
-version = "0.1.7"
+version = "0.1.8"
 
 [[deps.EzXML]]
 deps = ["Printf", "XML2_jll"]
@@ -844,9 +841,9 @@ version = "0.6.0"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions", "StaticArrays"]
-git-tree-sha1 = "2b72a5624e289ee18256111657663721d59c143e"
+git-tree-sha1 = "1bd6fc0c344fc0cbee1f42f8d2e7ec8253dda2d2"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
-version = "0.10.24"
+version = "0.10.25"
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Pkg", "Zlib_jll"]
@@ -1000,9 +997,9 @@ version = "0.1.1"
 
 [[deps.IndividualDisplacements]]
 deps = ["Artifacts", "CFTime", "CSV", "CyclicArrays", "DataFrames", "Dates", "LazyArtifacts", "MeshArrays", "NetCDF", "OrdinaryDiffEq", "Random", "UnPack"]
-git-tree-sha1 = "8a3f907a48a692e7d99ac254452af23471aaee60"
+git-tree-sha1 = "71875f15ab79aa2544eaef439bef9839248e1c3f"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.3.6"
+version = "0.3.7"
 
 [[deps.Inflate]]
 git-tree-sha1 = "f5fc07d4e706b84f72d54eedcc1c13d92fb0871c"
@@ -1083,9 +1080,9 @@ version = "0.2.3"
 
 [[deps.Krylov]]
 deps = ["LinearAlgebra", "Printf", "SparseArrays"]
-git-tree-sha1 = "2906bbe840175708e9fc33e5067bdab4bfe42bd2"
+git-tree-sha1 = "e60270d7871e7ffe66b3a90b477ecb5df037aa0c"
 uuid = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
-version = "0.7.10"
+version = "0.7.11"
 
 [[deps.KrylovKit]]
 deps = ["LinearAlgebra", "Printf"]
@@ -1098,6 +1095,11 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "f6250b16881adf048549549fba48b1161acdac8c"
 uuid = "c1c5ebd0-6772-5130-a774-d5fcae4a789d"
 version = "3.100.1+0"
+
+[[deps.LRUCache]]
+git-tree-sha1 = "d64a0aff6691612ab9fb0117b0995270871c5dfc"
+uuid = "8ac3fa9e-de4c-5943-b1dc-09c6b5f20637"
+version = "1.3.0"
 
 [[deps.LZO_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1211,9 +1213,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearSolve]]
 deps = ["ArrayInterface", "DocStringExtensions", "IterativeSolvers", "KLU", "Krylov", "KrylovKit", "LinearAlgebra", "RecursiveFactorization", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "SuiteSparse", "UnPack"]
-git-tree-sha1 = "839ea3d50963484c6ce6b7249c53fc5cf66767fb"
+git-tree-sha1 = "c954090c0a7327a52beccf984610cd505b18d6ce"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "1.6.0"
+version = "1.11.0"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
@@ -1238,9 +1240,9 @@ version = "1.9.3+0"
 
 [[deps.MITgcmTools]]
 deps = ["Artifacts", "ClimateModels", "DataFrames", "Dates", "LazyArtifacts", "MeshArrays", "NetCDF", "OrderedCollections", "Printf", "SparseArrays", "Suppressor", "UUIDs"]
-git-tree-sha1 = "e7bffd8a9892408d4be7927897450e84c58b950a"
+git-tree-sha1 = "bc351e1452ebffa346997f809e164815c73c1a67"
 uuid = "62725fbc-3a66-4df3-9000-e33e85b3a198"
-version = "0.2.0"
+version = "0.2.1"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -1341,9 +1343,9 @@ uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
 
 [[deps.NonlinearSolve]]
 deps = ["ArrayInterface", "FiniteDiff", "ForwardDiff", "IterativeSolvers", "LinearAlgebra", "RecursiveArrayTools", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "StaticArrays", "UnPack"]
-git-tree-sha1 = "200321809e94ba9eb70e7d7c3de8a7a6679a18b3"
+git-tree-sha1 = "b61c51cd5b9d8b197dfcbbf2077a0a4e1505278d"
 uuid = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
-version = "0.3.13"
+version = "0.3.14"
 
 [[deps.OceanStateEstimation]]
 deps = ["Artifacts", "CodecZlib", "Downloads", "FortranFiles", "LazyArtifacts", "MITgcmTools", "MeshArrays", "Statistics", "Tar"]
@@ -1395,10 +1397,10 @@ uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
 version = "1.4.1"
 
 [[deps.OrdinaryDiffEq]]
-deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastClosures", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "f10323023a0fc017c07de2a6d1b4604cace7f345"
+deps = ["Adapt", "ArrayInterface", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastClosures", "FiniteDiff", "ForwardDiff", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
+git-tree-sha1 = "d49b5ab8f44ceed4b896fca8a92ea198c2eeda9a"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.4.1"
+version = "6.6.2"
 
 [[deps.PCRE2_jll]]
 deps = ["Artifacts", "Libdl"]
@@ -1446,9 +1448,9 @@ version = "2.0.1"
 
 [[deps.PlotUtils]]
 deps = ["ColorSchemes", "Colors", "Dates", "Printf", "Random", "Reexport", "Statistics"]
-git-tree-sha1 = "68604313ed59f0408313228ba09e79252e4b2da8"
+git-tree-sha1 = "6f1b25e8ea06279b5689263cc538f51331d7ca17"
 uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
-version = "1.1.2"
+version = "1.1.3"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
@@ -1458,15 +1460,15 @@ version = "1.25.6"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
-git-tree-sha1 = "5c0eb9099596090bb3215260ceca687b888a1575"
+git-tree-sha1 = "ae6145ca68947569058866e443df69587acc1806"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.30"
+version = "0.7.32"
 
 [[deps.Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Requires", "Static", "StrideArraysCore", "ThreadingUtilities"]
-git-tree-sha1 = "3c44fc250c04352839cea8d5b9d94bcb7b3de420"
+git-tree-sha1 = "55f5db122f19d8b5b26fe9576edc1ff819e499bb"
 uuid = "f517fe37-dbe3-4b94-8317-1923a5111588"
-version = "0.6.2"
+version = "0.6.3"
 
 [[deps.PolyesterWeave]]
 deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]
@@ -1535,15 +1537,15 @@ version = "0.5.0"
 
 [[deps.RecursiveArrayTools]]
 deps = ["Adapt", "ArrayInterface", "ChainRulesCore", "DocStringExtensions", "FillArrays", "LinearAlgebra", "RecipesBase", "Requires", "StaticArrays", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "6b96eb51a22af7e927d9618eaaf135a3520f8e2f"
+git-tree-sha1 = "5144e1eafb2ecc75765888a4bdcd3a30a6a08b14"
 uuid = "731186ca-8d62-57ce-b412-fbd966d074cd"
-version = "2.24.0"
+version = "2.24.1"
 
 [[deps.RecursiveFactorization]]
 deps = ["LinearAlgebra", "LoopVectorization", "Polyester", "StrideArraysCore", "TriangularSolve"]
-git-tree-sha1 = "a6564a98066f512ff2efd438c8f1ce4262d69b87"
+git-tree-sha1 = "832379c5df67f4bab32ed0253ac299cf1e9c36e6"
 uuid = "f2c3362d-daeb-58d1-803e-2bc74f2840b4"
-version = "0.2.7"
+version = "0.2.8"
 
 [[deps.Reexport]]
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
@@ -1681,9 +1683,9 @@ version = "0.4.1"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
-git-tree-sha1 = "2ae4fe21e97cd13efd857462c1869b73c9f61be3"
+git-tree-sha1 = "2884859916598f974858ff01df7dfc6c708dd895"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.3.2"
+version = "1.3.3"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1702,9 +1704,9 @@ version = "0.33.14"
 
 [[deps.StatsFuns]]
 deps = ["ChainRulesCore", "InverseFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
-git-tree-sha1 = "bedb3e17cc1d94ce0e6e66d3afa47157978ba404"
+git-tree-sha1 = "f35e1879a71cca95f4826a14cdbf0b9e253ed918"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
-version = "0.9.14"
+version = "0.9.15"
 
 [[deps.StrideArraysCore]]
 deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "ManualMemory", "Requires", "SIMDTypes", "Static", "ThreadingUtilities"]
@@ -1988,10 +1990,10 @@ uuid = "c5fb5394-a638-5e4d-96e5-b29de1b5cf10"
 version = "1.4.0+3"
 
 [[deps.Zarr]]
-deps = ["AWS", "Blosc", "CodecZlib", "DataStructures", "Dates", "DiskArrays", "HTTP", "JSON", "OffsetArrays", "Pkg"]
-git-tree-sha1 = "18ac3fd29790edeee42bfed5020b12ae61a029d0"
+deps = ["AWS", "Blosc", "CodecZlib", "DataStructures", "Dates", "DiskArrays", "HTTP", "JSON", "LRUCache", "OffsetArrays", "Pkg", "URIs"]
+git-tree-sha1 = "47a53313f4493879345f217e20146c4c40774520"
 uuid = "0a941bbe-ad1d-11e8-39d9-ab76183a1d99"
-version = "0.6.3"
+version = "0.7.1"
 
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
