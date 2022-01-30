@@ -1,11 +1,11 @@
 
 ## Examples
 
-The four examples outlined below form a tutorial of sorts, and thus complement the [User Guide](@ref). They rely on `flow_fields.jl` to define grids and ingest velocity fields. The main goal is to provide a useful jumping off point in order to configure `IndividualDisplacements.jl` for new problems.
+The four examples outlined below form a tutorial of sorts that complements the [User Guide](@ref). They hopefully provide a useful jumping off point in order to configure `IndividualDisplacements.jl` for new problems.
 
-Output is in [DataFrames](https://juliadata.github.io/DataFrames.jl/latest/) tabular format which comes with powerful and convenient analysis methods. Plotting results in space and time can be done as in `recipes_plots.jl`, `recipes_makie.jl`, and `recipes_pyplot.jl` -- see the examples.
+Output from is `IndividualDisplacements.jl` is in [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) tabular format which comes with powerful and convenient analysis methods. They can  readily be plotted in space and time using e.g. `Plots.jl` or `Makie.jl`.
 
-To run an example, the recommended method is to copy the corresponding `notebook (code)` link, paste into the [Pluto.jl](https://github.com/fonsp/Pluto.jl/wiki/🔎-Basic-Commands-in-Pluto) prompt, and click `open`.
+To rerun an example yourself, the recommended method is to copy the corresponding `notebook (code)` link, paste it into the [Pluto.jl](https://github.com/fonsp/Pluto.jl/wiki/🔎-Basic-Commands-in-Pluto) prompt, and click `open`.
 
 ## Simple Two-Dimensional Flow
 
@@ -43,15 +43,18 @@ The flow field is based on a data-constrained ocean model solution. The problem 
 
 A simulation of particles that follow the three-dimensional ocean circulation. This example illustrates (1) the 3D case in a relatistic configuration, (2) tracking the advent or origin of a water patch, and (3) multifacted visualizations in 3D.
 
-The flow field is based on a data-constrained, realistic, ocean model. The problem configuration mimics, albeit very approximately, ocean tracers / coumpounds transported by water masses .
+The flow field is based on a data-constrained, realistic, ocean model. The problem configuration mimics, albeit very approximately, ocean tracers / coumpounds transported by water masses.
 
 ## Additional Examples
 
-- Interactive UI (Pluto.jl) : [notebook (html)](interactive_UI.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/worldwide/interactive_UI.jl)
+- Interactivity : [notebook (html)](interactive_UI.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/worldwide/interactive_UI.jl)
+- Atmosphere : [notebook (html)](https://gaelforget.github.io/MITgcmTools.jl/dev/examples/HS94_particles.html) ➭ [notebook (code)](https://raw.githubusercontent.com/gaelforget/MITgcmTools.jl/master/examples/HS94_particles.jl)
+- MITgcm : [Particle cloud](../particle_cloud/index.html), [Detailed look](../detailed_look/index.html) 
+- Plotting : [Plots.jl](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/jupyter/recipes_plots.jl), [Makie.jl](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/jupyter/recipes_makie.jl), [PyPlot.jl](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/jupyter/recipes_pyplot.jl)
 
-- Particle cloud (MITgcm) : [notebook (html)](../particle_cloud/index.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/basics/particle_cloud.jl)
+## Animations
 
-- Detailed look (MITgcm) : [notebook (html)](../detailed_look/index.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/basics/detailed_look.jl)
+Below are animations of results generated in [Global Ocean Circulation](@ref) and [Three Dimensional Pathways](@ref).
 
 [![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
 

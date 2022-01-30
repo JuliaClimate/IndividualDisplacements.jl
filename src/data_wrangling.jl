@@ -24,12 +24,12 @@ function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
 end
 
 """
-    postprocess_MeshArray(sol,𝑃::FlowFields; id=missing, 𝑇=missing)
+    postprocess_MeshArray(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=missing)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 using "exchanged" 𝐷.XC, 𝐷.YC via `add_lonlat!`
 """
-function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields; id=missing, 𝑇=missing)
+function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields, 𝐷::NamedTuple; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
@@ -110,12 +110,12 @@ function add_lonlat!(df::DataFrame,XC,YC,func::Function)
 end
 
 """
-    postprocess_xy()
+    postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=missing)
 
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_xy(sol,𝑃::FlowFields; id=missing, 𝑇=missing)
+function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 

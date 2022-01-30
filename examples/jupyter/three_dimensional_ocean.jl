@@ -60,8 +60,8 @@ custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[],
    k=Float64[], z=Float64[], iso=Float64[], t=Float64[], 
    lon=Float64[], lat=Float64[], year=Float64[], col=Symbol[])
 
-function custom🔧(sol,𝑃::𝐹_MeshArray3D;id=missing,𝑇=missing)
-   df=postprocess_MeshArray(sol,𝑃,id=id,𝑇=𝑇)
+function custom🔧(sol,𝑃::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=missing)
+   df=postprocess_MeshArray(sol,𝑃,𝐷,id=id,𝑇=𝑇)
    add_lonlat!(df,𝐷.XC,𝐷.YC)
 
    #add year (convenience time axis for plotting)
@@ -99,7 +99,7 @@ nf=100; lo=(-160.0,-150.0); la=(30.0,40.0); kk=2.5;
 df=DataFrame(:z => fill(kk,nf),:f => fill(1,nf))
 (df.x,df.y)=initial_positions(Γ, nf, lo, la)
 
-𝐼=Individuals(𝑃,df.x,df.y,df.z,df.f,(🔴=custom🔴,🔧=custom🔧))
+𝐼=Individuals(𝑃,df.x,df.y,df.z,df.f,(🔴=custom🔴,🔧=custom🔧, 𝐷=𝐷))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 3.1 Compute Displacements

@@ -73,8 +73,8 @@ u,v,w=solid_body_rotation(np,nz) #staggered velocity arrays
 # important that this intermediary (`postproc`) be consistent with the solver setup (`sol`) 
 # and the expected record format (`🔴`).
 
-function postproc(sol,𝐹::FlowFields;id=missing,𝑇=missing)
-    df=postprocess_xy(sol,𝐹,id=id,𝑇=𝑇)
+function postproc(sol,𝐹::FlowFields,𝐷::NamedTuple;id=missing,𝑇=missing)
+    df=postprocess_xy(sol,𝐹,𝐷,id=id,𝑇=𝑇)
     #add third coordinate
     z=sol[3,:]
     df.z=z[:]
