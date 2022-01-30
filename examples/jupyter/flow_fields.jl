@@ -248,6 +248,7 @@ function test2_periodic_domain(np = 12, nq = 12)
 
     f = (u -> MeshArrays.update_location_dpdo!(u,Γ.XC.grid))
     𝑃=FlowFields(u,u,v,v,[0.0,400.0],f)
+    𝐷=(;)
 
     #initial conditions
     x0 = np * (0.4:0.04:0.6)
@@ -261,5 +262,5 @@ function test2_periodic_domain(np = 12, nq = 12)
     prob = ODEProblem(dxdt!, u0, 𝑃.𝑇, 𝑃)
     sol = solve(prob,Euler(),dt=0.1)
 
-    return postprocess_xy(sol, 𝑃),𝑃
+    return postprocess_xy(sol, 𝑃, 𝐷),𝑃
 end
