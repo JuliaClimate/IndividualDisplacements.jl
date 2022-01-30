@@ -141,7 +141,10 @@ default_postproc = (x->x)
 The velocity function 🚄 typically computes velocity at individual positions (📌 to start) within the 
 specified space-time domain by interpolating gridded variables (provided via 𝑃). Individual trajectories 
 are computed by integrating (∫) interpolated velocities through time. Normally, integration is done by 
-calling ∫! which updates 📌 at the end and records results in 🔴 via 🔧. Unicode cheatsheet:
+calling ∫! which updates 📌 at the end and records results in 🔴 via 🔧. Ancillary data, for use in 
+🔧 for example, can be provided in 𝐷 and metadata stored in 𝑀.
+
+Unicode cheatsheet:
 
 - 📌=`\\:pushpin:<tab>`,          🔴=`\\:red_circle:<tab>`, 🆔=`\\:id:<tab>`
 - 🚄=`\\:bullettrain_side:<tab>`, ∫=`\\int<tab>`,          🔧=`\\:wrench:<tab>`

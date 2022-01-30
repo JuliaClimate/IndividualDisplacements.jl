@@ -10,7 +10,7 @@ As documented in the **examples**, the typical worflow is:
 1. set up `FlowFields` data structure
 1. set up `Individuals` with initial position `📌`
 1. displace `Individuals` (by	`∫🚄dt`) according to `FlowFields`
-1. post-process (`🔧`) and record (`🔴`) results
+1. post-process (`🔧`) and record diagnostics in `🔴`
 1. go back to `step 2` and continue if needed
 
 The data structures for steps `1` and `2` are documented below. Both steps `3` and `4` normally take place as part of `∫!` which post-processes results, using 🔧, records them in 🔴, and updates individual positions 📌 at the end. As a [DataFrame](https://juliadata.github.io/DataFrames.jl/latest/), 🔴 is easily manipulated, plotted, or saved in step `4` (or after the fact).
