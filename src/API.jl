@@ -126,6 +126,15 @@ end
 """
 
 default_solver(prob) = solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)
+
+function ensemble_solver(prob;solver=Tsit5(),reltol=1e-8,abstol=1e-8)
+	u0 = prob.u0
+	prob_func(prob,i,repeat) = remake(prob,u0=u0[i])
+	indiv_prob = ODEProblem(prob.f,u0[1],prob.tspan,prob.p)
+	ensemble_prob = EnsembleProblem(indiv_prob,prob_func=prob_func)
+	solve(ensemble_prob, Tsit5(), reltol=1e-8, abstol=1e-8,trajectories=length(u0))
+end
+
 a=fill(0.0,1,1)
 default_flowfields = 𝐹_Array2D{Float64}(a,a,a,a,[0. 1.])
 default_recorder = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
@@ -216,7 +225,7 @@ function Individuals(𝐹::𝐹_Array2D,x,y, NT::NamedTuple = NamedTuple())
     🆔=collect(1:size(📌,2))
     haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
 
-    ∫=default_solver
+    ∫=ensemble_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
     𝐷=NamedTuple()
@@ -244,7 +253,7 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     🆔=collect(1:size(📌,2))
     haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
 
-    ∫=default_solver
+    ∫=ensemble_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
     𝐷=NamedTuple()
@@ -267,7 +276,7 @@ function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple
     🆔=collect(1:size(📌,2))
     haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
 
-    ∫=default_solver
+    ∫=ensemble_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
     𝐷=NamedTuple()
@@ -295,7 +304,7 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTup
     🆔=collect(1:size(📌,2))
     haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
 
-    ∫=default_solver
+    ∫=ensemble_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
     𝐷=NamedTuple()
@@ -324,8 +333,12 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     isempty(🔴) ? np =0 : np=length(🆔)
     append!(🔴,tmp[np+1:end,:])
 
-    nd=length(size(sol))
-    nd==3 ? 📌[:,:] = deepcopy(sol[:,:,end]) : 📌[:] = deepcopy(sol[:,end])
+    if isa(sol,EnsembleSolution)
+        📌[:] = deepcopy([sol[i].u[end] for i in 1:size(sol,3)])
+    else
+        nd=length(size(sol))
+        nd==3 ? 📌[:,:] = deepcopy(sol[:,:,end]) : 📌[:] = deepcopy(sol[:,end])
+    end
 
 end
 

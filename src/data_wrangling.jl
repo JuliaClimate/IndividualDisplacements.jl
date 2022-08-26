@@ -126,7 +126,16 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
     nd=length(size(sol))
 
     id=id*ones(1,size(sol,nd))
-    if (size(sol,1)>1)&&(nd>2)
+    t=[ceil(i/nf)-1 for i in 1:nt*nf]
+    #size(𝐷.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
+    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
+
+    if isa(sol,EnsembleSolution)
+        x=mod.([sol[i][1,end] for i in 1:size(sol,3)],Ref(nx))
+        y=mod.([sol[i][2,end] for i in 1:size(sol,3)],Ref(ny))
+        t=fill(𝑇[2],size(x))
+        id=collect(1:length(t))
+    elseif (size(sol,1)>1)&&(nd>2)
         x=mod.(sol[1,:,:],Ref(nx))
         y=mod.(sol[2,:,:],Ref(ny))
     elseif (nd>2)
@@ -136,9 +145,6 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
         x=mod.(sol[1,:],Ref(nx))
         y=mod.(sol[2,:],Ref(ny))
     end
-    t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    #size(𝐷.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
-    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
     return DataFrame(ID=Int.(id[:]), t=t[:], x=x[:], y=y[:])
 end
