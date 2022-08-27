@@ -29,7 +29,7 @@ end
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 using "exchanged" 𝐷.XC, 𝐷.YC via `add_lonlat!`
 """
-function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields, 𝐷::NamedTuple; id=missing, 𝑇=missing)
+function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
@@ -37,7 +37,17 @@ function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields, 𝐷::NamedTup
     nt=size(sol,nd)
     nf=size(sol,nd-1)
     id=id*ones(1,size(sol,nd))
-    if (size(sol,1)>1)&&(nd>2)
+    t=[ceil(i/nf)-1 for i in 1:nt*nf]
+    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
+
+    if isa(sol,EnsembleSolution)
+        np=size(sol,3)
+        x=[[sol[i][1,1] for i in 1:np];[sol[i][1,end] for i in 1:np]]
+        y=[[sol[i][2,1] for i in 1:np];[sol[i][2,end] for i in 1:np]]
+        fIndex=[[sol[i][nd-1,end] for i in 1:np];[sol[i][nd-1,end] for i in 1:np]];
+        t=[fill(𝑇[1],np);fill(𝑇[2],np)]
+        id=[collect(1:np);collect(1:np)]
+    elseif (size(sol,1)>1)&&(nd>2)
         x=sol[1,:,:]
         y=sol[2,:,:]
         fIndex=sol[end,:,:]
@@ -53,9 +63,6 @@ function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields, 𝐷::NamedTup
     end
 
     𝑃.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
-
-    t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
     
     df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
     return df
