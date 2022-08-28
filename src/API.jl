@@ -132,7 +132,7 @@ function ensemble_solver(prob;solver=Tsit5(),reltol=1e-8,abstol=1e-8)
 	prob_func(prob,i,repeat) = remake(prob,u0=u0[i])
 	indiv_prob = ODEProblem(prob.f,u0[1],prob.tspan,prob.p)
 	ensemble_prob = EnsembleProblem(indiv_prob,prob_func=prob_func)
-	solve(ensemble_prob, Tsit5(), reltol=1e-8, abstol=1e-8,trajectories=length(u0))
+	solve(ensemble_prob, solver, reltol=reltol, abstol=abstol, trajectories=length(u0))
 end
 
 a=fill(0.0,1,1)
@@ -334,7 +334,7 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     append!(🔴,tmp[np+1:end,:])
 
     if isa(sol,EnsembleSolution)
-        📌[:] = deepcopy([sol[i].u[end] for i in 1:size(sol,3)])
+        📌[:] = deepcopy([sol[i].u[end] for i in 1:size(sol,nd)])
     else
         nd=length(size(sol))
         nd==3 ? 📌[:,:] = deepcopy(sol[:,:,end]) : 📌[:] = deepcopy(sol[:,end])

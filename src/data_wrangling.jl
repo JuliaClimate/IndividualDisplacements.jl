@@ -46,7 +46,7 @@ function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missin
         y=[[sol[i][2,1] for i in 1:np];[sol[i][2,end] for i in 1:np]]
         fIndex=[[sol[i][nd-1,end] for i in 1:np];[sol[i][nd-1,end] for i in 1:np]];
         t=[fill(𝑇[1],np);fill(𝑇[2],np)]
-        id=[collect(1:np);collect(1:np)]
+        id=[id[:,1];id[:,1]]
     elseif (size(sol,1)>1)&&(nd>2)
         x=sol[1,:,:]
         y=sol[2,:,:]
@@ -144,7 +144,7 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
         y=[mod.([sol[i][2,1] for i in 1:np],Ref(ny));
             mod.([sol[i][2,end] for i in 1:np],Ref(ny))]
         t=[fill(𝑇[1],np);fill(𝑇[2],np)]
-        id=[collect(1:np);collect(1:np)]
+        id=[id[:,1];id[:,1]]
     elseif (size(sol,1)>1)&&(nd>2)
         x=mod.(sol[1,:,:],Ref(nx))
         y=mod.(sol[2,:,:],Ref(ny))
