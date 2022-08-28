@@ -138,10 +138,13 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
     t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
     if isa(sol,EnsembleSolution)
-        x=mod.([sol[i][1,end] for i in 1:size(sol,3)],Ref(nx))
-        y=mod.([sol[i][2,end] for i in 1:size(sol,3)],Ref(ny))
-        t=fill(𝑇[2],size(x))
-        id=collect(1:length(t))
+        np=size(sol,3)
+        x=[mod.([sol[i][1,1] for i in 1:np],Ref(nx));
+            mod.([sol[i][1,end] for i in 1:np],Ref(nx))];
+        y=[mod.([sol[i][2,1] for i in 1:np],Ref(ny));
+            mod.([sol[i][2,end] for i in 1:np],Ref(ny))]
+        t=[fill(𝑇[1],np);fill(𝑇[2],np)]
+        id=[collect(1:np);collect(1:np)]
     elseif (size(sol,1)>1)&&(nd>2)
         x=mod.(sol[1,:,:],Ref(nx))
         y=mod.(sol[2,:,:],Ref(ny))
