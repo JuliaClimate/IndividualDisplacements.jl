@@ -334,7 +334,8 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     append!(🔴,tmp[np+1:end,:])
 
     if isa(sol,EnsembleSolution)
-        📌[:] = deepcopy([sol[i].u[end] for i in 1:size(sol,nd)])
+        np=size(sol,3)
+        📌[:] = deepcopy([sol[i].u[end] for i in 1:np])
     else
         nd=length(size(sol))
         nd==3 ? 📌[:,:] = deepcopy(sol[:,:,end]) : 📌[:] = deepcopy(sol[:,end])

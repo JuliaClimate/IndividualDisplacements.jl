@@ -234,8 +234,8 @@ Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/particle_cloud.jl"))
-ref=ref=[28.  22.]
-prod(isapprox.([median(𝐼.🔴.x) median(𝐼.🔴.y)],ref,atol=1.0))
+ref=[28.  22.]
+prod(isapprox.([median(𝐼.🔴.x) median(𝐼.🔴.y)],ref,atol=10.0))
 
 # output
 
