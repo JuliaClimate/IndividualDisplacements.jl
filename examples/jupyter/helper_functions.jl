@@ -68,14 +68,13 @@ file location (`pth`).
 _Note: the initial implementation approximates month durations to 
 365 days / 12 months for simplicity and sets 𝑃.𝑇 to [-mon/2,mon/2]_
 """
-function set_up_FlowFields(k::Int,Γ::NamedTuple,pth::String)
+function set_up_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
     XC=exchange(Γ.XC) #add 1 lon point at each edge
     YC=exchange(Γ.YC) #add 1 lat point at each edge
     iDXC=1. ./Γ.DXC
     iDYC=1. ./Γ.DYC
     γ=Γ.XC.grid
     mon=86400.0*365.0/12.0
-    func=Γ.update_location!
     
     if k==0
         msk=Γ.hFacC
