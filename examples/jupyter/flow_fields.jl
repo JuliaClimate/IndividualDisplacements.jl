@@ -70,12 +70,10 @@ function global_ocean_circulation(;k=1,ny=2)
   γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
   Γ=GridLoad(γ;option="full")
   Γ=merge(Γ,MeshArrays.NeighborTileIndices_cs(Γ))
-
-  func=(u -> MeshArrays.update_location_llc!(u,𝐷))
-  Γ=merge(Γ,(; update_location! = func))
+  func=(u -> MeshArrays.update_location_llc!(u,Γ))
 
   #initialize u0,u1 etc
-  𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path);
+  𝑃,𝐷=set_up_FlowFields(k,Γ,func,ECCOclim_path);
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, Γ=Γ)

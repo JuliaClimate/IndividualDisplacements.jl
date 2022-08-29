@@ -29,7 +29,7 @@ end
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
 using "exchanged" 𝐷.XC, 𝐷.YC via `add_lonlat!`
 """
-function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields, 𝐷::NamedTuple; id=missing, 𝑇=missing)
+function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
@@ -37,7 +37,17 @@ function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields, 𝐷::NamedTup
     nt=size(sol,nd)
     nf=size(sol,nd-1)
     id=id*ones(1,size(sol,nd))
-    if (size(sol,1)>1)&&(nd>2)
+    t=[ceil(i/nf)-1 for i in 1:nt*nf]
+    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
+
+    if isa(sol,EnsembleSolution)
+        np=length(sol)
+        x=[[sol[i][1,1] for i in 1:np];[sol[i][1,end] for i in 1:np]]
+        y=[[sol[i][2,1] for i in 1:np];[sol[i][2,end] for i in 1:np]]
+        fIndex=[[sol[i][nd,end] for i in 1:np];[sol[i][nd,end] for i in 1:np]];
+        t=[fill(𝑇[1],np);fill(𝑇[2],np)]
+        id=[id[:,1];id[:,1]]
+    elseif (size(sol,1)>1)&&(nd>2)
         x=sol[1,:,:]
         y=sol[2,:,:]
         fIndex=sol[end,:,:]
@@ -53,9 +63,6 @@ function postprocess_MeshArray(sol::ODESolution,𝑃::FlowFields, 𝐷::NamedTup
     end
 
     𝑃.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
-
-    t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
     
     df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
     return df
@@ -126,7 +133,19 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
     nd=length(size(sol))
 
     id=id*ones(1,size(sol,nd))
-    if (size(sol,1)>1)&&(nd>2)
+    t=[ceil(i/nf)-1 for i in 1:nt*nf]
+    #size(𝐷.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
+    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
+
+    if isa(sol,EnsembleSolution)
+        np=length(sol)
+        x=[mod.([sol[i][1,1] for i in 1:np],Ref(nx));
+            mod.([sol[i][1,end] for i in 1:np],Ref(nx))];
+        y=[mod.([sol[i][2,1] for i in 1:np],Ref(ny));
+            mod.([sol[i][2,end] for i in 1:np],Ref(ny))]
+        t=[fill(𝑇[1],np);fill(𝑇[2],np)]
+        id=[id[:,1];id[:,1]]
+    elseif (size(sol,1)>1)&&(nd>2)
         x=mod.(sol[1,:,:],Ref(nx))
         y=mod.(sol[2,:,:],Ref(ny))
     elseif (nd>2)
@@ -136,9 +155,6 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
         x=mod.(sol[1,:],Ref(nx))
         y=mod.(sol[2,:],Ref(ny))
     end
-    t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    #size(𝐷.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
-    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
     return DataFrame(ID=Int.(id[:]), t=t[:], x=x[:], y=y[:])
 end
