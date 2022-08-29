@@ -213,7 +213,12 @@ end
 
 function Individuals(𝐹::𝐹_Array2D,x,y, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i]] for i in eachindex(x)])
-    length(📌)==1 ? 📌=📌[1] : nothing
+    if length(📌)==1
+        📌=📌[1]
+        ∫=default_solver 
+    else
+        ∫=ensemble_solver
+    end
     T=eltype(📌)
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
@@ -225,7 +230,6 @@ function Individuals(𝐹::𝐹_Array2D,x,y, NT::NamedTuple = NamedTuple())
     🆔=collect(1:size(📌,2))
     haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
 
-    ∫=ensemble_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
     𝐷=NamedTuple()
@@ -236,7 +240,12 @@ end
 
 function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];z[i]] for i in eachindex(x)])
-    length(📌)==1 ? 📌=📌[1] : nothing
+    if length(📌)==1
+        📌=📌[1]
+        ∫=default_solver 
+    else
+        ∫=ensemble_solver
+    end
     T=eltype(📌)
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
@@ -253,7 +262,6 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     🆔=collect(1:size(📌,2))
     haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
 
-    ∫=ensemble_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
     𝐷=NamedTuple()
@@ -264,7 +272,12 @@ end
 
 function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
-    length(📌)==1 ? 📌=📌[1] : nothing
+    if length(📌)==1
+        📌=📌[1]
+        ∫=default_solver 
+    else
+        ∫=ensemble_solver
+    end
     T=eltype(📌)
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], fid=Int64[], t=Float64[])
@@ -276,7 +289,6 @@ function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple
     🆔=collect(1:size(📌,2))
     haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
 
-    ∫=ensemble_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
     𝐷=NamedTuple()
@@ -287,7 +299,12 @@ end
 
 function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];z[i];fid[i]] for i in eachindex(x)])
-    length(📌)==1 ? 📌=📌[1] : nothing
+    if length(📌)==1
+        📌=📌[1]
+        ∫=default_solver 
+    else
+        ∫=ensemble_solver
+    end
     T=eltype(📌)
 
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], fid=Int64[], t=Float64[])
@@ -304,7 +321,6 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTup
     🆔=collect(1:size(📌,2))
     haskey(NT,:🆔) ? 🆔=NT.🆔 : nothing
 
-    ∫=ensemble_solver
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
     𝐷=NamedTuple()
