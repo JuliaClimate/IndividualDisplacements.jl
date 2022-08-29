@@ -192,7 +192,7 @@ nearest_to_xy(α::Array,x,y) = [α[ Int(round(x[i] .+ 0.5)), Int(round(y[i] .+ 0
 
 Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps for plotting purposes).
 
-```jldoctest
+``` #jldoctest
 using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/helper_functions.jl"))

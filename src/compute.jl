@@ -17,7 +17,7 @@ fview(f::Array{Array{Float64,2},2},i::Int,j::Int) = view(f[i,j],:,:)
 Interpolate velocity from gridded fields (3D; with halos) to position `u`
 (`x,y,z,fIndex`) to compute the derivative of position v time  `du_dt`.
 
-```jldoctest; output = false
+``` #jldoctest; output = false
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/three_dimensional_ocean.jl"))
@@ -99,7 +99,7 @@ end
 Interpolate velocity from gridded fields (2D; with halos) to position `u`
 (`x,y,fIndex`) to compute the derivative of position v time  `du_dt`.
 
-```jldoctest; output = false
+``` #jldoctest; output = false
 using IndividualDisplacements, Statistics
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/global_ocean_circulation.jl"))
