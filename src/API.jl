@@ -334,7 +334,7 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     append!(🔴,tmp[np+1:end,:])
 
     if isa(sol,EnsembleSolution)
-        np=size(sol,3)
+        np=length(sol)
         📌[:] = deepcopy([sol[i].u[end] for i in 1:np])
     else
         nd=length(size(sol))
