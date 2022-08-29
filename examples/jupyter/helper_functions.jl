@@ -79,14 +79,14 @@ function set_up_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
     if k==0
         msk=Γ.hFacC
         (_,nr)=size(msk)
-        𝑃=FlowFields(MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
-        MeshArray(γ,Float64,nr),MeshArray(γ,Float64,nr),
-        MeshArray(γ,Float64,nr+1),MeshArray(γ,Float64,nr+1),
+        𝑃=FlowFields(MeshArray(γ,Float32,nr),MeshArray(γ,Float32,nr),
+        MeshArray(γ,Float32,nr),MeshArray(γ,Float32,nr),
+        MeshArray(γ,Float32,nr+1),MeshArray(γ,Float32,nr+1),
         [-mon/2,mon/2],func)
     else
         msk=Γ.hFacC[:, k]
-        𝑃=FlowFields(MeshArray(γ,Float64),MeshArray(γ,Float64),
-        MeshArray(γ,Float64),MeshArray(γ,Float64),[-mon/2,mon/2],func)    
+        𝑃=FlowFields(MeshArray(γ,Float32),MeshArray(γ,Float32),
+        MeshArray(γ,Float32),MeshArray(γ,Float32),[-mon/2,mon/2],func)    
     end
     
     𝐷 = (🔄 = update_FlowFields!, pth=pth,
@@ -108,7 +108,7 @@ _Note: for now, it is assumed that (1) the time interval `dt` between
 consecutive records is diff(𝑃.𝑇), (2) monthly climatologies are used 
 with a periodicity of 12 months, (3) vertical 𝑃.k is selected_
 """
-function update_FlowFields!(𝑃::𝐹_MeshArray2D,𝐷::NamedTuple,t::Float64)
+function update_FlowFields!(𝑃::𝐹_MeshArray2D,𝐷::NamedTuple,t::AbstractFloat)
     dt=𝑃.𝑇[2]-𝑃.𝑇[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
@@ -207,11 +207,11 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
 
     θ0=IndividualDisplacements.read_nctiles(𝐷.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m0))
     θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
-    𝐷.θ0[:,:]=θ0[:,:]
+    𝐷.θ0[:,:]=float32.(θ0[:,:])
 
     θ1=IndividualDisplacements.read_nctiles(𝐷.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m1))
     θ1[findall(isnan.(θ1))]=0.0 #mask with 0s rather than NaNs
-    𝐷.θ1[:,:]=θ1[:,:]
+    𝐷.θ1[:,:]=float32.(θ1[:,:])
 
     𝑃.𝑇[:]=[t0,t1]
 end

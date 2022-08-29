@@ -51,7 +51,7 @@ fieldnames(typeof(𝑃))
 #
 # - initial particle positions randomly over Global Ocean
 
-np=100
+np=10
 
 #xy = init_global_randn(np,𝐷)
 #df=DataFrame(x=xy[1,:],y=xy[2,:],f=xy[3,:])
