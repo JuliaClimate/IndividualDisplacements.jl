@@ -352,6 +352,7 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     if isa(sol,EnsembleSolution)
         np=length(sol)
         📌[:] = deepcopy([sol[i].u[end] for i in 1:np])
+        [update_location!(i,𝑃) for i in 𝐼.📌]
     else
         nd=length(size(sol))
         nd==3 ? 📌[:,:] = deepcopy(sol[:,:,end]) : 📌[:] = deepcopy(sol[:,end])

@@ -65,7 +65,20 @@ function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missin
     𝑃.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
     
     df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
+
     return df
+end
+
+"""
+    update_location!(pos,𝑃)
+
+Update `pos` via `𝑃.update_location!` if needed.
+"""
+function update_location!(pos,𝑃)
+    g=𝑃.u0.grid
+    while MeshArrays.location_is_out(pos,g)
+        𝑃.update_location!(pos)
+    end
 end
 
 """
@@ -101,7 +114,7 @@ function add_lonlat!(df::DataFrame,XC,YC,func::Function)
     g=XC.grid
     u=zeros(3)
 
-    for i in eachindex(df.lon)
+    for i in eachindex(df.x)
         u[:]=[df.x[i];df.y[i];df.fid[i]]
         while MeshArrays.location_is_out(u,g)
             func(u)
