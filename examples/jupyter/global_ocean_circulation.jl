@@ -26,8 +26,6 @@ import IndividualDisplacements.DataFrames: groupby, combine, nrow
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/worldwide/ECCO_FlowFields.jl"))
 
-ECCO_FlowFields.get_ecco_velocity_if_needed()
-
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Set Up Parameters & Inputs
 #

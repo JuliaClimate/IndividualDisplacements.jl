@@ -1,8 +1,13 @@
 module ECCO_FlowFields
 
-using IndividualDisplacements, MeshArrays, OceanStateEstimation, MITgcmTools
+using IndividualDisplacements, OceanStateEstimation, MITgcmTools
+
 import IndividualDisplacements.DataFrames: DataFrame
+import IndividualDisplacements.MeshArrays as MeshArrays
+import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray
 import IndividualDisplacements.CSV as CSV
+
+import OceanStateEstimation.ECCO_helpers.JLD2 as JLD2
 
 """
     init_from_file(np ::Int)
@@ -58,8 +63,8 @@ _Note: the initial implementation approximates month durations to
 365 days / 12 months for simplicity and sets 𝑃.𝑇 to [-mon/2,mon/2]_
 """
 function setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
-    XC=exchange(Γ.XC) #add 1 lon point at each edge
-    YC=exchange(Γ.YC) #add 1 lat point at each edge
+    XC=MeshArrays.exchange(Γ.XC) #add 1 lon point at each edge
+    YC=MeshArrays.exchange(Γ.YC) #add 1 lat point at each edge
     iDXC=1. ./Γ.DXC
     iDYC=1. ./Γ.DYC
     γ=Γ.XC.grid
@@ -114,13 +119,13 @@ function update_FlowFields!(𝑃::𝐹_MeshArray2D,𝐷::NamedTuple,t::AbstractF
     u0=U[:,𝐷.k]; v0=V[:,𝐷.k]
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
     u0=u0.*𝐷.iDXC; v0=v0.*𝐷.iDYC; #normalize to grid units
-    (u0,v0)=exchange(u0,v0,1) #add 1 point at each edge for u and v
+    (u0,v0)=MeshArrays.exchange(u0,v0,1) #add 1 point at each edge for u and v
 
     (U,V)=read_velocities(𝑃.u0.grid,m1,𝐷.pth)
     u1=U[:,𝐷.k]; v1=V[:,𝐷.k]
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
     u1=u1.*𝐷.iDXC; v1=v1.*𝐷.iDYC; #normalize to grid units
-    (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
+    (u1,v1)=MeshArrays.exchange(u1,v1,1) #add 1 point at each edge for u and v
 
     𝑃.u0[:]=u0[:]
     𝑃.u1[:]=u1[:]
@@ -227,14 +232,15 @@ Set up Global Ocean particle simulation in 2D with seasonally varying flow field
 """
 function global_ocean_circulation(;k=1,ny=2)
 
+  OceanStateEstimation.get_ecco_velocity_if_needed()
+
   #k=10 #choice of vertical level
   #ny=2 #number of simulated years (20 for k>20)
   r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 
   #read grid and set up connections between subdomains
-  p=dirname(pathof(IndividualDisplacements))
-  γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
-  Γ=GridLoad(γ;option="full")
+  γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
+  Γ=MeshArrays.GridLoad(γ;option="full")
   Γ=merge(Γ,MeshArrays.NeighborTileIndices_cs(Γ))
   func=(u -> MeshArrays.update_location_llc!(u,Γ))
 
@@ -242,12 +248,32 @@ function global_ocean_circulation(;k=1,ny=2)
   𝑃,𝐷=setup_FlowFields(k,Γ,func,ECCOclim_path)
   𝐷.🔄(𝑃,𝐷,0.0)
 
+  #add background map for plotting
+  λ=ECCO_FlowFields.get_interp_coefficients(Γ)
+  ODL=ECCO_FlowFields.OceanDepthLog(λ,Γ)
+  
   #add parameters for use in reset!
-  tmp=(frac=r_reset, Γ=Γ)
+  tmp=(frac=r_reset, Γ=Γ, ODL=ODL)
   𝐷=merge(𝐷,tmp)
 
   return 𝑃,𝐷
 
+end
+
+function get_interp_coefficients(Γ)
+    MeshArrays.GRID_LLC90_interp_download()
+    fil=joinpath(MeshArrays.GRID_LLC90,"interp_coeffs_halfdeg.jld2")
+    λ=JLD2.load(fil)
+    λ=MeshArrays.Dict_to_NamedTuple(λ)
+end
+
+function OceanDepthLog(λ,Γ)
+    DL=MeshArrays.Interpolate(λ.μ*Γ.Depth,λ.f,λ.i,λ.j,λ.w)
+    DL=reshape(DL,size(λ.lon))
+    DL[findall(DL.<0)].=0
+    DL=transpose(log10.(DL))
+    DL[findall((!isfinite).(DL))].=NaN
+    (lon=λ.lon[:,1],lat=λ.lat[1,:],fld=DL,rng=(1.5,5))
 end
 
 end #module ECCO_FlowFields

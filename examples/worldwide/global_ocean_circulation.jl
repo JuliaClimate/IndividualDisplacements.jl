@@ -6,17 +6,15 @@ using InteractiveUtils
 
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
-	using IndividualDisplacements, OceanStateEstimation, MITgcmTools
-	using Plots, PlutoUI, Statistics
-	
-	import IndividualDisplacements.DataFrames: DataFrame, groupby, combine, nrow
+	using IndividualDisplacements, Plots, PlutoUI
 	"done with loading packages"
 end
 
 # ╔═╡ 07e65622-3698-4dd8-b718-83588e116e58
 begin
-	using MeshArrays
+	using OceanStateEstimation, MITgcmTools
 	include("ECCO_FlowFields.jl")
+	𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=1,ny=2);
 	"Done with Grid and Velocity Files"
 end
 
@@ -39,9 +37,6 @@ TableOfContents()
 
 # ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
 md"""## 1. Grid and Velocity Files"""
-
-# ╔═╡ eaca82e8-79b1-43c0-8a9c-141ac4190c8a
-𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=1,ny=2);
 
 # ╔═╡ 94ca10ae-6a8a-4038-ace0-07d7d9026712
 md"""## 2. `FlowFields` Data Structure
@@ -74,18 +69,18 @@ md"""## 3. Main Computation Loop
 begin
 	df = ECCO_FlowFields.init_from_file(np)
 	𝐼=Individuals(𝑃,df.x,df.y,df.f,(𝐷=𝐷,))
-	fieldnames(typeof(𝐼))
+	📌_reference=deepcopy(𝐼.📌)
+	𝐼
 end
 
 # ╔═╡ 1495fda9-e46b-424e-922a-3b823f3fe200
-𝐼
+
 
 # ╔═╡ cc7cb4a8-86ea-42b0-bbb9-ca78469ad4ad
 df
 
 # ╔═╡ a3e45927-5d53-42be-b7b7-489d6e7a6fe5
 begin
-	📌ini=deepcopy(𝐼.📌)
 	𝑇=(0.0,𝐼.𝑃.𝑇[2])
 	∫!(𝐼,𝑇)
 	✔1="done"
@@ -105,7 +100,7 @@ In addition, `step!` is defined to provide additional flexibility around `∫!` 
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐼.𝐷.🔄(𝐼.𝑃,𝐼.𝐷,t_ϵ)
-    ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌ini)
+    ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference)
     ∫!(𝐼)
 end
 
@@ -120,56 +115,26 @@ begin
 	✔2="done"
 end
 
+# ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
+let
+	✔2
+	using DataFrames, Statistics
+	gdf = groupby(𝐼.🔴, :ID)
+	sgdf= combine(gdf,nrow,:lat => mean)
+	sgdf[rand(1:size(sgdf,1),4),:]
+end
+
 # ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
 md"""## 3.4 Compute summary statistics
 
 See [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) documentation for detail and additinal functionalities.
 """
 
-# ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
-begin
-	✔2
-	gdf = groupby(𝐼.🔴, :ID)
-	sgdf= combine(gdf,nrow,:lat => mean)
-end
-
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
 md"""## 4. Plot Individual Displacements"""
 
-# ╔═╡ 4b887e2f-7505-4db2-8784-400a786fba10
-begin
-	function CalcIntFac(Γ)
-	    lon=[i for i=20.:2.0:380., j=-79.:2.0:89.]
-	    lat=[j for i=20.:2.0:380., j=-79.:2.0:89.]
-		(f,i,j,w,_,_,_)=ECCO_FlowFields.InterpolationFactors(Γ,vec(lon),vec(lat))
-		IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)	
-	end
-	IntFac=CalcIntFac(𝐷.Γ)
-	"Done with interpolation coefficients for map"
-end
-
 # ╔═╡ de8dbb43-68bc-4fb2-b0c8-07100b8a97a0
-md"""## 5. Helper Functions"""
-
-# ╔═╡ af74c6c8-1859-4fdf-ae2b-5af8dccdee60
-"""
-    OceanDepthLog(Γ,IntFac)
-
-Compute Ocean depth logarithm on regular grid.
-"""
-function OceanDepthLog(Γ,IntFac)
-#    lon=[i for i=20.:2.0:380., j=-79.:2.0:89.]
-#    lat=[j for i=20.:2.0:380., j=-79.:2.0:89.]
-	DL=interp_to_lonlat(Γ.Depth,IntFac)
-	DL[findall(DL.<0)].=0
-    DL=transpose(log10.(DL))
-    DL[findall((!isfinite).(DL))].=NaN
-    return DL
-#	return (lon=lon[:,1],lat=lat[1,:],fld=DL,rng=(1.5,5))
-end
-
-# ╔═╡ c57f60b8-cec6-4ef0-bb63-0201c18c9ece
-
+md"""## 5. Plotting Functions"""
 
 # ╔═╡ 4a7ba3ff-449a-44e1-ad10-1de15a6d31cc
 """
@@ -193,11 +158,7 @@ function globalmap(𝐼::Individuals,𝐵::NamedTuple)
 end
 
 # ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
-begin
-	DL=(lon=IntFac.lon[:,1],lat=IntFac.lat[1,:],
-	fld=OceanDepthLog(𝐷.Γ,IntFac),rng=(1.5,5))
-	globalmap(𝐼,DL)
-end
+globalmap(𝐼,𝐼.𝐷.ODL)
 
 # ╔═╡ e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
 begin
@@ -231,18 +192,18 @@ end
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 MITgcmTools = "62725fbc-3a66-4df3-9000-e33e85b3a198"
-MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
 OceanStateEstimation = "891f6deb-a4f5-4bc5-a2e3-1e8f649cdd2c"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+DataFrames = "~1.3.4"
 IndividualDisplacements = "~0.3.10"
 MITgcmTools = "~0.2.1"
-MeshArrays = "~0.2.31"
 OceanStateEstimation = "~0.2.9"
 Plots = "~1.31.7"
 PlutoUI = "~0.7.39"
@@ -1982,11 +1943,10 @@ version = "1.4.1+0"
 
 # ╔═╡ Cell order:
 # ╟─c9e9faa8-f5f0-479c-bc85-877ff7114883
-# ╟─104ce9b0-3fd1-11ec-3eff-3b029552e3d9
+# ╠═104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 # ╟─171fa252-7a35-4d4a-a940-60de77327cf4
 # ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
 # ╠═07e65622-3698-4dd8-b718-83588e116e58
-# ╠═eaca82e8-79b1-43c0-8a9c-141ac4190c8a
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
 # ╟─218b9beb-68f2-4498-a96d-08e0719b4cff
 # ╟─f1215951-2eb2-490b-875a-91c1205b8f63
@@ -1995,17 +1955,14 @@ version = "1.4.1+0"
 # ╟─cc7cb4a8-86ea-42b0-bbb9-ca78469ad4ad
 # ╠═a3e45927-5d53-42be-b7b7-489d6e7a6fe5
 # ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
-# ╟─a2375720-f599-43b9-a7fb-af17956309b6
+# ╠═a2375720-f599-43b9-a7fb-af17956309b6
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
 # ╟─1044c5aa-1a56-45b6-a4c6-63d24eea878d
 # ╟─15077957-64d5-46a5-8a87-a76ad619cf38
-# ╟─6e43a2af-bf01-4f42-a4ba-1874a8cf4885
+# ╠═6e43a2af-bf01-4f42-a4ba-1874a8cf4885
 # ╟─c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
 # ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
-# ╟─4b887e2f-7505-4db2-8784-400a786fba10
 # ╟─de8dbb43-68bc-4fb2-b0c8-07100b8a97a0
-# ╟─af74c6c8-1859-4fdf-ae2b-5af8dccdee60
-# ╟─c57f60b8-cec6-4ef0-bb63-0201c18c9ece
 # ╟─4a7ba3ff-449a-44e1-ad10-1de15a6d31cc
 # ╟─e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
 # ╟─00000000-0000-0000-0000-000000000001
