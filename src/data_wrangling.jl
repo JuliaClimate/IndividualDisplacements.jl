@@ -47,10 +47,6 @@ function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missin
         fIndex=[[sol[i][nd,end] for i in 1:np];[sol[i][nd,end] for i in 1:np]];
         t=[fill(𝑇[1],np);fill(𝑇[2],np)]
         id=[id[:,1];id[:,1]]
-    elseif (size(sol,1)>1)&&(nd>2)
-        x=sol[1,:,:]
-        y=sol[2,:,:]
-        fIndex=sol[end,:,:]
     elseif (nd>2)
         x=[sol[1,i,j][1] for i in 1:nf, j in 1:nt]
         y=[sol[1,i,j][2] for i in 1:nf, j in 1:nt]
@@ -59,13 +55,25 @@ function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missin
         x=sol[1,:]
         y=sol[2,:]
         fIndex=sol[end,:]
-        nf=1
     end
 
     𝑃.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
     
     df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
+
     return df
+end
+
+"""
+    update_location!(pos,𝑃)
+
+Update `pos` via `𝑃.update_location!` if needed.
+"""
+function update_location!(pos,𝑃)
+    g=𝑃.u0.grid
+    while MeshArrays.location_is_out(pos,g)
+        𝑃.update_location!(pos)
+    end
 end
 
 """
@@ -101,7 +109,7 @@ function add_lonlat!(df::DataFrame,XC,YC,func::Function)
     g=XC.grid
     u=zeros(3)
 
-    for i in eachindex(df.lon)
+    for i in eachindex(df.x)
         u[:]=[df.x[i];df.y[i];df.fid[i]]
         while MeshArrays.location_is_out(u,g)
             func(u)
@@ -145,9 +153,6 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
             mod.([sol[i][2,end] for i in 1:np],Ref(ny))]
         t=[fill(𝑇[1],np);fill(𝑇[2],np)]
         id=[id[:,1];id[:,1]]
-    elseif (size(sol,1)>1)&&(nd>2)
-        x=mod.(sol[1,:,:],Ref(nx))
-        y=mod.(sol[2,:,:],Ref(ny))
     elseif (nd>2)
         x=[mod(sol[1,i,j][1],nx) for i in 1:nf, j in 1:nt]
         y=[mod(sol[1,i,j][2],ny) for i in 1:nf, j in 1:nt]
