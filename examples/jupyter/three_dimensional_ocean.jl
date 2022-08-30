@@ -77,7 +77,7 @@ function custom🔧(sol,𝑃::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=
 
    #add one isotherm depth
    θ=0.5*(𝐷.θ0+𝐷.θ1)
-   d=isosurface(θ,15,𝐷.RC)
+   d=isosurface(θ,15,𝐷)
    d[findall(isnan.(d))].=0.
    df.iso=interp_to_xy(df,exchange(d));
 

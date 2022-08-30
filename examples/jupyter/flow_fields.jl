@@ -2,17 +2,6 @@ using MeshArrays, OceanStateEstimation, MITgcmTools
 import IndividualDisplacements.NetCDF as NetCDF
 
 """
-    read_velocities(γ::gcmgrid,t::Int,pth::String)
-
-Read velocity components `u,v` from files in `pth`for time `t`
-"""
-function read_velocities(γ::gcmgrid,t::Int,pth::String)
-    u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
-    v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
-    return u,v
-end
-
-"""
     solid_body_rotation(np,nz)
 
 Set up an idealized flow field which consists of 
@@ -48,39 +37,6 @@ function solid_body_rotation(np,nz)
     w=fill(-0.01,MeshArray(γ,γ.ioPrec,nz+1))
     
     return write(uu),write(vv),write(w)
-end
-
-"""
-    global_ocean_circulation(;k=10,ny=2)
-
-Set up Global Ocean particle simulation in 2D with seasonally varying flow field.
-
-```
-𝑃,𝐷=global_ocean_circulation(k=10,ny=2);
-```
-"""
-function global_ocean_circulation(;k=1,ny=2)
-
-  #k=10 #choice of vertical level
-  #ny=2 #number of simulated years (20 for k>20)
-  r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
-
-  #read grid and set up connections between subdomains
-  p=dirname(pathof(IndividualDisplacements))
-  γ=GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
-  Γ=GridLoad(γ;option="full")
-  Γ=merge(Γ,MeshArrays.NeighborTileIndices_cs(Γ))
-  func=(u -> MeshArrays.update_location_llc!(u,Γ))
-
-  #initialize u0,u1 etc
-  𝑃,𝐷=set_up_FlowFields(k,Γ,func,ECCOclim_path);
-
-  #add parameters for use in reset!
-  tmp=(frac=r_reset, Γ=Γ)
-  𝐷=merge(𝐷,tmp)
-
-  return 𝑃,𝐷
-
 end
 
 """
