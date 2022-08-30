@@ -47,7 +47,6 @@ begin
 	Γ=merge(Γ,MeshArrays.NeighborTileIndices_cs(Γ))
 
 	func=(u -> MeshArrays.update_location_llc!(u,Γ))
-	Γ=merge(Γ,(; update_location! = func))
 
 	"Done with Grid and Velocity Files"
 end
@@ -78,6 +77,15 @@ md"""## 3. Main Computation Loop
 ### 3.1 initial particle positions randomly over Global Ocean
 ### 3.2 initial integration from time 0 to 0.5 month
 """
+
+# ╔═╡ 0f1117c8-8ab8-44b5-a1a7-82258e82b976
+function ensemble_solver(prob;solver=IndividualDisplacements.Tsit5(),reltol=1e-8,abstol=1e-8)
+	u0 = prob.u0
+	prob_func(prob,i,repeat) = IndividualDisplacements.remake(prob,u0=u0[i])
+	indiv_prob = IndividualDisplacements.ODEProblem(prob.f,u0[1],prob.tspan,prob.p)
+	ensemble_prob = IndividualDisplacements.EnsembleProblem(indiv_prob,prob_func=prob_func,safetycopy=false)
+	IndividualDisplacements.solve(ensemble_prob, solver, reltol=reltol, abstol=abstol, trajectories=length(u0))
+end
 
 # ╔═╡ 6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
 md""" ### 3.2 Iteration function example
@@ -271,14 +279,13 @@ vertical level (`k`), and  file location (`pth`).
 _Note: the initial implementation approximates month durations to 
 365 days / 12 months for simplicity and sets 𝑃.𝑇 to [-mon/2,mon/2]_
 """
-function set_up_FlowFields(k::Int,Γ::NamedTuple,pth::String)
+function set_up_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
     XC=MeshArrays.exchange(Γ.XC) #add 1 lon point at each edge
     YC=MeshArrays.exchange(Γ.YC) #add 1 lat point at each edge
     iDXC=1. ./Γ.DXC
     iDYC=1. ./Γ.DYC
     γ=Γ.XC.grid
     mon=86400.0*365.0/12.0
-    func=Γ.update_location!
 
     if k==0
         msk=1.0*(Γ.hFacC .> 0.0)
@@ -318,7 +325,7 @@ end
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
-	𝑃,𝐷=set_up_FlowFields(k,Γ,ECCOclim_path)
+	𝑃,𝐷=set_up_FlowFields(k,Γ,func,ECCOclim_path)
 	
 	#xy = init_global_randn(np,𝐷)
 	#df=DataFrame(x=xy[1,:],y=xy[2,:],f=xy[3,:])
@@ -328,10 +335,10 @@ begin
 	df=DataFrame(CSV.File(fil))
 
 	if !(k==0)
-		𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],df.f[1:np],(𝐷=𝐷,))
+		𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],df.f[1:np],(𝐷=𝐷,∫=ensemble_solver))
 	else
 		kk=2.5
-		𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],fill(kk,np),df.f[1:np],(𝐷=𝐷,))
+		𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],fill(kk,np),df.f[1:np],(𝐷=𝐷,∫=ensemble_solver))
 	end
 	fieldnames(typeof(𝐼))
 end
@@ -457,7 +464,7 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
-IndividualDisplacements = "~0.3.9"
+IndividualDisplacements = "~0.3.10"
 MITgcmTools = "~0.2.1"
 OceanStateEstimation = "~0.2.9"
 Plots = "~1.31.7"
@@ -1081,9 +1088,9 @@ version = "0.1.1"
 
 [[deps.IndividualDisplacements]]
 deps = ["Artifacts", "CFTime", "CSV", "CyclicArrays", "DataFrames", "Dates", "LazyArtifacts", "MeshArrays", "NetCDF", "OrdinaryDiffEq", "Random", "UnPack"]
-git-tree-sha1 = "025aa6e551a577d2ce282054502a16347c17b7f5"
+git-tree-sha1 = "2561f65966c5dfaa85583f295a2ca82b1984af88"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.3.9"
+version = "0.3.10"
 
 [[deps.Inflate]]
 git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
@@ -2209,6 +2216,7 @@ version = "1.4.1+0"
 # ╟─1495fda9-e46b-424e-922a-3b823f3fe200
 # ╟─cc7cb4a8-86ea-42b0-bbb9-ca78469ad4ad
 # ╟─a3e45927-5d53-42be-b7b7-489d6e7a6fe5
+# ╠═0f1117c8-8ab8-44b5-a1a7-82258e82b976
 # ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
 # ╟─a2375720-f599-43b9-a7fb-af17956309b6
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
