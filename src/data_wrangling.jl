@@ -55,7 +55,6 @@ function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missin
         x=sol[1,:]
         y=sol[2,:]
         fIndex=sol[end,:]
-        nf=1
     end
 
     𝑃.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing

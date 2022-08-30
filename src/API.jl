@@ -352,7 +352,9 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     if isa(sol,EnsembleSolution)
         np=length(sol)
         📌[:] = deepcopy([sol[i].u[end] for i in 1:np])
-        [update_location!(i,𝑃) for i in 𝐼.📌]
+        if isa(𝑃,𝐹_MeshArray3D)||isa(𝑃,𝐹_MeshArray2D)
+            [update_location!(i,𝑃) for i in 𝐼.📌]
+        end
     else
         nd=length(size(sol))
         nd==3 ? 📌[:,:] = deepcopy(sol[:,:,end]) : 📌[:] = deepcopy(sol[:,end])
