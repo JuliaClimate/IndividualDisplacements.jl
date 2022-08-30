@@ -38,8 +38,6 @@ ECCO_FlowFields.get_ecco_velocity_if_needed()
 
 𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=1,ny=2);
 
-𝐷.🔄(𝑃,𝐷,0.0)
-
 fieldnames(typeof(𝑃))
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}

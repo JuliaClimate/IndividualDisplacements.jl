@@ -240,6 +240,7 @@ function global_ocean_circulation(;k=1,ny=2)
 
   #initialize u0,u1 etc
   𝑃,𝐷=setup_FlowFields(k,Γ,func,ECCOclim_path)
+  𝐷.🔄(𝑃,𝐷,0.0)
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, Γ=Γ)
