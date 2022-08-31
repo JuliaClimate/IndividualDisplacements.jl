@@ -201,7 +201,7 @@ Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps fo
 using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/worldwide/ECCO_FlowFields.jl"))
-𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=1,ny=2);
+𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=1);
 
 lon=[i for i=20.:20.0:380., j=-70.:10.0:70.]
 lat=[j for i=20.:20.0:380., j=-70.:10.0:70.]
