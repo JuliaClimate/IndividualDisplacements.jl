@@ -4,11 +4,6 @@
 Convert a pair of U,V arrays (staggered C-grid velocity field in 2D) to
 a `𝐹_MeshArray2D` struct ready for integration of individual displacements
 from time `t0=0` to time `t1`.
-
-```
-_,u,v=random_flow_field()
-𝐹=convert_to_FlowFields(u,v,10.0)
-```
 """
 function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
     np,nq=size(U)
@@ -199,13 +194,13 @@ Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps fo
 
 ```jldoctest
 using IndividualDisplacements
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/worldwide/ECCO_FlowFields.jl"))
-𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=1);
+import IndividualDisplacements: MeshArrays
+γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
+Γ=MeshArrays.GridLoad(γ,option="full")
 
 lon=[i for i=20.:20.0:380., j=-70.:10.0:70.]
 lat=[j for i=20.:20.0:380., j=-70.:10.0:70.]
-tmp1=interp_to_lonlat(𝐷.Γ.Depth,𝐷.Γ,lon,lat)
+tmp1=interp_to_lonlat(Γ.Depth,Γ,lon,lat)
 
 prod(isapprox(maximum(tmp1),5896.,atol=1.0))
 

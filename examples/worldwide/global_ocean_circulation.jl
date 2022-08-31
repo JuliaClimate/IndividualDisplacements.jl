@@ -44,8 +44,8 @@ TableOfContents()
 # ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
 begin
 	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="1"))
-	bind_ny = (@bind nytxt Select(["1/12","1","2"]))
-	bind_np = (@bind nptxt Select(["10","100","500"],default="100"))
+	bind_ny = (@bind nytxt Select(["1/12","1","2"],default="1/12"))
+	bind_np = (@bind nptxt Select(["10","100","500"],default="10"))
 	md"""## 1. Simulation Parameters
 
 	The following parameters are used:
