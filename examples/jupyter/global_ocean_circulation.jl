@@ -50,7 +50,7 @@ np=10
 #df = ECCO_FlowFields.init_global_randn(np,𝐷)
 df = ECCO_FlowFields.init_from_file(np)
 
-𝐼=Individuals(𝑃,df.x,df.y,df.f)
+𝐼=Individuals(𝑃,df.x,df.y,df.f,(𝐷=𝐷,))
 fieldnames(typeof(𝐼))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
