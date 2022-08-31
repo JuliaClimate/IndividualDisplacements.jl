@@ -127,10 +127,10 @@ function update_FlowFields!(𝑃::𝐹_MeshArray2D,𝐷::NamedTuple,t::AbstractF
     u1=u1.*𝐷.iDXC; v1=v1.*𝐷.iDYC; #normalize to grid units
     (u1,v1)=MeshArrays.exchange(u1,v1,1) #add 1 point at each edge for u and v
 
-    𝑃.u0[:]=u0[:]
-    𝑃.u1[:]=u1[:]
-    𝑃.v0[:]=v0[:]
-    𝑃.v1[:]=v1[:]
+    𝑃.u0[:]=Float32.(u0[:])
+    𝑃.u1[:]=Float32.(u1[:])
+    𝑃.v0[:]=Float32.(v0[:])
+    𝑃.v1[:]=Float32.(v1[:])
     𝑃.𝑇[:]=[t0,t1]
 
 end
@@ -236,7 +236,10 @@ function global_ocean_circulation(;k=1)
 
   #read grid and set up connections between subdomains
   γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
-  Γ=MeshArrays.GridLoad(γ;option="full")
+  Γ=MeshArrays.GridLoad(γ)
+  f(x,y)=Float32.(MeshArrays.GridLoadVar(x,y))
+  tmp=(DXC=f("DXC",γ),DYC=f("DYC",γ),hFacC=f("hFacC",γ),Depth=f("Depth",γ))
+  Γ=merge(Γ,tmp)
   Γ=merge(Γ,MeshArrays.NeighborTileIndices_cs(Γ))
   func=(u -> MeshArrays.update_location_llc!(u,Γ))
 

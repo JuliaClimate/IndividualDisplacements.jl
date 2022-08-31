@@ -4,11 +4,6 @@
 Convert a pair of U,V arrays (staggered C-grid velocity field in 2D) to
 a `𝐹_MeshArray2D` struct ready for integration of individual displacements
 from time `t0=0` to time `t1`.
-
-```
-_,u,v=random_flow_field()
-𝐹=convert_to_FlowFields(u,v,10.0)
-```
 """
 function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
     np,nq=size(U)

@@ -39,16 +39,16 @@ makedocs(
 		"Introduction" => "index.md",
         "User Guide" => "workflow.md",
         "Examples" => "examples.md", 
-		"Tool Box" => "API.md"],
+               "Tool Box" => "API.md"],
         doctest = false,
     modules = [IndividualDisplacements]
 )
 
 pth_in = joinpath(@__DIR__, "..","examples")
 pth_out = joinpath(@__DIR__, "build","examples")
-lst=("solid_body_rotation.jl","random_flow_field.jl","interactive_UI.jl",
-     "global_ocean_circulation.jl","three_dimensional_ocean.jl")
-subpth=("basics","basics","worldwide","worldwide","worldwide")
+lst=("global_ocean_circulation.jl","three_dimensional_ocean.jl",
+     "solid_body_rotation.jl","random_flow_field.jl","interactive_UI.jl")
+subpth=("worldwide","worldwide","basics","basics","worldwide")
 for ii in 1:length(lst)
     fil_in=joinpath(pth_in,subpth[ii],lst[ii])
     fil_out=joinpath(pth_out,lst[ii][1:end-2]*"html")
