@@ -24,6 +24,8 @@ IndividualDisplacements.flt_example_download()
     @test isa(tmp2,Array)
     tmp3=nearest_to_xy(𝐹.u0,3.,3.)
     @test isa(tmp3,Array)
+
+    (U,V,Φ)=IndividualDisplacements.random_flow_field("Rotational Component")
 end
 
 @testset "doctests" begin

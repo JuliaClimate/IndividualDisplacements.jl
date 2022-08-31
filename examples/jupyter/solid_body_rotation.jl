@@ -26,8 +26,6 @@
 
 using IndividualDisplacements
 import IndividualDisplacements.DataFrames: DataFrame
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/flow_fields.jl"))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ### 1.2  Flow Fields
@@ -38,7 +36,7 @@ include(joinpath(p,"../examples/jupyter/flow_fields.jl"))
 
 np,nz=16,4 #gridded domain size (horizontal and vertical)
 
-u,v,w=solid_body_rotation(np,nz) #staggered velocity arrays
+u,v,w=IndividualDisplacements.solid_body_rotation(np,nz) #staggered velocity arrays
 
 𝐹=FlowFields(u,u,v,v,0*w,1*w,[0,19.95*2*pi]); #FlowFields data structure
 

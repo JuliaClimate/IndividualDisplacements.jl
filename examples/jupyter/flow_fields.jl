@@ -2,44 +2,6 @@ using MeshArrays, OceanStateEstimation, MITgcmTools
 import IndividualDisplacements.NetCDF as NetCDF
 
 """
-    solid_body_rotation(np,nz)
-
-Set up an idealized flow field which consists of 
-[rigid body rotation](https://en.wikipedia.org/wiki/Rigid_body), 
-plus a convergent term, plus a sinking term.
-
-```
-u,v,w=solid_body_rotation(12,4)
-```
-"""
-function solid_body_rotation(np,nz)
-    Γ=simple_periodic_domain(np)
-    Γ = UnitGrid(Γ.XC.grid;option="full")
-    γ=Γ.XC.grid;
-    
-    #Solid-body rotation around central location ...
-    i=Int(np/2+1)
-    u=-(Γ.YG.-Γ.YG[1][i,i])
-    v=(Γ.XG.-Γ.XG[1][i,i])
-    
-    #... plus a convergent term to / from central location
-    d=-0.01
-    u=u+d*(Γ.XG.-Γ.XG[1][i,i])
-    v=v+d*(Γ.YG.-Γ.YG[1][i,i])
-    
-    #Replicate u,v in vertical dimension
-    uu=MeshArray(γ,γ.ioPrec,nz)
-    [uu[k]=u[1] for k=1:nz]
-    vv=MeshArray(γ,γ.ioPrec,nz)
-    [vv[k]=v[1] for k=1:nz]
-    
-    #Vertical velocity component w    
-    w=fill(-0.01,MeshArray(γ,γ.ioPrec,nz+1))
-    
-    return write(uu),write(vv),write(w)
-end
-
-"""
     OCCA_FlowFields(;backward_in_time::Bool=false,nmax=Inf)
 
 Define gridded variables and return result as NamedTuple
