@@ -200,19 +200,14 @@ Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps fo
 ```jldoctest
 using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/helper_functions.jl"))
-𝑃,𝐷=global_ocean_circulation(k=1,ny=2);
+include(joinpath(p,"../examples/worldwide/ECCO_FlowFields.jl"))
+𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=1);
 
 lon=[i for i=20.:20.0:380., j=-70.:10.0:70.]
 lat=[j for i=20.:20.0:380., j=-70.:10.0:70.]
-(f,i,j,w,_,_,_)=InterpolationFactors(𝐷.Γ,vec(lon),vec(lat))
-IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)
-
 tmp1=interp_to_lonlat(𝐷.Γ.Depth,𝐷.Γ,lon,lat)
-tmp2=interp_to_lonlat(𝐷.Γ.Depth,IntFac)
 
-ref=[5896. 5896.]
-prod(isapprox.([maximum(tmp1) maximum(tmp2)],ref,atol=1.0))
+prod(isapprox(maximum(tmp1),5896.,atol=1.0))
 
 # output
 

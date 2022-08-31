@@ -20,15 +20,11 @@
 # - packages + helper functions
 # - grid and velocity files
 
-using IndividualDisplacements, OceanStateEstimation, Statistics
-
-import IndividualDisplacements.DataFrames: DataFrame, groupby, combine, nrow
-import IndividualDisplacements.CSV as CSV
+using IndividualDisplacements, Statistics
+import IndividualDisplacements.DataFrames: groupby, combine, nrow
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/helper_functions.jl"))
-
-OceanStateEstimation.get_ecco_velocity_if_needed();
+include(joinpath(p,"../examples/worldwide/ECCO_FlowFields.jl"))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
 # ## 2. Set Up Parameters & Inputs
@@ -38,9 +34,7 @@ OceanStateEstimation.get_ecco_velocity_if_needed();
 # - return FlowFields (𝑃) and ancillary variables etc (𝐷) 
 # - read & normalize velocities (𝐷.🔄)
 
-𝑃,𝐷=global_ocean_circulation(k=1,ny=2);
-
-𝐷.🔄(𝑃,𝐷,0.0)
+𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation();
 
 fieldnames(typeof(𝑃))
 
@@ -53,14 +47,10 @@ fieldnames(typeof(𝑃))
 
 np=10
 
-#xy = init_global_randn(np,𝐷)
-#df=DataFrame(x=xy[1,:],y=xy[2,:],f=xy[3,:])
+#df = ECCO_FlowFields.init_global_randn(np,𝐷)
+df = ECCO_FlowFields.init_from_file(np)
 
-p=dirname(pathof(IndividualDisplacements))
-fil=joinpath(p,"../examples/worldwide/global_ocean_circulation.csv")
-df=DataFrame(CSV.File(fil))
-
-𝐼=Individuals(𝑃,df.x[1:np],df.y[1:np],df.f[1:np])
+𝐼=Individuals(𝑃,df.x,df.y,df.f,(𝐷=𝐷,))
 fieldnames(typeof(𝐼))
 
 #nb # %% {"slideshow": {"slide_type": "subslide"}, "cell_type": "markdown"}
@@ -82,7 +72,7 @@ fieldnames(typeof(𝐼))
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐷.🔄(𝐼.𝑃,𝐷,t_ϵ)
-    reset_📌!(𝐼,𝐷.frac,📌ini)
+    ECCO_FlowFields.reset_📌!(𝐼,𝐷.frac,📌ini)
     ∫!(𝐼)
 end
 
@@ -92,7 +82,7 @@ end
 
 [step!(𝐼) for y=1:1, m=1:1]
 
-add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC);
+add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC)
 
 #nb # %% {"slideshow": {"slide_type": "slide"}, "cell_type": "markdown"}
 # ## 3.4 Compute summary statistics
