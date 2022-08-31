@@ -79,6 +79,8 @@ begin
 		nm=12 #number of months
 	end
 
+	OceanStateEstimation.get_ecco_velocity_if_needed()
+	
 	𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=k)
 	"Done with Setting Up FlowFields"
 end
