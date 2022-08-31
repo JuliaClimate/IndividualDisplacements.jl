@@ -33,14 +33,17 @@ begin
 	"Done with FlowFields"
 end
 
-# ╔═╡ f199f321-976a-4ccd-a003-140211aa67fe
+# ╔═╡ c21d725b-7adf-4918-bddd-39f225ea9858
 begin
 	nf=100; lo=(-160.0,-150.0); la=(30.0,40.0); level=2.5;
 	df=OCCA_FlowFields.initial_positions(𝐷.Γ, nf, lo, la, level)
-	
+	"Done with initial positions"
+end
+
+# ╔═╡ f199f321-976a-4ccd-a003-140211aa67fe
+begin	
 	𝐼=Individuals(𝑃,df.x,df.y,df.z,df.f,
 		(🔴=OCCA_FlowFields.custom🔴,🔧=OCCA_FlowFields.custom🔧, 𝐷=𝐷))
-
 	"Done with Individuals"
 end
 
@@ -1947,10 +1950,11 @@ version = "3.5.0+0"
 # ╟─68c92218-40d3-11ec-0397-1747ac61c311
 # ╟─16eab80b-325b-43bd-8bda-6b9ed27513a8
 # ╟─44346351-f249-4376-b002-8147755ed489
-# ╟─66c95828-227c-4db5-a6f1-3e3004a99785
-# ╟─f199f321-976a-4ccd-a003-140211aa67fe
+# ╠═66c95828-227c-4db5-a6f1-3e3004a99785
+# ╠═c21d725b-7adf-4918-bddd-39f225ea9858
+# ╠═f199f321-976a-4ccd-a003-140211aa67fe
 # ╟─00464caa-fab2-4fd2-b39b-177e505d6d89
-# ╟─938fdaa8-357d-477e-8fa2-e6da53806242
+# ╠═938fdaa8-357d-477e-8fa2-e6da53806242
 # ╟─09d31a7b-f411-429f-b42b-4c5cd0e5a420
 # ╟─8e371f54-d7f7-4f59-a2e1-9f673486f1fa
 # ╟─a6f4b5a0-7818-41a6-a4e5-30d80a727625
