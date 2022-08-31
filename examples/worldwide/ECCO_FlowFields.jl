@@ -222,13 +222,9 @@ function read_velocities(γ::gcmgrid,t::Int,pth::String)
 end
 
 """
-    global_ocean_circulation(;k=10,ny=2)
+    global_ocean_circulation(;k=1)
 
 Set up Global Ocean particle simulation in 2D with seasonally varying flow field.
-
-```
-𝑃,𝐷=global_ocean_circulation(k=10,ny=2);
-```
 """
 function global_ocean_circulation(;k=1)
 
