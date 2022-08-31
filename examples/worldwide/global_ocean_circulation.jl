@@ -79,6 +79,8 @@ begin
 		nm=12 #number of months
 	end
 
+	OceanStateEstimation.get_ecco_velocity_if_needed()
+	
 	𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=k)
 	"Done with Setting Up FlowFields"
 end
@@ -148,20 +150,19 @@ let
 	using DataFrames, Statistics
 	gdf = groupby(𝐼.🔴, :ID)
 	sgdf= combine(gdf,nrow,:lat => mean)
-	sgdf[rand(1:size(sgdf,1),4),:]
 end
 
 # ╔═╡ fc16b761-8b1f-41de-b4fe-7fa9987d6167
 𝐼.🔴
 
+# ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
+md"""## 4. Visualize Displacements"""
+
 # ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
-md"""## 4 Summary Statistics
+md"""## 5. Summary Statistics
 
 Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) to analyze the output (𝐼.🔴) of our simulation.
 """
-
-# ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-md"""## 5. Visualize Displacements"""
 
 # ╔═╡ de8dbb43-68bc-4fb2-b0c8-07100b8a97a0
 md"""## Appendix : Plotting Function"""
@@ -195,11 +196,12 @@ begin
 	## method use here
 
 """
-	globalmap(𝐼::Individuals,background::NamedTuple)
+	plot(𝐼::Individuals)
 
 Plot initial and final positions, superimposed on a globalmap of ocean depth log.
 """
-	function globalmap(𝐼::Individuals,𝐵::NamedTuple)
+	function plot(𝐼::Individuals)
+		𝐵=𝐼.𝐷.ODL
 	    xlims=extrema(𝐵.lon)
 	    ylims=extrema(𝐵.lat)
 	    plt=contourf(𝐵.lon,𝐵.lat,𝐵.fld,clims=𝐵.rng,c = :ice, 
@@ -216,7 +218,7 @@ Plot initial and final positions, superimposed on a globalmap of ocean depth log
 end
 
 # ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
-globalmap(𝐼,𝐼.𝐷.ODL)
+plot(𝐼)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1981,14 +1983,14 @@ version = "1.4.1+0"
 # ╠═f727992f-b72a-45bc-93f1-cc8daf89af0f
 # ╠═a3e45927-5d53-42be-b7b7-489d6e7a6fe5
 # ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
-# ╠═a2375720-f599-43b9-a7fb-af17956309b6
+# ╟─a2375720-f599-43b9-a7fb-af17956309b6
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
 # ╠═1044c5aa-1a56-45b6-a4c6-63d24eea878d
 # ╟─fc16b761-8b1f-41de-b4fe-7fa9987d6167
-# ╠═15077957-64d5-46a5-8a87-a76ad619cf38
-# ╠═6e43a2af-bf01-4f42-a4ba-1874a8cf4885
 # ╟─c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-# ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
+# ╠═b4841dc0-c257-45e0-8657-79121f2c9ce8
+# ╟─15077957-64d5-46a5-8a87-a76ad619cf38
+# ╠═6e43a2af-bf01-4f42-a4ba-1874a8cf4885
 # ╟─de8dbb43-68bc-4fb2-b0c8-07100b8a97a0
 # ╟─e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
 # ╟─00000000-0000-0000-0000-000000000001
