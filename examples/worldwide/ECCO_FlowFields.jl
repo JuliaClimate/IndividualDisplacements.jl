@@ -230,13 +230,9 @@ Set up Global Ocean particle simulation in 2D with seasonally varying flow field
 𝑃,𝐷=global_ocean_circulation(k=10,ny=2);
 ```
 """
-function global_ocean_circulation(;k=1,ny=2)
+function global_ocean_circulation(;k=1)
 
   OceanStateEstimation.get_ecco_velocity_if_needed()
-
-  #k=10 #choice of vertical level
-  #ny=2 #number of simulated years (20 for k>20)
-  r_reset = 0.01 #fraction of the particles reset per month (0.05 for k<=10)
 
   #read grid and set up connections between subdomains
   γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
@@ -252,6 +248,9 @@ function global_ocean_circulation(;k=1,ny=2)
   λ=ECCO_FlowFields.get_interp_coefficients(Γ)
   ODL=ECCO_FlowFields.OceanDepthLog(λ,Γ)
   
+  #(optional) fraction of the particles reset per month (e.g., 0.05 for k<=10)
+  r_reset = 0.01 
+
   #add parameters for use in reset!
   tmp=(frac=r_reset, Γ=Γ, ODL=ODL)
   𝐷=merge(𝐷,tmp)

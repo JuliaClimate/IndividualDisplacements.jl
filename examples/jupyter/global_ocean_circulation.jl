@@ -34,7 +34,7 @@ include(joinpath(p,"../examples/worldwide/ECCO_FlowFields.jl"))
 # - return FlowFields (𝑃) and ancillary variables etc (𝐷) 
 # - read & normalize velocities (𝐷.🔄)
 
-𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=1,ny=2);
+𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation();
 
 fieldnames(typeof(𝑃))
 

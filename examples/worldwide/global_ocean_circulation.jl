@@ -4,28 +4,34 @@
 using Markdown
 using InteractiveUtils
 
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
+
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
 	using IndividualDisplacements, Plots, PlutoUI
-	"done with loading packages"
-end
-
-# ╔═╡ 07e65622-3698-4dd8-b718-83588e116e58
-begin
 	using OceanStateEstimation, MITgcmTools
 	include("ECCO_FlowFields.jl")
-	𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=1,ny=2);
-	"Done with Grid and Velocity Files"
+	"Done with Loading Packages"
 end
 
 # ╔═╡ c9e9faa8-f5f0-479c-bc85-877ff7114883
 md"""# Global Climatology
 
-Advect particles with climatological monthly mean flow at selected depth level
-(e.g. `k=10` for 95 m) from a global ocean state estimate ([ECCO v4 r2](https://eccov4.readthedocs.io/en/latest/) ; see also <https://ecco-group.org>)
-which is here repeated for `ny` years. For additional documentation e.g. see :
-[1](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
-[2](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
+Simulate the displacement of a set of individuals (or particles) according to 
+climatological monthly mean flow at selected depth level
+(or in 3D). The flow fields are from a global ocean state estimate ([ECCO v4 r2](https://eccov4.readthedocs.io/en/latest/) ; see also <https://ecco-group.org>). It is here repeated for `ny` years to simulate trajectories. 
+
+For additional documentation see :
+[1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
+[2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 
@@ -36,33 +42,54 @@ which is here repeated for `ny` years. For additional documentation e.g. see :
 TableOfContents()
 
 # ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
-md"""## 1. Grid and Velocity Files"""
+begin
+	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="1"))
+	bind_ny = (@bind nytxt Select(["1/12","1","2"]))
+	bind_np = (@bind nptxt Select(["10","100","500"],default="100"))
+	md"""## 1. Simulation Parameters
+
+	The following parameters are used:
+
+	- k  = $(bind_k) = vertical level (for 2D; or 0 for 3D)
+	- ny = $(bind_ny) = similated period (1/12 = 1 month)
+	- np = $(bind_np) = number of individuals (100 by default)
+	"""
+end
 
 # ╔═╡ 94ca10ae-6a8a-4038-ace0-07d7d9026712
-md"""## 2. `FlowFields` Data Structure
+md"""## 2. Configure `FlowFields` 
 
-The following parameters are used:
+####
 
-- select vertical level (k=1 by default; k=0 for 3D)
-- select duration in years (ny=1, nm=1 by default)
-- read and process grid variables
-- return FlowFields (𝑃) and ancillary variables etc (𝐷) 
-- read & normalize velocities (𝐷.🔄)
+`global_ocean_circulation` reads in the global Ocean model grid and flow fields. It returns the `FlowFields` data structure `𝑃`. Ancillary variables are stored in NamedTuple `𝐷`.
+
+!!! note
+    The global grid is handled via `MeshArrays.jl` and monthly climatology fields accessed via `OceanStateEstimation.jl`.
 """
 
 # ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
 begin	
-	ny=1 #number of years
-	nm=1 #number of months
-	k=1 #vertical level (or 0 for 3D)
-	np=500 #number of particles
+	k=parse(Int,ktxt) #vertical level or 0
+	np=parse(Int,nptxt) #number of individuals
+	if nytxt=="1/12"
+		ny=1 #number of years
+		nm=1 #number of months
+	else
+		ny=parse(Int,nytxt) #number of years
+		nm=12 #number of months
+	end
+
+	𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=k)
+	"Done with Setting Up FlowFields"
 end
 
 # ╔═╡ f1215951-2eb2-490b-875a-91c1205b8f63
-md"""## 3. Main Computation Loop
+md"""## 3. Trajectory Computation
 
-### 3.1 initial particle positions randomly over Global Ocean
-### 3.2 initial integration from time 0 to 0.5 month
+### 3.1 Initialization
+
+- initialize individual positions (`init_from_file`)
+- initial integration from time 0 to 0.5 month
 """
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
@@ -73,27 +100,23 @@ begin
 	𝐼
 end
 
-# ╔═╡ 1495fda9-e46b-424e-922a-3b823f3fe200
-
-
-# ╔═╡ cc7cb4a8-86ea-42b0-bbb9-ca78469ad4ad
-df
-
 # ╔═╡ a3e45927-5d53-42be-b7b7-489d6e7a6fe5
 begin
 	𝑇=(0.0,𝐼.𝑃.𝑇[2])
 	∫!(𝐼,𝑇)
-	✔1="done"
+	✔1="Done with Initial Integration"
 end
 
 # ╔═╡ 6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
-md""" ### 3.2 Iteration function example
+md""" ### 3.2 Monthly Step Function
 
-In addition, `step!` is defined to provide additional flexibility around `∫!` :
+Since the Ocean circulation varies from month to month, the `𝐼.𝐷.🔄` function is used to update flow fields from one month to the next. 
 
-- `𝐼.𝐷.🔄(𝐼.𝑃,t_ϵ)` resets the velocity input streams to bracket t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2]) 
-- `reset_📌!(𝐼,📌)` randomly selects a fraction, `𝐼.𝐷.frac`, of the particles and resets their positions 𝐼.📌 to a random subset of 📌, before each integration period. Doing this tends to maintain homogeneous coverage of the Global Ocean by particles.
-- `∫!(𝐼)` then solves for the individual trajectories over one month, with updated velocity fields (𝐼.𝑃.u0 etc), and adds diagnostics to the DataFrame used to record variables along the trajectory (𝐼.🔴).
+Time variable flow fields are easily handled by defining a `step!` function that wraps around `∫!`. Here it does three things
+
+- `𝐼.𝐷.🔄` resets the velocity inputs (`𝐼.𝐷.u0` etc) to bracket time `t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])`
+- `reset_📌!` randomly selects a fraction of the individuals and resets their positions. This can be useful to maintain homogeneous coverage of the domain by the fleet of individuals.
+- `∫!(𝐼)` solves for the individual trajectories over one month (`𝐼.𝑃.𝑇`) with updated velocity fields (`𝐼.𝑃.u0` etc). It also adds diagnostics to the `DataFrame` used to record variables along the trajectory (`𝐼.🔴`).
 """
 
 # ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
@@ -105,14 +128,18 @@ function step!(𝐼::Individuals)
 end
 
 # ╔═╡ 7efadea7-4542-40cf-893a-40a75e9c52be
-md"""### 3.3 Iterate For `ny*12` Months"""
+md"""### 3.3 Monthly Simulation Loop
+
+!!! note
+    `add_lonlat!` derives geographic locations (longitude and latitude) from local grid coordinates (x, y, etc).
+"""
 
 # ╔═╡ 1044c5aa-1a56-45b6-a4c6-63d24eea878d
 begin
-	✔1
+	✔1	
 	[step!(𝐼) for y=1:ny, m=1:nm]
 	add_lonlat!(𝐼.🔴,𝐼.𝐷.XC,𝐼.𝐷.YC,𝑃.update_location!)
-	✔2="done"
+	✔2="Done with Main Computation"
 end
 
 # ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
@@ -124,45 +151,25 @@ let
 	sgdf[rand(1:size(sgdf,1),4),:]
 end
 
-# ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
-md"""## 3.4 Compute summary statistics
+# ╔═╡ fc16b761-8b1f-41de-b4fe-7fa9987d6167
+𝐼.🔴
 
-See [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) documentation for detail and additinal functionalities.
+# ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
+md"""## 4 Summary Statistics
+
+Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) to analyze the output (𝐼.🔴) of our simulation.
 """
 
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-md"""## 4. Plot Individual Displacements"""
+md"""## 5. Visualize Displacements"""
 
 # ╔═╡ de8dbb43-68bc-4fb2-b0c8-07100b8a97a0
-md"""## 5. Plotting Functions"""
-
-# ╔═╡ 4a7ba3ff-449a-44e1-ad10-1de15a6d31cc
-"""
-    globalmap(𝐼::Individuals,background::NamedTuple)
-
-Plot initial and final positions, superimposed on a globalmap of ocean depth log.
-"""
-function globalmap(𝐼::Individuals,𝐵::NamedTuple)
-    xlims=extrema(𝐵.lon)
-    ylims=extrema(𝐵.lat)
-    plt=contourf(𝐵.lon,𝐵.lat,𝐵.fld,clims=𝐵.rng,c = :ice, 
-    colorbar=false, xlims=xlims,ylims=ylims)
-
-    🔴_by_t = groupby(𝐼.🔴, :t)
-    lo=deepcopy(🔴_by_t[1].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-    scatter!(lo,🔴_by_t[1].lat,markersize=2.5,c=:red,leg=:none,marker = (:circle, stroke(0)))
-    lo=deepcopy(🔴_by_t[end].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-    scatter!(lo,🔴_by_t[end].lat,markersize=2.5,c=:yellow,leg=:none,marker = (:dot, stroke(0)))
-
-    return plt
-end
-
-# ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
-globalmap(𝐼,𝐼.𝐷.ODL)
+md"""## Appendix : Plotting Function"""
 
 # ╔═╡ e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
 begin
-
+	## alternate method 
+	
 	function p!(fig,x,y)
 		xlims=(0.,360.0)
 		lo=deepcopy(x); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
@@ -185,9 +192,31 @@ begin
 	#[p!(fig,gdf[i].lon,gdf[i].lat) for i in rand(collect(1:length(gdf)),500)]
 	#fig
 
-	"alternate plot method"
+	## method use here
 
+"""
+	globalmap(𝐼::Individuals,background::NamedTuple)
+
+Plot initial and final positions, superimposed on a globalmap of ocean depth log.
+"""
+	function globalmap(𝐼::Individuals,𝐵::NamedTuple)
+	    xlims=extrema(𝐵.lon)
+	    ylims=extrema(𝐵.lat)
+	    plt=contourf(𝐵.lon,𝐵.lat,𝐵.fld,clims=𝐵.rng,c = :ice, 
+	    colorbar=false, xlims=xlims,ylims=ylims)
+	
+	    🔴_by_t = groupby(𝐼.🔴, :t)
+	    lo=deepcopy(🔴_by_t[1].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
+	    scatter!(lo,🔴_by_t[1].lat,markersize=2.5,c=:red,leg=:none,marker = (:circle, stroke(0)))
+	    lo=deepcopy(🔴_by_t[end].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
+	    scatter!(lo,🔴_by_t[end].lat,markersize=2.5,c=:yellow,leg=:none,marker = (:dot, stroke(0)))
+	
+	    return plt
+	end
 end
+
+# ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
+globalmap(𝐼,𝐼.𝐷.ODL)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1943,27 +1972,24 @@ version = "1.4.1+0"
 
 # ╔═╡ Cell order:
 # ╟─c9e9faa8-f5f0-479c-bc85-877ff7114883
-# ╠═104ce9b0-3fd1-11ec-3eff-3b029552e3d9
+# ╟─104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 # ╟─171fa252-7a35-4d4a-a940-60de77327cf4
 # ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
-# ╠═07e65622-3698-4dd8-b718-83588e116e58
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
 # ╟─218b9beb-68f2-4498-a96d-08e0719b4cff
 # ╟─f1215951-2eb2-490b-875a-91c1205b8f63
 # ╠═f727992f-b72a-45bc-93f1-cc8daf89af0f
-# ╟─1495fda9-e46b-424e-922a-3b823f3fe200
-# ╟─cc7cb4a8-86ea-42b0-bbb9-ca78469ad4ad
 # ╠═a3e45927-5d53-42be-b7b7-489d6e7a6fe5
 # ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
 # ╠═a2375720-f599-43b9-a7fb-af17956309b6
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
-# ╟─1044c5aa-1a56-45b6-a4c6-63d24eea878d
-# ╟─15077957-64d5-46a5-8a87-a76ad619cf38
+# ╠═1044c5aa-1a56-45b6-a4c6-63d24eea878d
+# ╟─fc16b761-8b1f-41de-b4fe-7fa9987d6167
+# ╠═15077957-64d5-46a5-8a87-a76ad619cf38
 # ╠═6e43a2af-bf01-4f42-a4ba-1874a8cf4885
 # ╟─c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
 # ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
 # ╟─de8dbb43-68bc-4fb2-b0c8-07100b8a97a0
-# ╟─4a7ba3ff-449a-44e1-ad10-1de15a6d31cc
 # ╟─e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
