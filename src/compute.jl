@@ -94,10 +94,6 @@ function dxdt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray3D,tim) where T
     return du
 end
 
-function dxdt!(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray3D,tim) where T
-    [dxdt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
-end
-
 """
     dxdt!(du,u,p::𝐹_MeshArray2D,tim)
 
@@ -158,10 +154,6 @@ function dxdt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_MeshArray2D,tim) where T
     du[3]=0.0
     #
     return du
-end
-
-function dxdt!(du::Array{T,2},u::Array{T,2},𝑃::𝐹_MeshArray2D,tim) where T
-    [dxdt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
 end
 
 """
@@ -294,10 +286,6 @@ function dxdt!(du::Array{T,1},u::Array{T,1},𝑃::𝐹_Array2D,tim) where T
     return du
 end
 
-function dxdt!(du::Array{T,2},u::Array{T,2},𝑃::𝐹_Array2D,tim) where T
-    [dxdt!(du[i],u[i],𝑃,tim) for i=1:size(u,2)]
-end
-
 """
     dxy_dt_CyclicArray(du,u,𝑃::NamedTuple,tim)
 
@@ -336,14 +324,6 @@ function dxy_dt_CyclicArray(du::Array{T,2},u::Array{T,2},𝑃::NamedTuple,tim) w
     du[2,:]=[𝑃.v[i[ii],j[ii]] for ii in 1:np]
     return du
 end
-
-"""
-    dict_to_nt(tmp::Dict)
-
-Attempt to convert from Dict to NamedTuple
-"""
-dict_to_nt(tmp::Dict) = tmp=(; zip(Symbol.(keys(tmp)), values(tmp))...)
-dxdt!(du,u,𝑃::Dict,tim) = dxdt!(du,u,dict_to_nt(𝑃),tim)
 
 """
     dxy_dt_replay(du,u,p::DataFrame,t)

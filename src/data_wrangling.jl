@@ -175,9 +175,9 @@ Value of α at eachindex of the grid cell center nearest to `x,y`
 nearest_to_xy(α::Array,x,y) = [α[ Int(round(x[i] .+ 0.5)), Int(round(y[i] .+ 0.5)) ] for i in eachindex(x)]
 
 """
-    interp_to_lonlat
+    interp_to_lonlat(X::MeshArray,Γ::NamedTuple,lon,lat)
 
-Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps for plotting purposes).
+Use MeshArrays.Interpolate() to interpolate to arbitrary positions (e.g., a regular grid for plotting).
 
 # Extended help
 
@@ -191,6 +191,10 @@ lon=[i for i=20.:20.0:380., j=-70.:10.0:70.]
 lat=[j for i=20.:20.0:380., j=-70.:10.0:70.]
 tmp1=interp_to_lonlat(Γ.Depth,Γ,lon,lat)
 
+(f,i,j,w,_,_,_)=MeshArrays.InterpolationFactors(Γ,vec(lon),vec(lat))
+IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)
+tmp1=interp_to_lonlat(Γ.Depth,IntFac)
+    
 prod(isapprox(maximum(tmp1),5896.,atol=1.0))
 
 # output
@@ -203,6 +207,11 @@ function interp_to_lonlat(X::MeshArray,Γ::NamedTuple,lon,lat)
     return reshape(Interpolate(X,f,i,j,w),size(lon))
 end
 
+"""
+    interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
+
+Use MeshArrays.Interpolate() to interpolate to arbitrary positions (e.g., a regular grid for plotting).
+"""
 function interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
     @unpack f,i,j,w,lon,lat = IntFac
     return reshape(Interpolate(X,f,i,j,w),size(lon))
