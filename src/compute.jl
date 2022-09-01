@@ -17,12 +17,17 @@ fview(f::Array{Array{Float64,2},2},i::Int,j::Int) = view(f[i,j],:,:)
 Interpolate velocity from gridded fields (3D; with halos) to position `u`
 (`x,y,z,fIndex`) to compute the derivative of position v time  `du_dt`.
 
+# Extended help
+
 ```jldoctest; output = false
-using IndividualDisplacements, Statistics
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/three_dimensional_ocean.jl"))
-ref=[211. 34. -70.]
-prod(isapprox.([mean(𝐼.🔴.lon) mean(𝐼.🔴.lat) mean(𝐼.🔴.z)],ref,atol=50.0))
+using IndividualDisplacements
+u,v,w,pos,func=solid_body_rotation(format=:MeshArray)
+𝐹=FlowFields(u,u,v,v,0*w,1*w,[0,3*pi],func)
+𝐼=Individuals(𝐹,pos...)
+∫!(𝐼)
+
+ref=[6.16, 7.23, 1.29, 1.0] # hide
+prod(isapprox.(𝐼.📌,ref,atol=1.0)) # hide
 
 # output
 
@@ -99,12 +104,16 @@ end
 Interpolate velocity from gridded fields (2D; with halos) to position `u`
 (`x,y,fIndex`) to compute the derivative of position v time  `du_dt`.
 
+# Extended help
+
 ```jldoctest; output = false
-using IndividualDisplacements, Statistics
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/global_ocean_circulation.jl"))
-ref=[78. 88.]
-prod(isapprox.([mean(𝐼.🔴.x) mean(𝐼.🔴.y)],ref,atol=10.0))
+using IndividualDisplacements
+u,v,w,pos,func=random_flow_field(format=:MeshArray);
+𝐹=FlowFields(u,u,v,v,[0,1.0],func);
+𝐼=Individuals(𝐹,pos...);
+∫!(𝐼);
+
+isa(𝐼.📌,Vector)
 
 # output
 
@@ -161,12 +170,17 @@ end
 Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 (`x,y,z`) to compute the derivative of position v time  `du_dt`.
 
+# Extended help
+
 ```jldoctest; output = false
 using IndividualDisplacements
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/solid_body_rotation.jl"))
-ref=[7.767441577479032 9.513402495574852 0.7065855989421701]
-prod(isapprox.(𝐼.📌',ref,atol=1.0))
+u,v,w,pos=solid_body_rotation(format=:Array)
+𝐹=FlowFields(u,u,v,v,0*w,1*w,[0,3*pi])
+𝐼=Individuals(𝐹,pos...)
+∫!(𝐼)
+
+ref=[9.35, 7.93, 1.28] # hide
+prod(isapprox.(𝐼.📌,ref,atol=1.0)) # hide
 
 # output
 
@@ -230,12 +244,16 @@ end
 Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 (`x,y`) to compute the derivative of position v time  `du_dt`.
 
+# Extended help
+
 ```jldoctest; output = false
-using IndividualDisplacements, Statistics
-p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/particle_cloud.jl"))
-ref=[28.  22.]
-prod(isapprox.([median(𝐼.🔴.x) median(𝐼.🔴.y)],ref,atol=10.0))
+using IndividualDisplacements
+u,v,w,pos=random_flow_field(format=:Array);
+𝐹=FlowFields(u,u,v,v,[0,1.0]);
+𝐼=Individuals(𝐹,pos...);
+∫!(𝐼);
+
+isa(𝐼.📌,Vector)
 
 # output
 
@@ -286,15 +304,18 @@ end
 Nearest neighbor (?) velocity from gridded fields (2D; NO halos but
 not needed when CyclicArrays is used to extend valid indice ranges).
 
+# Extended help
+
 _notes:_ spatial interpolation & temporal interpolation are lacking
 
 ```jldoctest; output = false
-using IndividualDisplacements, Statistics
+using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/example_CyclicArray.jl"))
 (x,y)=cyclicarray_example()
-ref=[270. 243.]
-prod(isapprox.([mean(x) mean(y)],ref,atol=1.0))
+
+ref=[330.5 290.5]
+prod(isapprox.([x[end] y[end]],ref,atol=1.0))
 
 # output
 
@@ -330,8 +351,10 @@ dxdt!(du,u,𝑃::Dict,tim) = dxdt!(du,u,dict_to_nt(𝑃),tim)
 Interpolate velocity from MITgcm float_trajectories output and return
 position increment `du`.
 
+# Extended help
+
 ```jldoctest; output = false
-using IndividualDisplacements, Statistics
+using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
 include(joinpath(p,"../examples/jupyter/detailed_look.jl"))
 prod(isapprox.(sol[:,end],ref[:,end],atol=1.0))

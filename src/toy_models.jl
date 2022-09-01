@@ -7,7 +7,7 @@ Set up an idealized flow field which consists of
 plus a convergent term, plus a sinking term.
 
 ```
-u,v,w=solid_body_rotation(format=:MeshArray)
+u,v,w,func=solid_body_rotation(format=:MeshArray)
 ```
 """
 function solid_body_rotation(; np=12,nz=4,format=:Array)
@@ -34,10 +34,13 @@ function solid_body_rotation(; np=12,nz=4,format=:Array)
     #Vertical velocity component w    
     w=fill(-0.01,MeshArray(γ,γ.ioPrec,nz+1))
 
+    pos0=[np*1/3,np*1/3,nz*1/3]
+    func=(u -> MeshArrays.update_location_dpdo!(u,γ))
+
     if format==:Array
-        write(uu),write(vv),write(w)
+        write(uu),write(vv),write(w),pos0
     elseif format==:MeshArray
-        u,v,w
+        uu,vv,w,[pos0...,1.0],func
     end
 end
 
@@ -90,9 +93,14 @@ function random_flow_field(;component=:Rotational,np=12,nq=18,format=:Array)
 		error("non-recognized option")
 	end
 
+    pos0=[np*1/3,nq*1/3]
+    func=(u -> MeshArrays.update_location_dpdo!(u,γ))
+
     if format==:Array
-        tmp[1],tmp[2],tmp[3]
+        tmp[1],tmp[2],tmp[3],pos0
     elseif format==:MeshArray
-        read(tmp[1],γ),read(tmp[2],γ),read(tmp[3],γ)
+        tmp=γ.read.(tmp,Ref(MeshArray(γ,Float32)))
+        tmp[1],tmp[2],tmp[3],[pos0...,1.0],func
     end
+
 end
