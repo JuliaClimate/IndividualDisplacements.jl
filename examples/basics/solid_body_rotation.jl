@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.11
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -10,6 +10,9 @@ begin
 	import CairoMakie as Mkie
 	"done with loading packages"
 end
+
+# ╔═╡ abdcae13-40fe-495a-bf6c-dba5549c558a
+TableOfContents()
 
 # ╔═╡ 5c7e4e72-3f69-11ec-258b-6bcfdc7b1d65
 md"""# Simple Three Dimensional Flow Field
@@ -30,53 +33,19 @@ For additional documentation e.g. see :
 """
 
 # ╔═╡ aadd082a-3ed9-41b7-ba5e-7c5f77d59508
-TableOfContents()
-
-# ╔═╡ 011c89a7-f3d1-4cea-b71a-3d6f96a1801c
-begin
-function solid_body_rotation(np,nz)
-    Γ=simple_periodic_domain(np)
-    Γ = UnitGrid(Γ.XC.grid;option="full")
-    γ=Γ.XC.grid;
-    
-    #Solid-body rotation around central location ...
-    i=Int(np/2+1)
-    u=-(Γ.YG.-Γ.YG[1][i,i])
-    v=(Γ.XG.-Γ.XG[1][i,i])
-    
-    #... plus a convergent term to / from central location
-    d=-0.01
-    u=u+d*(Γ.XG.-Γ.XG[1][i,i])
-    v=v+d*(Γ.YG.-Γ.YG[1][i,i])
-    
-    #Replicate u,v in vertical dimension
-    uu=MeshArray(γ,γ.ioPrec,nz)
-    [uu[k]=u[1] for k=1:nz]
-    vv=MeshArray(γ,γ.ioPrec,nz)
-    [vv[k]=v[1] for k=1:nz]
-    
-    #Vertical velocity component w    
-    w=fill(-0.01,MeshArray(γ,γ.ioPrec,nz+1))
-    
-    return write(uu),write(vv),write(w)
-end
-	
 md"""## 1. Problem Configuration
 
 ### 1.1 Gridded Flow Fields
-
-**solid\_body\_rotation(np,nz)**
 
 Set up an idealized flow field which consists of 
 [rigid body rotation](https://en.wikipedia.org/wiki/Rigid_body), 
 plus a convergent term, plus a sinking term.
 """
-end
 
 # ╔═╡ 2200503c-605c-4dfd-878f-ffea2431f7ba
 begin
 	np,nz=16,4 #gridded domain size (horizontal and vertical)
-	u,v,w=solid_body_rotation(np,nz) #staggered velocity arrays
+	u,v,w=IndividualDisplacements.solid_body_rotation(24,16) #staggered velocity arrays
 	𝐹=FlowFields(u,u,v,v,0*w,1*w,[0,19.95*2*pi]); #FlowFields data structure
 	"Done with defining the flow fields."
 end
@@ -89,7 +58,7 @@ Here just one individual is initialized at [np*1/3,np*1/3,nz*1/3] in the three-d
 # ╔═╡ c60a48e0-6f51-44b0-bd6e-332e04d2d332
 begin
 	(x,y,z)=(np*1/3,np*1/3,nz*1/3)
-	𝐼=Individuals(𝐹,x,y,z,(∫=IndividualDisplacements.default_solver,))
+	𝐼=Individuals(𝐹,x,y,z)
 end
 
 # ╔═╡ 45762eb1-7404-4524-8d1d-788a70f8f5ef
@@ -208,7 +177,6 @@ begin
 	end
 end
 
-
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -221,7 +189,7 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 [compat]
 CairoMakie = "~0.8.13"
 DataFrames = "~1.3.4"
-IndividualDisplacements = "~0.3.9"
+IndividualDisplacements = "~0.3.11"
 MeshArrays = "~0.2.31"
 PlutoUI = "~0.7.39"
 """
@@ -662,9 +630,9 @@ version = "0.9.19"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
-git-tree-sha1 = "246621d23d1f43e3b9c368bf3b72b2331a27c286"
+git-tree-sha1 = "3399bbad4c9e9a2fd372a54d7b67b3c7121b6402"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.13.2"
+version = "0.13.3"
 
 [[deps.FiniteDiff]]
 deps = ["ArrayInterfaceCore", "LinearAlgebra", "Requires", "Setfield", "SparseArrays", "StaticArrays"]
@@ -872,9 +840,9 @@ version = "1.0.0"
 
 [[deps.IndividualDisplacements]]
 deps = ["Artifacts", "CFTime", "CSV", "CyclicArrays", "DataFrames", "Dates", "LazyArtifacts", "MeshArrays", "NetCDF", "OrdinaryDiffEq", "Random", "UnPack"]
-git-tree-sha1 = "025aa6e551a577d2ce282054502a16347c17b7f5"
+git-tree-sha1 = "ad6598a40ed20b6023778944c4cd0679c5c7732b"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.3.9"
+version = "0.3.11"
 
 [[deps.Inflate]]
 git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
@@ -1109,9 +1077,9 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[deps.LoopVectorization]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArrays", "CPUSummary", "ChainRulesCore", "CloseOpenIntervals", "DocStringExtensions", "ForwardDiff", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "SIMDDualNumbers", "SIMDTypes", "SLEEFPirates", "SnoopPrecompile", "SpecialFunctions", "Static", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "60613258cc56b6c7c909f3e960e8b3b4e86dc2f2"
+git-tree-sha1 = "6dd56fcc3bc7a4d01f9d66dcae76c4a0bc547c34"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.124"
+version = "0.12.125"
 
 [[deps.MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
@@ -1308,9 +1276,9 @@ version = "1.4.1"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["Adapt", "ArrayInterface", "ArrayInterfaceGPUArrays", "ArrayInterfaceStaticArrays", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SnoopPrecompile", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "4cf346be836dcafdfa8359fc0f593ad5860ba7cf"
+git-tree-sha1 = "1fad4b793276c7d9af0cee460a6761ca8cb632ac"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.24.4"
+version = "6.25.0"
 
 [[deps.PCRE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1447,9 +1415,9 @@ version = "1.0.0"
 
 [[deps.QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
-git-tree-sha1 = "78aadffb3efd2155af139781b8a8df1ef279ea39"
+git-tree-sha1 = "3c009334f45dfd546a16a57960a821a1a023d241"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.4.2"
+version = "2.5.0"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1943,11 +1911,11 @@ version = "3.5.0+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─abdcae13-40fe-495a-bf6c-dba5549c558a
 # ╟─5c7e4e72-3f69-11ec-258b-6bcfdc7b1d65
 # ╟─0fea38f6-2c9e-43c6-bfc1-267ff220a0cc
 # ╟─aadd082a-3ed9-41b7-ba5e-7c5f77d59508
-# ╟─011c89a7-f3d1-4cea-b71a-3d6f96a1801c
-# ╟─2200503c-605c-4dfd-878f-ffea2431f7ba
+# ╠═2200503c-605c-4dfd-878f-ffea2431f7ba
 # ╟─bde49eaf-3747-4edf-b712-3ee6f08ffe20
 # ╠═c60a48e0-6f51-44b0-bd6e-332e04d2d332
 # ╟─45762eb1-7404-4524-8d1d-788a70f8f5ef

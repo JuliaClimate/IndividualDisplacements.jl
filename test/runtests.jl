@@ -20,7 +20,7 @@ IndividualDisplacements.flt_example_download()
     𝐽=similar(𝐼)
     @test isa(𝐽,Individuals)
 
-    (U,V,Φ)=IndividualDisplacements.random_flow_field("Rotational Component")
+    (U,V,Φ)=IndividualDisplacements.random_flow_field()
     𝐺=convert_to_FlowFields(u,v,10.0)
     tmp2=nearest_to_xy(𝐺.u0,3.,3.,1.)
     @test isa(tmp2,Array)
