@@ -1,16 +1,16 @@
 
 """
-solid_body_rotation(np,nz)
+    vortex_flow_field(; np=12,nz=4,format=:Array)
 
 Set up an idealized flow field which consists of 
 [rigid body rotation](https://en.wikipedia.org/wiki/Rigid_body), 
 plus a convergent term, plus a sinking term.
 
 ```
-u,v,w=solid_body_rotation(12,4)
+u,v,w,func=vortex_flow_field(format=:MeshArray)
 ```
 """
-function solid_body_rotation(np,nz)
+function vortex_flow_field(; np=12,nz=4,format=:Array)
     Γ=simple_periodic_domain(np)
     Γ = UnitGrid(Γ.XC.grid;option="full")
     γ=Γ.XC.grid;
@@ -34,26 +34,33 @@ function solid_body_rotation(np,nz)
     #Vertical velocity component w    
     w=fill(-0.01,MeshArray(γ,γ.ioPrec,nz+1))
 
-    return write(uu),write(vv),write(w)
+    pos0=[np*1/3,np*1/3,nz*1/3]
+    func=(u -> MeshArrays.update_location_dpdo!(u,γ))
+
+    if format==:Array
+        write(uu),write(vv),write(w),pos0
+    elseif format==:MeshArray
+        uu,vv,w,[pos0...,1.0],func
+    end
 end
 
 """
-    random_flow_field(option::String;np=12,nq=18)
+    random_flow_field(;component=:Rotational,np=12,nq=18,format=:Array)
 
 Generate random flow fields on a grid of `np x nq` points for use in simple examples.
 
-The "Rotational Component" option is most similar to what is done 
+The `:Rotational` component option is most similar to what is done 
 in the standard example.
 
-The other option, "Divergent Component", generates a purely divergent flow field instead.
+The `:Divergent` component option generates a purely divergent flow field instead.
 
 ```
-(U,V,Φ)=random_flow_field("Rotational Component";np=2*nx,nq=nx)
+(U,V,Φ)=random_flow_field(component=:Rotational)
 F=convert_to_FlowFields(U,V,10.0)
 I=Individuals(F,x,y,fill(1,length(x)))
 ```
 """
-function random_flow_field(option::String;np=12,nq=18)
+function random_flow_field(;component=:Rotational,np=12,nq=18,format=:Array)
 
 	#define gridded domain
 	Γ=MeshArrays.simple_periodic_domain(np,nq)
@@ -68,13 +75,13 @@ function random_flow_field(option::String;np=12,nq=18)
     ϕ=MeshArrays.smooth(ϕ,3*Γ.DXC,3*Γ.DYC,Γ);
 
 	#derive flow field
-	if option=="Divergent Component"
+	if component==:Divergent
 		#For the convergent / scalar potential case, ϕ is interpreted as being 
 		#on center points -- hence the standard gradient function readily gives 
 		#what we need
 		(u,v)=MeshArrays.gradient(ϕ,Γ) 
 		tmp=(u[1],v[1],ϕ[1])
-	elseif option=="Rotational Component"
+	elseif component==:Rotational
 		#For the rotational / streamfunction case, ϕ is interpreted as being 
 		#on S/W corner points -- this is ok here since the grid is homegeneous, 
 		#and conveniently yields an adequate substitution u,v <- -v,u; but note
@@ -85,5 +92,15 @@ function random_flow_field(option::String;np=12,nq=18)
 	else
 		error("non-recognized option")
 	end
-	return tmp[1],tmp[2],tmp[3]
+
+    pos0=[np*1/3,nq*1/3]
+    func=(u -> MeshArrays.update_location_dpdo!(u,γ))
+
+    if format==:Array
+        tmp[1],tmp[2],tmp[3],pos0
+    elseif format==:MeshArray
+        tmp=γ.read.(tmp,Ref(MeshArray(γ,Float32)))
+        tmp[1],tmp[2],tmp[3],[pos0...,1.0],func
+    end
+
 end

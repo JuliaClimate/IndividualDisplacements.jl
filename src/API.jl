@@ -253,7 +253,12 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
 
     function 🔧(sol,𝐹::𝐹_Array3D,𝐷::NamedTuple;id=missing,𝑇=missing)
         df=postprocess_xy(sol,𝐹,𝐷,id=id,𝑇=𝑇)
-        z=sol[3,:]
+        if isa(sol,EnsembleSolution)
+            np=length(sol)
+            z=[[sol[i][1,3] for i in 1:np];[sol[3][1,end] for i in 1:np]]
+        else
+            z=sol[3,:]
+        end
         df.z=z[:]
         return df
     end
@@ -312,7 +317,12 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTup
 
     function 🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=missing)
         df=postprocess_MeshArray(sol,𝐹,𝐷,id=id,𝑇=𝑇)
-        z=[sol[1,i,j][1] for i in 1:size(sol,2), j in 1:size(sol,3)]
+        if isa(sol,EnsembleSolution)
+            np=length(sol)
+            z=[[sol[i][1,3] for i in 1:np];[sol[3][1,end] for i in 1:np]]
+        else
+            z=sol[3,:]
+        end
         df.z=z[:]
         return df
     end

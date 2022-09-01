@@ -13,9 +13,9 @@ To rerun an example yourself, the recommended method is to copy the correspondin
 
 Simulate an ensemble of displacements (and trajectories) in a simple 2D configuration. 
 
-The `convert_to_FlowFields` convenience function defines a simplified gridded domain that matches the velocity array size, adds a time range, and returns a `FlowFields`
-data structure `𝐹`. 
-All that is left to do at this stage is to define initial conditions, put them together with `𝐹` within the `Individuals` data structure `𝐼`, and call `∫!(𝐼)`.
+The [`FlowFields`](@ref) constructor readily wraps a flow field provided in the standard Array format, adds a time range, and returns a `FlowFields` data structure `𝐹`. 
+
+All that is left to do at this stage is to define initial positions for the individuals, put them together with `𝐹` into the [`Individuals`](@ref) data structure `𝐼`, and call `∫!(𝐼)`.
 
 Exercises include the non-periodic domain case, statistics made easy via `DataFrames.jl`, and replacing the flow field with your own.
 

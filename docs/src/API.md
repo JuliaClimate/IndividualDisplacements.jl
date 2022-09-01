@@ -15,11 +15,29 @@ Convenience functions to initialize a simulation and post-process the output are
 ```@docs
 postprocess_xy
 postprocess_MeshArray
+add_lonlat!
+```
+
+Basic geography support:
+
+```@docs
+gcdist
+diff
+stproj
+stproj_inv
 randn_lonlat
 interp_to_lonlat
 interp_to_xy
 nearest_to_xy
-gcdist
+```
+
+## Toy Problems
+
+These are used to demonstrate and test the package functionalities:
+
+```@docs
+random_flow_field
+vortex_flow_field
 ```
 
 ## Read External Files

@@ -27,13 +27,9 @@ using "exchanged" 𝐷.XC, 𝐷.YC via `add_lonlat!`
 function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missing, 𝑇=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
-
+    
     nd=length(size(sol))
     nt=size(sol,nd)
-    nf=size(sol,nd-1)
-    id=id*ones(1,size(sol,nd))
-    t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
     if isa(sol,EnsembleSolution)
         np=length(sol)
@@ -42,21 +38,20 @@ function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missin
         fIndex=[[sol[i][nd,end] for i in 1:np];[sol[i][nd,end] for i in 1:np]];
         t=[fill(𝑇[1],np);fill(𝑇[2],np)]
         id=[id[:,1];id[:,1]]
-    elseif (nd>2)
-        x=[sol[1,i,j][1] for i in 1:nf, j in 1:nt]
-        y=[sol[1,i,j][2] for i in 1:nf, j in 1:nt]
-        fIndex=[sol[1,i,j][end] for i in 1:nf, j in 1:nt]
     else
         x=sol[1,:]
         y=sol[2,:]
         fIndex=sol[end,:]
+        t=𝑇[1] .+ (𝑇[2]-𝑇[1]) * collect(0:nt-1) / (nt-1)
+        id=fill(id[1],nt)
     end
 
     𝑃.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
     
-    df = DataFrame(ID=Int.(id[:]), x=x[:], y=y[:], fid=Int.(fIndex[:]), t=t[:])
+    df = DataFrame(ID=id[:], x=x[:], y=y[:], fid=fIndex[:], t=t[:])
 
     return df
+#    return id,x,y,fIndex,t
 end
 
 """
@@ -129,16 +124,8 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
-    nf=size(sol,2)
-    nt=size(sol,3)
-
     isa(𝑃.u0,MeshArray) ? (nx,ny)=𝑃.u0.grid.ioSize[1:2] : (nx,ny)=size(𝑃.u0)[1:2]
     nd=length(size(sol))
-
-    id=id*ones(1,size(sol,nd))
-    t=[ceil(i/nf)-1 for i in 1:nt*nf]
-    #size(𝐷.XC,1)>1 ? fIndex=sol[3,:,:] : fIndex=fill(1.0,size(x))
-    t=𝑇[1] .+ (𝑇[2]-𝑇[1])/t[end].*t
 
     if isa(sol,EnsembleSolution)
         np=length(sol)
@@ -148,15 +135,15 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
             mod.([sol[i][2,end] for i in 1:np],Ref(ny))]
         t=[fill(𝑇[1],np);fill(𝑇[2],np)]
         id=[id[:,1];id[:,1]]
-    elseif (nd>2)
-        x=[mod(sol[1,i,j][1],nx) for i in 1:nf, j in 1:nt]
-        y=[mod(sol[1,i,j][2],ny) for i in 1:nf, j in 1:nt]
     else
+        nt=size(sol,nd)
         x=mod.(sol[1,:],Ref(nx))
         y=mod.(sol[2,:],Ref(ny))
+        t=𝑇[1] .+ (𝑇[2]-𝑇[1]) * collect(0:nt-1) / (nt-1)
+        id=fill(id[1],nt)
     end
 
-    return DataFrame(ID=Int.(id[:]), t=t[:], x=x[:], y=y[:])
+    return DataFrame(ID=id[:], t=t[:], x=x[:], y=y[:])
 end
 
 """
@@ -188,9 +175,11 @@ Value of α at eachindex of the grid cell center nearest to `x,y`
 nearest_to_xy(α::Array,x,y) = [α[ Int(round(x[i] .+ 0.5)), Int(round(y[i] .+ 0.5)) ] for i in eachindex(x)]
 
 """
-    interp_to_lonlat
+    interp_to_lonlat(X::MeshArray,Γ::NamedTuple,lon,lat)
 
-Use MeshArrays.Interpolate() to interpolate to e.g. a regular grid (e.g. maps for plotting purposes).
+Use MeshArrays.Interpolate() to interpolate to arbitrary positions (e.g., a regular grid for plotting).
+
+# Extended help
 
 ```jldoctest
 using IndividualDisplacements
@@ -202,6 +191,10 @@ lon=[i for i=20.:20.0:380., j=-70.:10.0:70.]
 lat=[j for i=20.:20.0:380., j=-70.:10.0:70.]
 tmp1=interp_to_lonlat(Γ.Depth,Γ,lon,lat)
 
+(f,i,j,w,_,_,_)=MeshArrays.InterpolationFactors(Γ,vec(lon),vec(lat))
+IntFac=(lon=lon,lat=lat,f=f,i=i,j=j,w=w)
+tmp1=interp_to_lonlat(Γ.Depth,IntFac)
+    
 prod(isapprox(maximum(tmp1),5896.,atol=1.0))
 
 # output
@@ -214,6 +207,11 @@ function interp_to_lonlat(X::MeshArray,Γ::NamedTuple,lon,lat)
     return reshape(Interpolate(X,f,i,j,w),size(lon))
 end
 
+"""
+    interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
+
+Use MeshArrays.Interpolate() to interpolate to arbitrary positions (e.g., a regular grid for plotting).
+"""
 function interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
     @unpack f,i,j,w,lon,lat = IntFac
     return reshape(Interpolate(X,f,i,j,w),size(lon))

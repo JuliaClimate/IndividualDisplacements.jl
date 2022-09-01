@@ -36,7 +36,7 @@ import IndividualDisplacements.DataFrames: DataFrame
 
 np,nz=16,4 #gridded domain size (horizontal and vertical)
 
-u,v,w=IndividualDisplacements.solid_body_rotation(np,nz) #staggered velocity arrays
+u,v,w=vortex_flow_field(np=np,nz=nz) #staggered velocity arrays
 
 𝐹=FlowFields(u,u,v,v,0*w,1*w,[0,19.95*2*pi]); #FlowFields data structure
 
