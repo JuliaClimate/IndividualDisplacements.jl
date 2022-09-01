@@ -45,7 +45,7 @@ plus a convergent term, plus a sinking term.
 # ╔═╡ 2200503c-605c-4dfd-878f-ffea2431f7ba
 begin
 	np,nz=16,4 #gridded domain size (horizontal and vertical)
-	u,v,w=IndividualDisplacements.solid_body_rotation(24,16) #staggered velocity arrays
+	u,v,w=IndividualDisplacements.vortex_flow_field(24,16) #staggered velocity arrays
 	𝐹=FlowFields(u,u,v,v,0*w,1*w,[0,19.95*2*pi]); #FlowFields data structure
 	"Done with defining the flow fields."
 end
@@ -167,7 +167,7 @@ begin
 		tt=1:p:nt
 		tt=tt.+(nt-maximum(tt))
 	
-		fil=joinpath(tempdir(),"solid_body_rotation.mp4")
+		fil=joinpath(tempdir(),"vortex_flow_field.mp4")
 		Mkie.record(f,fil, tt; framerate = 20) do t
 			time[] = t
 		end

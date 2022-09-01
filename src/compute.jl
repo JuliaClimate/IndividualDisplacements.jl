@@ -21,7 +21,7 @@ Interpolate velocity from gridded fields (3D; with halos) to position `u`
 
 ```jldoctest; output = false
 using IndividualDisplacements
-u,v,w,pos,func=solid_body_rotation(format=:MeshArray)
+u,v,w,pos,func=vortex_flow_field(format=:MeshArray)
 𝐹=FlowFields(u,u,v,v,0*w,1*w,[0,3*pi],func)
 𝐼=Individuals(𝐹,pos...)
 ∫!(𝐼)
@@ -166,7 +166,7 @@ Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 
 ```jldoctest; output = false
 using IndividualDisplacements
-u,v,w,pos=solid_body_rotation(format=:Array)
+u,v,w,pos=vortex_flow_field(format=:Array)
 𝐹=FlowFields(u,u,v,v,0*w,1*w,[0,3*pi])
 𝐼=Individuals(𝐹,pos...)
 ∫!(𝐼)
