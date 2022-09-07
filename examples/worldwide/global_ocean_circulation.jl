@@ -18,7 +18,10 @@ end
 begin
 	using IndividualDisplacements, Plots, PlutoUI
 	using OceanStateEstimation, MITgcmTools
-	include("ECCO_FlowFields.jl")
+
+	p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
+	f0=joinpath(p0,"worldwide","ECCO_FlowFields.jl")
+	include(f0)
 	"Done with Loading Packages"
 end
 
