@@ -38,7 +38,7 @@ individual displacement and trajectory computations.
 """
 
 # ╔═╡ a2c57844-080e-4598-bef5-4d5dfb740a63
-begin
+function SimpleFlowFields()
 	nx=16
 	dx= π/nx
 	XC = dx*(collect(1:2*nx) .- 0.5)
@@ -49,7 +49,8 @@ begin
 	ϕ = fac*[f(x, y) for x in XC,y in YC] #streamfunction
 	uC = -fac*[sin(y) for x in XC,y in YC] #dphi/dy at cell center
 	vC = -fac*[cos(x) for x in XC,y in YC] #-dphi/dx at cell center
-	"done with defining flow field at grid cell centers"
+	
+	return uC, vC, ϕ
 end
 
 # ╔═╡ 96b1d76e-1563-4f90-b821-feb75baea771
@@ -61,6 +62,9 @@ These flowfields, for consecutive time steps, are then embedded in a `FlowFields
 
 # ╔═╡ aa86042f-3da6-4252-9493-9a713688b4b1
 begin
+	uC, vC, ϕ = SimpleFlowFields()
+	"done with defining flow field at grid cell centers"
+
 	u=0.5*(circshift(uC, (1,0))+uC) /dx #staggered u converted to grid point units (m/s -> 1/s)
 	v=0.5*(circshift(vC, (0,1))+vC) /dx #staggered v converted to grid point units (m/s -> 1/s)
 	𝑇=(0.,10.)
