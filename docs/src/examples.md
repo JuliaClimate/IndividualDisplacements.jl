@@ -50,7 +50,7 @@ The flow field is based on a data-constrained, realistic, ocean model. The probl
 - Interactivity : [notebook (html)](interactive_UI.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/worldwide/interactive_UI.jl)
 - Atmosphere : [notebook (html)](https://gaelforget.github.io/MITgcmTools.jl/dev/examples/HS94_particles.html) ➭ [notebook (code)](https://raw.githubusercontent.com/gaelforget/MITgcmTools.jl/master/examples/HS94_particles.jl)
 - MITgcm : [Particle cloud](../particle_cloud/index.html), [Detailed look](../detailed_look/index.html) 
-- Plotting : [Plots.jl](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/jupyter/recipes_plots.jl), [Makie.jl](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/jupyter/recipes_makie.jl), [PyPlot.jl](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/jupyter/recipes_pyplot.jl)
+- Plotting : [Plots.jl](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/more/recipes_plots.jl), [Makie.jl](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/more/recipes_makie.jl), [PyPlot.jl](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/more/recipes_pyplot.jl)
 
 ## Animations
 

@@ -59,8 +59,7 @@ Animate positions, according to time vector tt, and save movie to mp4 file.
 ```
 using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/recipes_Makie.jl"))
-include(joinpath(p,"../examples/jupyter/helper_functions.jl"))
+include(joinpath(p,"../examples/more/recipes_Makie.jl"))
 module ex3
     fil="../examples/worldwide/three_dimensional_ocean.jl"
     include(joinpath(Main.p,fil))

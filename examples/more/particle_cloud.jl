@@ -19,8 +19,8 @@ import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5
 import IndividualDisplacements.DataFrames: DataFrame
 
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/example123.jl"));
-#md include(joinpath(p,"../examples/jupyter/recipes_plots.jl"))
+include(joinpath(p,"../examples/more/example123.jl"));
+#md include(joinpath(p,"../examples/more/recipes_plots.jl"))
 
 # ## 2. Setup Problem
 
