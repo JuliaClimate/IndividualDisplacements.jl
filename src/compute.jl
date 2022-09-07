@@ -299,7 +299,7 @@ _notes:_ spatial interpolation & temporal interpolation are lacking
 ```jldoctest; output = false
 using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/example_CyclicArray.jl"))
+include(joinpath(p,"../examples/more/example_CyclicArray.jl"))
 (x,y)=cyclicarray_example()
 
 ref=[330.5 290.5]
@@ -336,7 +336,7 @@ position increment `du`.
 ```jldoctest; output = false
 using IndividualDisplacements
 p=dirname(pathof(IndividualDisplacements))
-include(joinpath(p,"../examples/jupyter/detailed_look.jl"))
+include(joinpath(p,"../examples/more/detailed_look.jl"))
 prod(isapprox.(sol[:,end],ref[:,end],atol=1.0))
 
 # output

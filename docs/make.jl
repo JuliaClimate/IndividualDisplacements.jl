@@ -8,7 +8,7 @@ OceanStateEstimation.get_occa_velocity_if_needed();
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")
-lit = joinpath(@__DIR__, "../examples/jupyter/")
+lit = joinpath(@__DIR__, "../examples/more/")
 notebooks = joinpath(src, "notebooks")
 
 execute = false # Set to true for executing notebooks and documenter!
