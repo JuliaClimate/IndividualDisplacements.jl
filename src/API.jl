@@ -349,7 +349,7 @@ Displace simulated individuals continuously through space over time period 𝑇 
 - After this, `∫!` is also equipped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consists in updating 📌 to be ready for continuing in a subsequent call to `∫!`.
 """
 function ∫!(𝐼::Individuals,𝑇::Tuple)
-    @unpack 🚄,📌,𝑃, 𝐷, 🔧, 🆔, 🔴, ∫ = 𝐼
+    (; 🚄,📌,𝑃, 𝐷, 🔧, 🆔, 🔴, ∫) = 𝐼
 
     prob = ODEProblem(🚄,📌, 𝑇 ,𝑃)
     sol = ∫(prob)
@@ -386,7 +386,7 @@ Call ∫!(𝐼::Individuals,𝐼.𝑃.𝑇)
 Base.size(A::Individuals) = size(A.📌)
 
 function Base.show(io::IO, 𝐼::Individuals) where {T}
-    @unpack 🚄,📌,𝑃, 𝐷, 𝑀, 🔧, 🆔, 🔴, ∫ = 𝐼
+    (; 🚄,📌,𝑃, 𝐷, 𝑀, 🔧, 🆔, 🔴, ∫) = 𝐼
     printstyled(io, "  📌 details     = ",color=:normal)
     printstyled(io, "$(size(📌)) $(typeof(𝐼).parameters[1])\n",color=:blue)
     printstyled(io, "  🔴 details     = ",color=:normal)
@@ -405,7 +405,7 @@ function Base.show(io::IO, 𝐼::Individuals) where {T}
 end
 
 function Base.similar(𝐼::Individuals)
-    @unpack 🚄,📌,𝑃, 𝐷, 𝑀, 🔧, 🆔, 🔴, ∫ = 𝐼
+    (; 🚄,📌,𝑃, 𝐷, 𝑀, 🔧, 🆔, 🔴, ∫) = 𝐼
     T = typeof(𝐼).parameters[1]
     N = ndims(𝐼.📌)
     return Individuals{T,N}(📌=similar(📌),🔴=similar(🔴),🆔=similar(🆔),

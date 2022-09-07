@@ -213,7 +213,7 @@ end
 Use MeshArrays.Interpolate() to interpolate to arbitrary positions (e.g., a regular grid for plotting).
 """
 function interp_to_lonlat(X::MeshArray,IntFac::NamedTuple)
-    @unpack f,i,j,w,lon,lat = IntFac
+    (; f,i,j,w,lon,lat) = IntFac
     return reshape(Interpolate(X,f,i,j,w),size(lon))
 end
 
