@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.11
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -38,9 +38,7 @@ individual displacement and trajectory computations.
 """
 
 # ╔═╡ a2c57844-080e-4598-bef5-4d5dfb740a63
-function SimpleFlowFields()
-	nx=16
-	dx= π/nx
+function SimpleFlowFields(nx,dx)
 	XC = dx*(collect(1:2*nx) .- 0.5)
 	YC = dx*(collect(1:nx) .- 0.5)
 	
@@ -62,7 +60,10 @@ These flowfields, for consecutive time steps, are then embedded in a `FlowFields
 
 # ╔═╡ aa86042f-3da6-4252-9493-9a713688b4b1
 begin
-	uC, vC, ϕ = SimpleFlowFields()
+	nx=16
+	dx= π/nx
+
+	uC, vC, ϕ = SimpleFlowFields(nx,dx)
 	"done with defining flow field at grid cell centers"
 
 	u=0.5*(circshift(uC, (1,0))+uC) /dx #staggered u converted to grid point units (m/s -> 1/s)
@@ -160,58 +161,16 @@ Instead of using the common `Array` type it can be advantageous to use [MeshArra
 𝐼=Individuals(𝐹,x,y,fill(1,length(x)))
 ```
 
-The `random_flow_field` function, found below, provides generates random flow fields that can be used instead of the analytical formulation used above. The "Rotational Component" option is most similar to what done in the original example.
-
-```
-(U,V,Φ)=random_flow_field("Rotational Component";np=2*nx,nq=nx)
-F=convert_to_FlowFields(U,V,10.0)
-I=Individuals(F,x,y,fill(1,length(x)))
-```
+The `random_flow_field` function generates random flow fields that can be used instead of the analytical formulation used above. The "Rotational Component" option is most similar to what done in the original example.
 
 The other option, "Divergent Component", generates a purely divergent flow field instead. Try it and should you notice a qualitatively different outcome in terms of trajectories.
 
 In general, user defined `uC, vC` fields may have both rotational and divergent components. [MeshArrays.jl](https://juliaclimate.github.io/MeshArrays.jl/dev/) provides an implementation of the [Helmholtz decomposition](https://en.wikipedia.org/wiki/Helmholtz_decomposition) to separate them out as sometimes needed.
 """
 
-# ╔═╡ ef8cbf8e-3e10-4615-9640-86cb8bc68288
-function random_flow_field(option::String;np=12,nq=18)
-
-	#define gridded domain
-	Γ=MeshArrays.simple_periodic_domain(np,nq)
-	γ=Γ.XC.grid
-	Γ=MeshArrays.UnitGrid(γ;option="full")
-
-    #initialize 2D field of random numbers
-    tmp1=randn(Float64,Tuple(γ.ioSize))
-    ϕ=γ.read(tmp1,MeshArrays.MeshArray(γ,Float64))
-
-    #apply smoother
-    ϕ=MeshArrays.smooth(ϕ,3*Γ.DXC,3*Γ.DYC,Γ);
-
-	#derive flow field
-	if option=="Divergent Component"
-		#For the convergent / scalar potential case, ϕ is interpreted as being 
-		#on center points -- hence the standard gradient function readily gives 
-		#what we need
-		(u,v)=MeshArrays.gradient(ϕ,Γ) 
-		tmp=(u[1],v[1],ϕ[1])
-	elseif option=="Rotational Component"
-		#For the rotational / streamfunction case, ϕ is interpreted as being 
-		#on S/W corner points -- this is ok here since the grid is homegeneous, 
-		#and conveniently yields an adequate substitution u,v <- -v,u; but note
-		#that doing the same with gradient() would shift indices inconsistenly
-		u=-(circshift(ϕ[1], (0,-1))-ϕ[1])
-		v=(circshift(ϕ[1], (-1,0))-ϕ[1])
-		tmp=(u,v,ϕ[1])
-	else
-		error("non-recognized option")
-	end
-	return tmp[1],tmp[2],tmp[3]
-end
-
 # ╔═╡ e927ba74-2c88-493e-b25b-910e23a63045
 begin
-	(U,V,Φ)=random_flow_field("Rotational Component";np=2*nx,nq=nx)
+	(U,V,Φ)=random_flow_field(component=:Rotational,np=2*nx,nq=nx)
 	F=convert_to_FlowFields(U,V,10.0)
 	I=Individuals(F,x,y,fill(1,length(x)))
 	∫!(I)
@@ -227,8 +186,8 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 CairoMakie = "~0.8.13"
-IndividualDisplacements = "~0.3.9"
-PlutoUI = "~0.7.39"
+IndividualDisplacements = "~0.3.12"
+PlutoUI = "~0.7.40"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -278,15 +237,15 @@ version = "0.2.0"
 
 [[deps.ArrayInterface]]
 deps = ["ArrayInterfaceCore", "Compat", "IfElse", "LinearAlgebra", "Static"]
-git-tree-sha1 = "0582b5976fc76523f77056e888e454f0f7732596"
+git-tree-sha1 = "d6173480145eb632d6571c148d94b9d3d773820e"
 uuid = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
-version = "6.0.22"
+version = "6.0.23"
 
 [[deps.ArrayInterfaceCore]]
 deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse"]
-git-tree-sha1 = "40debc9f72d0511e12d817c7ca06a721b6423ba3"
+git-tree-sha1 = "5bb0f8292405a516880a3809954cb832ae7a31c5"
 uuid = "30b0a656-2188-435a-8636-2ec0e6a096e2"
-version = "0.1.17"
+version = "0.1.20"
 
 [[deps.ArrayInterfaceGPUArrays]]
 deps = ["Adapt", "ArrayInterfaceCore", "GPUArraysCore", "LinearAlgebra"]
@@ -397,9 +356,9 @@ version = "1.0.0"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "80ca332f6dcb2508adba68f22f551adb2d00a624"
+git-tree-sha1 = "8a494fe0c4ae21047f28eb48ac968f0b8a6fcaa7"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.15.3"
+version = "1.15.4"
 
 [[deps.ChangesOfVariables]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Test"]
@@ -534,10 +493,10 @@ uuid = "b429d917-457f-4dbc-8f4c-0cc954292b1d"
 version = "0.4.0"
 
 [[deps.DiffEqBase]]
-deps = ["ArrayInterfaceCore", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "MuladdMacro", "NonlinearSolve", "Parameters", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "Static", "StaticArrays", "Statistics", "ZygoteRules"]
-git-tree-sha1 = "665832fd81cd961aad28fa7009d4aaa23a07db57"
+deps = ["ArrayInterfaceCore", "ChainRulesCore", "DataStructures", "Distributions", "DocStringExtensions", "FastBroadcast", "ForwardDiff", "FunctionWrappers", "FunctionWrappersWrappers", "LinearAlgebra", "Logging", "MuladdMacro", "NonlinearSolve", "Parameters", "Printf", "RecursiveArrayTools", "Reexport", "Requires", "SciMLBase", "Setfield", "SparseArrays", "Static", "StaticArrays", "Statistics", "Tricks", "ZygoteRules"]
+git-tree-sha1 = "41ee5c6e6bee98a4166777db30ab6c7023366ccb"
 uuid = "2b5f629d-d688-5b77-993f-72d75c75574e"
-version = "6.98.2"
+version = "6.100.1"
 
 [[deps.DiffResults]]
 deps = ["StaticArrays"]
@@ -569,9 +528,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]
-git-tree-sha1 = "334a5896c1534bb1aa7aa2a642d30ba7707357ef"
+git-tree-sha1 = "8579b5cdae93e55c0cff50fbb0c2d1220efd5beb"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.68"
+version = "0.25.70"
 
 [[deps.DocStringExtensions]]
 deps = ["LibGit2"]
@@ -667,9 +626,9 @@ version = "0.9.19"
 
 [[deps.FillArrays]]
 deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
-git-tree-sha1 = "246621d23d1f43e3b9c368bf3b72b2331a27c286"
+git-tree-sha1 = "87519eb762f85534445f5cda35be12e32759ee14"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.13.2"
+version = "0.13.4"
 
 [[deps.FiniteDiff]]
 deps = ["ArrayInterfaceCore", "LinearAlgebra", "Requires", "Setfield", "SparseArrays", "StaticArrays"]
@@ -807,9 +766,9 @@ version = "1.0.2"
 
 [[deps.HDF5_jll]]
 deps = ["Artifacts", "JLLWrappers", "LibCURL_jll", "Libdl", "OpenSSL_jll", "Pkg", "Zlib_jll"]
-git-tree-sha1 = "c003b31e2e818bc512b0ff99d7dce03b0c1359f5"
+git-tree-sha1 = "4cc2bb72df6ff40b055295fdef6d92955f9dede8"
 uuid = "0234f1f7-429e-5d53-9886-15a909be8d59"
-version = "1.12.2+1"
+version = "1.12.2+2"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
@@ -877,9 +836,9 @@ version = "1.0.0"
 
 [[deps.IndividualDisplacements]]
 deps = ["Artifacts", "CFTime", "CSV", "CyclicArrays", "DataFrames", "Dates", "LazyArtifacts", "MeshArrays", "NetCDF", "OrdinaryDiffEq", "Random", "UnPack"]
-git-tree-sha1 = "025aa6e551a577d2ce282054502a16347c17b7f5"
+git-tree-sha1 = "edc1bdfa3f71c6e31a62fc92b0daa6484d0e5096"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.3.9"
+version = "0.3.12"
 
 [[deps.Inflate]]
 git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
@@ -1099,9 +1058,9 @@ uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [[deps.LinearSolve]]
 deps = ["ArrayInterfaceCore", "DocStringExtensions", "FastLapackInterface", "GPUArraysCore", "IterativeSolvers", "KLU", "Krylov", "KrylovKit", "LinearAlgebra", "RecursiveFactorization", "Reexport", "SciMLBase", "Setfield", "SparseArrays", "SuiteSparse", "UnPack"]
-git-tree-sha1 = "af8c2f07401cb3c39ad05542adf053314ea37ec8"
+git-tree-sha1 = "c17007396b2ae56b8496f5a9857326dea0b7bb7b"
 uuid = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
-version = "1.25.0"
+version = "1.26.0"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
@@ -1114,9 +1073,9 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[deps.LoopVectorization]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArrays", "CPUSummary", "ChainRulesCore", "CloseOpenIntervals", "DocStringExtensions", "ForwardDiff", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "SIMDDualNumbers", "SIMDTypes", "SLEEFPirates", "SnoopPrecompile", "SpecialFunctions", "Static", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "60613258cc56b6c7c909f3e960e8b3b4e86dc2f2"
+git-tree-sha1 = "6dd56fcc3bc7a4d01f9d66dcae76c4a0bc547c34"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.124"
+version = "0.12.125"
 
 [[deps.MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
@@ -1313,9 +1272,9 @@ version = "1.4.1"
 
 [[deps.OrdinaryDiffEq]]
 deps = ["Adapt", "ArrayInterface", "ArrayInterfaceGPUArrays", "ArrayInterfaceStaticArrays", "DataStructures", "DiffEqBase", "DocStringExtensions", "ExponentialUtilities", "FastBroadcast", "FastClosures", "FiniteDiff", "ForwardDiff", "FunctionWrappersWrappers", "LinearAlgebra", "LinearSolve", "Logging", "LoopVectorization", "MacroTools", "MuladdMacro", "NLsolve", "NonlinearSolve", "Polyester", "PreallocationTools", "RecursiveArrayTools", "Reexport", "SciMLBase", "SnoopPrecompile", "SparseArrays", "SparseDiffTools", "StaticArrays", "UnPack"]
-git-tree-sha1 = "4cf346be836dcafdfa8359fc0f593ad5860ba7cf"
+git-tree-sha1 = "fce6fcee6b69bbeb9b6652b2b00adc7fbf9984bc"
 uuid = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
-version = "6.24.4"
+version = "6.26.2"
 
 [[deps.PCRE_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1389,15 +1348,15 @@ version = "1.3.0"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
-git-tree-sha1 = "8d1f54886b9037091edf146b517989fc4a09efec"
+git-tree-sha1 = "a602d7b0babfca89005da04d89223b867b55319f"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.39"
+version = "0.7.40"
 
 [[deps.Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Requires", "Static", "StrideArraysCore", "ThreadingUtilities"]
-git-tree-sha1 = "94e20822bd7427b1b1b843a3980003f5d5e8696b"
+git-tree-sha1 = "6ee5518f7baa05e154757a003bfb6936a174dbad"
 uuid = "f517fe37-dbe3-4b94-8317-1923a5111588"
-version = "0.6.14"
+version = "0.6.15"
 
 [[deps.PolyesterWeave]]
 deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]
@@ -1452,9 +1411,9 @@ version = "1.0.0"
 
 [[deps.QuadGK]]
 deps = ["DataStructures", "LinearAlgebra"]
-git-tree-sha1 = "78aadffb3efd2155af139781b8a8df1ef279ea39"
+git-tree-sha1 = "3c009334f45dfd546a16a57960a821a1a023d241"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "2.4.2"
+version = "2.5.0"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1555,9 +1514,9 @@ version = "0.3.3"
 
 [[deps.SciMLBase]]
 deps = ["ArrayInterfaceCore", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "RecipesBase", "RecursiveArrayTools", "StaticArraysCore", "Statistics", "Tables"]
-git-tree-sha1 = "adbb628d4116d9d87e41b6d678772c44877d442c"
+git-tree-sha1 = "e30c2f8bd32b2d1ba73f1a0044827645d2439fdc"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "1.52.0"
+version = "1.53.2"
 
 [[deps.Scratch]]
 deps = ["Dates"]
@@ -1965,6 +1924,5 @@ version = "3.5.0+0"
 # ╟─67c39f1e-8aa5-4fad-a0b8-a7fca1b17c36
 # ╟─feb874c4-80dd-444f-beb5-90b90647d44d
 # ╟─e927ba74-2c88-493e-b25b-910e23a63045
-# ╟─ef8cbf8e-3e10-4615-9640-86cb8bc68288
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
