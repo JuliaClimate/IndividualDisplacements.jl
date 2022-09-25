@@ -216,8 +216,8 @@ end
 Read velocity components `u,v` from files in `pth`for time `t`
 """
 function read_velocities(γ::gcmgrid,t::Int,pth::String)
-    u=read_nctiles("$pth"*"UVELMASS/UVELMASS","UVELMASS",γ,I=(:,:,:,t))
-    v=read_nctiles("$pth"*"VVELMASS/VVELMASS","VVELMASS",γ,I=(:,:,:,t))
+    u=read_nctiles(joinpath(pth,"UVELMASS/UVELMASS"),"UVELMASS",γ,I=(:,:,:,t))
+    v=read_nctiles(joinpath(pth,"VVELMASS/VVELMASS"),"VVELMASS",γ,I=(:,:,:,t))
     return u,v
 end
 
@@ -240,7 +240,7 @@ function global_ocean_circulation(;k=1)
   func=(u -> MeshArrays.update_location_llc!(u,Γ))
 
   #initialize u0,u1 etc
-  𝑃,𝐷=setup_FlowFields(k,Γ,func,ECCOclim_path)
+  𝑃,𝐷=setup_FlowFields(k,Γ,func,ScratchSpaces.ECCO)
   𝐷.🔄(𝑃,𝐷,0.0)
 
   #add background map for plotting

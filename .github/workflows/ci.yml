@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - master
+      - v0p4p0
     tags: '*'
 jobs:
   test:
