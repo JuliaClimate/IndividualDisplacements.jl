@@ -1,19 +1,14 @@
 ## User Guide
 
-!!! note
-    The [Examples](@ref) section illustrates the features documented here.
+As shown in the [Examples](@ref) section, the typical worflow is:
 
-### Standard Workflow
-
-As documented in the **examples**, the typical worflow is:
-
-1. set up `FlowFields` data structure
-1. set up `Individuals` with initial position `📌`
-1. displace `Individuals` (by	`∫🚄dt`) according to `FlowFields`
-1. post-process (`🔧`) and record diagnostics in `🔴`
+1. set up a `FlowFields` data structure (`𝐹`)
+1. set up `Individuals` (`𝐼`) with initial position `📌` and `𝐹`
+1. displace `𝐼.📌` by	`∫!(𝐼,𝑇)` following `𝐼.𝐹` over `𝑇` 
+1. post-process by `𝐼.🔧` and record information in `𝐼.🔴`
 1. go back to `step 2` and continue if needed
 
-The data structures for steps `1` and `2` are documented below. Both steps `3` and `4` normally take place as part of `∫!` which post-processes results, using 🔧, records them in 🔴, and updates individual positions 📌 at the end. As a [DataFrame](https://juliadata.github.io/DataFrames.jl/latest/), 🔴 is easily manipulated, plotted, or saved in step `4` (or after the fact).
+The data structures for steps `1` and `2` are documented below. Steps `3` and `4` normally take place as part of `∫!` which post-processes results, using 🔧, records them in 🔴, and finally updates the positions of individuals in 📌. Since 🔴 is a [DataFrame](https://juliadata.github.io/DataFrames.jl/latest/), it is easily manipulated, plotted, or saved in step `4` or after the fact.
 
 ## Overview
 
