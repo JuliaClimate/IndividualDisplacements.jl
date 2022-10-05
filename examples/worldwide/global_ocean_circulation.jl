@@ -46,9 +46,9 @@ TableOfContents()
 
 # ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
 begin
-	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="1"))
-	bind_ny = (@bind nytxt Select(["1/12","1","2"],default="1/12"))
-	bind_np = (@bind nptxt Select(["10","100","500"],default="10"))
+	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
+	bind_ny = (@bind nytxt Select(["1/12","1","2"],default="2"))
+	bind_np = (@bind nptxt Select(["10","100","500"],default="500"))
 	md"""## 1. Simulation Parameters
 
 	The following parameters are used:
@@ -100,7 +100,13 @@ md"""## 3. Trajectory Computation
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
 	df = ECCO_FlowFields.init_from_file(np)
-	𝐼=Individuals(𝑃,df.x,df.y,df.f,(𝐷=𝐷,))
+	if !(k==0)
+		𝐼=Individuals(𝑃,df.x,df.y,df.f,(𝐷=𝐷,))
+	else
+		df.z=10.0 .+ 0.0*df.x
+		𝐼=Individuals(𝑃,df.x,df.y,df.z,df.f,(𝐷=𝐷,))
+	end
+
 	📌_reference=deepcopy(𝐼.📌)
 	𝐼
 end
