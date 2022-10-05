@@ -28,14 +28,14 @@ function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missin
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
     
-    nd=length(size(sol))
+    nd=length(sol.u[1][1])
     nt=size(sol,nd)
 
     if isa(sol,EnsembleSolution)
         np=length(sol)
-        x=[[sol[i][1,1] for i in 1:np];[sol[i][1,end] for i in 1:np]]
-        y=[[sol[i][2,1] for i in 1:np];[sol[i][2,end] for i in 1:np]]
-        fIndex=[[sol[i][nd,end] for i in 1:np];[sol[i][nd,end] for i in 1:np]];
+        x=[[sol.u[i][1][1] for i in 1:np];[sol.u[i][end][1] for i in 1:np]]
+        y=[[sol.u[i][1][2] for i in 1:np];[sol.u[i][end][2] for i in 1:np]]
+        fIndex=[[sol.u[i][1][nd] for i in 1:np];[sol.u[i][end][nd] for i in 1:np]];
         t=[fill(𝑇[1],np);fill(𝑇[2],np)]
         id=[id[:,1];id[:,1]]
     else
