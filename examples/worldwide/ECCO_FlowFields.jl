@@ -2,6 +2,7 @@ module ECCO_FlowFields
 
 using IndividualDisplacements, OceanStateEstimation, MITgcmTools
 
+import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
 import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
@@ -353,7 +354,7 @@ function OceanDepthLog(λ,Γ)
     (lon=λ.lon[:,1],lat=λ.lat[1,:],fld=DL,rng=(1.5,5))
 end
 
-#OLD : custom∫(prob) = IndividualDisplacements.solve(prob,IndividualDisplacements.Tsit5(),reltol=1e-5,abstol=1e-5,save_everystep=false)
+custom∫(prob) = IndividualDisplacements.ensemble_solver(prob,solver=Tsit5(),reltol=1e-5,abstol=1e-5)
 
 custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
 lon=Float64[], lat=Float64[], z=Float64[], θ=Float64[], SSθ=Float64[],

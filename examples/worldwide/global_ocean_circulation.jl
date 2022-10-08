@@ -101,11 +101,12 @@ md"""## 3. Trajectory Computation
 begin
 	df = ECCO_FlowFields.init_from_file(np)
 	if !(k==0)
-		𝐼=Individuals(𝑃,df.x,df.y,df.f,(𝐷=𝐷,))
+		𝐼=Individuals(𝑃,df.x,df.y,df.f,(𝐷=𝐷,∫=ECCO_FlowFields.custom∫))
 	else
 		df.z=10.0 .+ 0.0*df.x
-		𝐼=Individuals(𝑃,df.x,df.y,df.z,df.f,
-		(𝐷=𝐷,🔴=deepcopy(ECCO_FlowFields.custom🔴),🔧=ECCO_FlowFields.custom🔧))
+		𝐼=Individuals(𝑃,df.x,df.y,df.z,df.f,(𝐷=𝐷,∫=ECCO_FlowFields.custom∫,
+			🔴=deepcopy(ECCO_FlowFields.custom🔴),
+			🔧=ECCO_FlowFields.custom🔧))
 	end
 
 	📌_reference=deepcopy(𝐼.📌)
