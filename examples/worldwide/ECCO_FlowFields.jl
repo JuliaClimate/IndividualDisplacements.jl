@@ -9,8 +9,9 @@ import IndividualDisplacements.CSV as CSV
 
 import OceanStateEstimation.ECCO_helpers.JLD2 as JLD2
 
-np=10000 #number of particles
-nn=100 #chunk size
+#note: the following should be passed by function arguments
+np=500 #number of particles
+nn=500 #chunk size
 backward_time=false
 
 """
@@ -350,6 +351,80 @@ function OceanDepthLog(λ,Γ)
     DL=transpose(log10.(DL))
     DL[findall((!isfinite).(DL))].=NaN
     (lon=λ.lon[:,1],lat=λ.lat[1,:],fld=DL,rng=(1.5,5))
+end
+
+#OLD : custom∫(prob) = IndividualDisplacements.solve(prob,IndividualDisplacements.Tsit5(),reltol=1e-5,abstol=1e-5,save_everystep=false)
+
+custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
+lon=Float64[], lat=Float64[], z=Float64[], θ=Float64[], SSθ=Float64[],
+S=Float64[], SSS=Float64[], year=Float64[], t=Float64[])
+
+function custom🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=missing)
+    df=postprocess_MeshArray(sol,𝐹,𝐷,id=id,𝑇=𝑇)
+    np=length(sol.u)
+    z=[[sol.u[i][1][3] for i in 1:np];[sol.u[i][end][3] for i in 1:np]]
+    df.z=z[:]
+    df.year=df.t ./86400/365
+    add_lonlat!(df,𝐷.XC,𝐷.YC)
+
+    #for k in 1:nr
+    # 𝐷.batch_T[:,k]=interp_to_xy(df,𝐷.θ1[:,k])./interp_to_xy(df,𝐷.exmsk[:,k])
+    #end
+
+    x=df[!,:x];
+    y=df[!,:y];
+    f=Int.(df[!,:fid]);
+    dx,dy=(x - floor.(x) .+ 0.5,y - floor.(y) .+ 0.5);
+    i_c = Int32.(floor.(x)) .+ 1;
+    j_c = Int32.(floor.(y)) .+ 1;
+    
+    nr=size(𝐷.exmsk,2)
+
+    #need time interpolation (df.t)
+    for k in 1:nr, jj in 1:length(i_c)
+        tmp0=(1.0-dx[jj])*(1.0-dy[jj])*𝐷.exmsk[f[jj],k][i_c[jj],j_c[jj]]+
+        (dx[jj])*(1.0-dy[jj])*𝐷.exmsk[f[jj],k][i_c[jj]+1,j_c[jj]]+
+        (1.0-dx[jj])*(dy[jj])*𝐷.exmsk[f[jj],k][i_c[jj],j_c[jj]+1]+
+        (dx[jj])*(dy[jj])*𝐷.exmsk[f[jj],k][i_c[jj]+1,j_c[jj]+1]
+        #
+        tmp1=(1.0-dx[jj])*(1.0-dy[jj])*𝐷.θ1[f[jj],k][i_c[jj],j_c[jj]]+
+        (dx[jj])*(1.0-dy[jj])*𝐷.θ1[f[jj],k][i_c[jj]+1,j_c[jj]]+
+        (1.0-dx[jj])*(dy[jj])*𝐷.θ1[f[jj],k][i_c[jj],j_c[jj]+1]+
+        (dx[jj])*(dy[jj])*𝐷.θ1[f[jj],k][i_c[jj]+1,j_c[jj]+1]
+        𝐷.batch_T[jj,k]=tmp1/tmp0
+        #
+        tmp1=(1.0-dx[jj])*(1.0-dy[jj])*𝐷.S1[f[jj],k][i_c[jj],j_c[jj]]+
+        (dx[jj])*(1.0-dy[jj])*𝐷.S1[f[jj],k][i_c[jj]+1,j_c[jj]]+
+        (1.0-dx[jj])*(dy[jj])*𝐷.S1[f[jj],k][i_c[jj],j_c[jj]+1]+
+        (dx[jj])*(dy[jj])*𝐷.S1[f[jj],k][i_c[jj]+1,j_c[jj]+1]
+        𝐷.batch_S[jj,k]=tmp1/tmp0
+    end
+
+    #need time interpolation (df.t)
+    for p=1:size(df,1)
+        #k=max(Int(floor(z[p])),1)
+        #local_T[p]=batch_T[p,k]
+        k1=floor(z[p]+0.5)
+        a2=(z[p]+0.5)-k1
+        k2=Int(min(max(k1+1,1),nr))
+        k1=Int(min(max(k1,1),nr))
+        𝐷.local_T[p]=(1-a2)*𝐷.batch_T[p,k1]+a2*𝐷.batch_T[p,k2]
+        𝐷.local_S[p]=(1-a2)*𝐷.batch_S[p,k1]+a2*𝐷.batch_S[p,k2]
+    end
+
+    df.SSθ=𝐷.batch_T[:,1]
+    df.θ=𝐷.local_T[:]
+    df.SSS=𝐷.batch_S[:,1]
+    df.S=𝐷.local_S[:]
+
+    ##println(unique(df.t[1:nn]))
+    ##println(unique(df.t[nn+1:end]))
+    #t=Int(round(0.5+df.t[end]/(𝑇[2]-𝑇[1])))
+    ##df.ID[1]==1 ? println(t) : nothing        
+    #𝐷.prof_T[df.ID[nn+1:end],:,t]=𝐷.batch_T[nn+1:end,:]
+    #𝐷.prof_S[df.ID[nn+1:end],:,t]=𝐷.batch_S[nn+1:end,:]
+
+    return df
 end
 
 end #module ECCO_FlowFields
