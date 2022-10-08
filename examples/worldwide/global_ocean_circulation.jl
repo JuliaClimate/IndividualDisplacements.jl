@@ -102,11 +102,13 @@ begin
 	df = ECCO_FlowFields.init_from_file(np)
 	if !(k==0)
 		𝐼=Individuals(𝑃,df.x,df.y,df.f,(𝐷=𝐷,∫=ECCO_FlowFields.custom∫))
+		my∫! = ∫!
 	else
 		df.z=10.0 .+ 0.0*df.x
 		𝐼=Individuals(𝑃,df.x,df.y,df.z,df.f,(𝐷=𝐷,∫=ECCO_FlowFields.custom∫,
 			🔴=deepcopy(ECCO_FlowFields.custom🔴),
 			🔧=ECCO_FlowFields.custom🔧))
+		my∫! = ECCO_FlowFields.custom∫!
 	end
 
 	📌_reference=deepcopy(𝐼.📌)
@@ -116,7 +118,7 @@ end
 # ╔═╡ a3e45927-5d53-42be-b7b7-489d6e7a6fe5
 begin
 	𝑇=(0.0,𝐼.𝑃.𝑇[2])
-	∫!(𝐼,𝑇)
+	my∫!(𝐼,𝑇)
 	✔1="Done with Initial Integration"
 end
 
@@ -137,7 +139,7 @@ function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐼.𝐷.🔄(𝐼.𝑃,𝐼.𝐷,t_ϵ)
     ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference)
-    ∫!(𝐼)
+    my∫!(𝐼)
 end
 
 # ╔═╡ 7efadea7-4542-40cf-893a-40a75e9c52be

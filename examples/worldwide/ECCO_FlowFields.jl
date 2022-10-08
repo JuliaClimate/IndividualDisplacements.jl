@@ -2,7 +2,8 @@ module ECCO_FlowFields
 
 using IndividualDisplacements, OceanStateEstimation, MITgcmTools
 
-import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5
+import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, ODEProblem
+import IndividualDisplacements: update_location!
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
 import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
@@ -361,6 +362,8 @@ lon=Float64[], lat=Float64[], z=Float64[], θ=Float64[], SSθ=Float64[],
 S=Float64[], SSS=Float64[], year=Float64[], t=Float64[])
 
 function custom🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=missing)
+    println("hi")
+
     df=postprocess_MeshArray(sol,𝐹,𝐷,id=id,𝑇=𝑇)
     np=length(sol.u)
     z=[[sol.u[i][1][3] for i in 1:np];[sol.u[i][end][3] for i in 1:np]]
@@ -427,5 +430,39 @@ function custom🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=
 
     return df
 end
+
+function custom∫!(𝐼::Individuals,𝑇)
+    (; 🚄,📌,𝑃,𝐷,🔧,🆔,🔴,∫) = 𝐼
+
+    vel=0*vec(📌)
+    [🚄(vel[i],📌[i],𝑃,𝑇[1]) for i in 1:length(vel)]
+    nd=ndims(vel[1])-1
+    vel=[sqrt(sum(vel[ii][1:nd].^2)) for ii in eachindex(vel)]
+    vel=[(ii,vel[ii]) for ii=1:length(vel)]
+    sort!(vel, by = x -> x[2])
+    ii=[vel[ii][1] for ii=1:length(vel)]
+    ni=Int(ceil(length(ii)/nn))
+    
+    tmp=deepcopy(custom🔴)
+    for i=1:ni
+        println("i="*string(i))
+        jj=ii[nn*(i-1) .+ collect(1:nn)]
+        prob = ODEProblem(🚄,permutedims(📌[jj]), 𝑇 ,𝑃)
+        sol = ∫(prob)
+        append!(tmp, 🔧(sol,𝑃,𝐷,id=🆔[jj], 𝑇=𝑇))
+        📌[jj] = deepcopy([sol[i].u[end] for i in 1:nn])
+        if isa(𝑃,𝐹_MeshArray3D)||isa(𝑃,𝐹_MeshArray2D)
+            [update_location!(i,𝑃) for i in 📌[jj]]
+        end
+    end
+    sort!(tmp, IndividualDisplacements.order(:t))
+
+    isempty(🔴) ? np =0 : np=length(🆔)
+    append!(🔴,tmp[np+1:end,:])
+#    isempty(🔴) ? append!(🔴,tmp) : 🔴[:,:]=tmp[:,:]
+    return true
+end
+
+custom∫!(x) = custom∫!(x,(x.𝑃.𝑇[1],x.𝑃.𝑇[2]))
 
 end #module ECCO_FlowFields
