@@ -105,7 +105,7 @@ begin
 		𝐼 = Individuals(𝑃,df.x,df.y,df.f,(𝐷=merge(𝐷,𝑆),∫=ECCO_FlowFields.custom∫))
 		my∫! = ∫!
 	else
-		df.z=10.0 .+ 0.0*df.x
+		sum(occursin.(names(df),"z"))==0 ? df.z=10.0 .+ 0.0*df.x : nothing
 		𝑆 = ECCO_FlowFields.init_storage(np,100,length(𝐷.Γ.RC),50)
 		𝐼 = Individuals(𝑃,df.x,df.y,df.z,df.f,
 			(𝐷=merge(𝐷,𝑆),∫=ECCO_FlowFields.custom∫,
@@ -221,7 +221,7 @@ begin
 
 Plot initial and final positions, superimposed on a globalmap of ocean depth log.
 """
-	function plot(𝐼::Individuals,🔴)
+	function myplot(𝐼::Individuals,🔴)
 		𝐵=𝐼.𝐷.ODL
 	    xlims=extrema(𝐵.lon)
 	    ylims=extrema(𝐵.lat)
@@ -239,7 +239,7 @@ Plot initial and final positions, superimposed on a globalmap of ocean depth log
 end
 
 # ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
-plot(𝐼)
+myplot(𝐼,𝐼.🔴)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
