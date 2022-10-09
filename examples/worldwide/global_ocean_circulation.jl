@@ -47,8 +47,8 @@ TableOfContents()
 # ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
 begin
 	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
-	bind_ny = (@bind nytxt Select(["1/12","1","2"],default="2"))
-	bind_np = (@bind nptxt Select(["10","100","500"],default="500"))
+	bind_ny = (@bind nytxt Select(["1/12","1","2"],default="3"))
+	bind_np = (@bind nptxt Select(["10","100","500"],default="10000"))
 	md"""## 1. Simulation Parameters
 
 	The following parameters are used:
@@ -107,7 +107,8 @@ begin
 	else
 		df.z=10.0 .+ 0.0*df.x
 		𝑆 = ECCO_FlowFields.init_storage(np,100,length(𝐷.Γ.RC),50)
-		𝐼 = Individuals(𝑃,df.x,df.y,df.z,df.f,(𝐷=merge(𝐷,𝑆),∫=ECCO_FlowFields.custom∫,
+		𝐼 = Individuals(𝑃,df.x,df.y,df.z,df.f,
+			(𝐷=merge(𝐷,𝑆),∫=ECCO_FlowFields.custom∫,
 			🔴=deepcopy(ECCO_FlowFields.custom🔴),
 			🔧=ECCO_FlowFields.custom🔧))
 		my∫! = ECCO_FlowFields.custom∫!
@@ -168,7 +169,12 @@ let
 end
 
 # ╔═╡ fc16b761-8b1f-41de-b4fe-7fa9987d6167
-𝐼.🔴
+begin
+#𝐼.🔴
+import IndividualDisplacements: CSV
+file_output=joinpath(tempdir(),"output_8_6.csv")
+CSV.write(file_output, Float32.(𝐼.🔴))
+end
 
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
 md"""## 4. Visualize Displacements"""
@@ -215,18 +221,18 @@ begin
 
 Plot initial and final positions, superimposed on a globalmap of ocean depth log.
 """
-	function plot(𝐼::Individuals)
+	function plot(𝐼::Individuals,🔴)
 		𝐵=𝐼.𝐷.ODL
 	    xlims=extrema(𝐵.lon)
 	    ylims=extrema(𝐵.lat)
-	    plt=contourf(𝐵.lon,𝐵.lat,𝐵.fld,clims=𝐵.rng,c = :ice, 
-	    colorbar=false, xlims=xlims,ylims=ylims)
+		plt=contour(𝐵.lon,𝐵.lat,𝐵.fld,xlims=[-180.0,-90.0],ylims=[20.0,70.0],color=:black)
+	    #plt=contourf(𝐵.lon,𝐵.lat,𝐵.fld,clims=𝐵.rng,c = :ice, colorbar=false, xlims=xlims,ylims=ylims)
 	
-	    🔴_by_t = groupby(𝐼.🔴, :t)
+	    🔴_by_t = groupby(🔴, :t)
 	    lo=deepcopy(🔴_by_t[1].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-	    scatter!(lo,🔴_by_t[1].lat,markersize=2.5,c=:red,leg=:none,marker = (:circle, stroke(0)))
+	    scatter!(lo,🔴_by_t[1].lat,markersize=0.5,c=:lightblue,leg=:none,marker = (:circle, stroke(0)))
 	    lo=deepcopy(🔴_by_t[end].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-	    scatter!(lo,🔴_by_t[end].lat,markersize=2.5,c=:yellow,leg=:none,marker = (:dot, stroke(0)))
+	    scatter!(lo,🔴_by_t[end].lat,markersize=2.0,c=:red,leg=:none,marker = (:dot, stroke(0)))
 	
 	    return plt
 	end
