@@ -13,7 +13,7 @@ import OceanStateEstimation.ECCO_helpers.JLD2 as JLD2
 
 #note: the following should be passed by function arguments
 np=500 #number of particles
-nn=500 #chunk size
+nn=100 #chunk size
 backward_time=false
 
 """
@@ -362,7 +362,6 @@ lon=Float64[], lat=Float64[], z=Float64[], θ=Float64[], SSθ=Float64[],
 S=Float64[], SSS=Float64[], year=Float64[], t=Float64[])
 
 function custom🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=missing)
-    println("hi")
 
     df=postprocess_MeshArray(sol,𝐹,𝐷,id=id,𝑇=𝑇)
     np=length(sol.u)
@@ -445,7 +444,7 @@ function custom∫!(𝐼::Individuals,𝑇)
     
     tmp=deepcopy(custom🔴)
     for i=1:ni
-        println("i="*string(i))
+#        println("i="*string(i))
         jj=ii[nn*(i-1) .+ collect(1:nn)]
         prob = ODEProblem(🚄,permutedims(📌[jj]), 𝑇 ,𝑃)
         sol = ∫(prob)
