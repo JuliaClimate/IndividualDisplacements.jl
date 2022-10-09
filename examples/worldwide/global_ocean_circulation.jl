@@ -138,7 +138,7 @@ Time variable flow fields are easily handled by defining a `step!` function that
 function step!(𝐼::Individuals)
     t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
     𝐼.𝐷.🔄(𝐼.𝑃,𝐼.𝐷,t_ϵ)
-    ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference)
+	𝐼,𝐼.𝐷.frac > 0 ? ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
     my∫!(𝐼)
 end
 

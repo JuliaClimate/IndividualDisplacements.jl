@@ -107,7 +107,7 @@ function setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
     #add parameters related to gridded domain decomposition
     𝐷 = merge(𝐷 , MeshArrays.NeighborTileIndices_cs(Γ))
 
-    frac=0.01 #fraction of the particles reset per month (0.05 for k<=10)
+    frac=0.0 #fraction of the particles reset per month (0.05 for k<=10)
     tmp=(frac=frac, Γ=Γ)
     𝐷=merge(𝐷,tmp)
 
@@ -420,12 +420,12 @@ function custom🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=
     df.SSS=𝐷.batch_S[:,1]
     df.S=𝐷.local_S[:]
 
-    ##println(unique(df.t[1:nn]))
-    ##println(unique(df.t[nn+1:end]))
-    #t=Int(round(0.5+df.t[end]/(𝑇[2]-𝑇[1])))
-    ##df.ID[1]==1 ? println(t) : nothing        
-    #𝐷.prof_T[df.ID[nn+1:end],:,t]=𝐷.batch_T[nn+1:end,:]
-    #𝐷.prof_S[df.ID[nn+1:end],:,t]=𝐷.batch_S[nn+1:end,:]
+    if 𝐷.frac==0.0
+        t=Int(round(0.5+df.t[end]/(𝑇[2]-𝑇[1])))
+        #df.ID[1]==1 ? println(t) : nothing        
+        𝐷.prof_T[df.ID[nn+1:end],:,t].=𝐷.batch_T[nn+1:end,:]
+        𝐷.prof_S[df.ID[nn+1:end],:,t].=𝐷.batch_S[nn+1:end,:]
+    end
 
     return df
 end
