@@ -84,7 +84,7 @@ begin
 
 	OceanStateEstimation.get_ecco_velocity_if_needed()
 	
-	𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(k=k)
+	𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(;k=k,backward_time=false)
 	"Done with Setting Up FlowFields"
 end
 
@@ -93,19 +93,21 @@ md"""## 3. Trajectory Computation
 
 ### 3.1 Initialization
 
-- initialize individual positions (`init_from_file`)
+- initialize individual positions (`init_positions`)
 - initial integration from time 0 to 0.5 month
 """
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
-	df = ECCO_FlowFields.init_from_file(np)
+	df = ECCO_FlowFields.init_positions(np,filename="global_ocean_circulation_runs/initial_8_6.csv")
 	if !(k==0)
-		𝐼=Individuals(𝑃,df.x,df.y,df.f,(𝐷=𝐷,∫=ECCO_FlowFields.custom∫))
+		𝑆 = ECCO_FlowFields.init_storage(np,nn,1,50)
+		𝐼 = Individuals(𝑃,df.x,df.y,df.f,(𝐷=merge(𝐷,𝑆),∫=ECCO_FlowFields.custom∫))
 		my∫! = ∫!
 	else
 		df.z=10.0 .+ 0.0*df.x
-		𝐼=Individuals(𝑃,df.x,df.y,df.z,df.f,(𝐷=𝐷,∫=ECCO_FlowFields.custom∫,
+		𝑆 = ECCO_FlowFields.init_storage(np,nn,length(𝐷.Γ.RC),50)
+		𝐼 = Individuals(𝑃,df.x,df.y,df.z,df.f,(𝐷=merge(𝐷,𝑆),∫=ECCO_FlowFields.custom∫,
 			🔴=deepcopy(ECCO_FlowFields.custom🔴),
 			🔧=ECCO_FlowFields.custom🔧))
 		my∫! = ECCO_FlowFields.custom∫!

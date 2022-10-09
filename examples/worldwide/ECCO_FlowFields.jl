@@ -11,21 +11,19 @@ import IndividualDisplacements.CSV as CSV
 
 import OceanStateEstimation.ECCO_helpers.JLD2 as JLD2
 
-#note: the following should be passed by function arguments
-np=500 #number of particles
-nn=100 #chunk size
-backward_time=false
-
 """
-    init_from_file(np ::Int)
+    init_positions(np ::Int)
 
 Randomly distribute `np` points over the Earth, within `𝑃.msk` 
 region, and return position in grid index space (`i,j,subdomain`).
 """
-function init_from_file(np ::Int)
-    #p=dirname(pathof(IndividualDisplacements))
-    #fil=joinpath(p,"../examples/worldwide/global_ocean_circulation.csv")
-    fil="global_ocean_circulation_runs/initial_8_6.csv"
+function init_positions(np ::Int; filename="global_ocean_circulation.csv")
+    if filename=="global_ocean_circulation.csv"
+        p=dirname(pathof(IndividualDisplacements))
+        fil=joinpath(p,"../examples/worldwide/global_ocean_circulation.csv")
+    else
+        fil=filename
+    end
     return DataFrame(CSV.File(fil))[1:np,:]
 end
 
@@ -61,6 +59,20 @@ function reset_📌!(𝐼::Individuals,frac::Number,📌::Array)
 end
 
 """
+    init_storage(np)
+
+- np=number of individuals to store
+- nn=number of individuals per chunk
+- nl=number of vertical levels to store
+- nt=number of time steps to store
+"""
+function init_storage(np,nn,nl,nt=2)
+    (   prof_T=NaN*zeros(np,nl,nt),batch_T=zeros(2*nn,nl),local_T=zeros(2*nn),
+        prof_S=NaN*zeros(np,nl,nt),batch_S=zeros(2*nn,nl),local_S=zeros(2*nn)
+        ) 
+end
+
+"""
     setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
 
 Define `FlowFields` data structure along with specified grid (`Γ` NamedTuple), 
@@ -70,7 +82,7 @@ and file location (`pth`).
 _Note: the initial implementation approximates month durations to 
 365 days / 12 months for simplicity and sets 𝑃.𝑇 to [-mon/2,mon/2]_
 """
-function setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
+function setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String,backward_time=false)
     XC=exchange(Γ.XC) #add 1 lon point at each edge
     YC=exchange(Γ.YC) #add 1 lat point at each edge
     iDXC=1. ./Γ.DXC
@@ -107,16 +119,8 @@ function setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
     #add parameters related to gridded domain decomposition
     𝐷 = merge(𝐷 , MeshArrays.NeighborTileIndices_cs(Γ))
 
-    frac=0.0 #fraction of the particles reset per month (0.05 for k<=10)
-    tmp=(frac=frac, Γ=Γ)
+    tmp=(Γ=Γ, backward_time=backward_time)
     𝐷=merge(𝐷,tmp)
-
-    k==0 ? nr=50 : nr=1
-    𝐷=merge(𝐷, (prof_T=NaN*zeros(np,nr,50),batch_T=zeros(2*nn,nr),local_T=zeros(2*nn)) )
-    𝐷=merge(𝐷, (prof_S=NaN*zeros(np,nr,50),batch_S=zeros(2*nn,nr),local_S=zeros(2*nn)) )
-
-    #initialize flow field etc arrays
-    #𝐷.🔄(𝑃,𝐷,0.0)
 
     return 𝑃,𝐷
 end
@@ -145,7 +149,7 @@ function update_FlowFields!(𝑃::𝐹_MeshArray2D,𝐷::NamedTuple,t::AbstractF
     m1==0 ? m1=12 : nothing
 
     velocity_factor=1.0
-    if backward_time
+    if 𝐷.backward_time
         velocity_factor=-1.0
         m0=13-m0
         m1=13-m1
@@ -217,7 +221,7 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::AbstractF
     m1==0 ? m1=12 : nothing
 
     velocity_factor=1.0
-    if backward_time
+    if 𝐷.backward_time
         velocity_factor=-1.0
         m0=13-m0
         m1=13-m1
@@ -306,7 +310,7 @@ end
 
 Set up Global Ocean particle simulation in 2D with seasonally varying flow field.
 """
-function global_ocean_circulation(;k=1)
+function global_ocean_circulation(; k=1, backward_time=false)
 
   OceanStateEstimation.get_ecco_velocity_if_needed()
 
@@ -321,7 +325,7 @@ function global_ocean_circulation(;k=1)
   func=(u -> MeshArrays.update_location_llc!(u,Γ))
 
   #initialize u0,u1 etc
-  𝑃,𝐷=setup_FlowFields(k,Γ,func,ScratchSpaces.ECCO)
+  𝑃,𝐷=setup_FlowFields(k,Γ,func,ScratchSpaces.ECCO,backward_time)
   𝐷.🔄(𝑃,𝐷,0.0)
 
   #add background map for plotting
@@ -329,14 +333,13 @@ function global_ocean_circulation(;k=1)
   ODL=ECCO_FlowFields.OceanDepthLog(λ,Γ)
   
   #(optional) fraction of the particles reset per month (e.g., 0.05 for k<=10)
-  r_reset = 0.01 
+  r_reset = 0.0
 
   #add parameters for use in reset!
-  tmp=(frac=r_reset, Γ=Γ, ODL=ODL)
+  tmp=(frac=r_reset, ODL=ODL)
   𝐷=merge(𝐷,tmp)
 
   return 𝑃,𝐷
-
 end
 
 function get_interp_coefficients(Γ)
@@ -422,6 +425,7 @@ function custom🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=
 
     if 𝐷.frac==0.0
         t=Int(round(0.5+df.t[end]/(𝑇[2]-𝑇[1])))
+        nn=Int(size(𝐷.batch_T,1)/2)
         #df.ID[1]==1 ? println(t) : nothing        
         𝐷.prof_T[df.ID[nn+1:end],:,t].=𝐷.batch_T[nn+1:end,:]
         𝐷.prof_S[df.ID[nn+1:end],:,t].=𝐷.batch_S[nn+1:end,:]
@@ -440,6 +444,7 @@ function custom∫!(𝐼::Individuals,𝑇)
     vel=[(ii,vel[ii]) for ii=1:length(vel)]
     sort!(vel, by = x -> x[2])
     ii=[vel[ii][1] for ii=1:length(vel)]
+    nn=Int(size(𝐷.batch_T,1)/2)
     ni=Int(ceil(length(ii)/nn))
     
     tmp=deepcopy(custom🔴)
