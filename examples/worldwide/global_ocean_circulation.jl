@@ -16,7 +16,7 @@ end
 
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
-	using IndividualDisplacements, Plots, PlutoUI
+	using IndividualDisplacements, GLMakie, PlutoUI
 	using OceanStateEstimation, MITgcmTools
 
 	p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
@@ -190,32 +190,6 @@ md"""## Appendix : Plotting Function"""
 
 # ╔═╡ e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
 begin
-	## alternate method 
-	
-	function p!(fig,x,y)
-		xlims=(0.,360.0)
-		lo=deepcopy(x); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-		scatter!(fig,lo,y,color=:red,markersize=1.5,markerstrokewidth=0)
-	end
-
-	function globalmap_b(𝐵::NamedTuple)
-		
-		fig=plot(;xlims=(0.,360.0),ylims=(-90,90),legend=:none)
-
-	    xlims=extrema(𝐵.lon)
-	    ylims=extrema(𝐵.lat)
-	    heatmap!(fig,𝐵.lon,𝐵.lat,𝐵.fld,clims=𝐵.rng,c = :ice, 
-	    colorbar=false, xlims=xlims,ylims=ylims)
-	
-		fig
-	end
-	
-	#fig=globalmap_b(DL)
-	#[p!(fig,gdf[i].lon,gdf[i].lat) for i in rand(collect(1:length(gdf)),500)]
-	#fig
-
-	## method use here
-
 """
 	plot(𝐼::Individuals)
 
@@ -223,18 +197,20 @@ Plot initial and final positions, superimposed on a globalmap of ocean depth log
 """
 	function myplot(𝐼::Individuals,🔴)
 		𝐵=𝐼.𝐷.ODL
-	    xlims=extrema(𝐵.lon)
-	    ylims=extrema(𝐵.lat)
-		plt=contour(𝐵.lon,𝐵.lat,𝐵.fld,xlims=[-180.0,-90.0],ylims=[20.0,70.0],color=:black)
-	    #plt=contourf(𝐵.lon,𝐵.lat,𝐵.fld,clims=𝐵.rng,c = :ice, colorbar=false, xlims=xlims,ylims=ylims)
+		xlims=extrema(𝐵.lon)
+		ylims=extrema(𝐵.lat)
+		fig=Figure()
+		ax=Axis(fig[1,1])
+		limits!(ax,-180.0,-90.0,20.0,70.0)
+		contour!(ax,𝐵.lon,𝐵.lat,permutedims(𝐵.fld),color=:black,levels=0:0.1:4)
 	
 	    🔴_by_t = groupby(🔴, :t)
 	    lo=deepcopy(🔴_by_t[1].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-	    scatter!(lo,🔴_by_t[1].lat,markersize=0.5,c=:lightblue,leg=:none,marker = (:circle, stroke(0)))
+	    scatter!(ax,lo,🔴_by_t[1].lat,markersize=2.0,color=:lightblue)
 	    lo=deepcopy(🔴_by_t[end].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-	    scatter!(lo,🔴_by_t[end].lat,markersize=2.0,c=:red,leg=:none,marker = (:dot, stroke(0)))
+	    scatter!(ax,lo,🔴_by_t[end].lat,markersize=4.0,color=:red)
 	
-	    return plt
+	    return fig
 	end
 end
 
