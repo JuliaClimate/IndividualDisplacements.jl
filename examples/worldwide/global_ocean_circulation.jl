@@ -170,10 +170,10 @@ end
 
 # ╔═╡ fc16b761-8b1f-41de-b4fe-7fa9987d6167
 begin
-#𝐼.🔴
-import IndividualDisplacements: CSV
-file_output=joinpath(tempdir(),"output_8_6.csv")
-CSV.write(file_output, Float32.(𝐼.🔴))
+	#𝐼.🔴
+	import IndividualDisplacements: CSV
+	file_output=joinpath(tempdir(),"output_8_6.csv")
+	CSV.write(file_output, Float32.(𝐼.🔴))
 end
 
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
@@ -204,18 +204,30 @@ Plot initial and final positions, superimposed on a globalmap of ocean depth log
 		limits!(ax,-180.0,-90.0,20.0,70.0)
 		contour!(ax,𝐵.lon,𝐵.lat,permutedims(𝐵.fld),color=:black,levels=0:0.1:4)
 	
-	    🔴_by_t = groupby(🔴, :t)
-	    lo=deepcopy(🔴_by_t[1].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-	    scatter!(ax,lo,🔴_by_t[1].lat,markersize=2.0,color=:lightblue)
-	    lo=deepcopy(🔴_by_t[end].lon); lo[findall(lo.<xlims[1])]=lo[findall(lo.<xlims[1])].+360
-	    scatter!(ax,lo,🔴_by_t[end].lat,markersize=4.0,color=:red)
+		np=maximum(𝐼.🔴.ID)
+		nt=Int(round(size(𝐼.🔴,1)/np))
+		ii=findall((!isnan).(𝐼.🔴[np*0 .+ collect(1:10000),:θ]))
+
+		tt=Observable(nt)
+		tmp1=groupby(🔴, :t)
+		lon_t1=tmp1[1][ii,:lon]
+		lat_t1=tmp1[1][ii,:lat]
+		lon_tt=@lift(tmp1[$tt][ii,:lon])
+		lat_tt=@lift(tmp1[$tt][ii,:lat])
+		
+	    scatter!(ax,lon_t1,lat_t1,markersize=2.0,color=:lightblue)
+	    scatter!(ax,lon_tt,lat_tt,markersize=4.0,color=:red)
 	
-	    return fig
+	    return fig,tt
 	end
 end
 
 # ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
-myplot(𝐼,𝐼.🔴)
+begin
+	fig,tt=myplot(𝐼,𝐼.🔴)
+	file_output=joinpath(tempdir(),"output_8_6.png")
+	save(file_output,fig)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
