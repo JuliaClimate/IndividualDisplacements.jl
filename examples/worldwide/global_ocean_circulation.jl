@@ -221,7 +221,7 @@ Plot initial and final positions, superimposed on a globalmap of ocean depth log
 		scatter!(ax,lon_t1,lat_t1,markersize=2.0,color=:lightblue)
 		scatter!(ax,lon_tt,lat_tt,markersize=4.0,color=:red)
 	
-		return jj
+		return fig,tt
 	end
 end
 
