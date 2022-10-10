@@ -8,8 +8,11 @@ import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
 import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
 import IndividualDisplacements.CSV as CSV
-
 import OceanStateEstimation.ECCO_helpers.JLD2 as JLD2
+
+export init_FlowFields, init_positions, init_storage
+export custom∫, custom🔧, custom🔴, custom∫!
+#export reset_📌!, init_z_if_needed
 
 """
     init_positions(np ::Int)
@@ -41,9 +44,6 @@ function init_global_randn(np ::Int , 𝐷::NamedTuple)
     xyf=permutedims([x[m[n]] y[m[n]] f[m[n]]])
     return DataFrame(x=xyf[1,:],y=xyf[2,:],f=xyf[3,:])
 end
-
-init_z_if_needed(df::DataFrame,z0=10.0) = 
-    sum(occursin.(names(df),"z"))==0 ? df.z=z0 .+ 0.0*df.x : nothing
 
 """
     reset_📌!(𝐼::Individuals,frac::Number,📌::Array)

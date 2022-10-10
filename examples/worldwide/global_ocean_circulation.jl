@@ -15,16 +15,14 @@ macro bind(def, element)
 end
 
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
-begin
+if !isdefined(Main,:ECCO_FlowFields)
 	using IndividualDisplacements, GLMakie, PlutoUI
 	using OceanStateEstimation, MITgcmTools
 
 	p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
 	include(joinpath(p0,"worldwide","ECCO_FlowFields.jl"))
 	include(joinpath(p0,"worldwide","global_ocean_plotting.jl"))
-	import Main.ECCO_FlowFields: init_FlowFields, init_positions, init_storage
-	import Main.ECCO_FlowFields: custom∫, custom🔧, custom🔴, custom∫!
-	#import Main.ECCO_FlowFields: reset_📌!, init_z_if_needed
+	using Main.ECCO_FlowFields
 	
 	output_path=joinpath(tempdir(),"global_ocean_tmp")
 	!isdir(output_path) ? mkdir(output_path) : nothing
@@ -58,7 +56,7 @@ begin
 	
 	file_IC = joinpath("global_ocean_circulation_runs","initial_8_6.csv")
 	file_base = basename(file_IC)[1:end-4]
-	backward_time = true
+	backward_time = false
 	backward_time ? file_base=file_base*"_◀◀" : file_base=file_base*"_▶▶"
 
 	md"""## 1. Simulation Parameters
@@ -112,12 +110,13 @@ md"""## 3. Trajectory Computation
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
 	df = init_positions(np,filename=file_IC)
+	#"z" in names(df) ? nothing : df.z=10.0 .+ 0.0*df.x
+
 	if !(k==0)
 		𝑆 = init_storage(np,100,1,50)
 		𝐼 = Individuals(𝑃,df.x,df.y,df.f,(𝐷=merge(𝐷,𝑆),∫=custom∫))
 		my∫! = ∫!
-	else
-		#init_z_if_needed(df,10.0)
+	else		
 		𝑆 = init_storage(np,100,length(𝐷.Γ.RC),50)
 		𝐼 = Individuals(𝑃,df.x,df.y,df.z,df.f,
 			(𝐷=merge(𝐷,𝑆),∫=custom∫,🔧=custom🔧,🔴=deepcopy(custom🔴)))
@@ -165,6 +164,9 @@ md"""### 3.3 Monthly Simulation Loop
 begin
 	✔1	
 	[step!(𝐼) for y=1:ny, m=1:nm]
+
+	"lon" in names(𝐼.🔴) ? nothing : add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC)
+	
 	✔2="Done with Main Computation"
 end
 

@@ -19,7 +19,11 @@ function plot(𝐼::Individuals,🔴)
 
     np=maximum(𝐼.🔴.ID)
     nt=Int(round(size(𝐼.🔴,1)/np))
-    ii=findall((!isnan).(𝐼.🔴[np*0 .+ collect(1:10000),:θ]))
+    if "θ" in names(𝐼.🔴)
+        ii=findall((!isnan).(𝐼.🔴[np*0 .+ collect(1:10000),:θ]))
+    else
+        ii=1:10000
+    end
     tmp1=𝐼.🔴[np*0 .+ ii,:lon].!==𝐼.🔴[np*(nt-1) .+ ii,:lon]
     tmp2=𝐼.🔴[np*0 .+ ii,:lat].!==𝐼.🔴[np*(nt-1) .+ ii,:lat]
     jj=ii[findall(tmp1.*tmp2)]
