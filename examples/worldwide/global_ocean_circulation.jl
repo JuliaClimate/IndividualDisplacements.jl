@@ -20,8 +20,11 @@ begin
 	using OceanStateEstimation, MITgcmTools
 
 	p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
-	f0=joinpath(p0,"worldwide","ECCO_FlowFields.jl")
-	include(f0)
+	include(joinpath(p0,"worldwide","ECCO_FlowFields.jl"))
+	include(joinpath(p0,"worldwide","global_ocean_plotting.jl"))
+
+	output_path=joinpath(tempdir(),"global_ocean_tmp")
+	!isdir(output_path) ? mkdir(output_path) : nothing
 	"Done with Loading Packages"
 end
 
@@ -84,7 +87,7 @@ begin
 
 	OceanStateEstimation.get_ecco_velocity_if_needed()
 	
-	𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(;k=k,backward_time=false)
+	𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(;k=k,backward_time=true)
 	"Done with Setting Up FlowFields"
 end
 
@@ -156,12 +159,11 @@ md"""### 3.3 Monthly Simulation Loop
 begin
 	✔1	
 	[step!(𝐼) for y=1:ny, m=1:nm]
-	add_lonlat!(𝐼.🔴,𝐼.𝐷.XC,𝐼.𝐷.YC,𝑃.update_location!)
 	✔2="Done with Main Computation"
 end
 
 # ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
-let
+if false
 	✔2
 	using DataFrames, Statistics
 	gdf = groupby(𝐼.🔴, :ID)
@@ -172,7 +174,7 @@ end
 begin
 	#𝐼.🔴
 	import IndividualDisplacements: CSV
-	file_output=joinpath(tempdir(),"output_8_6.csv")
+	file_output=joinpath(output_path,"output_8_6.csv")
 	CSV.write(file_output, Float32.(𝐼.🔴))
 end
 
@@ -189,50 +191,15 @@ Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.i
 md"""## Appendix : Plotting Function"""
 
 # ╔═╡ e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
-begin
-"""
-	plot(𝐼::Individuals)
-
-Plot initial and final positions, superimposed on a globalmap of ocean depth log.
-"""
-	function myplot(𝐼::Individuals,🔴)
-		𝐵=𝐼.𝐷.ODL
-		xlims=extrema(𝐵.lon)
-		ylims=extrema(𝐵.lat)
-		fig=Figure()
-		ax=Axis(fig[1,1])
-		limits!(ax,-180.0,-90.0,20.0,70.0)
-		contour!(ax,𝐵.lon,𝐵.lat,permutedims(𝐵.fld),color=:black,levels=0:0.1:4)
-	
-		np=maximum(𝐼.🔴.ID)
-		nt=Int(round(size(𝐼.🔴,1)/np))
-		ii=findall((!isnan).(𝐼.🔴[np*0 .+ collect(1:10000),:θ]))
-		tmp1=𝐼.🔴[np*0 .+ ii,:lon].!==𝐼.🔴[np*(nt-1) .+ ii,:lon]
-		tmp2=𝐼.🔴[np*0 .+ ii,:lat].!==𝐼.🔴[np*(nt-1) .+ ii,:lat]
-		jj=ii[findall(tmp1.*tmp2)]
-
-		tt=Observable(nt)
-		tmp1=groupby(🔴, :t)
-		lon_t1=tmp1[1][jj,:lon]
-		lat_t1=tmp1[1][jj,:lat]
-		lon_tt=@lift(tmp1[$tt][jj,:lon])
-		lat_tt=@lift(tmp1[$tt][jj,:lat])
-		
-		scatter!(ax,lon_t1,lat_t1,markersize=2.0,color=:lightblue)
-		scatter!(ax,lon_tt,lat_tt,markersize=4.0,color=:red)
-	
-		return fig,tt
-	end
-end
 
 # ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
 begin
-	fig,tt=myplot(𝐼,𝐼.🔴)
+	fig,tt=PlottingFunctions.plot(𝐼,𝐼.🔴)
 
-	file_output=joinpath(tempdir(),"output_8_6.png")
+	file_output=joinpath(output_path,"output_8_6.png")
 	save(file_output,fig)
 
-	file_output=joinpath(tempdir(),"output_8_6.mp4")
+	file_output=joinpath(output_path,"output_8_6.mp4")
 	record(fig, file_output, 1:38, framerate = 10) do t
 			tt[]=t
 	end
