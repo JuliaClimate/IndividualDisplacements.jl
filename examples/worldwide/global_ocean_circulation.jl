@@ -207,26 +207,35 @@ Plot initial and final positions, superimposed on a globalmap of ocean depth log
 		np=maximum(𝐼.🔴.ID)
 		nt=Int(round(size(𝐼.🔴,1)/np))
 		ii=findall((!isnan).(𝐼.🔴[np*0 .+ collect(1:10000),:θ]))
+		tmp1=𝐼.🔴[np*0 .+ ii,:lon].!==𝐼.🔴[np*(nt-1) .+ ii,:lon]
+		tmp2=𝐼.🔴[np*0 .+ ii,:lat].!==𝐼.🔴[np*(nt-1) .+ ii,:lat]
+		jj=ii[findall(tmp1.*tmp2)]
 
 		tt=Observable(nt)
 		tmp1=groupby(🔴, :t)
-		lon_t1=tmp1[1][ii,:lon]
-		lat_t1=tmp1[1][ii,:lat]
-		lon_tt=@lift(tmp1[$tt][ii,:lon])
-		lat_tt=@lift(tmp1[$tt][ii,:lat])
+		lon_t1=tmp1[1][jj,:lon]
+		lat_t1=tmp1[1][jj,:lat]
+		lon_tt=@lift(tmp1[$tt][jj,:lon])
+		lat_tt=@lift(tmp1[$tt][jj,:lat])
 		
-	    scatter!(ax,lon_t1,lat_t1,markersize=2.0,color=:lightblue)
-	    scatter!(ax,lon_tt,lat_tt,markersize=4.0,color=:red)
+		scatter!(ax,lon_t1,lat_t1,markersize=2.0,color=:lightblue)
+		scatter!(ax,lon_tt,lat_tt,markersize=4.0,color=:red)
 	
-	    return fig,tt
+		return jj
 	end
 end
 
 # ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
 begin
 	fig,tt=myplot(𝐼,𝐼.🔴)
+
 	file_output=joinpath(tempdir(),"output_8_6.png")
 	save(file_output,fig)
+
+	file_output=joinpath(tempdir(),"output_8_6.mp4")
+	record(fig, file_output, 1:38, framerate = 10) do t
+			tt[]=t
+	end
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
