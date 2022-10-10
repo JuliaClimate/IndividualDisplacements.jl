@@ -42,6 +42,9 @@ function init_global_randn(np ::Int , 𝐷::NamedTuple)
     return DataFrame(x=xyf[1,:],y=xyf[2,:],f=xyf[3,:])
 end
 
+init_z_if_needed(df::DataFrame,z0=10.0) = 
+    sum(occursin.(names(df),"z"))==0 ? df.z=z0 .+ 0.0*df.x : nothing
+
 """
     reset_📌!(𝐼::Individuals,frac::Number,📌::Array)
 
@@ -295,6 +298,21 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::AbstractF
 end
 
 """
+    update_FlowFields!(𝐼::Individuals)
+
+Update flow field arrays in 𝐼.𝑃, update 𝐼.𝑃.𝑇, and ancillary variables in 𝐼.𝐷
+such that 𝐼.𝑃.𝑇 includes time `t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])`.
+
+_Note: for now, it is assumed that (1) the time interval `dt` between 
+consecutive records is diff(𝑃.𝑇), (2) monthly climatologies are used 
+with a periodicity of 12 months, (3) vertical 𝑃.k is selected_
+"""
+function update_FlowFields!(𝐼::Individuals)
+    t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
+    𝐼.𝐷.🔄(𝐼.𝑃,𝐼.𝐷,t_ϵ)
+end
+
+"""
     read_velocities(γ::gcmgrid,t::Int,pth::String)
 
 Read velocity components `u,v` from files in `pth`for time `t`
@@ -306,11 +324,11 @@ function read_velocities(γ::gcmgrid,t::Int,pth::String)
 end
 
 """
-    global_ocean_circulation(;k=1)
+    init_FlowFields(;k=1)
 
 Set up Global Ocean particle simulation in 2D with seasonally varying flow field.
 """
-function global_ocean_circulation(; k=1, backward_time=false)
+function init_FlowFields(; k=1, backward_time=false)
 
   OceanStateEstimation.get_ecco_velocity_if_needed()
 
@@ -329,8 +347,8 @@ function global_ocean_circulation(; k=1, backward_time=false)
   𝐷.🔄(𝑃,𝐷,0.0)
 
   #add background map for plotting
-  λ=ECCO_FlowFields.get_interp_coefficients(Γ)
-  ODL=ECCO_FlowFields.OceanDepthLog(λ,Γ)
+  λ=get_interp_coefficients(Γ)
+  ODL=OceanDepthLog(λ,Γ)
   
   #(optional) fraction of the particles reset per month (e.g., 0.05 for k<=10)
   r_reset = 0.0

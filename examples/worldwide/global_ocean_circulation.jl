@@ -22,7 +22,10 @@ begin
 	p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
 	include(joinpath(p0,"worldwide","ECCO_FlowFields.jl"))
 	include(joinpath(p0,"worldwide","global_ocean_plotting.jl"))
-
+	import Main.ECCO_FlowFields: init_FlowFields, init_positions, init_storage
+	import Main.ECCO_FlowFields: custom∫, custom🔧, custom🔴, custom∫!
+	#import Main.ECCO_FlowFields: reset_📌!, init_z_if_needed
+	
 	output_path=joinpath(tempdir(),"global_ocean_tmp")
 	!isdir(output_path) ? mkdir(output_path) : nothing
 	"Done with Loading Packages"
@@ -52,6 +55,12 @@ begin
 	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
 	bind_ny = (@bind nytxt Select(["1/12","1","2"],default="3"))
 	bind_np = (@bind nptxt Select(["10","100","500"],default="10000"))
+	
+	file_IC = joinpath("global_ocean_circulation_runs","initial_8_6.csv")
+	file_base = basename(file_IC)[1:end-4]
+	backward_time = true
+	backward_time ? file_base=file_base*"_◀◀" : file_base=file_base*"_▶▶"
+
 	md"""## 1. Simulation Parameters
 
 	The following parameters are used:
@@ -87,7 +96,7 @@ begin
 
 	OceanStateEstimation.get_ecco_velocity_if_needed()
 	
-	𝑃,𝐷=ECCO_FlowFields.global_ocean_circulation(;k=k,backward_time=true)
+	𝑃,𝐷=init_FlowFields(k=k,backward_time=backward_time)
 	"Done with Setting Up FlowFields"
 end
 
@@ -102,19 +111,17 @@ md"""## 3. Trajectory Computation
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
-	df = ECCO_FlowFields.init_positions(np,filename="global_ocean_circulation_runs/initial_8_6.csv")
+	df = init_positions(np,filename=file_IC)
 	if !(k==0)
-		𝑆 = ECCO_FlowFields.init_storage(np,100,1,50)
-		𝐼 = Individuals(𝑃,df.x,df.y,df.f,(𝐷=merge(𝐷,𝑆),∫=ECCO_FlowFields.custom∫))
+		𝑆 = init_storage(np,100,1,50)
+		𝐼 = Individuals(𝑃,df.x,df.y,df.f,(𝐷=merge(𝐷,𝑆),∫=custom∫))
 		my∫! = ∫!
 	else
-		sum(occursin.(names(df),"z"))==0 ? df.z=10.0 .+ 0.0*df.x : nothing
-		𝑆 = ECCO_FlowFields.init_storage(np,100,length(𝐷.Γ.RC),50)
+		#init_z_if_needed(df,10.0)
+		𝑆 = init_storage(np,100,length(𝐷.Γ.RC),50)
 		𝐼 = Individuals(𝑃,df.x,df.y,df.z,df.f,
-			(𝐷=merge(𝐷,𝑆),∫=ECCO_FlowFields.custom∫,
-			🔴=deepcopy(ECCO_FlowFields.custom🔴),
-			🔧=ECCO_FlowFields.custom🔧))
-		my∫! = ECCO_FlowFields.custom∫!
+			(𝐷=merge(𝐷,𝑆),∫=custom∫,🔧=custom🔧,🔴=deepcopy(custom🔴)))
+		my∫! = custom∫!
 	end
 
 	📌_reference=deepcopy(𝐼.📌)
@@ -142,9 +149,8 @@ Time variable flow fields are easily handled by defining a `step!` function that
 
 # ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
 function step!(𝐼::Individuals)
-    t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])
-    𝐼.𝐷.🔄(𝐼.𝑃,𝐼.𝐷,t_ϵ)
-	𝐼,𝐼.𝐷.frac > 0 ? ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
+    𝐼.𝐷.🔄(𝐼)
+	#𝐼.𝐷.frac > 0 ? reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
     my∫!(𝐼)
 end
 
@@ -163,7 +169,7 @@ begin
 end
 
 # ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
-if false
+let
 	✔2
 	using DataFrames, Statistics
 	gdf = groupby(𝐼.🔴, :ID)
@@ -174,7 +180,7 @@ end
 begin
 	#𝐼.🔴
 	import IndividualDisplacements: CSV
-	file_output=joinpath(output_path,"output_8_6.csv")
+	file_output=joinpath(output_path,file_base*".csv")
 	CSV.write(file_output, Float32.(𝐼.🔴))
 end
 
@@ -196,10 +202,10 @@ md"""## Appendix : Plotting Function"""
 begin
 	fig,tt=PlottingFunctions.plot(𝐼,𝐼.🔴)
 
-	file_output=joinpath(output_path,"output_8_6.png")
+	file_output=joinpath(output_path,file_base*".png")
 	save(file_output,fig)
 
-	file_output=joinpath(output_path,"output_8_6.mp4")
+	file_output=joinpath(output_path,file_base*".mp4")
 	record(fig, file_output, 1:38, framerate = 10) do t
 			tt[]=t
 	end
