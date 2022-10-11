@@ -260,9 +260,14 @@ end
 
 function get_interp_coefficients(Γ)
     fil=joinpath(ScratchSpaces.ECCO,"interp_coeffs_halfdeg.jld2")
-    !isfile(fil) ? OceanStateEstimation.ECCOdiags_add("interp_coeffs") : nothing
-    λ=JLD2.load(fil)
-    λ=MeshArrays.Dict_to_NamedTuple(λ)
+    if !isfile(fil)
+        url="https://zenodo.org/record/5784905/files/interp_coeffs_halfdeg.jld2"
+        OceanStateEstimation.download(url,fil;timeout=60000.0)
+        #OceanStateEstimation.ECCOdiags_add("interp_coeffs") : nothing
+    else
+        λ=JLD2.load(fil)
+        λ=MeshArrays.Dict_to_NamedTuple(λ)
+    end
 end
 
 function OceanDepthLog(λ,Γ)
