@@ -319,7 +319,7 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTup
         df=postprocess_MeshArray(sol,𝐹,𝐷,id=id,𝑇=𝑇)
         if isa(sol,EnsembleSolution)
             np=length(sol)
-            z=[[sol[i][1,3] for i in 1:np];[sol[3][1,end] for i in 1:np]]
+            z=[[sol.u[i][1][3] for i in 1:np];[sol.u[i][end][3] for i in 1:np]]
         else
             z=sol[3,:]
         end
@@ -357,7 +357,7 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     tmp = 🔧(sol,𝑃,𝐷, id=🆔, 𝑇=𝑇)
 
     isempty(🔴) ? np =0 : np=length(🆔)
-    append!(🔴,tmp[np+1:end,:])
+    append!(🔴,tmp[np+1:end,:],promote=true)
 
     if isa(sol,EnsembleSolution)
         np=length(sol)
