@@ -259,8 +259,12 @@ function global_ocean_circulation(;k=1)
 end
 
 function get_interp_coefficients(Γ)
-    MeshArrays.GRID_LLC90_interp_download()
-    fil=joinpath(MeshArrays.GRID_LLC90,"interp_coeffs_halfdeg.jld2")
+    fil=joinpath(ScratchSpaces.ECCO,"interp_coeffs_halfdeg.jld2")
+    if !isfile(fil)
+        url="https://zenodo.org/record/5784905/files/interp_coeffs_halfdeg.jld2"
+        OceanStateEstimation.ScratchSpaces.Downloads.download(url,fil;timeout=60000.0)
+        #OceanStateEstimation.ECCOdiags_add("interp_coeffs") : nothing
+    end
     λ=JLD2.load(fil)
     λ=MeshArrays.Dict_to_NamedTuple(λ)
 end

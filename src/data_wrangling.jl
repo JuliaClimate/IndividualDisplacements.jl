@@ -28,17 +28,16 @@ function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missin
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
     
-    nd=length(size(sol))
-    nt=size(sol,nd)
-
     if isa(sol,EnsembleSolution)
+        nd=length(sol.u[1][1])
         np=length(sol)
-        x=[[sol[i][1,1] for i in 1:np];[sol[i][1,end] for i in 1:np]]
-        y=[[sol[i][2,1] for i in 1:np];[sol[i][2,end] for i in 1:np]]
-        fIndex=[[sol[i][nd,end] for i in 1:np];[sol[i][nd,end] for i in 1:np]];
+        x=[[sol.u[i][1][1] for i in 1:np];[sol.u[i][end][1] for i in 1:np]]
+        y=[[sol.u[i][1][2] for i in 1:np];[sol.u[i][end][2] for i in 1:np]]
+        fIndex=[[sol.u[i][1][nd] for i in 1:np];[sol.u[i][end][nd] for i in 1:np]];
         t=[fill(𝑇[1],np);fill(𝑇[2],np)]
         id=[id[:,1];id[:,1]]
     else
+        nt=length(sol.u)
         x=sol[1,:]
         y=sol[2,:]
         fIndex=sol[end,:]
@@ -125,9 +124,9 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
     ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
 
     isa(𝑃.u0,MeshArray) ? (nx,ny)=𝑃.u0.grid.ioSize[1:2] : (nx,ny)=size(𝑃.u0)[1:2]
-    nd=length(size(sol))
 
     if isa(sol,EnsembleSolution)
+        nd=length(sol.u[1][1])
         np=length(sol)
         x=[mod.([sol[i][1,1] for i in 1:np],Ref(nx));
             mod.([sol[i][1,end] for i in 1:np],Ref(nx))];
@@ -136,7 +135,7 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
         t=[fill(𝑇[1],np);fill(𝑇[2],np)]
         id=[id[:,1];id[:,1]]
     else
-        nt=size(sol,nd)
+        nt=length(sol.u)
         x=mod.(sol[1,:],Ref(nx))
         y=mod.(sol[2,:],Ref(ny))
         t=𝑇[1] .+ (𝑇[2]-𝑇[1]) * collect(0:nt-1) / (nt-1)
