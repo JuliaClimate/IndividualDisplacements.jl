@@ -1,11 +1,10 @@
 module OCCA_FlowFields
 
-using IndividualDisplacements, OceanStateEstimation
+using IndividualDisplacements, OceanStateEstimation, NetCDF
 
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
 import IndividualDisplacements.MeshArrays: MeshArray
-import IndividualDisplacements.NetCDF as NetCDF
 import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, remake
 import IndividualDisplacements.OrdinaryDiffEq: ODEProblem, EnsembleProblem
 
@@ -36,24 +35,24 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
    return tmp
    end
 
-   OceanStateEstimation.get_occa_velocity_if_needed();
+   OceanStateEstimation.get_occa_velocity_if_needed()
 
-   fileIn=OCCAclim_path*"DDuvel.0406clim.nc"
+   fileIn=joinpath(ScratchSpaces.OCCA,"DDuvel.0406clim.nc")
    u=s*read(rd(fileIn,"u",n),MeshArray(γ,Float32,n))
 
-   fileIn=OCCAclim_path*"DDvvel.0406clim.nc"
+   fileIn=joinpath(ScratchSpaces.OCCA,"DDvvel.0406clim.nc")
    v=s*read(rd(fileIn,"v",n),MeshArray(γ,Float32,n))
 
-   fileIn=OCCAclim_path*"DDwvel.0406clim.nc"
+   fileIn=joinpath(ScratchSpaces.OCCA,"DDwvel.0406clim.nc")
    w=s*rd(fileIn,"w",n)
    w=-cat(w,zeros(360, 160),dims=3)
    w[:,:,1] .=0.0
    w=read(w,MeshArray(γ,Float32,n+1))
 
-   fileIn=OCCAclim_path*"DDtheta.0406clim.nc"
+   fileIn=joinpath(ScratchSpaces.OCCA,"DDtheta.0406clim.nc")
    θ=read(rd(fileIn,"theta",n),MeshArray(γ,Float32,n))
 
-#   fileIn=OCCAclim_path*"DDsalt.0406clim.nc"
+#   fileIn=joinpath(ScratchSpaces.OCCA,"DDsalt.0406clim.nc")
 #   𝑆=read(rd(fileIn,"salt",n),MeshArray(γ,Float64,n))
 
    for i in eachindex(u)
