@@ -471,12 +471,13 @@ function custom∫!(𝐼::Individuals,𝑇)
     
     tmp=deepcopy(custom🔴)
     for i=1:ni
+        mm=min(nn,length(ii)-nn*(i-1))
 #        println("i="*string(i))
-        jj=ii[nn*(i-1) .+ collect(1:nn)]
+        jj=ii[nn*(i-1) .+ collect(1:mm)]
         prob = ODEProblem(🚄,permutedims(📌[jj]), 𝑇 ,𝑃)
         sol = ∫(prob)
         append!(tmp, 🔧(sol,𝑃,𝐷,id=🆔[jj], 𝑇=𝑇))
-        📌[jj] = deepcopy([sol[i].u[end] for i in 1:nn])
+        📌[jj] = deepcopy([sol[i].u[end] for i in 1:mm])
         if isa(𝑃,𝐹_MeshArray3D)||isa(𝑃,𝐹_MeshArray2D)
             [update_location!(i,𝑃) for i in 📌[jj]]
         end
