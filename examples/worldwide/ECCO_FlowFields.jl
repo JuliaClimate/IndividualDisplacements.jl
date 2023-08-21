@@ -1,13 +1,10 @@
 module ECCO_FlowFields
 
-using IndividualDisplacements, OceanStateEstimation, MITgcmTools
+using IndividualDisplacements, OceanStateEstimation, MITgcmTools, CSV, JLD2
 
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
 import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray
-import IndividualDisplacements.CSV as CSV
-
-import OceanStateEstimation.ECCO_helpers.JLD2 as JLD2
 
 """
     init_from_file(np ::Int)

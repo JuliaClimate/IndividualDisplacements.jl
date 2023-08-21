@@ -1,6 +1,5 @@
 using Test, Documenter
-using IndividualDisplacements, OceanStateEstimation
-import IndividualDisplacements.MeshArrays as MeshArrays
+using IndividualDisplacements, OceanStateEstimation, MeshArrays
 
 OceanStateEstimation.get_ecco_velocity_if_needed()
 OceanStateEstimation.get_occa_velocity_if_needed()
