@@ -17,8 +17,7 @@ end
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
 	using IndividualDisplacements, GLMakie, PlutoUI
-	using OceanStateEstimation, MITgcmTools
-
+	using OceanStateEstimation, MITgcmTools, CSV, JLD2
 	include("ECCO_FlowFields.jl")
 	include("global_ocean_plotting.jl")
 	
@@ -179,7 +178,6 @@ end
 # ╔═╡ fc16b761-8b1f-41de-b4fe-7fa9987d6167
 begin
 	#𝐼.🔴
-	import IndividualDisplacements: CSV
 	file_output_csv=joinpath(output_path,file_base*".csv")
 	CSV.write(file_output_csv, Float32.(𝐼.🔴))
 end
@@ -215,16 +213,29 @@ md"""## Appendix : Plotting Function"""
 
 
 
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 MITgcmTools = "62725fbc-3a66-4df3-9000-e33e85b3a198"
 OceanStateEstimation = "891f6deb-a4f5-4bc5-a2e3-1e8f649cdd2c"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[compat]
+CSV = "~0.10.11"
+DataFrames = "~1.6.1"
+GLMakie = "~0.8.8"
+IndividualDisplacements = "~0.4.3"
+JLD2 = "~0.4.33"
+MITgcmTools = "~0.2.5"
+OceanStateEstimation = "~0.3.4"
+PlutoUI = "~0.7.52"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -233,7 +244,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "544bfd1ea029ce18839cb6be7c0933944c607bd3"
+project_hash = "c2165aaf05200371bdf42a3059219d29ce3e41da"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "f5c25e8a5b29b5e941b7408bc8cc79fea4d9ef9a"
@@ -1088,7 +1099,7 @@ version = "1.0.0"
 
 [[deps.IndividualDisplacements]]
 deps = ["Artifacts", "CFTime", "CSV", "CyclicArrays", "DataFrames", "Dates", "LazyArtifacts", "MeshArrays", "OrdinaryDiffEq", "Random"]
-path = "/Users/gforget/mywork/projects_major/2019-jlpkgs/IndividualDisplacements.jl"
+git-tree-sha1 = "480c518777afde08580d8164edae17da92e080e3"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 version = "0.4.3"
 

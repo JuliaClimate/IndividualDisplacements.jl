@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.13
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -165,7 +165,7 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 
 [compat]
-DataFrames = "~1.4.1"
+DataFrames = "~1.6.1"
 IndividualDisplacements = "~0.4.1"
 NetCDF = "~0.11.7"
 OceanStateEstimation = "~0.3.1"
@@ -179,7 +179,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "def306ca768ff32dc19223f476be6a619b4b9bd6"
+project_hash = "f06e5f34fc043785af970754f04e86dcb24aa3c7"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "f5c25e8a5b29b5e941b7408bc8cc79fea4d9ef9a"
@@ -471,10 +471,10 @@ uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.15.0"
 
 [[deps.DataFrames]]
-deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SnoopPrecompile", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "d4f69885afa5e6149d0cab3818491565cf41446d"
+deps = ["Compat", "DataAPI", "DataStructures", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrecompileTools", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SentinelArrays", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
+git-tree-sha1 = "04c738083f29f86e62c8afc341f0967d8717bdb8"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "1.4.4"
+version = "1.6.1"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -1850,9 +1850,9 @@ version = "5.10.1+6"
 
 [[deps.Suppressor]]
 deps = ["Logging"]
-git-tree-sha1 = "37d1976ca8368f6adbe1d65a4deeeda6ee7faa31"
+git-tree-sha1 = "34c29aeaea1d120a3403beed6134a76f7d06ef38"
 uuid = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
-version = "0.2.4"
+version = "0.2.5"
 
 [[deps.SymbolicIndexingInterface]]
 deps = ["DocStringExtensions"]
@@ -2263,7 +2263,7 @@ version = "1.4.1+0"
 # ╟─4935fd46-e70f-11ea-386c-f9c444a20644
 # ╟─9c80e722-e70f-11ea-22a6-0be2e85f3b8b
 # ╟─e25eee9e-dfee-11ea-2a4c-3946ccb63876
-# ╠═a13d6ea6-dff1-11ea-0713-cb235e28cf79
+# ╟─a13d6ea6-dff1-11ea-0713-cb235e28cf79
 # ╟─f65ddffa-e63a-11ea-34a6-2fa9284e98fa
 # ╟─0b12cf52-e6e3-11ea-1a01-dd0c49c9e641
 # ╟─6f70033a-e6cc-11ea-373e-6dcbaaa53d15

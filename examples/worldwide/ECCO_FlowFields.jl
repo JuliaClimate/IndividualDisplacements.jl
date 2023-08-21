@@ -1,14 +1,12 @@
 module ECCO_FlowFields
 
-using IndividualDisplacements, OceanStateEstimation, MITgcmTools
+using IndividualDisplacements, OceanStateEstimation, MITgcmTools, CSV, JLD2
 
 import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, ODEProblem
 import IndividualDisplacements: update_location!
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
 import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
-import IndividualDisplacements.CSV as CSV
-import OceanStateEstimation.ECCO_helpers.JLD2 as JLD2
 
 export init_FlowFields, init_positions, init_storage
 export custom∫, custom🔧, custom🔴, custom∫!

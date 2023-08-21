@@ -385,7 +385,7 @@ Call ∫!(𝐼::Individuals,𝐼.𝑃.𝑇)
 
 Base.size(A::Individuals) = size(A.📌)
 
-function Base.show(io::IO, 𝐼::Individuals) where {T}
+function Base.show(io::IO, 𝐼::Individuals)
     (; 🚄,📌,𝑃, 𝐷, 𝑀, 🔧, 🆔, 🔴, ∫) = 𝐼
     printstyled(io, "  📌 details     = ",color=:normal)
     printstyled(io, "$(size(📌)) $(typeof(𝐼).parameters[1])\n",color=:blue)
