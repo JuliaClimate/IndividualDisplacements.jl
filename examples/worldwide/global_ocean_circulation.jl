@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.19
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -17,7 +17,7 @@ end
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
 	using IndividualDisplacements, CairoMakie, PlutoUI
-	using OceanStateEstimation, MITgcmTools
+	using OceanStateEstimation, MITgcmTools, CSV, JLD2
 	include("ECCO_FlowFields.jl")
 	"Done with Loading Packages"
 end
@@ -197,21 +197,26 @@ plot(𝐼)
 
 
 
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 MITgcmTools = "62725fbc-3a66-4df3-9000-e33e85b3a198"
 OceanStateEstimation = "891f6deb-a4f5-4bc5-a2e3-1e8f649cdd2c"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+CSV = "~0.10.11"
 CairoMakie = "~0.10.0"
-DataFrames = "~1.4.4"
+DataFrames = "~1.6.1"
 IndividualDisplacements = "~0.4.2"
+JLD2 = "~0.4.33"
 MITgcmTools = "~0.2.4"
 OceanStateEstimation = "~0.3.1"
 PlutoUI = "~0.7.49"
@@ -223,7 +228,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "2431d76689a69508a02ff63bbd20339304f80208"
+project_hash = "acf6927bb525cc94afee6cf53bd49e9ba106bdbd"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "f5c25e8a5b29b5e941b7408bc8cc79fea4d9ef9a"
@@ -561,10 +566,10 @@ uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.15.0"
 
 [[deps.DataFrames]]
-deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SnoopPrecompile", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "d4f69885afa5e6149d0cab3818491565cf41446d"
+deps = ["Compat", "DataAPI", "DataStructures", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrecompileTools", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SentinelArrays", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
+git-tree-sha1 = "04c738083f29f86e62c8afc341f0967d8717bdb8"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "1.4.4"
+version = "1.6.1"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -2218,9 +2223,9 @@ version = "5.10.1+6"
 
 [[deps.Suppressor]]
 deps = ["Logging"]
-git-tree-sha1 = "37d1976ca8368f6adbe1d65a4deeeda6ee7faa31"
+git-tree-sha1 = "34c29aeaea1d120a3403beed6134a76f7d06ef38"
 uuid = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
-version = "0.2.4"
+version = "0.2.5"
 
 [[deps.SymbolicIndexingInterface]]
 deps = ["DocStringExtensions"]

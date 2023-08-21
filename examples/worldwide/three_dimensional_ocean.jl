@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.19
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -97,7 +97,7 @@ OceanStateEstimation = "891f6deb-a4f5-4bc5-a2e3-1e8f649cdd2c"
 
 [compat]
 CairoMakie = "~0.10.0"
-DataFrames = "~1.4.4"
+DataFrames = "~1.6.1"
 IndividualDisplacements = "~0.4.2"
 NetCDF = "~0.11.7"
 OceanStateEstimation = "~0.3.1"
@@ -109,7 +109,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.1"
 manifest_format = "2.0"
-project_hash = "83440b0db31e6ce47b83ff82ae2387d204407db1"
+project_hash = "bf2c0ff058c50b9e4a86c408c3c91e314c947703"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "f5c25e8a5b29b5e941b7408bc8cc79fea4d9ef9a"
@@ -441,10 +441,10 @@ uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.15.0"
 
 [[deps.DataFrames]]
-deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SnoopPrecompile", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "d4f69885afa5e6149d0cab3818491565cf41446d"
+deps = ["Compat", "DataAPI", "DataStructures", "Future", "InlineStrings", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrecompileTools", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SentinelArrays", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
+git-tree-sha1 = "04c738083f29f86e62c8afc341f0967d8717bdb8"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "1.4.4"
+version = "1.6.1"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -2069,9 +2069,9 @@ version = "5.10.1+6"
 
 [[deps.Suppressor]]
 deps = ["Logging"]
-git-tree-sha1 = "37d1976ca8368f6adbe1d65a4deeeda6ee7faa31"
+git-tree-sha1 = "34c29aeaea1d120a3403beed6134a76f7d06ef38"
 uuid = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
-version = "0.2.4"
+version = "0.2.5"
 
 [[deps.SymbolicIndexingInterface]]
 deps = ["DocStringExtensions"]
