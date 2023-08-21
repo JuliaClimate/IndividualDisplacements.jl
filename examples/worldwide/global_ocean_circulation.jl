@@ -15,13 +15,12 @@ macro bind(def, element)
 end
 
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
-begin #if !isdefined(Main,:ECCO_FlowFields)
+begin
 	using IndividualDisplacements, GLMakie, PlutoUI
 	using OceanStateEstimation, MITgcmTools
 
 	include("ECCO_FlowFields.jl")
 	include("global_ocean_plotting.jl")
-#	using workspace.ECCO_FlowFields
 	
 	output_path=joinpath(tempdir(),"global_ocean_tmp")
 	!isdir(output_path) ? mkdir(output_path) : nothing
@@ -212,6 +211,8 @@ Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.i
 md"""## Appendix : Plotting Function"""
 
 # ╔═╡ e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
+
+
 
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1089,7 +1090,7 @@ version = "1.0.0"
 deps = ["Artifacts", "CFTime", "CSV", "CyclicArrays", "DataFrames", "Dates", "LazyArtifacts", "MeshArrays", "OrdinaryDiffEq", "Random"]
 path = "/Users/gforget/mywork/projects_major/2019-jlpkgs/IndividualDisplacements.jl"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.4.2"
+version = "0.4.3"
 
 [[deps.Inflate]]
 git-tree-sha1 = "5cd07aab533df5170988219191dfad0519391428"
