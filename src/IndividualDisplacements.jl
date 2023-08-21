@@ -1,6 +1,7 @@
 module IndividualDisplacements
 
-using MeshArrays, CyclicArrays, OrdinaryDiffEq, DataFrames,  Random, Artifacts
+using MeshArrays, CyclicArrays, OrdinaryDiffEq, DataFrames
+using Random, Artifacts, LazyArtifacts
 
 include("API.jl")
 include("compute.jl")
