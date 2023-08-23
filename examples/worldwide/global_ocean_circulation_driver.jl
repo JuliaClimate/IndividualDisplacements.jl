@@ -30,6 +30,8 @@ end
 """
 function main_comp(kk)
 
+println(kk)
+
 """## Initial Position Files"""
 
 list=readdir(path)
