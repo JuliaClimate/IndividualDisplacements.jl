@@ -16,15 +16,20 @@ end
 
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
-	using IndividualDisplacements, GLMakie, PlutoUI
-	using OceanStateEstimation, MITgcmTools, CSV, JLD2
-	include("ECCO_FlowFields.jl")
-	include("global_ocean_plotting.jl")
+	using Statistics, PlutoUI
 	
 	output_path=joinpath(tempdir(),"global_ocean_tmp")
 	!isdir(output_path) ? mkdir(output_path) : nothing
 	"Done with Loading Packages"
 end
+
+# ╔═╡ 2acbfc79-3926-4c5a-9994-e3222c60c377
+module inc 
+	using IndividualDisplacements, GLMakie, DataFrames
+	using OceanStateEstimation, MITgcmTools, CSV, JLD2
+	include("ECCO_FlowFields.jl")
+	include("global_ocean_plotting.jl")
+end	
 
 # ╔═╡ c9e9faa8-f5f0-479c-bc85-877ff7114883
 md"""# Global Climatology
@@ -50,6 +55,8 @@ begin
 	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
 	bind_ny = (@bind nytxt Select(["1/12","1","3"],default="3"))
 	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
+	bind_replay = (@bind do_replay CheckBox(default=true))
+	bind_zoomin = (@bind zoom_in CheckBox(default=false))
 	
 	file_IC = joinpath("global_ocean_circulation_inputs","initial_8_6.csv")
 	file_base = basename(file_IC)[1:end-4]
@@ -63,6 +70,8 @@ begin
 	- k  = $(bind_k) = vertical level (for 2D; or 0 for 3D)
 	- ny = $(bind_ny) = similated period (1/12 = 1 month)
 	- np = $(bind_np) = number of individuals (100 by default)
+	- replay = $(bind_replay) = load results from csv instead of recomputing
+	- zoom in = $(bind_zoomin) = zoom in rather than plotting whole Earth
 	"""
 end
 
@@ -89,9 +98,9 @@ begin
 		nm=12 #number of months
 	end
 
-	OceanStateEstimation.get_ecco_velocity_if_needed()
+	inc.OceanStateEstimation.get_ecco_velocity_if_needed()
 	
-	𝑃,𝐷=ECCO_FlowFields.init_FlowFields(k=k,backward_time=backward_time)
+	𝑃,𝐷=inc.ECCO_FlowFields.init_FlowFields(k=k,backward_time=backward_time)
 	"Done with Setting Up FlowFields"
 end
 
@@ -106,29 +115,22 @@ md"""## 3. Trajectory Computation
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
-	df = ECCO_FlowFields.init_positions(np,filename=file_IC)
+	df = inc.ECCO_FlowFields.init_positions(np,filename=file_IC)
 	#"z" in names(df) ? nothing : df.z=10.0 .+ 0.0*df.x
 
 	if !(k==0)
-		𝑆 = ECCO_FlowFields.init_storage(np,100,1,50)
-		𝐼 = Individuals(𝑃,df.x,df.y,df.f,(𝐷=merge(𝐷,𝑆),∫=ECCO_FlowFields.custom∫))
+		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,1,50)
+		𝐼 = Individuals(𝑃,df.x,df.y,df.f,(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫))
 		my∫! = ∫!
 	else		
-		𝑆 = ECCO_FlowFields.init_storage(np,100,length(𝐷.Γ.RC),50)
-		𝐼 = Individuals(𝑃,df.x,df.y,df.z,df.f,
-			(𝐷=merge(𝐷,𝑆),∫=ECCO_FlowFields.custom∫,🔧=ECCO_FlowFields.custom🔧,🔴=deepcopy(ECCO_FlowFields.custom🔴)))
-		my∫! = ECCO_FlowFields.custom∫!
+		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,length(𝐷.Γ.RC),50)
+		𝐼 = inc.Individuals(𝑃,df.x,df.y,df.z,df.f,
+			(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫,🔧=inc.ECCO_FlowFields.custom🔧,🔴=deepcopy(inc.ECCO_FlowFields.custom🔴)))
+		my∫! = inc.ECCO_FlowFields.custom∫!
 	end
 
 	📌_reference=deepcopy(𝐼.📌)
 	𝐼
-end
-
-# ╔═╡ a3e45927-5d53-42be-b7b7-489d6e7a6fe5
-begin
-	𝑇=(0.0,𝐼.𝑃.𝑇[2])
-	my∫!(𝐼,𝑇)
-	✔1="Done with Initial Integration"
 end
 
 # ╔═╡ 6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
@@ -157,47 +159,83 @@ md"""### 3.3 Monthly Simulation Loop
     `add_lonlat!` derives geographic locations (longitude and latitude) from local grid coordinates (x, y, etc).
 """
 
-# ╔═╡ 1044c5aa-1a56-45b6-a4c6-63d24eea878d
-begin
-	✔1	
-	[step!(𝐼) for y=1:ny, m=1:nm]
-
-	"lon" in names(𝐼.🔴) ? nothing : add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC)
-	
-	✔2="Done with Main Computation"
+# ╔═╡ a3e45927-5d53-42be-b7b7-489d6e7a6fe5
+if !do_replay
+	𝑇=(0.0,𝐼.𝑃.𝑇[2])
+	my∫!(𝐼,𝑇)
+	✔1="Done with Initial Integration"
+else
+	✔1="Skipping Initial Integration (replay instead)"
 end
 
-# ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
-let
-	✔2
-	using DataFrames, Statistics
-	gdf = groupby(𝐼.🔴, :ID)
-	sgdf= combine(gdf,nrow,:lat => mean)
+# ╔═╡ 1044c5aa-1a56-45b6-a4c6-63d24eea878d
+if !do_replay
+	✔1	
+	[step!(𝐼) for y=1:ny, m=1:nm]
+	"lon" in names(𝐼.🔴) ? nothing : add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC)
+	✔2="Done with Main Computation"
+else
+	✔2="Skipping Main Computation (replay instead)"
 end
 
 # ╔═╡ fc16b761-8b1f-41de-b4fe-7fa9987d6167
-begin
-	#𝐼.🔴
+if !do_replay
 	file_output_csv=joinpath(output_path,file_base*".csv")
-	CSV.write(file_output_csv, Float32.(𝐼.🔴))
+	inc.CSV.write(file_output_csv, Float32.(𝐼.🔴))
+else
+	"Skipping File Output (replay instead)"
 end
+
+# ╔═╡ 63b68e72-76c1-4104-bf76-dd9eefc4e225
+md"""### 3.4 Replay previous simulation
+
+If the replay option ($(bind_replay)) has been selected then we reload the result of a previous computation from file.
+"""
+
+# ╔═╡ 397e5491-56ce-44ba-81d4-2982b0c3f503
+@bind fil_replay FilePicker()
 
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
 md"""## 4. Visualize Displacements"""
 
-# ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
-begin
-	fig,tt=PlottingFunctions.plot(𝐼,𝐼.🔴)
-
-	file_output_png=joinpath(output_path,file_base*".png")
-	save(file_output_png,fig)
-
-	file_output_mp4=joinpath(output_path,file_base*".mp4")
-	record(fig, file_output_mp4, 1:38, framerate = 10) do t
-			tt[]=t
-	end
+# ╔═╡ 33fb4a15-b5ef-46f8-9e4e-c20da4536195
+if do_replay&&isa(fil_replay,Dict)&&haskey(fil_replay,"name")
+	#tmp_🔴=CSV.read(fil_replay["name"],DataFrame)
+	tmp_🔴=UInt8.(fil_replay["data"]) |> IOBuffer |> inc.CSV.File |> inc.DataFrame
+	tmp_file_base=split(fil_replay["name"],'.')[1]
+else
+	tmp_🔴=𝐼.🔴
+	tmp_file_base=file_base
 end
 
+# ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
+if !isempty(tmp_🔴)
+	t=length(unique(tmp_🔴.t))
+	if zoom_in
+		xlims=extrema(tmp_🔴.lon)
+	    ylims=extrema(tmp_🔴.lat)
+	else
+		xlims=(-180.0,180.0)
+		ylims=(-90.0,90.0)
+	end
+
+	fig,tt=inc.PlottingFunctions.plot(𝐼,tmp_🔴,xlims=xlims,ylims=ylims)
+
+	file_output_png=joinpath(output_path,tmp_file_base*".png")
+	save(file_output_png,fig)
+
+	file_output_mp4=joinpath(output_path,tmp_file_base*".mp4")
+	record(fig, file_output_mp4, 1:38, framerate = 10) do t
+		tt[]=t
+	end
+	
+	fig
+else
+	"nothing to plot"
+end
+
+# ╔═╡ 1a6af0eb-ab2a-4999-8063-f218b2f3f651
+"output path is $(output_path)"
 
 # ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
 md"""## 5. Summary Statistics
@@ -205,14 +243,12 @@ md"""## 5. Summary Statistics
 Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) to analyze the output (𝐼.🔴) of our simulation.
 """
 
-# ╔═╡ de8dbb43-68bc-4fb2-b0c8-07100b8a97a0
-md"""## Appendix : Plotting Function"""
-
-# ╔═╡ e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
-
-
-
-
+# ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
+begin
+	✔2
+	gdf = inc.groupby(tmp_🔴, :ID)
+	sgdf= inc.combine(gdf,nrow,:lat => mean)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1398,9 +1434,9 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 
 [[deps.LoggingExtras]]
 deps = ["Dates", "Logging"]
-git-tree-sha1 = "cedb76b37bc5a6c702ade66be44f831fa23c681e"
+git-tree-sha1 = "a03c77519ab45eb9a34d3cfe2ca223d79c064323"
 uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
-version = "1.0.0"
+version = "1.0.1"
 
 [[deps.LoopVectorization]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "CPUSummary", "CloseOpenIntervals", "DocStringExtensions", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "PrecompileTools", "SIMDTypes", "SLEEFPirates", "Static", "StaticArrayInterface", "ThreadingUtilities", "UnPack", "VectorizationBase"]
@@ -2589,23 +2625,26 @@ version = "3.5.0+0"
 # ╔═╡ Cell order:
 # ╟─c9e9faa8-f5f0-479c-bc85-877ff7114883
 # ╟─104ce9b0-3fd1-11ec-3eff-3b029552e3d9
+# ╟─2acbfc79-3926-4c5a-9994-e3222c60c377
 # ╟─171fa252-7a35-4d4a-a940-60de77327cf4
 # ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
 # ╟─218b9beb-68f2-4498-a96d-08e0719b4cff
 # ╟─f1215951-2eb2-490b-875a-91c1205b8f63
 # ╟─f727992f-b72a-45bc-93f1-cc8daf89af0f
-# ╠═a3e45927-5d53-42be-b7b7-489d6e7a6fe5
 # ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
 # ╟─a2375720-f599-43b9-a7fb-af17956309b6
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
-# ╠═1044c5aa-1a56-45b6-a4c6-63d24eea878d
+# ╟─a3e45927-5d53-42be-b7b7-489d6e7a6fe5
+# ╟─1044c5aa-1a56-45b6-a4c6-63d24eea878d
 # ╟─fc16b761-8b1f-41de-b4fe-7fa9987d6167
+# ╟─63b68e72-76c1-4104-bf76-dd9eefc4e225
+# ╟─397e5491-56ce-44ba-81d4-2982b0c3f503
 # ╟─c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-# ╠═b4841dc0-c257-45e0-8657-79121f2c9ce8
+# ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
+# ╟─33fb4a15-b5ef-46f8-9e4e-c20da4536195
+# ╟─1a6af0eb-ab2a-4999-8063-f218b2f3f651
 # ╟─15077957-64d5-46a5-8a87-a76ad619cf38
 # ╟─6e43a2af-bf01-4f42-a4ba-1874a8cf4885
-# ╟─de8dbb43-68bc-4fb2-b0c8-07100b8a97a0
-# ╟─e1cdcac9-c3cc-4ce4-a477-452ca460a3d5
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
