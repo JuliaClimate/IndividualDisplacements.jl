@@ -8,10 +8,8 @@ using GLMakie, IndividualDisplacements, DataFrames
 
 Plot initial and final positions, superimposed on a globalmap of ocean depth log.
 """
-function plot(𝐼::Individuals,🔴,time=0)
+function plot(𝐼::Individuals,🔴;time=0,xlims=(-180.0,180.0),ylims=(-90.0,90.0))
     𝐵=𝐼.𝐷.ODL
-    xlims=extrema(𝐵.lon)
-    ylims=extrema(𝐵.lat)
     fig=Figure()
     ax=Axis(fig[1,1])
 #    limits!(ax,-180.0,-90.0,20.0,70.0)
@@ -26,9 +24,9 @@ function plot(𝐼::Individuals,🔴,time=0)
     end
     tmp1=🔴[np*0 .+ ii,:lon].!==🔴[np*(nt-1) .+ ii,:lon]
     tmp2=🔴[np*0 .+ ii,:lat].!==🔴[np*(nt-1) .+ ii,:lat]
-    jj=ii[findall(tmp1.*tmp2)]
+    jj=ii[findall(tmp1.*tmp2)] 
 
-    time==0 ? tt=Observable(nt) : tt=time
+    time==0 ? tt=Observable(nt) : tt=Observable(time)
     tmp1=groupby(🔴, :t)
     lon_t1=tmp1[1][jj,:lon]
     lat_t1=tmp1[1][jj,:lat]
@@ -38,9 +36,7 @@ function plot(𝐼::Individuals,🔴,time=0)
     scatter!(ax,lon_t1,lat_t1,markersize=2.0,color=:lightblue)
     scatter!(ax,lon_tt,lat_tt,markersize=4.0,color=:red)
 
-    lon_rng=extrema(lon_tt) .+(-20,20)
-    lat_rng=extrema(lat_tt) .+(-20,20)
-    limits!(ax,lon_rng...,lat_rng...)
+    limits!(ax,xlims...,ylims...)
 
     return fig,tt
 end
