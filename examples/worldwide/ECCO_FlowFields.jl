@@ -44,6 +44,28 @@ function init_global_randn(np ::Int , 𝐷::NamedTuple)
 end
 
 """
+    init_gulf_stream(np ::Int , 𝐷::NamedTuple)
+
+Randomly distribute `np` points in the Florida Strait region, within 
+`𝐷.msk` region, and return position in grid index space (`i,j,subdomain`).
+"""
+function init_gulf_stream(np ::Int , 𝐷::NamedTuple)
+	lons=[-81,-79]
+	lats=[26,28]
+	lon=rand(2*np)*diff(lons)[1].+lons[1]
+	lat=rand(2*np)*diff(lats)[1].+lats[1]
+	
+	(_,_,_,_,f,x,y)=IndividualDisplacements.InterpolationFactors(𝐷.Γ,lon,lat)
+    m=findall( (f.!==0).*((!isnan).(x)) )
+    n=findall(IndividualDisplacements.nearest_to_xy(𝐷.msk,x[m],y[m],f[m]).==1.0)[1:np]
+    xyf=permutedims([x[m[n]] y[m[n]] f[m[n]]])
+
+	#z=rand(np)*27
+	z=15 .+rand(np)*12
+    return DataFrame(x=xyf[1,:],y=xyf[2,:],z=z,f=xyf[3,:])
+end
+
+"""
     reset_📌!(𝐼::Individuals,frac::Number,📌::Array)
 
 Randomly select a fraction (frac) of the particles and reset 
@@ -55,8 +77,8 @@ function reset_📌!(𝐼::Individuals,frac::Number,📌::Array)
     k_reset = rand(1:np, n_reset)
     l_reset = rand(1:np, n_reset)
     𝐼.📌[k_reset]=deepcopy(📌[l_reset])
-    isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
-    𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
+    #isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
+    #𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
 end
 
 """
@@ -332,7 +354,7 @@ function init_FlowFields(; k=1, backward_time=false)
 
   #read grid and set up connections between subdomains
   γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
-  Γ=MeshArrays.GridLoad(γ)
+  Γ=MeshArrays.GridLoad(γ,option="full")
   f(x,y)=Float32.(MeshArrays.GridLoadVar(x,y))
   tmp=( DXC=f("DXC",γ),DYC=f("DYC",γ),hFacC=f("hFacC",γ),
         Depth=f("Depth",γ),RC=f("RC",γ),DRC=f("DRC",γ))
@@ -349,7 +371,7 @@ function init_FlowFields(; k=1, backward_time=false)
   ODL=OceanDepthLog(λ,Γ)
   
   #(optional) fraction of the particles reset per month (e.g., 0.05 for k<=10)
-  r_reset = 0.0
+  r_reset = 0.05
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, ODL=ODL)

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.35
 
 using Markdown
 using InteractiveUtils
@@ -53,7 +53,7 @@ TableOfContents()
 # ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
 begin
 	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
-	bind_ny = (@bind nytxt Select(["1/12","1","3"],default="3"))
+	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="3"))
 	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
 	bind_replay = (@bind do_replay CheckBox(default=true))
 	bind_zoomin = (@bind zoom_in CheckBox(default=false))
@@ -109,13 +109,14 @@ md"""## 3. Trajectory Computation
 
 ### 3.1 Initialization
 
-- initialize individual positions (`init_positions`)
+- initialize individual positions (`init_gulf_stream`)
 - initial integration from time 0 to 0.5 month
 """
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
-	df = inc.ECCO_FlowFields.init_positions(np,filename=file_IC)
+	file_IC
+	df = inc.ECCO_FlowFields.init_gulf_stream(np , 𝐷)
 	#"z" in names(df) ? nothing : df.z=10.0 .+ 0.0*df.x
 
 	if !(k==0)
@@ -146,9 +147,9 @@ Time variable flow fields are easily handled by defining a `step!` function that
 """
 
 # ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
-function step!(𝐼::Individuals)
+function step!(𝐼::inc.Individuals)
     𝐼.𝐷.🔄(𝐼)
-	#𝐼.𝐷.frac > 0 ? reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
+	𝐼.𝐷.frac > 0 ? inc.ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
     my∫!(𝐼)
 end
 
@@ -178,8 +179,20 @@ else
 	✔2="Skipping Main Computation (replay instead)"
 end
 
+# ╔═╡ 42959eb9-7c14-4892-bf41-a1a434b00e27
+if !do_replay
+	✔2
+	!isdir(output_path) ? mkdir(output_path) : nothing
+	file_output=joinpath(output_path,file_base*".csv")
+	inc.CSV.write(file_output, Float32.(𝐼.🔴))
+	✔3="Done with saving trajectories"
+else
+	✔3="Skipping save (replay instead)"
+end		
+
 # ╔═╡ fc16b761-8b1f-41de-b4fe-7fa9987d6167
 if !do_replay
+	✔3
 	file_output_csv=joinpath(output_path,file_base*".csv")
 	inc.CSV.write(file_output_csv, Float32.(𝐼.🔴))
 else
@@ -210,7 +223,8 @@ end
 
 # ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
 if !isempty(tmp_🔴)
-	t=length(unique(tmp_🔴.t))
+	nt=length(unique(tmp_🔴.t))
+	
 	if zoom_in
 		xlims=extrema(tmp_🔴.lon)
 	    ylims=extrema(tmp_🔴.lat)
@@ -222,10 +236,10 @@ if !isempty(tmp_🔴)
 	fig,tt=inc.PlottingFunctions.plot(𝐼,tmp_🔴,xlims=xlims,ylims=ylims)
 
 	file_output_png=joinpath(output_path,tmp_file_base*".png")
-	save(file_output_png,fig)
+	inc.save(file_output_png,fig)
 
 	file_output_mp4=joinpath(output_path,tmp_file_base*".mp4")
-	record(fig, file_output_mp4, 1:38, framerate = 10) do t
+	inc.record(fig, file_output_mp4, 1:nt, framerate = 10) do t
 		tt[]=t
 	end
 	
@@ -247,7 +261,7 @@ Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.i
 begin
 	✔2
 	gdf = inc.groupby(tmp_🔴, :ID)
-	sgdf= inc.combine(gdf,nrow,:lat => mean)
+	sgdf= inc.combine(gdf,inc.nrow,:lat => mean)
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -278,7 +292,7 @@ PlutoUI = "~0.7.52"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.1"
+julia_version = "1.9.3"
 manifest_format = "2.0"
 project_hash = "c2165aaf05200371bdf42a3059219d29ce3e41da"
 
@@ -554,7 +568,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.0.2+0"
+version = "1.0.5+0"
 
 [[deps.ConcurrentUtilities]]
 deps = ["Serialization", "Sockets"]
@@ -1778,7 +1792,7 @@ version = "0.42.2+0"
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
-version = "1.9.0"
+version = "1.9.2"
 
 [[deps.PkgVersion]]
 deps = ["Pkg"]
@@ -2624,8 +2638,8 @@ version = "3.5.0+0"
 
 # ╔═╡ Cell order:
 # ╟─c9e9faa8-f5f0-479c-bc85-877ff7114883
-# ╟─104ce9b0-3fd1-11ec-3eff-3b029552e3d9
-# ╟─2acbfc79-3926-4c5a-9994-e3222c60c377
+# ╠═104ce9b0-3fd1-11ec-3eff-3b029552e3d9
+# ╠═2acbfc79-3926-4c5a-9994-e3222c60c377
 # ╟─171fa252-7a35-4d4a-a940-60de77327cf4
 # ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
@@ -2637,6 +2651,7 @@ version = "3.5.0+0"
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
 # ╟─a3e45927-5d53-42be-b7b7-489d6e7a6fe5
 # ╟─1044c5aa-1a56-45b6-a4c6-63d24eea878d
+# ╟─42959eb9-7c14-4892-bf41-a1a434b00e27
 # ╟─fc16b761-8b1f-41de-b4fe-7fa9987d6167
 # ╟─63b68e72-76c1-4104-bf76-dd9eefc4e225
 # ╟─397e5491-56ce-44ba-81d4-2982b0c3f503
