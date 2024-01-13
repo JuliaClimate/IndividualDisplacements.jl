@@ -370,7 +370,7 @@ function init_FlowFields(; k=1, backward_time=false)
   ODL=OceanDepthLog(λ,Γ)
   
   #(optional) fraction of the particles reset per month (e.g., 0.05 for k<=10)
-  r_reset = 0.05
+  r_reset = 1/12
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, ODL=ODL)

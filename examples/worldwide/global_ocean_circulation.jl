@@ -20,7 +20,6 @@ begin
 	
 	output_path=joinpath(tempdir(),"global_ocean_tmp")
 	!isdir(output_path) ? mkdir(output_path) : nothing
-	"Done with Loading Packages"
 end
 
 # ╔═╡ 2acbfc79-3926-4c5a-9994-e3222c60c377
@@ -52,11 +51,14 @@ TableOfContents()
 
 # ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
 begin
+	✔0="selected parameters"
+	
 	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
 	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="3"))
 	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
 	bind_replay = (@bind do_replay CheckBox(default=true))
 	bind_zoomin = (@bind zoom_in CheckBox(default=false))
+	bind_zrng = @bind zrng Select([0:10,11:19,20:27],default=20:27)
 	
 	file_IC = joinpath("global_ocean_circulation_inputs","initial_8_6.csv")
 	file_base = basename(file_IC)[1:end-4]
@@ -67,7 +69,9 @@ begin
 
 	The following parameters are used:
 
-	- k  = $(bind_k) = vertical level (for 2D; or 0 for 3D)
+	- k  = $(bind_k) = flow field vertical level (set to 0 for 3D)
+	  - _optional :_ zrng = $(bind_zrng) = vertical coordindate range 
+	  - _(only used if k==0; if otherwise then zrng effectively is k-0.5:k-0.5)_
 	- ny = $(bind_ny) = similated period (1/12 = 1 month)
 	- np = $(bind_np) = number of individuals (100 by default)
 	- replay = $(bind_replay) = load results from csv instead of recomputing
@@ -89,19 +93,17 @@ md"""## 2. Configure `FlowFields`
 # ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
 begin	
 	k=parse(Int,ktxt) #vertical level or 0
-	np=parse(Int,nptxt) #number of individuals
-	if nytxt=="1/12"
-		ny=1 #number of years
-		nm=1 #number of months
-	else
-		ny=parse(Int,nytxt) #number of years
-		nm=12 #number of months
-	end
-
+	k!==0 ? zs=[k-0.5:k-0.5] : zs=zrng
+	
 	inc.OceanStateEstimation.get_ecco_velocity_if_needed()
 	
 	𝑃,𝐷=inc.ECCO_FlowFields.init_FlowFields(k=k,backward_time=backward_time)
-	"Done with Setting Up FlowFields"
+
+	println("Done with Setting Up FlowFields")
+	tmp1="  - flow field depth level = "*(k==0 ? "three-dimensional" : "level $(k)") 
+	println(tmp1)
+	tmp1="  - inital depth range = $(round.([𝐷.Γ.RF[zrng[1]+1] 𝐷.Γ.RF[zrng[end]+1]]))"
+	println(tmp1)
 end
 
 # ╔═╡ f1215951-2eb2-490b-875a-91c1205b8f63
@@ -115,9 +117,18 @@ md"""## 3. Trajectory Computation
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
-	file_IC
-	df = inc.ECCO_FlowFields.init_gulf_stream(np , 𝐷, zs=0:10)
-	#"z" in names(df) ? nothing : df.z=10.0 .+ 0.0*df.x
+	✔0
+
+	np=parse(Int,nptxt) #number of individuals
+	if nytxt=="1/12"
+		ny=1 #number of years
+		nm=1 #number of months
+	else
+		ny=parse(Int,nytxt) #number of years
+		nm=12 #number of months
+	end
+	
+	df = inc.ECCO_FlowFields.init_gulf_stream(np , 𝐷, zs=zs)
 
 	if !(k==0)
 		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,1,50)
@@ -196,6 +207,7 @@ if !do_replay
 	file_output_csv=joinpath(output_path,file_base*".csv")
 	inc.CSV.write(file_output_csv, Float32.(𝐼.🔴))
 else
+	✔3
 	"Skipping File Output (replay instead)"
 end
 
@@ -223,14 +235,15 @@ end
 
 # ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
 if !isempty(tmp_🔴)
+	✔3
 	nt=length(unique(tmp_🔴.t))
 	
 	if zoom_in
 		xlims=extrema(tmp_🔴.lon)
 	    ylims=extrema(tmp_🔴.lat)
 	else
-		xlims=(-180.0,180.0)
-		ylims=(-90.0,90.0)
+		xlims=(-100.0,10.0)
+		ylims=(20.0,70.0)
 	end
 
 	fig,tt=inc.PlottingFunctions.plot(𝐼,tmp_🔴,xlims=xlims,ylims=ylims)
@@ -2648,7 +2661,7 @@ version = "3.5.0+0"
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
 # ╟─218b9beb-68f2-4498-a96d-08e0719b4cff
 # ╟─f1215951-2eb2-490b-875a-91c1205b8f63
-# ╠═f727992f-b72a-45bc-93f1-cc8daf89af0f
+# ╟─f727992f-b72a-45bc-93f1-cc8daf89af0f
 # ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
 # ╟─a2375720-f599-43b9-a7fb-af17956309b6
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
