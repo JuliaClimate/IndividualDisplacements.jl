@@ -58,7 +58,7 @@ begin
 	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
 	bind_replay = (@bind do_replay CheckBox(default=true))
 	bind_zoomin = (@bind zoom_in CheckBox(default=false))
-	bind_zrng = @bind zrng Select([0:10,11:19,20:27],default=20:27)
+	bind_zrng = @bind zrng Select([0:11,11:21,21:27],default=20:27)
 	
 	file_IC = joinpath("global_ocean_circulation_inputs","initial_8_6.csv")
 	file_base = basename(file_IC)[1:end-4]
