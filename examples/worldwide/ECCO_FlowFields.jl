@@ -49,7 +49,7 @@ end
 Randomly distribute `np` points in the Florida Strait region, within 
 `𝐷.msk` region, and return position in grid index space (`i,j,subdomain`).
 """
-function init_gulf_stream(np ::Int , 𝐷::NamedTuple)
+function init_gulf_stream(np ::Int , 𝐷::NamedTuple; zs=0:27)
 	lons=[-81,-79]
 	lats=[26,28]
 	lon=rand(2*np)*diff(lons)[1].+lons[1]
@@ -60,8 +60,7 @@ function init_gulf_stream(np ::Int , 𝐷::NamedTuple)
     n=findall(IndividualDisplacements.nearest_to_xy(𝐷.msk,x[m],y[m],f[m]).==1.0)[1:np]
     xyf=permutedims([x[m[n]] y[m[n]] f[m[n]]])
 
-	#z=rand(np)*27
-	z=15 .+rand(np)*12
+	z=zs[1] .+rand(np)*(zs[end]-zs[1])
     return DataFrame(x=xyf[1,:],y=xyf[2,:],z=z,f=xyf[3,:])
 end
 
@@ -403,8 +402,8 @@ end
 custom∫(prob) = IndividualDisplacements.ensemble_solver(prob,solver=Tsit5(),reltol=1e-5,abstol=1e-5)
 
 custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
-lon=Float64[], lat=Float64[], z=Float64[], θ=Float64[], SSθ=Float64[],
-S=Float64[], SSS=Float64[], year=Float64[], t=Float64[])
+lon=Float64[], lat=Float64[], z=Float64[], d=Float64[], 
+θ=Float64[], SSθ=Float64[], S=Float64[], SSS=Float64[], year=Float64[], t=Float64[])
 
 function custom🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=missing)
 
@@ -414,6 +413,8 @@ function custom🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=
     df.z=z[:]
     df.year=df.t ./86400/365
     add_lonlat!(df,𝐷.XC,𝐷.YC)
+    k=Int.(floor.(z)); w=(z-k);
+	df.d=𝐷.Γ.RF[1 .+ k].*(1 .- w)+𝐷.Γ.RF[2 .+ k].*w
 
     #for k in 1:nr
     # 𝐷.batch_T[:,k]=interp_to_xy(df,𝐷.θ1[:,k])./interp_to_xy(df,𝐷.exmsk[:,k])

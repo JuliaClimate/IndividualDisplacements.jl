@@ -116,7 +116,7 @@ md"""## 3. Trajectory Computation
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
 	file_IC
-	df = inc.ECCO_FlowFields.init_gulf_stream(np , 𝐷)
+	df = inc.ECCO_FlowFields.init_gulf_stream(np , 𝐷, zs=0:10)
 	#"z" in names(df) ? nothing : df.z=10.0 .+ 0.0*df.x
 
 	if !(k==0)
@@ -263,6 +263,9 @@ begin
 	gdf = inc.groupby(tmp_🔴, :ID)
 	sgdf= inc.combine(gdf,inc.nrow,:lat => mean)
 end
+
+# ╔═╡ 0251b905-82e1-41c7-9917-dfdb980eef4f
+tmp_🔴
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2645,7 +2648,7 @@ version = "3.5.0+0"
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
 # ╟─218b9beb-68f2-4498-a96d-08e0719b4cff
 # ╟─f1215951-2eb2-490b-875a-91c1205b8f63
-# ╟─f727992f-b72a-45bc-93f1-cc8daf89af0f
+# ╠═f727992f-b72a-45bc-93f1-cc8daf89af0f
 # ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
 # ╟─a2375720-f599-43b9-a7fb-af17956309b6
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
@@ -2661,5 +2664,6 @@ version = "3.5.0+0"
 # ╟─1a6af0eb-ab2a-4999-8063-f218b2f3f651
 # ╟─15077957-64d5-46a5-8a87-a76ad619cf38
 # ╟─6e43a2af-bf01-4f42-a4ba-1874a8cf4885
+# ╟─0251b905-82e1-41c7-9917-dfdb980eef4f
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
