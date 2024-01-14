@@ -18,7 +18,8 @@ end
 begin
 	using Statistics, PlutoUI
 	
-	output_path=joinpath(tempdir(),"global_ocean_tmp")
+	#output_path=joinpath(tempdir(),"global_ocean_tmp")
+	output_path="GulfStream_20240113"
 	!isdir(output_path) ? mkdir(output_path) : nothing
 end
 
@@ -26,6 +27,7 @@ end
 module inc 
 	using IndividualDisplacements, GLMakie, DataFrames
 	using OceanStateEstimation, MITgcmTools, CSV, JLD2
+	using FileIO, Colors
 	include("ECCO_FlowFields.jl")
 	include("global_ocean_plotting.jl")
 end	
@@ -54,7 +56,7 @@ begin
 	✔0="selected parameters"
 	
 	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
-	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="3"))
+	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="10"))
 	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
 	bind_replay = (@bind do_replay CheckBox(default=true))
 	bind_zoomin = (@bind zoom_in CheckBox(default=false))
@@ -88,6 +90,16 @@ md"""## 2. Configure `FlowFields`
 
 !!! note
     The global grid is handled via `MeshArrays.jl` and monthly climatology fields accessed via `OceanStateEstimation.jl`.
+
+```
+zrng=ARGS[1]
+zrng=parse.(Int,split(zrng,":"))
+zrng=zrng[1]:zrng[2]
+println(zrng)
+```
+
+!!! note
+    For non-interactive, one can add here code as shown above. Then `julia --project=. main.jl 21:27 &`.
 """
 
 # ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
@@ -105,6 +117,9 @@ begin
 	tmp1="  - inital depth range = $(round.([𝐷.Γ.RF[zrng[1]+1] 𝐷.Γ.RF[zrng[end]+1]]))"
 	println(tmp1)
 end
+
+# ╔═╡ 2fb4d76d-56d5-4c3e-bc7c-ba0cac57e0e3
+output_path
 
 # ╔═╡ f1215951-2eb2-490b-875a-91c1205b8f63
 md"""## 3. Trajectory Computation
@@ -218,16 +233,43 @@ If the replay option ($(bind_replay)) has been selected then we reload the resul
 """
 
 # ╔═╡ 397e5491-56ce-44ba-81d4-2982b0c3f503
-@bind fil_replay FilePicker()
+begin
+	#@bind fil_replay FilePicker()
+	fil_replay="GulfStream_20240113/GulfStream_21_27.csv"
+end
 
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-md"""## 4. Visualize Displacements"""
+md"""## 4. Visualize Displacements
+
+!!! note
+    For offline visualization, see code below.
+
+```
+using CSV, DataFrames
+include("global_ocean_plotting.jl")
+
+fil=joinpath(tempdir(),"global_ocean_tmp","GulfStream_21_27.csv")
+df=CSV.read(fil,DataFrame)
+
+nt=length(unique(df.t)); xlims=(-100.0,10.0); ylims=(20.0,70.0)
+fig,tt=PlottingFunctions.plot(𝐼,df,xlims=xlims,ylims=ylims)
+fig
+
+file_output_mp4=tempfile()*".mp4"
+PlottingFunctions.record(fig, file_output_mp4, 1:nt, framerate = 10) do t
+    tt[]=t
+end
+```
+"""
 
 # ╔═╡ 33fb4a15-b5ef-46f8-9e4e-c20da4536195
 if do_replay&&isa(fil_replay,Dict)&&haskey(fil_replay,"name")
 	#tmp_🔴=CSV.read(fil_replay["name"],DataFrame)
 	tmp_🔴=UInt8.(fil_replay["data"]) |> IOBuffer |> inc.CSV.File |> inc.DataFrame
 	tmp_file_base=split(fil_replay["name"],'.')[1]
+elseif do_replay
+	tmp_🔴=inc.CSV.read(fil_replay,inc.DataFrame)
+	tmp_file_base=basename(fil_replay)[1:end-4]
 else
 	tmp_🔴=𝐼.🔴
 	tmp_file_base=file_base
@@ -285,7 +327,9 @@ tmp_🔴
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
@@ -296,7 +340,9 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 CSV = "~0.10.11"
+Colors = "~0.12.10"
 DataFrames = "~1.6.1"
+FileIO = "~1.16.2"
 GLMakie = "~0.8.8"
 IndividualDisplacements = "~0.4.3"
 JLD2 = "~0.4.33"
@@ -311,7 +357,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "c2165aaf05200371bdf42a3059219d29ce3e41da"
+project_hash = "d190d92813afd119a3eb1c63219ebc4ed980f774"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "41c37aa88889c171f1300ceac1313c06e891d245"
@@ -2813,6 +2859,7 @@ version = "3.5.0+0"
 # ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
 # ╟─218b9beb-68f2-4498-a96d-08e0719b4cff
+# ╟─2fb4d76d-56d5-4c3e-bc7c-ba0cac57e0e3
 # ╟─f1215951-2eb2-490b-875a-91c1205b8f63
 # ╟─f727992f-b72a-45bc-93f1-cc8daf89af0f
 # ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
@@ -2823,7 +2870,7 @@ version = "3.5.0+0"
 # ╟─42959eb9-7c14-4892-bf41-a1a434b00e27
 # ╟─fc16b761-8b1f-41de-b4fe-7fa9987d6167
 # ╟─63b68e72-76c1-4104-bf76-dd9eefc4e225
-# ╟─397e5491-56ce-44ba-81d4-2982b0c3f503
+# ╠═397e5491-56ce-44ba-81d4-2982b0c3f503
 # ╟─c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
 # ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
 # ╟─33fb4a15-b5ef-46f8-9e4e-c20da4536195

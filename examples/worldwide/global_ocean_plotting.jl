@@ -2,18 +2,32 @@
 module PlottingFunctions 
 
 using GLMakie, IndividualDisplacements, DataFrames
+using FileIO, Colors
+
+function background()
+    dx=0.1
+    earth_img=load(joinpath("images","Blue_Marble_Next_Generation_topography_bathymetry.jpg"))
+    earth_img=reverse(permutedims(earth_img),dims=2)
+    fig = Figure(resolution = (1200, 800), backgroundcolor = :grey80)
+    ax = Axis(fig[1, 1])
+    image!(ax,-179.95:dx:179.95,-89.95:dx:89.95,Gray.(earth_img))
+    fig,ax
+end
 
 """
     plot(𝐼::Individuals)
 
 Plot initial and final positions, superimposed on a globalmap of ocean depth log.
 """
-function plot(𝐼::Individuals,🔴;time=0,xlims=(-180.0,180.0),ylims=(-90.0,90.0))
-    𝐵=𝐼.𝐷.ODL
-    fig=Figure()
-    ax=Axis(fig[1,1])
-#    limits!(ax,-180.0,-90.0,20.0,70.0)
-    contour!(ax,𝐵.lon,𝐵.lat,permutedims(𝐵.fld),color=:black,levels=0:0.1:4)
+function plot(𝐼,🔴;time=0,xlims=(-180.0,180.0),ylims=(-90.0,90.0))
+    if false
+        𝐵=𝐼.𝐷.ODL
+        fig=Figure()
+        ax=Axis(fig[1,1])
+        contour!(ax,𝐵.lon,𝐵.lat,permutedims(𝐵.fld),color=:black,levels=0:0.1:4)
+    else
+        fig,ax=background()
+    end
 
     np=Int(maximum(🔴.ID))
     nt=length(unique(🔴.t))
@@ -30,11 +44,15 @@ function plot(𝐼::Individuals,🔴;time=0,xlims=(-180.0,180.0),ylims=(-90.0,90
     tmp1=groupby(🔴, :t)
     lon_t1=tmp1[1][jj,:lon]
     lat_t1=tmp1[1][jj,:lat]
-    lon_tt=@lift(tmp1[$tt][jj,:lon])
-    lat_tt=@lift(tmp1[$tt][jj,:lat])
     
-    scatter!(ax,lon_t1,lat_t1,markersize=2.0,color=:lightblue)
-    scatter!(ax,lon_tt,lat_tt,markersize=4.0,color=:red)
+    scatter!(ax,lon_t1,lat_t1,markersize=1.0,color=:lightblue)
+    for tx in -5:0 
+        ttt=@lift(max(1,$tt+tx))
+        lon_tt=@lift(tmp1[$ttt][jj,:lon])
+        lat_tt=@lift(tmp1[$ttt][jj,:lat])
+        scatter!(ax,lon_tt,lat_tt,markersize=3.0,color=:red)
+    end
+    #more time steps
 
     limits!(ax,xlims...,ylims...)
 
