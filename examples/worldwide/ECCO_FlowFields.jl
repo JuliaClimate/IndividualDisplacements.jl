@@ -489,19 +489,28 @@ function custom∫!(𝐼::Individuals,𝑇)
     ii=[vel[ii][1] for ii=1:length(vel)]
     nn=Int(size(𝐷.batch_T,1)/2)
     ni=Int(ceil(length(ii)/nn))
+
+    nt=6
+    dt=(𝐼.𝑃.𝑇[2]-𝐼.𝑃.𝑇[1])/nt
+    nj=Int(round(ni*min(𝑇[2]/86400/365,1)))
     
     tmp=deepcopy(custom🔴)
     for i=1:ni
         mm=min(nn,length(ii)-nn*(i-1))
 #        println("i="*string(i))
         jj=ii[nn*(i-1) .+ collect(1:mm)]
-        prob = ODEProblem(🚄,permutedims(📌[jj]), 𝑇 ,𝑃)
+      for tt in 1:nt
+        𝑇𝑇=[𝐼.𝑃.𝑇[1]+(tt-1)*dt, 𝐼.𝑃.𝑇[1]+tt*dt]
+        prob = ODEProblem(🚄,permutedims(📌[jj]), 𝑇𝑇 ,𝑃)
         sol = ∫(prob)
-        append!(tmp, 🔧(sol,𝑃,𝐷,id=🆔[jj], 𝑇=𝑇))
+        append!(tmp, 🔧(sol,𝑃,𝐷,id=🆔[jj], 𝑇=𝑇𝑇))
         📌[jj] = deepcopy([sol[i].u[end] for i in 1:mm])
-        if isa(𝑃,𝐹_MeshArray3D)||isa(𝑃,𝐹_MeshArray2D)
-            [update_location!(i,𝑃) for i in 📌[jj]]
+        if i<=nj
+         if isa(𝑃,𝐹_MeshArray3D)||isa(𝑃,𝐹_MeshArray2D)
+             [update_location!(i,𝑃) for i in 📌[jj]]
+         end
         end
+      end
     end
     sort!(tmp, IndividualDisplacements.order(:t))
 

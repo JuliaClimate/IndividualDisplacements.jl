@@ -18,8 +18,8 @@ end
 begin
 	using Statistics, PlutoUI
 	
-	#output_path=joinpath(tempdir(),"global_ocean_tmp")
-	output_path="GulfStream_20240113"
+	output_path=joinpath(tempdir(),"global_ocean_tmp")
+	#output_path="GulfStream_20240113"
 	!isdir(output_path) ? mkdir(output_path) : nothing
 end
 
@@ -60,7 +60,7 @@ begin
 	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
 	bind_replay = (@bind do_replay CheckBox(default=true))
 	bind_zoomin = (@bind zoom_in CheckBox(default=false))
-	bind_zrng = @bind zrng Select([0:11,11:21,21:27],default=20:27)
+	bind_zrng = @bind zrng Select([0:11,11:21,21:27],default=21:27)
 	
 	file_IC = joinpath("global_ocean_circulation_inputs","initial_8_6.csv")
 	file_base = basename(file_IC)[1:end-4]
@@ -103,7 +103,10 @@ println(zrng)
 """
 
 # ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
-begin	
+begin
+    file_base="GulfStream_$(zrng[1])_$(zrng[end])"
+    println("file_base = "*file_base)
+
 	k=parse(Int,ktxt) #vertical level or 0
 	k!==0 ? zs=[k-0.5:k-0.5] : zs=zrng
 	
@@ -175,7 +178,7 @@ Time variable flow fields are easily handled by defining a `step!` function that
 # ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
 function step!(𝐼::inc.Individuals)
     𝐼.𝐷.🔄(𝐼)
-	𝐼.𝐷.frac > 0 ? inc.ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
+    𝐼.𝐷.frac > 0 ? inc.ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
     my∫!(𝐼)
 end
 
@@ -235,7 +238,8 @@ If the replay option ($(bind_replay)) has been selected then we reload the resul
 # ╔═╡ 397e5491-56ce-44ba-81d4-2982b0c3f503
 begin
 	#@bind fil_replay FilePicker()
-	fil_replay="GulfStream_20240113/GulfStream_21_27.csv"
+    path_replay="/Users/gforget/mywork/data/LagrangianParticleSimulations/GulfStream_20240114"
+    fil_replay=joinpath(path_replay,"GulfStream_$(zrng[1])_$(zrng[end]).csv")
 end
 
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
@@ -251,12 +255,12 @@ include("global_ocean_plotting.jl")
 fil=joinpath(tempdir(),"global_ocean_tmp","GulfStream_21_27.csv")
 df=CSV.read(fil,DataFrame)
 
-nt=length(unique(df.t)); xlims=(-100.0,10.0); ylims=(20.0,70.0)
-fig,tt=PlottingFunctions.plot(𝐼,df,xlims=xlims,ylims=ylims)
+nt=length(unique(df.t)); xlims=(-85.0,-5.0); ylims=(20.0,67.0)
+fig,tt=PlottingFunctions.plot([],df,xlims=xlims,ylims=ylims)
 fig
 
 file_output_mp4=tempfile()*".mp4"
-PlottingFunctions.record(fig, file_output_mp4, 1:nt, framerate = 10) do t
+PlottingFunctions.record(fig, file_output_mp4, 1:nt, framerate = 30) do t
     tt[]=t
 end
 ```
@@ -267,7 +271,7 @@ if do_replay&&isa(fil_replay,Dict)&&haskey(fil_replay,"name")
 	#tmp_🔴=CSV.read(fil_replay["name"],DataFrame)
 	tmp_🔴=UInt8.(fil_replay["data"]) |> IOBuffer |> inc.CSV.File |> inc.DataFrame
 	tmp_file_base=split(fil_replay["name"],'.')[1]
-elseif do_replay
+elseif do_replay&&isa(fil_replay,String)
 	tmp_🔴=inc.CSV.read(fil_replay,inc.DataFrame)
 	tmp_file_base=basename(fil_replay)[1:end-4]
 else
@@ -284,8 +288,8 @@ if !isempty(tmp_🔴)
 		xlims=extrema(tmp_🔴.lon)
 	    ylims=extrema(tmp_🔴.lat)
 	else
-		xlims=(-100.0,10.0)
-		ylims=(20.0,70.0)
+		xlims=(-85.0,-5.0)
+		ylims=(20.0,67.0)
 	end
 
 	fig,tt=inc.PlottingFunctions.plot(𝐼,tmp_🔴,xlims=xlims,ylims=ylims)
@@ -294,7 +298,7 @@ if !isempty(tmp_🔴)
 	inc.save(file_output_png,fig)
 
 	file_output_mp4=joinpath(output_path,tmp_file_base*".mp4")
-	inc.record(fig, file_output_mp4, 1:nt, framerate = 10) do t
+	inc.record(fig, file_output_mp4, 1:nt, framerate = 30) do t
 		tt[]=t
 	end
 	
