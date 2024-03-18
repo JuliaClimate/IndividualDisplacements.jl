@@ -36,11 +36,12 @@ makedocs(
     sitename = "IndividualDisplacements",
     format = Documenter.HTML(),
     pages = [
-		"Introduction" => "index.md",
+	"Introduction" => "index.md",
         "User Guide" => "workflow.md",
         "Examples" => "examples.md", 
-               "Tool Box" => "API.md"],
-        doctest = false,
+        "Tool Box" => "API.md"],
+    doctest = false,
+    warnonly = [:cross_references,:missing_docs],
     modules = [IndividualDisplacements]
 )
 
