@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.7' # Replace this with the minimum Julia version that your package supports. E.g. if your package requires Julia 1.5 or higher, change this to '1.5'.
+          - '1.9' # Replace this with the minimum Julia version that your package supports. E.g. if your package requires Julia 1.5 or higher, change this to '1.5'.
           - '1' # Leave this line unchanged. '1' will automatically expand to the latest stable 1.x release of Julia.
         os:
           - ubuntu-latest
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
         with:
-          version: '1.9'
+          version: '1'
       - run: |
           julia --project=docs -e '
             using Pkg
