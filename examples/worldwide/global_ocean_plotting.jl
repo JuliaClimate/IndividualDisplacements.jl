@@ -1,8 +1,7 @@
 
 module PlottingFunctions 
 
-using GLMakie, IndividualDisplacements, DataFrames
-using FileIO, Colors
+using GLMakie, DataFrames, FileIO, Colors
 
 function background()
     dx=0.1
@@ -22,7 +21,8 @@ end
 
 Plot initial and final positions, superimposed on a globalmap of ocean depth log.
 """
-function plot(𝐼,🔴;time=0,xlims=(-180.0,180.0),ylims=(-90.0,90.0))
+function plot(𝐼,🔴;time=0,xlims=(-180.0,180.0),ylims=(-90.0,90.0),
+    colormap=:linear_wcmr_100_45_c42_n256,colorrange=(-1300,00))
     if false
         𝐵=𝐼.𝐷.ODL
         fig=Figure()
@@ -55,12 +55,17 @@ function plot(𝐼,🔴;time=0,xlims=(-180.0,180.0),ylims=(-90.0,90.0))
         lat_tt=@lift(tmp1[$ttt][jj,:lat])
         d_tt=@lift(max.(tmp1[$ttt][jj,:d],Ref(-1200)))
         scatter!(ax,lon_tt,lat_tt,markersize=4.0,
-        color=d_tt,colorrange=(-1300,00),colormap=(:linear_wcmr_100_45_c42_n256))
+        color=d_tt,colorrange=colorrange,colormap=colormap)
+#        color=d_tt,colorrange=(-1300,00),colormap=(:linear_wcmr_100_45_c42_n256))
 #        color=d_tt,colorrange=(-1000,00),colormap=(:linear_wcmr_100_45_c42_n256))
 #       color=d_tt,colorrange=(-1300,-200),colormap=(:linear_wcmr_100_45_c42_n256))
 #        color=d_tt,colorrange=(-1300,00),colormap=(:linear_wcmr_100_45_c42_n256))
 #        color=:red)
-    end
+# :linear_wcmr_100_45_c42_n256
+# :linear_wyor_100_45_c55_n256		
+# :diverging_tritanopic_cwr_75_98_c20_n256		
+# :RdYlBu_9
+end
     #more time steps
 
     limits!(ax,xlims...,ylims...)
@@ -72,7 +77,3 @@ end
 
 end #module Plotting 
 
-# :linear_wcmr_100_45_c42_n256
-# :linear_wyor_100_45_c55_n256		
-# :diverging_tritanopic_cwr_75_98_c20_n256		
-# :RdYlBu_9

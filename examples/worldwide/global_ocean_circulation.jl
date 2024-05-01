@@ -249,19 +249,22 @@ md"""## 4. Visualize Displacements
     For offline visualization, see code below.
 
 ```
-using CSV, DataFrames
+using Pkg; Pkg.activate(temp=true)
+Pkg.add.(["CSV", "DataFrames", "FileIO", "Colors", "GLMakie"])
+
+using CSV, DataFrames, FileIO, Colors, GLMakie
 include("global_ocean_plotting.jl")
 
-fil=joinpath(tempdir(),"global_ocean_tmp","GulfStream_21_27.csv")
+fil=joinpath("inputs","GulfStream_21_27.csv")
 df=CSV.read(fil,DataFrame)
 
-nt=length(unique(df.t)); xlims=(-85.0,-5.0); ylims=(20.0,67.0)
+nt=length(unique(df.t)); xlims=(-85.0,5.0); ylims=(20.0,67.0)
 fig,tt=PlottingFunctions.plot([],df,xlims=xlims,ylims=ylims)
 fig
 
-file_output_mp4=tempfile()*".mp4"
-PlottingFunctions.record(fig, file_output_mp4, 1:nt, framerate = 30) do t
-    tt[]=t
+file_output_mp4=tempname()*".mp4"
+PlottingFunctions.record(fig, file_output_mp4, -50:nt, framerate = 25) do t
+    tt[]=max(t,0)
 end
 ```
 """
