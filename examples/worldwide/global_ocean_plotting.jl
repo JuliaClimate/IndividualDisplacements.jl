@@ -10,7 +10,7 @@ function background()
     earth_img=load(joinpath(path_img,
              "Blue_Marble_Next_Generation_topography_bathymetry.jpg"))
     earth_img=reverse(permutedims(earth_img),dims=2)
-    fig = Figure(resolution = (1200, 800), backgroundcolor = :grey80)
+    fig = Figure(size = (1200, 800), backgroundcolor = :grey80)
     ax = Axis(fig[1, 1])
     image!(ax,-179.95:dx:179.95,-89.95:dx:89.95,earth_img)
     hidedecorations!(ax)
@@ -55,13 +55,24 @@ function plot(𝐼,🔴;time=0,xlims=(-180.0,180.0),ylims=(-90.0,90.0))
         lat_tt=@lift(tmp1[$ttt][jj,:lat])
         d_tt=@lift(max.(tmp1[$ttt][jj,:d],Ref(-1200)))
         scatter!(ax,lon_tt,lat_tt,markersize=4.0,
-          color=d_tt,colorrange=(-1500,0),colormap=:plasma)
+        color=d_tt,colorrange=(-1300,00),colormap=(:linear_wcmr_100_45_c42_n256))
+#        color=d_tt,colorrange=(-1000,00),colormap=(:linear_wcmr_100_45_c42_n256))
+#       color=d_tt,colorrange=(-1300,-200),colormap=(:linear_wcmr_100_45_c42_n256))
+#        color=d_tt,colorrange=(-1300,00),colormap=(:linear_wcmr_100_45_c42_n256))
+#        color=:red)
     end
     #more time steps
 
     limits!(ax,xlims...,ylims...)
 
+#    Colorbar(fig[1,2],sc)
+
     return fig,tt
 end
 
 end #module Plotting 
+
+# :linear_wcmr_100_45_c42_n256
+# :linear_wyor_100_45_c55_n256		
+# :diverging_tritanopic_cwr_75_98_c20_n256		
+# :RdYlBu_9
