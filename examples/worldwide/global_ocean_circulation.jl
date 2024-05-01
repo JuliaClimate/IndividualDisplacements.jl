@@ -259,7 +259,8 @@ fil=joinpath("inputs","GulfStream_21_27.csv")
 df=CSV.read(fil,DataFrame)
 
 nt=length(unique(df.t)); xlims=(-85.0,5.0); ylims=(20.0,67.0)
-fig,tt=PlottingFunctions.plot([],df,xlims=xlims,ylims=ylims)
+fig,tt=PlottingFunctions.plot([],df,xlims=xlims,ylims=ylims,
+	colormap=:linear_wcmr_100_45_c42_n256,colorrange=(-1300,00), add_colorbar=false)
 fig
 
 file_output_mp4=tempname()*".mp4"

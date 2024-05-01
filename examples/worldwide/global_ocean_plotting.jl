@@ -5,7 +5,7 @@ using GLMakie, DataFrames, FileIO, Colors
 
 function background()
     dx=0.1
-    path_img="/Users/gforget/mywork/data/MITgcm_highres_sample/images/"
+    path_img="inputs"
     earth_img=load(joinpath(path_img,
              "Blue_Marble_Next_Generation_topography_bathymetry.jpg"))
     earth_img=reverse(permutedims(earth_img),dims=2)
@@ -20,25 +20,38 @@ end
     plot(𝐼::Individuals)
 
 Plot initial and final positions, superimposed on a globalmap of ocean depth log.
+
+```
+using Pkg; Pkg.activate(temp=true)
+Pkg.add.(["CSV", "DataFrames", "FileIO", "Colors", "GLMakie"])
+
+using CSV, DataFrames, FileIO, Colors, GLMakie
+include("global_ocean_plotting.jl")
+
+fil=joinpath("inputs","GulfStream_21_27.csv")
+df=CSV.read(fil,DataFrame)
+
+nt=length(unique(df.t)); xlims=(-85.0,5.0); ylims=(20.0,67.0)
+fig,tt=PlottingFunctions.plot([],df,xlims=xlims,ylims=ylims,
+	colormap=:linear_wcmr_100_45_c42_n256,colorrange=(-1300,00), add_colorbar=false)
+fig
+
+file_output_mp4=tempname()*".mp4"
+PlottingFunctions.record(fig, file_output_mp4, -50:nt, framerate = 25) do t
+    tt[]=max(t,0)
+end
+```
 """
 function plot(𝐼,🔴;time=0,xlims=(-180.0,180.0),ylims=(-90.0,90.0),
-    colormap=:linear_wcmr_100_45_c42_n256,colorrange=(-1300,00))
-    if false
-        𝐵=𝐼.𝐷.ODL
-        fig=Figure()
-        ax=Axis(fig[1,1])
-        contour!(ax,𝐵.lon,𝐵.lat,permutedims(𝐵.fld),color=:black,levels=0:0.1:4)
-    else
-        fig,ax=background()
-    end
+    colormap=:linear_wcmr_100_45_c42_n256,colorrange=(-1300,00),
+    add_colorbar=false)
+
+    fig,ax=background()
 
     np=Int(maximum(🔴.ID))
     nt=length(unique(🔴.t))
-    if "θ" in names(🔴)
-        ii=findall((!isnan).(🔴[np*0 .+ collect(1:10000),:θ]))
-    else
-        ii=1:10000
-    end
+    ii=1:10000
+
     tmp1=🔴[np*0 .+ ii,:lon].!==🔴[np*(nt-1) .+ ii,:lon]
     tmp2=🔴[np*0 .+ ii,:lat].!==🔴[np*(nt-1) .+ ii,:lat]
     jj=ii[findall(tmp1.*tmp2)] 
@@ -56,21 +69,11 @@ function plot(𝐼,🔴;time=0,xlims=(-180.0,180.0),ylims=(-90.0,90.0),
         d_tt=@lift(max.(tmp1[$ttt][jj,:d],Ref(-1200)))
         scatter!(ax,lon_tt,lat_tt,markersize=4.0,
         color=d_tt,colorrange=colorrange,colormap=colormap)
-#        color=d_tt,colorrange=(-1300,00),colormap=(:linear_wcmr_100_45_c42_n256))
-#        color=d_tt,colorrange=(-1000,00),colormap=(:linear_wcmr_100_45_c42_n256))
-#       color=d_tt,colorrange=(-1300,-200),colormap=(:linear_wcmr_100_45_c42_n256))
-#        color=d_tt,colorrange=(-1300,00),colormap=(:linear_wcmr_100_45_c42_n256))
-#        color=:red)
-# :linear_wcmr_100_45_c42_n256
-# :linear_wyor_100_45_c55_n256		
-# :diverging_tritanopic_cwr_75_98_c20_n256		
-# :RdYlBu_9
-end
-    #more time steps
+    end
 
     limits!(ax,xlims...,ylims...)
 
-#    Colorbar(fig[1,2],sc)
+    add_colorbar ? Colorbar(fig[1,2],colorrange=colorrange,colormap=colormap) : nothing
 
     return fig,tt
 end
