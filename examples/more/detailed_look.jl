@@ -21,7 +21,7 @@
 
 # ## 1. Import Software
 
-using IndividualDisplacements, MITgcmTools
+using IndividualDisplacements, MITgcm
 import IndividualDisplacements.OrdinaryDiffEq as OrdinaryDiffEq
 import IndividualDisplacements.DataFrames as DataFrames
 p=dirname(pathof(IndividualDisplacements))

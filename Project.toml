@@ -1,7 +1,7 @@
 name = "IndividualDisplacements"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 authors = ["gaelforget <gforget@mit.edu>"]
-version = "0.4.4"
+version = "0.4.6"
 
 [deps]
 Artifacts = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -13,8 +13,10 @@ OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
-CyclicArrays = "0.2, 0.3, 0.4, 0.5"
-DataFrames = "0.21, 0.22, 1"
-MeshArrays = "0.2.19, 0.2, 0.3"
-OrdinaryDiffEq = "5, 6"
-julia = "^1.6"
+Artifacts = "1"
+CyclicArrays = "0.5"
+DataFrames = "1"
+LazyArtifacts = "1"
+MeshArrays = "0.3"
+OrdinaryDiffEq = "6"
+julia = "^1.10"
