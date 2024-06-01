@@ -1,5 +1,5 @@
-using Documenter, Literate, PlutoSliderServer
-using IndividualDisplacements, OceanStateEstimation
+using Documenter, Literate, PlutoSliderServer, IndividualDisplacements
+using OceanStateEstimation
 
 #download data dependencies if needed
 IndividualDisplacements.flt_example_download()
@@ -32,8 +32,10 @@ end
 ismd(f) = splitext(f)[2] == ".md"
 pages(folder) = [joinpath(folder, f) for f in readdir(joinpath(src, folder)) if ismd(f)]
 
-makedocs(
-    sitename = "IndividualDisplacements",
+makedocs(;
+    sitename = "IndividualDisplacements.jl",
+    repo = Remotes.GitHub("JuliaClimate", "IndividualDisplacements.jl"),
+    authors="JuliaClimate <gforget@mit.edu>",
     format = Documenter.HTML(),
     pages = [
 	"Introduction" => "index.md",
