@@ -11,10 +11,10 @@ include("various.jl")
 
 DiffEqBase.solve!(𝐼::Individuals,args...)=∫!(𝐼::Individuals,args...)
 DataFrames.groupby(I::Individuals,args...) = groupby(I.🔴,args...)
+DataFrames.DataFrame(I::Individuals) = I.🔴
 F_Array3D=𝐹_Array3D; F_Array2D=𝐹_Array2D; F_MeshArray3D=𝐹_MeshArray3D; F_MeshArray2D=𝐹_MeshArray2D
-record(I::Individuals) = I.🔴
 
-export Individuals, ∫!, solve!, record, groupby
+export Individuals, ∫!, solve!, DataFrame, groupby
 export FlowFields, convert_to_FlowFields
 export 𝐹_Array3D, 𝐹_Array2D, 𝐹_MeshArray3D, 𝐹_MeshArray2D
 export F_Array3D, F_Array2D, F_MeshArray3D, F_MeshArray2D
