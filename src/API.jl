@@ -114,7 +114,7 @@ to_C_grid!(x;dims=0) = begin
     elseif dims==2
         x.=0.5*(circshift(x, (0,1,0))+x)
     elseif dims==3
-        x.=0.5*(circshift(x, (0,1,1))+x)
+        x.=0.5*(circshift(x, (0,0,1))+x)
     end
 end
 
