@@ -63,6 +63,61 @@ struct 𝐹_Array3D{T} <: FlowFields
     𝑇::Array{T}
 end
 
+"""
+    FlowFields(; u::Union{Array,Tuple}=[], v::Union{Array,Tuple}=[], w::Union{Array,Tuple}=[], 
+    period::Union{Array,Tuple}=[], gridtype::Symbol=:centered)
+
+Construct FlowFields data structure based on keywords.
+
+```
+uC, vC, _ = SimpleFlowFields(16)
+F=FlowFields(u=uC,v=vC,period=(0,10.))
+```
+"""
+function FlowFields(; u::Union{Array,Tuple}=[], v::Union{Array,Tuple}=[], w::Union{Array,Tuple}=[], 
+    period::Union{Array,Tuple}=[], gridtype::Symbol=:centered)
+    (isa(u,Tuple)||length(u[:])==2) ? (u0=u[1]; u1=u[2]) : (u0=u; u1=u)
+    (isa(v,Tuple)||length(v[:])==2) ? (v0=v[1]; v1=v[2]) : (v0=v; v1=v)
+    (isa(w,Tuple)||length(w[:])==2) ? (w0=w[1]; w1=w[2]) : (w0=w; w1=w)
+    if isempty(period)
+        @warn "period needs to be defined"
+    else
+        if gridtype==:centered
+            to_C_grid!(u0,dims=1)
+            to_C_grid!(u1,dims=1)
+            to_C_grid!(v0,dims=2)
+            to_C_grid!(v1,dims=2)
+            if !isempty(w0)
+                to_C_grid!(w0,dims=3)
+                to_C_grid!(w1,dims=3)
+            end
+        end
+    end
+    if !isempty(u0) && !isempty(v0)
+        if !isempty(w0)
+            FlowFields(u0,u1,v0,v1,w0,w1,period)
+        else
+            FlowFields(u0,u1,v0,v1,period)
+        end
+    else
+        []
+    end
+end
+
+to_C_grid!(x;dims=0) = begin
+    if (dims==1)&&(ndims(x)==2)
+        x.=0.5*(circshift(x, (1,0))+x)
+    elseif (dims==2)&&(ndims(x)==2)
+        x.=0.5*(circshift(x, (0,1))+x)
+    elseif dims==1
+        x.=0.5*(circshift(x, (1,0,0))+x)
+    elseif dims==2
+        x.=0.5*(circshift(x, (0,1,0))+x)
+    elseif dims==3
+        x.=0.5*(circshift(x, (0,0,1))+x)
+    end
+end
+
 function FlowFields(u0::Array{T,3},u1::Array{T,3},v0::Array{T,3},v1::Array{T,3},
     w0::Array{T,3},w1::Array{T,3},𝑇::Union{Array,Tuple}) where T
     #test for type of 𝑇 and fix if needed
