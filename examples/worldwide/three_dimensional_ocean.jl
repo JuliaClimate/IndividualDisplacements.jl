@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.40
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -73,7 +73,7 @@ function plot(𝐼::Individuals)
 	🔴_by_t = DataFrames.groupby(𝐼.🔴, :t)
 	
 	set_theme!(theme_light())
-	fig=Figure(resolution = (900, 600))
+	fig=Figure(size = (900, 600))
 	try
 		a = Axis(fig[1, 1],xlabel="longitude",ylabel="latitude")		
 		scatter!(a,🔴_by_t[1].lon,🔴_by_t[1].lat,color=:green2)
