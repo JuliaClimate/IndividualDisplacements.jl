@@ -158,12 +158,6 @@ end
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
 md"""## 4. Visualize Displacements"""
 
-# ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
-plot(𝐼)
-
-
-
-
 # ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
 md"""## 5. Summary Statistics
 
@@ -197,6 +191,12 @@ function plot(𝐼::Individuals)
 
 	return fig
 end
+
+
+# ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
+plot(𝐼)
+
+
 
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -1257,9 +1257,9 @@ version = "1.0.0"
 
 [[deps.IndividualDisplacements]]
 deps = ["Artifacts", "CyclicArrays", "DataFrames", "LazyArtifacts", "MeshArrays", "OrdinaryDiffEq", "Random"]
-git-tree-sha1 = "7e74f5300ca1938b6534191b4a2f2c66e0510518"
+git-tree-sha1 = "c55af1fbfae5603067d7ee9711b8c0e9cc7b83fc"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.4.7"
+version = "0.4.8"
 
 [[deps.Inflate]]
 git-tree-sha1 = "d1b1b796e47d94588b3757fe84fbf65a5ec4a80d"

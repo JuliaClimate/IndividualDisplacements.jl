@@ -110,6 +110,18 @@ begin
 	"$✓ dlon, dlat histogram2d"
 end
 
+# ╔═╡ 7d52252e-e006-11ea-2632-df2af831b52f
+begin
+	xx=vec(𝐷.Γ.XC[1][:,1])
+	yy=vec(𝐷.Γ.YC[1][1,:])
+	zz=transpose(log10.(𝐷.Γ.Depth[1]))
+	𝐵=(x = xx, y = yy, z = zz)
+	
+	𝐶(g::ColorGradient) = RGB[g[z] for z=LinRange(0,1,length(🔴_by_t))]
+	𝐶(t::Int) = 𝐶(cgrad(:inferno))[t]	
+	"$✓ Set up plotting"
+end
+
 # ╔═╡ 0b12cf52-e6e3-11ea-1a01-dd0c49c9e641
 begin
 	plt_dlat = @df 🔴_by_t[1] density(:dlat, leg = :none, colour = 𝐶(1), ylims=(0,0.5))
@@ -126,18 +138,6 @@ begin
 	[@df 🔴_by_t[tt] density!(plt_dlon,:dlon, leg = :none, colour = 𝐶(tt)) for tt in 2:length(🔴_by_t)];
 	density!(plt_dlon,🔴_by_t[tt].dlon, leg = :none, colour = :cyan, linewidth=4)
 	"$✓ dlon density"
-end
-
-# ╔═╡ 7d52252e-e006-11ea-2632-df2af831b52f
-begin
-	xx=vec(𝐷.Γ.XC[1][:,1])
-	yy=vec(𝐷.Γ.YC[1][1,:])
-	zz=transpose(log10.(𝐷.Γ.Depth[1]))
-	𝐵=(x = xx, y = yy, z = zz)
-	
-	𝐶(g::ColorGradient) = RGB[g[z] for z=LinRange(0,1,length(🔴_by_t))]
-	𝐶(t::Int) = 𝐶(cgrad(:inferno))[t]	
-	"$✓ Set up plotting"
 end
 
 # ╔═╡ a13d6ea6-dff1-11ea-0713-cb235e28cf79
@@ -161,6 +161,7 @@ Climatology = "9e9a4d37-2d2e-41e3-8b85-f7978328d9c7"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 """
 
@@ -188,6 +189,12 @@ weakdeps = ["ChainRulesCore", "Test"]
     [AbstractFFTs.extensions]
     AbstractFFTsChainRulesCoreExt = "ChainRulesCore"
     AbstractFFTsTestExt = "Test"
+
+[[AbstractPlutoDingetjes]]
+deps = ["Pkg"]
+git-tree-sha1 = "6e1d2a35f2f90a4bc7c2ed98079b2ba09c35b83a"
+uuid = "6e696c72-6542-2067-7265-42206c756150"
+version = "1.3.2"
 
 [[Accessors]]
 deps = ["CompositionsBase", "ConstructionBase", "InverseFunctions", "LinearAlgebra", "MacroTools", "Markdown"]
@@ -1011,6 +1018,24 @@ git-tree-sha1 = "7c4195be1649ae622304031ed46a2f4df989f1eb"
 uuid = "34004b35-14d8-5ef3-9330-4cdb6864b03a"
 version = "0.3.24"
 
+[[Hyperscript]]
+deps = ["Test"]
+git-tree-sha1 = "179267cfa5e712760cd43dcae385d7ea90cc25a4"
+uuid = "47d2ed2b-36de-50cf-bf87-49c2cf4b8b91"
+version = "0.0.5"
+
+[[HypertextLiteral]]
+deps = ["Tricks"]
+git-tree-sha1 = "7134810b1afce04bbc1045ca1985fbe81ce17653"
+uuid = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+version = "0.9.5"
+
+[[IOCapture]]
+deps = ["Logging", "Random"]
+git-tree-sha1 = "b6d6bfdd7ce25b0f9b2f6b3dd56b2673a66c8770"
+uuid = "b5f81e59-6552-4d32-b1f0-c071b021bf89"
+version = "0.2.5"
+
 [[IfElse]]
 git-tree-sha1 = "debdd00ffef04665ccbb3e150747a77560e8fad1"
 uuid = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
@@ -1018,9 +1043,9 @@ version = "0.1.1"
 
 [[IndividualDisplacements]]
 deps = ["Artifacts", "CyclicArrays", "DataFrames", "LazyArtifacts", "MeshArrays", "OrdinaryDiffEq", "Random"]
-git-tree-sha1 = "7e74f5300ca1938b6534191b4a2f2c66e0510518"
+git-tree-sha1 = "c55af1fbfae5603067d7ee9711b8c0e9cc7b83fc"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.4.7"
+version = "0.4.8"
 
 [[Inflate]]
 git-tree-sha1 = "d1b1b796e47d94588b3757fe84fbf65a5ec4a80d"
@@ -1382,6 +1407,11 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "abf88ff67f4fd89839efcae2f4c39cbc4ecd0846"
 uuid = "5ced341a-0733-55b8-9ab6-a4889d929147"
 version = "1.10.0+1"
+
+[[MIMEs]]
+git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
+uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
+version = "0.1.4"
 
 [[MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "oneTBB_jll"]
@@ -1920,6 +1950,12 @@ version = "1.40.8"
     IJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
     ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[[PlutoUI]]
+deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
+git-tree-sha1 = "eba4810d5e6a01f612b948c9fa94f905b49087b0"
+uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+version = "0.7.60"
 
 [[Polyester]]
 deps = ["ArrayInterface", "BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "ManualMemory", "PolyesterWeave", "Static", "StaticArrayInterface", "StrideArraysCore", "ThreadingUtilities"]

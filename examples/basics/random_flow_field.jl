@@ -1057,9 +1057,9 @@ version = "1.0.0"
 
 [[deps.IndividualDisplacements]]
 deps = ["Artifacts", "CyclicArrays", "DataFrames", "LazyArtifacts", "MeshArrays", "OrdinaryDiffEq", "Random"]
-git-tree-sha1 = "7e74f5300ca1938b6534191b4a2f2c66e0510518"
+git-tree-sha1 = "c55af1fbfae5603067d7ee9711b8c0e9cc7b83fc"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.4.7"
+version = "0.4.8"
 
 [[deps.Inflate]]
 git-tree-sha1 = "d1b1b796e47d94588b3757fe84fbf65a5ec4a80d"
