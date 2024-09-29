@@ -1,8 +1,8 @@
 [deps]
+Climatology = "9e9a4d37-2d2e-41e3-8b85-f7978328d9c7"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 MITgcm = "dce5fa8e-68ce-4431-a242-9469c69627a0"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
-OceanStateEstimation = "891f6deb-a4f5-4bc5-a2e3-1e8f649cdd2c"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoSliderServer = "2fc8631c-6f24-4c5b-bca7-cbb509c42db4"
