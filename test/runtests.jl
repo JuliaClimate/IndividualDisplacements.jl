@@ -1,5 +1,5 @@
 using Test, Documenter
-using IndividualDisplacements, Climatology, MeshArrays
+using IndividualDisplacements, Climatology, MeshArrays, NetCDF
 
 Climatology.get_ecco_velocity_if_needed()
 Climatology.get_occa_velocity_if_needed()
