@@ -1,6 +1,6 @@
 module OCCA_FlowFields
 
-using IndividualDisplacements, OceanStateEstimation, NetCDF
+using IndividualDisplacements, Climatology, NetCDF
 
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
@@ -35,7 +35,7 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
    return tmp
    end
 
-   OceanStateEstimation.get_occa_velocity_if_needed()
+   Climatology.get_occa_velocity_if_needed()
 
    fileIn=joinpath(ScratchSpaces.OCCA,"DDuvel.0406clim.nc")
    u=s*read(rd(fileIn,"u",n),MeshArray(γ,Float32,n))
