@@ -1,8 +1,8 @@
 using Test, Documenter
-using IndividualDisplacements, OceanStateEstimation, MeshArrays
+using IndividualDisplacements, Climatology, MeshArrays
 
-OceanStateEstimation.get_ecco_velocity_if_needed()
-OceanStateEstimation.get_occa_velocity_if_needed()
+Climatology.get_ecco_velocity_if_needed()
+Climatology.get_occa_velocity_if_needed()
 MeshArrays.GridLoad(MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90))
 MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360))
 IndividualDisplacements.flt_example_download()
