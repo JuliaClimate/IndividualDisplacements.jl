@@ -1,10 +1,10 @@
 using Documenter, Literate, PlutoSliderServer, IndividualDisplacements
-using OceanStateEstimation
+using Climatology
 
 #download data dependencies if needed
 IndividualDisplacements.flt_example_download()
-OceanStateEstimation.get_ecco_velocity_if_needed();
-OceanStateEstimation.get_occa_velocity_if_needed();
+Climatology.get_ecco_velocity_if_needed();
+Climatology.get_occa_velocity_if_needed();
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")
