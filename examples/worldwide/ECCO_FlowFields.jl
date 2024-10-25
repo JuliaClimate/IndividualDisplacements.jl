@@ -19,34 +19,34 @@ function init_from_file(np ::Int)
 end
 
 """
-    init_global_randn(np ::Int , 𝐷::NamedTuple)
+    init_global_randn(np ::Int , D::NamedTuple)
 
-Randomly distribute `np` points over the Earth, within `𝐷.msk` 
+Randomly distribute `np` points over the Earth, within `D.msk` 
 region, and return position in grid index space (`i,j,subdomain`).
 """
-function init_global_randn(np ::Int , 𝐷::NamedTuple)
+function init_global_randn(np ::Int , D::NamedTuple)
     (lon, lat) = randn_lonlat(maximum([2*np 10]))
-    (_,_,_,_,f,x,y)=InterpolationFactors(𝐷.Γ,lon,lat)
+    (_,_,_,_,f,x,y)=InterpolationFactors(D.Γ,lon,lat)
     m=findall( (f.!==0).*((!isnan).(x)) )
-    n=findall(nearest_to_xy(𝐷.msk,x[m],y[m],f[m]).==1.0)[1:np]
+    n=findall(nearest_to_xy(D.msk,x[m],y[m],f[m]).==1.0)[1:np]
     xyf=permutedims([x[m[n]] y[m[n]] f[m[n]]])
     return DataFrame(x=xyf[1,:],y=xyf[2,:],f=xyf[3,:])
 end
 
 """
-    reset_📌!(𝐼::Individuals,frac::Number,📌::Array)
+    reset_📌!(I::Individuals,frac::Number,📌::Array)
 
 Randomly select a fraction (frac) of the particles and reset 
-their positions (𝐼.📌) to a random subset of the specified 📌.
+their positions (I.📌) to a random subset of the specified 📌.
 """
-function reset_📌!(𝐼::Individuals,frac::Number,📌::Array)
-    np=length(𝐼.🆔)
+function reset_📌!(I::Individuals,frac::Number,📌::Array)
+    np=length(I.🆔)
     n_reset = Int(round(frac*np))
     k_reset = rand(1:np, n_reset)
     l_reset = rand(1:np, n_reset)
-    𝐼.📌[k_reset]=deepcopy(📌[l_reset])
-    isempty(𝐼.🔴.ID) ? m=maximum(𝐼.🆔) : m=max(maximum(𝐼.🔴.ID),maximum(𝐼.🆔))
-    𝐼.🆔[k_reset]=collect(1:n_reset) .+ m
+    I.📌[k_reset]=deepcopy(📌[l_reset])
+    isempty(I.🔴.ID) ? m=maximum(I.🆔) : m=max(maximum(I.🔴.ID),maximum(I.🆔))
+    I.🆔[k_reset]=collect(1:n_reset) .+ m
 end
 
 """
@@ -57,7 +57,7 @@ function `func` (e.g., `(u -> MeshArrays.update_location_llc!(u,Γ)))`,
 and file location (`pth`).
     
 _Note: the initial implementation approximates month durations to 
-365 days / 12 months for simplicity and sets 𝑃.𝑇 to [-mon/2,mon/2]_
+365 days / 12 months for simplicity and sets 𝑃.T to [-mon/2,mon/2]_
 """
 function setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
     XC=MeshArrays.exchange(Γ.XC) #add 1 lon point at each edge
@@ -80,27 +80,27 @@ function setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
         MeshArray(γ,Float32),MeshArray(γ,Float32),[-mon/2,mon/2],func)    
     end
     
-    𝐷 = (🔄 = update_FlowFields!, pth=pth,
+    D = (🔄 = update_FlowFields!, pth=pth,
          XC=XC, YC=YC, iDXC=iDXC, iDYC=iDYC,
          k=k, msk=msk, θ0=similar(msk), θ1=similar(msk))
 
-    𝐷 = merge(𝐷 , MeshArrays.NeighborTileIndices_cs(Γ))
+    D = merge(D , MeshArrays.NeighborTileIndices_cs(Γ))
 
-    return 𝑃,𝐷
+    return 𝑃,D
 end
 
 """
-    update_FlowFields!(𝑃::𝐹_MeshArray2D,𝐷::NamedTuple,t::Float64)
+    update_FlowFields!(𝑃::F_MeshArray2D,D::NamedTuple,t::Float64)
 
-Update flow field arrays (in 𝑃), 𝑃.𝑇, and ancillary variables (in 𝐷) 
+Update flow field arrays (in 𝑃), 𝑃.T, and ancillary variables (in D) 
 according to the chosen time `t` (in `seconds`). 
 
 _Note: for now, it is assumed that (1) the time interval `dt` between 
-consecutive records is diff(𝑃.𝑇), (2) monthly climatologies are used 
+consecutive records is diff(𝑃.T), (2) monthly climatologies are used 
 with a periodicity of 12 months, (3) vertical 𝑃.k is selected_
 """
-function update_FlowFields!(𝑃::𝐹_MeshArray2D,𝐷::NamedTuple,t::AbstractFloat)
-    dt=𝑃.𝑇[2]-𝑃.𝑇[1]
+function update_FlowFields!(𝑃::F_MeshArray2D,D::NamedTuple,t::AbstractFloat)
+    dt=𝑃.T[2]-𝑃.T[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
     m1=m0+1
@@ -112,38 +112,38 @@ function update_FlowFields!(𝑃::𝐹_MeshArray2D,𝐷::NamedTuple,t::AbstractF
     m1=mod(m1,12)
     m1==0 ? m1=12 : nothing
 
-    (U,V)=read_velocities(𝑃.u0.grid,m0,𝐷.pth)
-    u0=U[:,𝐷.k]; v0=V[:,𝐷.k]
+    (U,V)=read_velocities(𝑃.u0.grid,m0,D.pth)
+    u0=U[:,D.k]; v0=V[:,D.k]
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
-    u0=u0.*𝐷.iDXC; v0=v0.*𝐷.iDYC; #normalize to grid units
+    u0=u0.*D.iDXC; v0=v0.*D.iDYC; #normalize to grid units
     (u0,v0)=MeshArrays.exchange(u0,v0,1) #add 1 point at each edge for u and v
 
-    (U,V)=read_velocities(𝑃.u0.grid,m1,𝐷.pth)
-    u1=U[:,𝐷.k]; v1=V[:,𝐷.k]
+    (U,V)=read_velocities(𝑃.u0.grid,m1,D.pth)
+    u1=U[:,D.k]; v1=V[:,D.k]
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
-    u1=u1.*𝐷.iDXC; v1=v1.*𝐷.iDYC; #normalize to grid units
+    u1=u1.*D.iDXC; v1=v1.*D.iDYC; #normalize to grid units
     (u1,v1)=MeshArrays.exchange(u1,v1,1) #add 1 point at each edge for u and v
 
     𝑃.u0[:]=Float32.(u0[:])
     𝑃.u1[:]=Float32.(u1[:])
     𝑃.v0[:]=Float32.(v0[:])
     𝑃.v1[:]=Float32.(v1[:])
-    𝑃.𝑇[:]=[t0,t1]
+    𝑃.T[:]=[t0,t1]
 
 end
 
 """
-    update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
+    update_FlowFields!(𝑃::F_MeshArray3D,D::NamedTuple,t::Float64)
 
-Update flow field arrays (in 𝑃), 𝑃.𝑇, and ancillary variables (in 𝐷) 
+Update flow field arrays (in 𝑃), 𝑃.T, and ancillary variables (in D) 
 according to the chosen time `t` (in `seconds`). 
 
 _Note: for now, it is assumed that (1) the time interval `dt` between 
-consecutive records is diff(𝑃.𝑇), (2) monthly climatologies are used 
+consecutive records is diff(𝑃.T), (2) monthly climatologies are used 
 with a periodicity of 12 months, (3) vertical 𝑃.k is selected_
 """
-function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
-    dt=𝑃.𝑇[2]-𝑃.𝑇[1]
+function update_FlowFields!(𝑃::F_MeshArray3D,D::NamedTuple,t::Float64)
+    dt=𝑃.T[2]-𝑃.T[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
     m1=m0+1
@@ -155,30 +155,30 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
     m1=mod(m1,12)
     m1==0 ? m1=12 : nothing
 
-    (_,nr)=size(𝐷.Γ.hFacC)
+    (_,nr)=size(D.Γ.hFacC)
 
-    (U,V)=read_velocities(𝑃.u0.grid,m0,𝐷.pth)
+    (U,V)=read_velocities(𝑃.u0.grid,m0,D.pth)
     u0=U; v0=V
     u0[findall(isnan.(u0))]=0.0; v0[findall(isnan.(v0))]=0.0 #mask with 0s rather than NaNs
     for k=1:nr
-        u0[:,k]=u0[:,k].*𝐷.iDXC; v0[:,k]=v0[:,k].*𝐷.iDYC; #normalize to grid units
+        u0[:,k]=u0[:,k].*D.iDXC; v0[:,k]=v0[:,k].*D.iDYC; #normalize to grid units
         (tmpu,tmpv)=exchange(u0[:,k],v0[:,k],1) #add 1 point at each edge for u and v
         u0[:,k]=tmpu
         v0[:,k]=tmpv
     end
-    w0=IndividualDisplacements.read_nctiles(𝐷.pth*"WVELMASS/WVELMASS","WVELMASS",𝑃.u0.grid,I=(:,:,:,m0))
+    w0=IndividualDisplacements.read_nctiles(D.pth*"WVELMASS/WVELMASS","WVELMASS",𝑃.u0.grid,I=(:,:,:,m0))
     w0[findall(isnan.(w0))]=0.0 #mask with 0s rather than NaNs
 
-    (U,V)=read_velocities(𝑃.u0.grid,m1,𝐷.pth)
+    (U,V)=read_velocities(𝑃.u0.grid,m1,D.pth)
     u1=U; v1=V
     u1[findall(isnan.(u1))]=0.0; v1[findall(isnan.(v1))]=0.0 #mask with 0s rather than NaNs
     for k=1:nr
-        u1[:,k]=u1[:,k].*𝐷.iDXC; v1[:,k]=v1[:,k].*𝐷.iDYC; #normalize to grid units
+        u1[:,k]=u1[:,k].*D.iDXC; v1[:,k]=v1[:,k].*D.iDYC; #normalize to grid units
         (tmpu,tmpv)=exchange(u1[:,k],v1[:,k],1) #add 1 point at each edge for u and v
         u1[:,k]=tmpu
         v1[:,k]=tmpv
     end
-    w1=IndividualDisplacements.read_nctiles(𝐷.pth*"WVELMASS/WVELMASS","WVELMASS",𝑃.u0.grid,I=(:,:,:,m1))
+    w1=IndividualDisplacements.read_nctiles(D.pth*"WVELMASS/WVELMASS","WVELMASS",𝑃.u0.grid,I=(:,:,:,m1))
     w1[findall(isnan.(w1))]=0.0 #mask with 0s rather than NaNs
 
     𝑃.u0[:,:]=u0[:,:]
@@ -187,24 +187,24 @@ function update_FlowFields!(𝑃::𝐹_MeshArray3D,𝐷::NamedTuple,t::Float64)
     𝑃.v1[:,:]=v1[:,:]
     for k=1:nr
         tmpw=exchange(-w0[:,k],1)
-        𝑃.w0[:,k]=tmpw./𝐷.Γ.DRC[k]
+        𝑃.w0[:,k]=tmpw./D.Γ.DRC[k]
         tmpw=exchange(-w1[:,k],1)
-        𝑃.w1[:,k]=tmpw./𝐷.Γ.DRC[k]
+        𝑃.w1[:,k]=tmpw./D.Γ.DRC[k]
     end
     𝑃.w0[:,1]=0*exchange(-w0[:,1],1)
     𝑃.w1[:,1]=0*exchange(-w1[:,1],1)
     𝑃.w0[:,nr+1]=0*exchange(-w0[:,1],1)
     𝑃.w1[:,nr+1]=0*exchange(-w1[:,1],1)
 
-    θ0=IndividualDisplacements.read_nctiles(𝐷.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m0))
+    θ0=IndividualDisplacements.read_nctiles(D.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m0))
     θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
-    𝐷.θ0[:,:]=float32.(θ0[:,:])
+    D.θ0[:,:]=float32.(θ0[:,:])
 
-    θ1=IndividualDisplacements.read_nctiles(𝐷.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m1))
+    θ1=IndividualDisplacements.read_nctiles(D.pth*"THETA/THETA","THETA",𝑃.u0.grid,I=(:,:,:,m1))
     θ1[findall(isnan.(θ1))]=0.0 #mask with 0s rather than NaNs
-    𝐷.θ1[:,:]=float32.(θ1[:,:])
+    D.θ1[:,:]=float32.(θ1[:,:])
 
-    𝑃.𝑇[:]=[t0,t1]
+    𝑃.T[:]=[t0,t1]
 end
 
 """
@@ -237,8 +237,8 @@ function global_ocean_circulation(;k=1)
   func=(u -> MeshArrays.update_location_llc!(u,Γ))
 
   #initialize u0,u1 etc
-  𝑃,𝐷=setup_FlowFields(k,Γ,func,ScratchSpaces.ECCO)
-  𝐷.🔄(𝑃,𝐷,0.0)
+  𝑃,D=setup_FlowFields(k,Γ,func,ScratchSpaces.ECCO)
+  D.🔄(𝑃,D,0.0)
 
   #add background map for plotting
   λ=ECCO_FlowFields.get_interp_coefficients(Γ)
@@ -249,9 +249,9 @@ function global_ocean_circulation(;k=1)
 
   #add parameters for use in reset!
   tmp=(frac=r_reset, Γ=Γ, ODL=ODL)
-  𝐷=merge(𝐷,tmp)
+  D=merge(D,tmp)
 
-  return 𝑃,𝐷
+  return 𝑃,D
 
 end
 

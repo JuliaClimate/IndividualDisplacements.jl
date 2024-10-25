@@ -16,17 +16,17 @@ Also by convention, velocity fields are expected to have been normalized to grid
 before sending them to one of the supported `FlowFields` constructors (using either `Array` or `MeshArray`):
 
 ```
-𝐹_Array2D(u0,u1,v0,v1,𝑇)
-𝐹_Array3D(u0,u1,v0,v1,w0,w1,𝑇)
-𝐹_MeshArray2D(u0,u1,v0,v1,𝑇,update_location!)
-𝐹_MeshArray3D(u0,u1,v0,v1,w0,w1,𝑇,update_location!)
+F_Array2D(u0,u1,v0,v1,T)
+F_Array3D(u0,u1,v0,v1,w0,w1,T)
+F_MeshArray2D(u0,u1,v0,v1,T,update_location!)
+F_MeshArray3D(u0,u1,v0,v1,w0,w1,T,update_location!)
 ```
 
 Using the `FlowFields` constructor which gets selected by the type of `u0` etc. For example :
 
 ```
-𝐹=FlowFields(u,u,v,v,0*w,1*w,[0.0,10.0])
-𝐹=FlowFields(u,u,v,v,[0.0,10.0],func)
+F=FlowFields(u,u,v,v,0*w,1*w,[0.0,10.0])
+F=FlowFields(u,u,v,v,[0.0,10.0],func)
 ```
 
 as shown in the online documentation examples.
@@ -34,33 +34,33 @@ as shown in the online documentation examples.
 """
 abstract type FlowFields end
 
-struct 𝐹_Array2D{T} <: FlowFields
-    u0::Array{T,2}
-    u1::Array{T,2}
-    v0::Array{T,2}
-    v1::Array{T,2}
-    𝑇::Array{T}
+struct F_Array2D{Ty} <: FlowFields
+    u0::Array{Ty,2}
+    u1::Array{Ty,2}
+    v0::Array{Ty,2}
+    v1::Array{Ty,2}
+    T::Array{Ty}
 end
 
-function FlowFields(u0::Array{T,2},u1::Array{T,2},
-    v0::Array{T,2},v1::Array{T,2},𝑇::Union{Array,Tuple}) where T
-    #test for type of 𝑇 and fix if needed
-    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+function FlowFields(u0::Array{Ty,2},u1::Array{Ty,2},
+    v0::Array{Ty,2},v1::Array{Ty,2},T::Union{Array,Tuple}) where Ty
+    #test for type of T and fix if needed
+    isa(T,Tuple) ? T=convert(Array{Ty},[T...]) : T=convert(Array{Ty},T)
     #check array size concistency
     tst=prod([(size(u0)==size(tmp)) for tmp in (u1,v0,v1)])
     !tst ? error("inconsistent array sizes") : nothing
     #call constructor
-    𝐹_Array2D(u0,u1,v0,v1,𝑇)
+    F_Array2D(u0,u1,v0,v1,T)
 end
 
-struct 𝐹_Array3D{T} <: FlowFields
-    u0::Array{T,3}
-    u1::Array{T,3}
-    v0::Array{T,3}
-    v1::Array{T,3}
-    w0::Array{T,3}
-    w1::Array{T,3}
-    𝑇::Array{T}
+struct F_Array3D{Ty} <: FlowFields
+    u0::Array{Ty,3}
+    u1::Array{Ty,3}
+    v0::Array{Ty,3}
+    v1::Array{Ty,3}
+    w0::Array{Ty,3}
+    w1::Array{Ty,3}
+    T::Array{Ty}
 end
 
 """
@@ -118,62 +118,62 @@ to_C_grid!(x;dims=0) = begin
     end
 end
 
-function FlowFields(u0::Array{T,3},u1::Array{T,3},v0::Array{T,3},v1::Array{T,3},
-    w0::Array{T,3},w1::Array{T,3},𝑇::Union{Array,Tuple}) where T
-    #test for type of 𝑇 and fix if needed
-    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+function FlowFields(u0::Array{Ty,3},u1::Array{Ty,3},v0::Array{Ty,3},v1::Array{Ty,3},
+    w0::Array{Ty,3},w1::Array{Ty,3},T::Union{Array,Tuple}) where Ty
+    #test for type of T and fix if needed
+    isa(T,Tuple) ? T=convert(Array{Ty},[T...]) : T=convert(Array{Ty},T)
     #check array size concistency
     tst=prod([(size(u0)==size(tmp)) for tmp in (u1,v0,v1)])
     tst=tst*prod([(size(u0)==size(tmp).-(0,0,1)) for tmp in (w0,w1)])
     !tst ? error("inconsistent array sizes") : nothing
     #call constructor
-    𝐹_Array3D(u0,u1,v0,v1,w0,w1,𝑇)
+    F_Array3D(u0,u1,v0,v1,w0,w1,T)
 end
 
-struct 𝐹_MeshArray2D{T} <: FlowFields
-    u0::AbstractMeshArray{T,1}
-    u1::AbstractMeshArray{T,1}
-    v0::AbstractMeshArray{T,1}
-    v1::AbstractMeshArray{T,1}
-    𝑇::Array{T}
+struct F_MeshArray2D{Ty} <: FlowFields
+    u0::AbstractMeshArray{Ty,1}
+    u1::AbstractMeshArray{Ty,1}
+    v0::AbstractMeshArray{Ty,1}
+    v1::AbstractMeshArray{Ty,1}
+    T::Array{Ty}
     update_location!::Function
 end
 
-function FlowFields(u0::AbstractMeshArray{T,1},u1::AbstractMeshArray{T,1},
-    v0::AbstractMeshArray{T,1},v1::AbstractMeshArray{T,1},
-    𝑇::Union{Array,Tuple},update_location!::Function) where T
-    #test for type of 𝑇 and fix if needed
-    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+function FlowFields(u0::AbstractMeshArray{Ty,1},u1::AbstractMeshArray{Ty,1},
+    v0::AbstractMeshArray{Ty,1},v1::AbstractMeshArray{Ty,1},
+    T::Union{Array,Tuple},update_location!::Function) where Ty
+    #test for type of T and fix if needed
+    isa(T,Tuple) ? T=convert(Array{Ty},[T...]) : T=convert(Array{Ty},T)
     #check array size concistency
     tst=prod([(size(u0)==size(tmp))*(u0.fSize==tmp.fSize) for tmp in (u1,v0,v1)])
     !tst ? error("inconsistent array sizes") : nothing
     #call constructor
-    𝐹_MeshArray2D(u0,u1,v0,v1,𝑇,update_location!)
+    F_MeshArray2D(u0,u1,v0,v1,T,update_location!)
 end
 
-struct 𝐹_MeshArray3D{T} <: FlowFields
-    u0::AbstractMeshArray{T,2}
-    u1::AbstractMeshArray{T,2}
-    v0::AbstractMeshArray{T,2}
-    v1::AbstractMeshArray{T,2}
-    w0::AbstractMeshArray{T,2}
-    w1::AbstractMeshArray{T,2}
-    𝑇::Array{T}
+struct F_MeshArray3D{Ty} <: FlowFields
+    u0::AbstractMeshArray{Ty,2}
+    u1::AbstractMeshArray{Ty,2}
+    v0::AbstractMeshArray{Ty,2}
+    v1::AbstractMeshArray{Ty,2}
+    w0::AbstractMeshArray{Ty,2}
+    w1::AbstractMeshArray{Ty,2}
+    T::Array{Ty}
     update_location!::Function
 end
 
-function FlowFields(u0::AbstractMeshArray{T,2},u1::AbstractMeshArray{T,2},
-    v0::AbstractMeshArray{T,2},v1::AbstractMeshArray{T,2},
-    w0::AbstractMeshArray{T,2},w1::AbstractMeshArray{T,2},
-    𝑇::Union{Array,Tuple},update_location!::Function) where T
-    #test for type of 𝑇 and fix if needed
-    isa(𝑇,Tuple) ? 𝑇=convert(Array{T},[𝑇...]) : 𝑇=convert(Array{T},𝑇)
+function FlowFields(u0::AbstractMeshArray{Ty,2},u1::AbstractMeshArray{Ty,2},
+    v0::AbstractMeshArray{Ty,2},v1::AbstractMeshArray{Ty,2},
+    w0::AbstractMeshArray{Ty,2},w1::AbstractMeshArray{Ty,2},
+    T::Union{Array,Tuple},update_location!::Function) where Ty
+    #test for type of T and fix if needed
+    isa(T,Tuple) ? T=convert(Array{Ty},[T...]) : T=convert(Array{Ty},T)
     #check array size consistency
     tst=prod([(size(u0)==size(tmp))*(u0.fSize==tmp.fSize) for tmp in (u1,v0,v1)])
     tst=tst*prod([(size(u0)==size(tmp).-(0,1))*(u0.fSize==tmp.fSize) for tmp in (w0,w1)])
     !tst ? error("inconsistent array sizes") : nothing
     #call constructor
-    𝐹_MeshArray3D(u0,u1,v0,v1,w0,w1,𝑇,update_location!)
+    F_MeshArray3D(u0,u1,v0,v1,w0,w1,T,update_location!)
 end
 
 """
@@ -191,42 +191,42 @@ function ensemble_solver(prob;solver=Tsit5(),reltol=1e-8,abstol=1e-8,safetycopy=
 end
 
 a=fill(0.0,1,1)
-default_flowfields = 𝐹_Array2D{Float64}(a,a,a,a,[0. 1.])
+default_flowfields = F_Array2D{Float64}(a,a,a,a,[0. 1.])
 default_recorder = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
 default_postproc = (x->x)
 
 """
     struct Individuals{T,N}
 
-- Data:           📌 (position),   🔴(record), 🆔 (ID), 𝑃 (`FlowFields`)
+- Data:           📌 (position),   🔴(record), 🆔 (ID), P (`FlowFields`)
 - Functions:      🚄 (velocity),   ∫ (integration), 🔧(postprocessing)
-- NamedTuples:    𝐷 (diagnostics),      𝑀 (metadata)
+- NamedTuples:    D (diagnostics),      M (metadata)
 
 The velocity function 🚄 typically computes velocity at individual positions (📌 to start) within the 
-specified space-time domain by interpolating gridded variables (provided via 𝑃). Individual trajectories 
+specified space-time domain by interpolating gridded variables (provided via P). Individual trajectories 
 are computed by integrating (∫) interpolated velocities through time. Normally, integration is done by 
 calling ∫! which updates 📌 at the end and records results in 🔴 via 🔧. Ancillary data, for use in 
-🔧 for example, can be provided in 𝐷 and metadata stored in 𝑀.
+🔧 for example, can be provided in D and metadata stored in M.
 
 Unicode cheatsheet:
 
 - 📌=`\\:pushpin:<tab>`,          🔴=`\\:red_circle:<tab>`, 🆔=`\\:id:<tab>`
 - 🚄=`\\:bullettrain_side:<tab>`, ∫=`\\int<tab>`,          🔧=`\\:wrench:<tab>`
-- 𝑃=`\\itP<tab>`,                 𝐷=`\\itD<tab>`,           𝑀=`\\itM<tab>`
+- P=`\\itP<tab>`,                 D=`\\itD<tab>`,           M=`\\itM<tab>`
 
 Simple constructors that use `FlowFields` to choose adequate defaults:
 
-- Individuals(𝐹::𝐹_Array2D,x,y)
-- Individuals(𝐹::𝐹_Array3D,x,y,z)
-- Individuals(𝐹::𝐹_MeshArray2D,x,y,fid)
-- Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid)
+- Individuals(F::F_Array2D,x,y)
+- Individuals(F::F_Array3D,x,y,z)
+- Individuals(F::F_MeshArray2D,x,y,fid)
+- Individuals(F::F_MeshArray3D,x,y,z,fid)
 
 Further customization is achievable via keyword constructors:
 
 ```
 df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
-𝐼=Individuals{Float64,2}(📌=zeros(3,10),🆔=1:10,🔴=deepcopy(df))
-𝐼=Individuals(📌=zeros(3,2),🆔=collect(1:2),🔴=deepcopy(df))
+I=Individuals{Float64,2}(📌=zeros(3,10),🆔=1:10,🔴=deepcopy(df))
+I=Individuals(📌=zeros(3,2),🆔=collect(1:2),🔴=deepcopy(df))
 ```
 
 Or via the plain text (or no-unicode) constructors:
@@ -237,16 +237,16 @@ I=(position=zeros(3,2),ID=1:2,record=deepcopy(df))
 I=Individuals(I)
 ```
 """
-Base.@kwdef struct Individuals{T,N}
-   📌  ::Array{T,N} = Array{T,N}(undef, Tuple(Int.(zeros(1,N)))) #\:pushpin:<tab>
+Base.@kwdef struct Individuals{Ty,N}
+   📌  ::Array{Ty,N} = Array{Ty,N}(undef, Tuple(Int.(zeros(1,N)))) #\:pushpin:<tab>
    🔴  ::DataFrame = similar(default_recorder) #\:red_circle:<tab>
    🆔   ::Array{Int,1} = Array{Int,1}(undef, 0) #\:id:<tab>
    🚄  ::Function = dxdt! #\:bullettrain_side:<tab>
    ∫   ::Function = default_solver #\int<tab>
    🔧  ::Function = default_postproc #\:wrench:<tab>
-   𝑃   ::FlowFields = default_flowfields #\itP<tab>
-   𝐷   ::NamedTuple = NamedTuple() #\itD<tab>
-   𝑀   ::NamedTuple = NamedTuple() #\itM<tab>
+   P   ::FlowFields = default_flowfields #\itP<tab>
+   D   ::NamedTuple = NamedTuple() #\itD<tab>
+   M   ::NamedTuple = NamedTuple() #\itM<tab>
 end
 
 function Individuals(NT::NamedTuple)
@@ -257,16 +257,16 @@ function Individuals(NT::NamedTuple)
     haskey(NT,:velocity) ? 🚄=NT.velocity : 🚄=dxdt!
     haskey(NT,:integration) ? ∫=NT.integration : ∫=default_solver
     haskey(NT,:postprocessing) ? 🔧=NT.postprocessing : 🔧=default_postproc
-    haskey(NT,:parameters) ? 𝑃=NT.parameters : 𝑃=default_flowfields
-    haskey(NT,:diagnostics) ? 𝐷=NT.diagnostics : 𝐷=NamedTuple()
-    haskey(NT,:metadata) ? 𝑀=NT.metadata : 𝑀=NamedTuple()
+    haskey(NT,:parameters) ? P=NT.parameters : P=default_flowfields
+    haskey(NT,:diagnostics) ? D=NT.diagnostics : D=NamedTuple()
+    haskey(NT,:metadata) ? M=NT.metadata : M=NamedTuple()
     isa(📌,UnitRange) ? 📌=collect(📌) : nothing
     haskey(NT,:type) ? T=NT.type : T=eltype(📌)
 
-    Individuals{T,ndims(📌)}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,𝑃=𝑃,𝐷=𝐷,𝑀=𝑀)    
+    Individuals{T,ndims(📌)}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,P=P,D=D,M=M)    
 end
 
-function Individuals(𝐹::𝐹_Array2D,x,y, NT::NamedTuple = NamedTuple())
+function Individuals(F::F_Array2D,x,y, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i]] for i in eachindex(x)])
     if length(📌)==1
         📌=📌[1]
@@ -287,13 +287,13 @@ function Individuals(𝐹::𝐹_Array2D,x,y, NT::NamedTuple = NamedTuple())
 
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
-    𝐷=NamedTuple()
-    haskey(NT,:𝐷) ? 𝐷=NT.𝐷 : nothing
+    D=NamedTuple()
+    haskey(NT,:D) ? D=NT.D : nothing
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,𝐷=𝐷)
+    Individuals{T,ndims(📌)}(P=F,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,D=D)
 end
 
-function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
+function Individuals(F::F_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];z[i]] for i in eachindex(x)])
     if length(📌)==1
         📌=📌[1]
@@ -306,8 +306,8 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
     haskey(NT,:🔴) ? 🔴=NT.🔴 : nothing
 
-    function 🔧(sol,𝐹::𝐹_Array3D,𝐷::NamedTuple;id=missing,𝑇=missing)
-        df=postprocess_xy(sol,𝐹,𝐷,id=id,𝑇=𝑇)
+    function 🔧(sol,F::F_Array3D,D::NamedTuple;id=missing,T=missing)
+        df=postprocess_xy(sol,F,D,id=id,T=T)
         if isa(sol,EnsembleSolution)
             np=length(sol)
             z=[[sol[i][1,3] for i in 1:np];[sol[3][1,end] for i in 1:np]]
@@ -324,13 +324,13 @@ function Individuals(𝐹::𝐹_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
 
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
-    𝐷=NamedTuple()
-    haskey(NT,:𝐷) ? 𝐷=NT.𝐷 : nothing
+    D=NamedTuple()
+    haskey(NT,:D) ? D=NT.D : nothing
     
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,𝐷=𝐷)
+    Individuals{T,ndims(📌)}(P=F,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,D=D)
 end
 
-function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple())
+function Individuals(F::F_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
     if length(📌)==1
         📌=📌[1]
@@ -351,13 +351,13 @@ function Individuals(𝐹::𝐹_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple
 
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
-    𝐷=NamedTuple()
-    haskey(NT,:𝐷) ? 𝐷=NT.𝐷 : nothing
+    D=NamedTuple()
+    haskey(NT,:D) ? D=NT.D : nothing
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,𝐷=𝐷)
+    Individuals{T,ndims(📌)}(P=F,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,D=D)
 end
 
-function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTuple())
+function Individuals(F::F_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];z[i];fid[i]] for i in eachindex(x)])
     if length(📌)==1
         📌=📌[1]
@@ -370,8 +370,8 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTup
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], fid=Int64[], t=Float64[])
     haskey(NT,:🔴) ? 🔴=NT.🔴 : nothing
 
-    function 🔧(sol,𝐹::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=missing)
-        df=postprocess_MeshArray(sol,𝐹,𝐷,id=id,𝑇=𝑇)
+    function 🔧(sol,F::F_MeshArray3D,D::NamedTuple;id=missing,T=missing)
+        df=postprocess_MeshArray(sol,F,D,id=id,T=T)
         if isa(sol,EnsembleSolution)
             np=length(sol)
             z=[[sol.u[i][1][3] for i in 1:np];[sol.u[i][end][3] for i in 1:np]]
@@ -388,28 +388,28 @@ function Individuals(𝐹::𝐹_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTup
 
     haskey(NT,:∫) ? ∫=NT.∫ : nothing
 
-    𝐷=NamedTuple()
-    haskey(NT,:𝐷) ? 𝐷=NT.𝐷 : nothing
+    D=NamedTuple()
+    haskey(NT,:D) ? D=NT.D : nothing
 
-    Individuals{T,ndims(📌)}(𝑃=𝐹,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,𝐷=𝐷)
+    Individuals{T,ndims(📌)}(P=F,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,D=D)
 end
 
 """
-    ∫!(𝐼::Individuals,𝑇::Tuple)
+    ∫!(I::Individuals,T::Tuple)
 
-Displace simulated individuals continuously through space over time period 𝑇 starting from position 📌. 
+Displace simulated individuals continuously through space over time period T starting from position 📌. 
 
 - This is typically achieved by computing the cumulative integral of velocity experienced by each individual along its trajectory (∫ 🚄 dt).
 - The current default is `solve(prob,Tsit5(),reltol=1e-8,abstol=1e-8)` but all solver options from the [OrdinaryDiffEq.jl](https://github.com/SciML/OrdinaryDiffEq.jl) package are available.
 - After this, `∫!` is also equipped to postprocess results recorded into 🔴 via the 🔧 workflow, and the last step in `∫!` consists in updating 📌 to be ready for continuing in a subsequent call to `∫!`.
 """
-function ∫!(𝐼::Individuals,𝑇::Tuple)
-    (; 🚄,📌,𝑃, 𝐷, 🔧, 🆔, 🔴, ∫) = 𝐼
+function ∫!(I::Individuals,T::Tuple)
+    (; 🚄,📌,P, D, 🔧, 🆔, 🔴, ∫) = I
 
-    prob = ODEProblem(🚄,📌, 𝑇 ,𝑃)
+    prob = ODEProblem(🚄,📌, T ,P)
     sol = ∫(prob)
 
-    tmp = 🔧(sol,𝑃,𝐷, id=🆔, 𝑇=𝑇)
+    tmp = 🔧(sol,P,D, id=🆔, T=T)
 
     isempty(🔴) ? np =0 : np=length(🆔)
     append!(🔴,tmp[np+1:end,:],promote=true)
@@ -417,8 +417,8 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
     if isa(sol,EnsembleSolution)
         np=length(sol)
         📌[:] = deepcopy([sol[i].u[end] for i in 1:np])
-        if isa(𝑃,𝐹_MeshArray3D)||isa(𝑃,𝐹_MeshArray2D)
-            [update_location!(i,𝑃) for i in 𝐼.📌]
+        if isa(P,F_MeshArray3D)||isa(P,F_MeshArray2D)
+            [update_location!(i,P) for i in I.📌]
         end
     else
         nd=length(size(sol))
@@ -427,23 +427,23 @@ function ∫!(𝐼::Individuals,𝑇::Tuple)
 
 end
 
-∫!(𝐼::Individuals,𝑇::Array) = ∫!(𝐼::Individuals,(𝑇[1],𝑇[2]))
+∫!(I::Individuals,T::Array) = ∫!(I::Individuals,(T[1],T[2]))
 
 """
-    ∫!(𝐼::Individuals)
+    ∫!(I::Individuals)
 
-Call ∫!(𝐼::Individuals,𝐼.𝑃.𝑇)
+Call ∫!(I::Individuals,I.P.T)
 """
-∫!(𝐼::Individuals) = ∫!(𝐼::Individuals,𝐼.𝑃.𝑇)
+∫!(I::Individuals) = ∫!(I::Individuals,I.P.T)
 
 ## Convenience Methods (size,show,similar)
 
 Base.size(A::Individuals) = size(A.📌)
 
-function Base.show(io::IO, 𝐼::Individuals)
-    (; 🚄,📌,𝑃, 𝐷, 𝑀, 🔧, 🆔, 🔴, ∫) = 𝐼
+function Base.show(io::IO, I::Individuals)
+    (; 🚄,📌,P, D, M, 🔧, 🆔, 🔴, ∫) = I
     printstyled(io, "  📌 details     = ",color=:normal)
-    printstyled(io, "$(size(📌)) $(typeof(𝐼).parameters[1])\n",color=:blue)
+    printstyled(io, "$(size(📌)) $(typeof(I).parameters[1])\n",color=:blue)
     printstyled(io, "  🔴 details     = ",color=:normal)
     printstyled(io, "$(size(🔴)) $(names(🔴))\n",color=:blue)
     printstyled(io, "  🆔 range       = ",color=:normal)
@@ -454,37 +454,37 @@ function Base.show(io::IO, 𝐼::Individuals)
     printstyled(io, "$(∫)\n",color=:blue)
     printstyled(io, "  🔧 function    = ",color=:normal)
     printstyled(io, "$(🔧)\n",color=:blue)
-    printstyled(io, "  𝑃  details     = ",color=:normal)
-    printstyled(io, "$(fieldnames(typeof(𝑃)))\n",color=:blue)
+    printstyled(io, "  P  details     = ",color=:normal)
+    printstyled(io, "$(fieldnames(typeof(P)))\n",color=:blue)
   return
 end
 
-function Base.similar(𝐼::Individuals)
-    (; 🚄,📌,𝑃, 𝐷, 𝑀, 🔧, 🆔, 🔴, ∫) = 𝐼
-    T = typeof(𝐼).parameters[1]
-    N = ndims(𝐼.📌)
+function Base.similar(I::Individuals)
+    (; 🚄,📌,P, D, M, 🔧, 🆔, 🔴, ∫) = I
+    T = typeof(I).parameters[1]
+    N = ndims(I.📌)
     return Individuals{T,N}(📌=similar(📌),🔴=similar(🔴),🆔=similar(🆔),
-                          🚄=🚄, ∫=∫, 🔧=🔧, 𝑃=𝑃, 𝐷=𝐷, 𝑀=𝑀)
+                          🚄=🚄, ∫=∫, 🔧=🔧, P=P, D=D, M=M)
 end
 
 """
-    Base.diff(𝐼::Individuals)
+    Base.diff(I::Individuals)
 
 Difference in grid unit coordinates (dx,dy) between final and initial positions.
 """
-function Base.diff(𝐼::Individuals)
+function Base.diff(I::Individuals)
     f(x)=last(x).-first(x)
-    🔴_by_ID = groupby(𝐼.🔴, :ID)
+    🔴_by_ID = groupby(I.🔴, :ID)
     return combine(🔴_by_ID,nrow,:x => f => :dx,:y => f => :dy)
 end
 
 """
-    gcdist(𝐼::Individuals)
+    gcdist(I::Individuals)
 
 Great circle distance (gcd in radians) between final and initial positions.
 """
-function gcdist(𝐼::Individuals)
-    🔴_by_ID = groupby(𝐼.🔴, :ID)
+function gcdist(I::Individuals)
+    🔴_by_ID = groupby(I.🔴, :ID)
     tmp = combine(🔴_by_ID, 
     :lon => first => :lo1,:lon => last => :lo2,
     :lat => first => :la1,:lat => last => :la2)
