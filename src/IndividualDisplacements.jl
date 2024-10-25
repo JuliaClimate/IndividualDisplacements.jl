@@ -15,7 +15,7 @@ DataFrames.DataFrame(I::Individuals) = I.🔴
 
 export Individuals, ∫!, solve!, DataFrame, groupby
 export FlowFields, convert_to_FlowFields
-export F_Array3D, F_Array2D, F_MeshArray3D, F_MeshArray2D
+export uvwArrays, uvArrays, uvwMeshArrays, uvMeshArrays
 export dxdt!, dxy_dt_CyclicArray, dxy_dt_replay
 export postprocess_MeshArray, add_lonlat!, postprocess_xy, interp_to_xy
 export nearest_to_xy, randn_lonlat, interp_to_lonlat

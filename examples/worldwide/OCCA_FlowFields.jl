@@ -125,7 +125,7 @@ custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[],
    lon=Float64[], lat=Float64[], dlon=Float64[], dlat=Float64[], 
    year=Float64[], col=Symbol[])
 
-function custom🔧(sol,𝑃::F_MeshArray3D,D::NamedTuple;id=missing,T=missing)
+function custom🔧(sol,𝑃::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
    df=postprocess_MeshArray(sol,𝑃,D,id=id,T=T)
    add_lonlat!(df,D.XC,D.YC)
    df.dlon=0*df.lon

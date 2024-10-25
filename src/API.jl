@@ -16,10 +16,10 @@ Also by convention, velocity fields are expected to have been normalized to grid
 before sending them to one of the supported `FlowFields` constructors (using either `Array` or `MeshArray`):
 
 ```
-F_Array2D(u0,u1,v0,v1,T)
-F_Array3D(u0,u1,v0,v1,w0,w1,T)
-F_MeshArray2D(u0,u1,v0,v1,T,update_location!)
-F_MeshArray3D(u0,u1,v0,v1,w0,w1,T,update_location!)
+uvArrays(u0,u1,v0,v1,T)
+uvwArrays(u0,u1,v0,v1,w0,w1,T)
+uvMeshArrays(u0,u1,v0,v1,T,update_location!)
+uvwMeshArrays(u0,u1,v0,v1,w0,w1,T,update_location!)
 ```
 
 Using the `FlowFields` constructor which gets selected by the type of `u0` etc. For example :
@@ -34,7 +34,7 @@ as shown in the online documentation examples.
 """
 abstract type FlowFields end
 
-struct F_Array2D{Ty} <: FlowFields
+struct uvArrays{Ty} <: FlowFields
     u0::Array{Ty,2}
     u1::Array{Ty,2}
     v0::Array{Ty,2}
@@ -50,10 +50,10 @@ function FlowFields(u0::Array{Ty,2},u1::Array{Ty,2},
     tst=prod([(size(u0)==size(tmp)) for tmp in (u1,v0,v1)])
     !tst ? error("inconsistent array sizes") : nothing
     #call constructor
-    F_Array2D(u0,u1,v0,v1,T)
+    uvArrays(u0,u1,v0,v1,T)
 end
 
-struct F_Array3D{Ty} <: FlowFields
+struct uvwArrays{Ty} <: FlowFields
     u0::Array{Ty,3}
     u1::Array{Ty,3}
     v0::Array{Ty,3}
@@ -127,10 +127,10 @@ function FlowFields(u0::Array{Ty,3},u1::Array{Ty,3},v0::Array{Ty,3},v1::Array{Ty
     tst=tst*prod([(size(u0)==size(tmp).-(0,0,1)) for tmp in (w0,w1)])
     !tst ? error("inconsistent array sizes") : nothing
     #call constructor
-    F_Array3D(u0,u1,v0,v1,w0,w1,T)
+    uvwArrays(u0,u1,v0,v1,w0,w1,T)
 end
 
-struct F_MeshArray2D{Ty} <: FlowFields
+struct uvMeshArrays{Ty} <: FlowFields
     u0::AbstractMeshArray{Ty,1}
     u1::AbstractMeshArray{Ty,1}
     v0::AbstractMeshArray{Ty,1}
@@ -148,10 +148,10 @@ function FlowFields(u0::AbstractMeshArray{Ty,1},u1::AbstractMeshArray{Ty,1},
     tst=prod([(size(u0)==size(tmp))*(u0.fSize==tmp.fSize) for tmp in (u1,v0,v1)])
     !tst ? error("inconsistent array sizes") : nothing
     #call constructor
-    F_MeshArray2D(u0,u1,v0,v1,T,update_location!)
+    uvMeshArrays(u0,u1,v0,v1,T,update_location!)
 end
 
-struct F_MeshArray3D{Ty} <: FlowFields
+struct uvwMeshArrays{Ty} <: FlowFields
     u0::AbstractMeshArray{Ty,2}
     u1::AbstractMeshArray{Ty,2}
     v0::AbstractMeshArray{Ty,2}
@@ -173,7 +173,7 @@ function FlowFields(u0::AbstractMeshArray{Ty,2},u1::AbstractMeshArray{Ty,2},
     tst=tst*prod([(size(u0)==size(tmp).-(0,1))*(u0.fSize==tmp.fSize) for tmp in (w0,w1)])
     !tst ? error("inconsistent array sizes") : nothing
     #call constructor
-    F_MeshArray3D(u0,u1,v0,v1,w0,w1,T,update_location!)
+    uvwMeshArrays(u0,u1,v0,v1,w0,w1,T,update_location!)
 end
 
 """
@@ -191,7 +191,7 @@ function ensemble_solver(prob;solver=Tsit5(),reltol=1e-8,abstol=1e-8,safetycopy=
 end
 
 a=fill(0.0,1,1)
-default_flowfields = F_Array2D{Float64}(a,a,a,a,[0. 1.])
+default_flowfields = uvArrays{Float64}(a,a,a,a,[0. 1.])
 default_recorder = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
 default_postproc = (x->x)
 
@@ -216,10 +216,10 @@ Unicode cheatsheet:
 
 Simple constructors that use `FlowFields` to choose adequate defaults:
 
-- Individuals(F::F_Array2D,x,y)
-- Individuals(F::F_Array3D,x,y,z)
-- Individuals(F::F_MeshArray2D,x,y,fid)
-- Individuals(F::F_MeshArray3D,x,y,z,fid)
+- Individuals(F::uvArrays,x,y)
+- Individuals(F::uvwArrays,x,y,z)
+- Individuals(F::uvMeshArrays,x,y,fid)
+- Individuals(F::uvwMeshArrays,x,y,z,fid)
 
 Further customization is achievable via keyword constructors:
 
@@ -266,7 +266,7 @@ function Individuals(NT::NamedTuple)
     Individuals{T,ndims(📌)}(📌=📌,🔴=🔴,🆔=🆔,🚄=🚄,∫=∫,🔧=🔧,P=P,D=D,M=M)    
 end
 
-function Individuals(F::F_Array2D,x,y, NT::NamedTuple = NamedTuple())
+function Individuals(F::uvArrays,x,y, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i]] for i in eachindex(x)])
     if length(📌)==1
         📌=📌[1]
@@ -293,7 +293,7 @@ function Individuals(F::F_Array2D,x,y, NT::NamedTuple = NamedTuple())
     Individuals{T,ndims(📌)}(P=F,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,D=D)
 end
 
-function Individuals(F::F_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
+function Individuals(F::uvwArrays,x,y,z, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];z[i]] for i in eachindex(x)])
     if length(📌)==1
         📌=📌[1]
@@ -306,7 +306,7 @@ function Individuals(F::F_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], t=Float64[])
     haskey(NT,:🔴) ? 🔴=NT.🔴 : nothing
 
-    function 🔧(sol,F::F_Array3D,D::NamedTuple;id=missing,T=missing)
+    function 🔧(sol,F::uvwArrays,D::NamedTuple;id=missing,T=missing)
         df=postprocess_xy(sol,F,D,id=id,T=T)
         if isa(sol,EnsembleSolution)
             np=length(sol)
@@ -330,7 +330,7 @@ function Individuals(F::F_Array3D,x,y,z, NT::NamedTuple = NamedTuple())
     Individuals{T,ndims(📌)}(P=F,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,D=D)
 end
 
-function Individuals(F::F_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple())
+function Individuals(F::uvMeshArrays,x,y,fid, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];fid[i]] for i in eachindex(x)])
     if length(📌)==1
         📌=📌[1]
@@ -357,7 +357,7 @@ function Individuals(F::F_MeshArray2D,x,y,fid, NT::NamedTuple = NamedTuple())
     Individuals{T,ndims(📌)}(P=F,📌=📌,🔴=🔴,🆔=🆔,🚄=dxdt!,∫=∫,🔧=🔧,D=D)
 end
 
-function Individuals(F::F_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTuple())
+function Individuals(F::uvwMeshArrays,x,y,z,fid, NT::NamedTuple = NamedTuple())
     📌=permutedims([[x[i];y[i];z[i];fid[i]] for i in eachindex(x)])
     if length(📌)==1
         📌=📌[1]
@@ -370,7 +370,7 @@ function Individuals(F::F_MeshArray3D,x,y,z,fid, NT::NamedTuple = NamedTuple())
     🔴 = DataFrame(ID=Int[], x=Float64[], y=Float64[], z=Float64[], fid=Int64[], t=Float64[])
     haskey(NT,:🔴) ? 🔴=NT.🔴 : nothing
 
-    function 🔧(sol,F::F_MeshArray3D,D::NamedTuple;id=missing,T=missing)
+    function 🔧(sol,F::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
         df=postprocess_MeshArray(sol,F,D,id=id,T=T)
         if isa(sol,EnsembleSolution)
             np=length(sol)
@@ -417,7 +417,7 @@ function ∫!(I::Individuals,T::Tuple)
     if isa(sol,EnsembleSolution)
         np=length(sol)
         📌[:] = deepcopy([sol[i].u[end] for i in 1:np])
-        if isa(P,F_MeshArray3D)||isa(P,F_MeshArray2D)
+        if isa(P,uvwMeshArrays)||isa(P,uvMeshArrays)
             [update_location!(i,P) for i in I.📌]
         end
     else
