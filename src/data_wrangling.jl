@@ -2,7 +2,7 @@
     convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
 
 Convert a pair of U,V arrays (staggered C-grid velocity field in 2D) to
-a `F_MeshArray2D` struct ready for integration of individual displacements
+a `uvMeshArrays` struct ready for integration of individual displacements
 from time `t0=0` to time `t1`.
 """
 function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
@@ -15,7 +15,7 @@ function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
     (u,v)=exchange(u,v,1)
     func=(u -> MeshArrays.update_location_dpdo!(u,g))
 
-    F_MeshArray2D{eltype(u)}(u,u,v,v,[0,t1],func)
+    uvMeshArrays{eltype(u)}(u,u,v,v,[0,t1],func)
 end
 
 """

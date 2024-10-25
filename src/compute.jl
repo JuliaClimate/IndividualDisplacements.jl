@@ -12,7 +12,7 @@ fview(f::Array{Array{Float32,2},2},i::Int,j::Int) = view(f[i,j],:,:)
 fview(f::Array{Array{Float64,2},2},i::Int,j::Int) = view(f[i,j],:,:)
 
 """
-    dxdt!(du,u,p::F_MeshArray3D,tim)
+    dxdt!(du,u,p::uvwMeshArrays,tim)
 
 Interpolate velocity from gridded fields (3D; with halos) to position `u`
 (`x,y,z,fIndex`) to compute the derivative of position v time  `du_dt`.
@@ -34,7 +34,7 @@ prod(isapprox.(I.📌,ref,atol=1.0)) # hide
 true
 ```
 """
-function dxdt!(du::Array{T,1},u::Array{T,1},P::F_MeshArray3D,tim) where T
+function dxdt!(du::Array{T,1},u::Array{T,1},P::uvwMeshArrays,tim) where T
     dt=mydt(tim,P.T)
     g=P.u0.grid
     #
@@ -95,7 +95,7 @@ function dxdt!(du::Array{T,1},u::Array{T,1},P::F_MeshArray3D,tim) where T
 end
 
 """
-    dxdt!(du,u,p::F_MeshArray2D,tim)
+    dxdt!(du,u,p::uvMeshArrays,tim)
 
 Interpolate velocity from gridded fields (2D; with halos) to position `u`
 (`x,y,fIndex`) to compute the derivative of position v time  `du_dt`.
@@ -116,7 +116,7 @@ isa(I.📌,Vector)
 true
 ```
 """
-function dxdt!(du::Array{T,1},u::Array{T,1},P::F_MeshArray2D,tim) where T
+function dxdt!(du::Array{T,1},u::Array{T,1},P::uvMeshArrays,tim) where T
     #compute positions in index units
     dt=mydt(tim,P.T)
     g=P.u0.grid
@@ -157,7 +157,7 @@ function dxdt!(du::Array{T,1},u::Array{T,1},P::F_MeshArray2D,tim) where T
 end
 
 """
-    dxdt!(du,u,P::F_Array3D,tim)
+    dxdt!(du,u,P::uvwArrays,tim)
 
 Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 (`x,y,z`) to compute the derivative of position v time  `du_dt`.
@@ -179,7 +179,7 @@ prod(isapprox.(I.📌,ref,atol=1.0)) # hide
 true
 ```
 """
-function dxdt!(du::Array{T,1},u::Array{T,1},P::F_Array3D,tim) where T
+function dxdt!(du::Array{T,1},u::Array{T,1},P::uvwArrays,tim) where T
     #compute positions in index units
     dt=mydt(tim,P.T)
     #
@@ -226,12 +226,12 @@ function dxdt!(du::Array{T,1},u::Array{T,1},P::F_Array3D,tim) where T
     return du
 end
 
-function dxdt!(du::Array{T,2},u::Array{T,2},P::F_Array3D,tim) where T
+function dxdt!(du::Array{T,2},u::Array{T,2},P::uvwArrays,tim) where T
     [dxdt!(du[i],u[i],P,tim) for i=1:size(u,2)]
 end
 
 """
-    dxdt!(du,u,P::F_Array2D,tim)
+    dxdt!(du,u,P::uvArrays,tim)
 
 Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 (`x,y`) to compute the derivative of position v time  `du_dt`.
@@ -252,7 +252,7 @@ isa(I.📌,Vector)
 true
 ```
 """
-function dxdt!(du::Array{T,1},u::Array{T,1},P::F_Array2D,tim) where T
+function dxdt!(du::Array{T,1},u::Array{T,1},P::uvArrays,tim) where T
     dt=mydt(tim,P.T)
     #
     (nx,ny) = size(P.u0)

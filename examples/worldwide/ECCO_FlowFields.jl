@@ -90,7 +90,7 @@ function setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String)
 end
 
 """
-    update_FlowFields!(𝑃::F_MeshArray2D,D::NamedTuple,t::Float64)
+    update_FlowFields!(𝑃::uvMeshArrays,D::NamedTuple,t::Float64)
 
 Update flow field arrays (in 𝑃), 𝑃.T, and ancillary variables (in D) 
 according to the chosen time `t` (in `seconds`). 
@@ -99,7 +99,7 @@ _Note: for now, it is assumed that (1) the time interval `dt` between
 consecutive records is diff(𝑃.T), (2) monthly climatologies are used 
 with a periodicity of 12 months, (3) vertical 𝑃.k is selected_
 """
-function update_FlowFields!(𝑃::F_MeshArray2D,D::NamedTuple,t::AbstractFloat)
+function update_FlowFields!(𝑃::uvMeshArrays,D::NamedTuple,t::AbstractFloat)
     dt=𝑃.T[2]-𝑃.T[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
@@ -133,7 +133,7 @@ function update_FlowFields!(𝑃::F_MeshArray2D,D::NamedTuple,t::AbstractFloat)
 end
 
 """
-    update_FlowFields!(𝑃::F_MeshArray3D,D::NamedTuple,t::Float64)
+    update_FlowFields!(𝑃::uvwMeshArrays,D::NamedTuple,t::Float64)
 
 Update flow field arrays (in 𝑃), 𝑃.T, and ancillary variables (in D) 
 according to the chosen time `t` (in `seconds`). 
@@ -142,7 +142,7 @@ _Note: for now, it is assumed that (1) the time interval `dt` between
 consecutive records is diff(𝑃.T), (2) monthly climatologies are used 
 with a periodicity of 12 months, (3) vertical 𝑃.k is selected_
 """
-function update_FlowFields!(𝑃::F_MeshArray3D,D::NamedTuple,t::Float64)
+function update_FlowFields!(𝑃::uvwMeshArrays,D::NamedTuple,t::Float64)
     dt=𝑃.T[2]-𝑃.T[1]
 
     m0=Int(floor((t+dt/2.0)/dt))
