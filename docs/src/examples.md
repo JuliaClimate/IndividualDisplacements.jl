@@ -13,9 +13,9 @@ To rerun an example yourself, the recommended method is to copy the correspondin
 
 Simulate an ensemble of displacements (and trajectories) in a simple 2D configuration. 
 
-The [`FlowFields`](@ref) constructor readily wraps a flow field provided in the standard Array format, adds a time range, and returns a `FlowFields` data structure `𝐹`. 
+The [`FlowFields`](@ref) constructor readily wraps a flow field provided in the standard Array format, adds a time range, and returns a `FlowFields` data structure `F`. 
 
-All that is left to do at this stage is to define initial positions for the individuals, put them together with `𝐹` into the [`Individuals`](@ref) data structure `𝐼`, and call `∫!(𝐼)`.
+All that is left to do at this stage is to define initial positions for the individuals, put them together with `F` into the [`Individuals`](@ref) data structure `I`, and call `∫!(I)`.
 
 Exercises include the non-periodic domain case, statistics made easy via `DataFrames.jl`, and replacing the flow field with your own.
 
@@ -23,9 +23,9 @@ Exercises include the non-periodic domain case, statistics made easy via `DataFr
 
 [notebook (html)](solid_body_rotation.html) ➭ [notebook (code)](https://github.com/JuliaClimate/IndividualDisplacements.jl/blob/master/examples/basics/solid_body_rotation.jl)
 
-Set up a three-dimensional flow field `u,v,w`, initialize a single particle at position `📌`, and wrap everything up within an `Individuals` data structure `𝐼`.
+Set up a three-dimensional flow field `u,v,w`, initialize a single particle at position `📌`, and wrap everything up within an `Individuals` data structure `I`.
 
-`𝐼` is displaced by integrating the individual velocity, [moving along through space](https://en.wikipedia.org/wiki/Lagrangian_and_Eulerian_specification_of_the_flow_field), over time `𝑇`.  This is the main computation done in this package -- interpolating `u,v,w` to individual positions `𝐼.📌` on the fly, using `𝐼.🚄`, and integrating through time, using `𝐼.∫`.
+`I` is displaced by integrating the individual velocity, [moving along through space](https://en.wikipedia.org/wiki/Lagrangian_and_Eulerian_specification_of_the_flow_field), over time `T`.  This is the main computation done in this package -- interpolating `u,v,w` to individual positions `I.📌` on the fly, using `I.🚄`, and integrating through time, using `I.∫`.
 
 The flow field consists of [rigid body rotation](https://en.wikipedia.org/wiki/Rigid_body), plus a convergent term, plus a sinking term in the vertical direction. This flow field generates a downward, converging spiral -- a idealized version of a relevant case in the Ocean.
 
