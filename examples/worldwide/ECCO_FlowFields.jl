@@ -1,6 +1,6 @@
 module ECCO_FlowFields
 
-using IndividualDisplacements, OceanStateEstimation, MITgcm, CSV, JLD2
+using IndividualDisplacements, Climatology, MITgcm, CSV, JLD2
 
 import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, ODEProblem
 import IndividualDisplacements: update_location!
@@ -349,7 +349,7 @@ Set up Global Ocean particle simulation in 2D with seasonally varying flow field
 """
 function init_FlowFields(; k=1, backward_time=false)
 
-  OceanStateEstimation.get_ecco_velocity_if_needed()
+  Climatology.get_ecco_velocity_if_needed()
 
   #read grid and set up connections between subdomains
   γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
@@ -383,8 +383,8 @@ function get_interp_coefficients(Γ)
     fil=joinpath(ScratchSpaces.ECCO,"interp_coeffs_halfdeg.jld2")
     if !isfile(fil)
         url="https://zenodo.org/record/5784905/files/interp_coeffs_halfdeg.jld2"
-        OceanStateEstimation.ScratchSpaces.Downloads.download(url,fil;timeout=60000.0)
-        #OceanStateEstimation.ECCOdiags_add("interp_coeffs") : nothing
+        Climatology.ScratchSpaces.Downloads.download(url,fil;timeout=60000.0)
+        #Climatology.ECCOdiags_add("interp_coeffs") : nothing
     end
     λ=JLD2.load(fil)
     λ=MeshArrays.Dict_to_NamedTuple(λ)

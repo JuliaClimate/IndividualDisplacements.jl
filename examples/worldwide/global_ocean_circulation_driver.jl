@@ -1,4 +1,6 @@
 
+using Distributed, IndividualDisplacements
+
 if !isdefined(Main,:ECCO_FlowFields) && myid()==1
     @everywhere include("ECCO_FlowFields.jl")
     @everywhere using Main.ECCO_FlowFields, IndividualDisplacements,  CSV
