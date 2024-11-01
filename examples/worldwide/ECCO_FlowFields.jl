@@ -1,6 +1,6 @@
 module ECCO_FlowFields
 
-using IndividualDisplacements, Climatology, MITgcm, CSV, JLD2
+using IndividualDisplacements, Climatology, MITgcm, CSV, JLD2, NetCDF
 
 import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, ODEProblem
 import IndividualDisplacements: update_location!
