@@ -22,6 +22,9 @@ To run in parallel, see global_ocean_circulation_support.jl and example below
 include("global_ocean_circulation_driver.jl")
 @everywhere include("global_ocean_circulation_driver.jl")
 
+output_path=joinpath(tempdir(),"global_ocean_tmp")
+!ispath(output_path) ? mkdir(output_path) : nothing
+
 @sync @distributed for i in 1:nworkers()
 for j in 1:n_per_worker
     k=(i-1)*n_per_worker+j
