@@ -32,6 +32,18 @@ for j in 1:n_per_worker
 end
 end
 ```
+
+and for plotting
+
+```
+include("global_ocean_plotting.jl")
+fig,tt=PlottingFunctions.plot([],df)
+
+file_output_mp4=tempname()*".mp4"
+PlottingFunctions.record(fig, file_output_mp4, -50:nt, framerate = 25) do t
+    tt[]=max(t,0)
+end
+```    
 """
 function main_comp(kk)
 

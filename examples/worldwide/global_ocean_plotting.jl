@@ -29,17 +29,14 @@ Pkg.add.(["CSV", "DataFrames", "FileIO", "Colors", "GLMakie"])
 using CSV, DataFrames, FileIO, Colors, GLMakie
 include("global_ocean_plotting.jl")
 
-fil=joinpath("inputs","GulfStream_21_27.csv")
+fil=joinpath(output_path,"initial_5_4_▶▶.csv")
 df=CSV.read(fil,DataFrame)
 
 nt=length(unique(df.t))
-#xlims=(-85.0,5.0); ylims=(20.0,67.0)
-xlims=(0.0,360.0); ylims=(-80.0,90.0)
 cm=:linear_wcmr_100_45_c42_n256
 cr=(-1300,00)
 
 fig,tt=PlottingFunctions.plot([],df,colormap=cm,colorrange=cr)
-    #xlims=xlims,ylims=ylims,
 fig
 
 file_output_mp4=tempname()*".mp4"
