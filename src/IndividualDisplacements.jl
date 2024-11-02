@@ -8,6 +8,7 @@ include("compute.jl")
 include("data_wrangling.jl")
 include("toy_models.jl")
 include("various.jl")
+include("Downloads.jl")
 
 DiffEqBase.solve!(I::Individuals,args...)=∫!(I::Individuals,args...)
 DataFrames.groupby(I::Individuals,args...) = groupby(I.🔴,args...)
@@ -22,5 +23,9 @@ export nearest_to_xy, randn_lonlat, interp_to_lonlat
 export gcdist, stproj, stproj_inv
 
 export random_flow_field, vortex_flow_field
+
+__init__() = begin
+    datadeps.__init__datadeps()
+end
 
 end # module
