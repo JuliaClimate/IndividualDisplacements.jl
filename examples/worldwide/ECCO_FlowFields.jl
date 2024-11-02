@@ -350,7 +350,9 @@ Set up Global Ocean particle simulation in 2D with seasonally varying flow field
 function init_FlowFields(; k=1, backward_time=false)
 
   Climatology.get_ecco_velocity_if_needed()
-
+  Climatology.get_ecco_variable_if_needed("THETA")
+  Climatology.get_ecco_variable_if_needed("SALT")
+  
   #read grid and set up connections between subdomains
   γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
   Γ=MeshArrays.GridLoad(γ,option="full")
