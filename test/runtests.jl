@@ -10,15 +10,15 @@ MeshArrays.GridLoad(MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90))
 MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360))
 
 @testset "downloads" begin
-    IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
+    p0=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
     IndividualDisplacements.datadeps.getdata("flt_example")
 end
 
 @testset "global" begin
-    p=dirname(pathof(IndividualDisplacements))
-    include(joinpath(p,"../examples/worldwide/ECCO_FlowFields.jl"))
+    p1=dirname(pathof(IndividualDisplacements))
+    include(joinpath(p1,"../examples/worldwide/ECCO_FlowFields.jl"))
     P,D=ECCO_FlowFields.init_FlowFields()
-    file_input=joinpath(p,"../examples/worldwide/global_ocean_circulation_inputs","initial_10_1.csv")
+    file_input=joinpath(p0,"initial_10_1.csv")
     df = ECCO_FlowFields.init_positions(10,filename=file_input)
     I=Individuals(P,df.x,df.y,df.f,(D=D,))
     T=(0.0,I.P.T[2])
