@@ -36,6 +36,9 @@ end
 and for plotting
 
 ```
+fil=joinpath("global_ocean_circulation_outputs","initial_5_4_▶▶.csv")
+df=CSV.read(fil,DataFrame)
+
 include("global_ocean_plotting.jl")
 fig,tt=PlottingFunctions.plot([],df)
 
