@@ -68,28 +68,28 @@ np=10000
 ny=3 #number of years
 nm=12 #number of months
 
-𝑃,𝐷=init_FlowFields(k=k,backward_time=backward_time)
+P,D=init_FlowFields(k=k,backward_time=backward_time)
 
 df = init_positions(np,filename=file_input)
 #"z" in names(df) ? nothing : df.z=10.0 .+ 0.0*df.x
 
-𝑆 = init_storage(np,100,length(𝐷.Γ.RC),50)
-𝐼 = Individuals(𝑃,df.x,df.y,df.z,df.f,
-    (𝐷=merge(𝐷,𝑆),∫=custom∫,🔧=custom🔧,🔴=deepcopy(custom🔴)))
+S = init_storage(np,100,length(D.Γ.RC),50)
+I = Individuals(P,df.x,df.y,df.z,df.f,
+    (D=merge(D,S),∫=custom∫,🔧=custom🔧,🔴=deepcopy(custom🔴)))
 
-𝑇=(0.0,𝐼.𝑃.𝑇[2])
-custom∫!(𝐼,𝑇)
+T=(0.0,I.P.T[2])
+custom∫!(I,T)
 
-[step!(𝐼) for y=1:ny, m=1:nm]
+[step!(I) for y=1:ny, m=1:nm]
 
 file_output=joinpath(output_path,file_base*".csv")
-CSV.write(file_output, Float32.(𝐼.🔴))
+CSV.write(file_output, Float32.(I.🔴))
 
-𝐼
+I
 
 end
 
-function step!(𝐼::Individuals)
-    𝐼.𝐷.🔄(𝐼)
-    custom∫!(𝐼)
+function step!(I::Individuals)
+    I.D.🔄(I)
+    custom∫!(I)
 end
