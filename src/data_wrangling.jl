@@ -2,12 +2,12 @@
     convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
 
 Convert a pair of U,V arrays (staggered C-grid velocity field in 2D) to
-a `𝐹_MeshArray2D` struct ready for integration of individual displacements
+a `uvMeshArrays` struct ready for integration of individual displacements
 from time `t0=0` to time `t1`.
 """
 function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
     np,nq=size(U)
-    Γ=simple_periodic_domain(np,nq)
+    Γ=Grids_simple.periodic_domain(np,nq)
 
     g=Γ.XC.grid
     u=MeshArray(g,[U])
@@ -15,18 +15,18 @@ function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
     (u,v)=exchange(u,v,1)
     func=(u -> MeshArrays.update_location_dpdo!(u,g))
 
-    𝐹_MeshArray2D{eltype(u)}(u,u,v,v,[0,t1],func)
+    uvMeshArrays{eltype(u)}(u,u,v,v,[0,t1],func)
 end
 
 """
-    postprocess_MeshArray(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=missing)
+    postprocess_MeshArray(sol,P::FlowFields,D::NamedTuple; id=missing, T=missing)
 
 Copy `sol` to a `DataFrame` & map position to lon,lat coordinates
-using "exchanged" 𝐷.XC, 𝐷.YC via `add_lonlat!`
+using "exchanged" D.XC, D.YC via `add_lonlat!`
 """
-function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missing, 𝑇=missing)
+function postprocess_MeshArray(sol,P::FlowFields, D::NamedTuple; id=missing, T=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
-    ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
+    ismissing(T) ? T=P.T : nothing
     
     if isa(sol,EnsembleSolution)
         nd=length(sol.u[1][1])
@@ -34,18 +34,18 @@ function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missin
         x=[[sol.u[i][1][1] for i in 1:np];[sol.u[i][end][1] for i in 1:np]]
         y=[[sol.u[i][1][2] for i in 1:np];[sol.u[i][end][2] for i in 1:np]]
         fIndex=[[sol.u[i][1][nd] for i in 1:np];[sol.u[i][end][nd] for i in 1:np]];
-        t=[fill(𝑇[1],np);fill(𝑇[2],np)]
+        t=[fill(T[1],np);fill(T[2],np)]
         id=[id[:,1];id[:,1]]
     else
         nt=length(sol.u)
         x=sol[1,:]
         y=sol[2,:]
         fIndex=sol[end,:]
-        t=𝑇[1] .+ (𝑇[2]-𝑇[1]) * collect(0:nt-1) / (nt-1)
+        t=T[1] .+ (T[2]-T[1]) * collect(0:nt-1) / (nt-1)
         id=fill(id[1],nt)
     end
 
-    𝑃.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
+    P.u0.grid.nFaces==1 ? fIndex=ones(size(x)) : nothing
     
     df = DataFrame(ID=id[:], x=x[:], y=y[:], fid=fIndex[:], t=t[:])
 
@@ -54,14 +54,14 @@ function postprocess_MeshArray(sol,𝑃::FlowFields, 𝐷::NamedTuple; id=missin
 end
 
 """
-    update_location!(pos,𝑃)
+    update_location!(pos,P)
 
-Update `pos` via `𝑃.update_location!` if needed.
+Update `pos` via `P.update_location!` if needed.
 """
-function update_location!(pos,𝑃)
-    g=𝑃.u0.grid
+function update_location!(pos,P)
+    g=P.u0.grid
     while MeshArrays.location_is_out(pos,g)
-        𝑃.update_location!(pos)
+        P.update_location!(pos)
     end
 end
 
@@ -114,16 +114,16 @@ function add_lonlat!(df::DataFrame,XC,YC,func::Function)
 end
 
 """
-    postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=missing)
+    postprocess_xy(sol,P::FlowFields,D::NamedTuple; id=missing, T=missing)
 
 Copy `sol` to a `DataFrame` & map position to x,y coordinates,
 and define time axis for a simple doubly periodic domain
 """
-function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=missing)
+function postprocess_xy(sol,P::FlowFields,D::NamedTuple; id=missing, T=missing)
     ismissing(id) ? id=collect(1:size(sol,2)) : nothing
-    ismissing(𝑇) ? 𝑇=𝑃.𝑇 : nothing
+    ismissing(T) ? T=P.T : nothing
 
-    isa(𝑃.u0,MeshArray) ? (nx,ny)=𝑃.u0.grid.ioSize[1:2] : (nx,ny)=size(𝑃.u0)[1:2]
+    isa(P.u0,MeshArray) ? (nx,ny)=P.u0.grid.ioSize[1:2] : (nx,ny)=size(P.u0)[1:2]
 
     if isa(sol,EnsembleSolution)
         nd=length(sol.u[1][1])
@@ -132,13 +132,13 @@ function postprocess_xy(sol,𝑃::FlowFields,𝐷::NamedTuple; id=missing, 𝑇=
             mod.([sol[i][1,end] for i in 1:np],Ref(nx))];
         y=[mod.([sol[i][2,1] for i in 1:np],Ref(ny));
             mod.([sol[i][2,end] for i in 1:np],Ref(ny))]
-        t=[fill(𝑇[1],np);fill(𝑇[2],np)]
+        t=[fill(T[1],np);fill(T[2],np)]
         id=[id[:,1];id[:,1]]
     else
         nt=length(sol.u)
         x=mod.(sol[1,:],Ref(nx))
         y=mod.(sol[2,:],Ref(ny))
-        t=𝑇[1] .+ (𝑇[2]-𝑇[1]) * collect(0:nt-1) / (nt-1)
+        t=T[1] .+ (T[2]-T[1]) * collect(0:nt-1) / (nt-1)
         id=fill(id[1],nt)
     end
 

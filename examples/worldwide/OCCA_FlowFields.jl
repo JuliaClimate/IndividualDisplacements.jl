@@ -1,6 +1,6 @@
 module OCCA_FlowFields
 
-using IndividualDisplacements, OceanStateEstimation, NetCDF
+using IndividualDisplacements, Climatology, NetCDF
 
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
@@ -35,7 +35,7 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
    return tmp
    end
 
-   OceanStateEstimation.get_occa_velocity_if_needed()
+   Climatology.get_occa_velocity_if_needed()
 
    fileIn=joinpath(ScratchSpaces.OCCA,"DDuvel.0406clim.nc")
    u=s*read(rd(fileIn,"u",n),MeshArray(γ,Float32,n))
@@ -95,10 +95,10 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
 
    𝑃=FlowFields(u,u,v,v,w,w,[t0,t1],func)
 
-   𝐷 = (θ0=θ, θ1=θ, XC=MeshArrays.exchange(Γ.XC), YC=MeshArrays.exchange(Γ.YC), 
+   D = (θ0=θ, θ1=θ, XC=MeshArrays.exchange(Γ.XC), YC=MeshArrays.exchange(Γ.YC), 
    RF=Γ.RF, RC=Γ.RC,ioSize=(360,160,n), Γ=Γ)
 
-   return 𝑃,𝐷
+   return 𝑃,D
 
 end
 
@@ -125,9 +125,9 @@ custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[],
    lon=Float64[], lat=Float64[], dlon=Float64[], dlat=Float64[], 
    year=Float64[], col=Symbol[])
 
-function custom🔧(sol,𝑃::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=missing)
-   df=postprocess_MeshArray(sol,𝑃,𝐷,id=id,𝑇=𝑇)
-   add_lonlat!(df,𝐷.XC,𝐷.YC)
+function custom🔧(sol,𝑃::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
+   df=postprocess_MeshArray(sol,𝑃,D,id=id,T=T)
+   add_lonlat!(df,D.XC,D.YC)
    df.dlon=0*df.lon
    df.dlat=0*df.lat
 
@@ -136,14 +136,14 @@ function custom🔧(sol,𝑃::𝐹_MeshArray3D,𝐷::NamedTuple;id=missing,𝑇=
 
    #add depth (i.e. the 3rd, vertical, coordinate)
    k=[[sol[i][3,1] for i in 1:size(sol,3)];[sol[i][3,end] for i in 1:size(sol,3)]]
-   nz=length(𝐷.RC)
+   nz=length(D.RC)
    df.k=min.(max.(k[:],Ref(0.0)),Ref(nz)) #level
    k=Int.(floor.(df.k)); w=(df.k-k);
-   df.z=𝐷.RF[1 .+ k].*(1 .- w)+𝐷.RF[2 .+ k].*w #depth
+   df.z=D.RF[1 .+ k].*(1 .- w)+D.RF[2 .+ k].*w #depth
 
    #add one isotherm depth
-   θ=0.5*(𝐷.θ0+𝐷.θ1)
-   d=MeshArrays.isosurface(θ,15,𝐷)
+   θ=0.5*(D.θ0+D.θ1)
+   d=MeshArrays.isosurface(θ,15,D)
    d[findall(isnan.(d))].=0.
    df.iso=interp_to_xy(df,MeshArrays.exchange(d));
 

@@ -1,10 +1,10 @@
-using Documenter, Literate, PlutoSliderServer
-using IndividualDisplacements, OceanStateEstimation
+using Documenter, Literate, PlutoSliderServer, IndividualDisplacements
+using Climatology
 
 #download data dependencies if needed
 IndividualDisplacements.flt_example_download()
-OceanStateEstimation.get_ecco_velocity_if_needed();
-OceanStateEstimation.get_occa_velocity_if_needed();
+Climatology.get_ecco_velocity_if_needed();
+Climatology.get_occa_velocity_if_needed();
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")
@@ -32,8 +32,10 @@ end
 ismd(f) = splitext(f)[2] == ".md"
 pages(folder) = [joinpath(folder, f) for f in readdir(joinpath(src, folder)) if ismd(f)]
 
-makedocs(
-    sitename = "IndividualDisplacements",
+makedocs(;
+    sitename = "IndividualDisplacements.jl",
+    repo = Remotes.GitHub("JuliaClimate", "IndividualDisplacements.jl"),
+    authors="JuliaClimate <gforget@mit.edu>",
     format = Documenter.HTML(),
     pages = [
 	"Introduction" => "index.md",
