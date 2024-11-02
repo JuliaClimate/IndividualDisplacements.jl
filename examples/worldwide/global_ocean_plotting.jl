@@ -2,7 +2,7 @@
 module PlottingFunctions 
 
 using GLMakie, DataFrames, FileIO, Colors
-using DataDeps, MeshArrays
+using DataDeps, MeshArrays, IndividualDisplacements
 
 lon180(x)=Float64(x>180.0 ? x-360.0 : x)
 lon360(x)=Float64(x<0.0 ? x+360.0 : x)
@@ -45,7 +45,7 @@ PlottingFunctions.record(fig, file_output_mp4, -50:nt, framerate = 25) do t
 end
 ```
 """
-function plot(𝐼,🔴;time=0,xlims=(0.0,360.0),ylims=(-80.0,90.0),
+function plot(𝐼::Individuals,🔴::DataFrame;time=0,xlims=(0.0,360.0),ylims=(-80.0,90.0),
     colormap=:linear_wcmr_100_45_c42_n256,colorrange=(-1300,00),
     add_colorbar=false)
 

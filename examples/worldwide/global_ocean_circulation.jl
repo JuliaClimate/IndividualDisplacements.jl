@@ -23,17 +23,15 @@ end
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
 	using Statistics, PlutoUI
-	
 	output_path=joinpath(tempdir(),"global_ocean_tmp")
-	#output_path="GulfStream_20240113"
 	!isdir(output_path) ? mkdir(output_path) : nothing
 end
 
 # ╔═╡ 2acbfc79-3926-4c5a-9994-e3222c60c377
 module inc 
 	using IndividualDisplacements, GLMakie, DataFrames
-	using Climatology, MITgcm, CSV, JLD2
-	using FileIO, Colors
+	using Climatology, MITgcm, CSV, JLD2, MeshArrays
+	using FileIO, NetCDF, DataDeps, Colors
 	include("ECCO_FlowFields.jl")
 	include("global_ocean_plotting.jl")
 end	
@@ -54,6 +52,9 @@ For additional documentation see :
 [![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
 """
 
+# ╔═╡ 8b1cc95b-c5c9-44cb-86a7-ff14e48ce811
+
+
 # ╔═╡ 171fa252-7a35-4d4a-a940-60de77327cf4
 TableOfContents()
 
@@ -70,8 +71,8 @@ begin
 	
 	file_IC = joinpath("global_ocean_circulation_inputs","initial_8_6.csv")
 	backward_time = false
-	#file_base = basename(file_IC)[1:end-4]
-	#backward_time ? file_base=file_base*"_◀◀" : file_base=file_base*"_▶▶"
+	file_base = basename(file_IC)[1:end-4]
+	backward_time ? file_base=file_base*"_◀◀" : file_base=file_base*"_▶▶"
 
 	md"""## 1. Simulation Parameters
 
@@ -110,8 +111,8 @@ println(zrng)
 
 # ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
 begin
-    file_base="GulfStream_$(zrng[1])_$(zrng[end])"
-    println("file_base = "*file_base)
+    #file_base=file_base*"_$(zrng[1])_$(zrng[end])"
+    #println("file_base = "*file_base)
 
 	k=parse(Int,ktxt) #vertical level or 0
 	k!==0 ? zs=[k-0.5:k-0.5] : zs=zrng
@@ -244,8 +245,9 @@ If the replay option ($(bind_replay)) has been selected then we reload the resul
 # ╔═╡ 397e5491-56ce-44ba-81d4-2982b0c3f503
 begin
 	#@bind fil_replay FilePicker()
-    path_replay="/Users/gforget/mywork/data/LagrangianParticleSimulations/GulfStream_20240114"
-    fil_replay=joinpath(path_replay,"GulfStream_$(zrng[1])_$(zrng[end]).csv")
+    path_replay="global_ocean_circulation_outputs"
+    #fil_replay=joinpath(path_replay,"initial_$(zrng[1])_$(zrng[end])_▶▶.csv")
+    fil_replay=joinpath(path_replay,"initial_10_1_▶▶.csv")
 end
 
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
@@ -261,7 +263,7 @@ Pkg.add.(["CSV", "DataFrames", "FileIO", "Colors", "GLMakie"])
 using CSV, DataFrames, FileIO, Colors, GLMakie
 include("global_ocean_plotting.jl")
 
-fil=joinpath("inputs","GulfStream_21_27.csv")
+fil=joinpath("inputs","initial_21_27.csv")
 df=CSV.read(fil,DataFrame)
 
 nt=length(unique(df.t)); xlims=(-85.0,5.0); ylims=(20.0,67.0)
@@ -283,7 +285,9 @@ if do_replay&&isa(fil_replay,Dict)&&haskey(fil_replay,"name")
 	tmp_file_base=split(fil_replay["name"],'.')[1]
 elseif do_replay&&isa(fil_replay,String)
 	tmp_🔴=inc.CSV.read(fil_replay,inc.DataFrame)
-	tmp_file_base=basename(fil_replay)[1:end-4]
+#	tmp_file_base=basename(fil_replay)[1:end-4]
+	tmp_file_base=basename(fil_replay)
+	tmp_file_base=split(tmp_file_base,"_▶▶")[1]
 else
 	tmp_🔴=𝐼.🔴
 	tmp_file_base=file_base
@@ -302,7 +306,7 @@ if !isempty(tmp_🔴)
 		ylims=(20.0,67.0)
 	end
 
-	fig,tt=inc.PlottingFunctions.plot(𝐼,tmp_🔴,xlims=xlims,ylims=ylims)
+	fig,tt=inc.PlottingFunctions.plot(𝐼,tmp_🔴) #,xlims=xlims,ylims=ylims)
 
 	file_output_png=joinpath(output_path,tmp_file_base*".png")
 	inc.save(file_output_png,fig)
@@ -315,6 +319,13 @@ if !isempty(tmp_🔴)
 	fig
 else
 	"nothing to plot"
+end
+
+# ╔═╡ 44bdc51f-9e95-4a40-b299-5554c6514e06
+let
+#	tmp_fil_replay=tmp_fil_replay[1:(length(tmp_fil_replay)-4)]
+	#file_base[1:length(file_base)-4]
+#	inc.PlottingFunctions.plot
 end
 
 # ╔═╡ 1a6af0eb-ab2a-4999-8063-f218b2f3f651
@@ -357,12 +368,17 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 CSV = "~0.10.15"
+Climatology = "~0.5.12"
 Colors = "~0.12.11"
+DataDeps = "~0.7.13"
 DataFrames = "~1.7.0"
 FileIO = "~1.16.4"
 GLMakie = "~0.10.15"
+IndividualDisplacements = "~0.5.0"
 JLD2 = "~0.4.53"
 MITgcm = "~0.5.0"
+MeshArrays = "~0.3.16"
+NetCDF = "~0.12.0"
 PlutoUI = "~0.7.60"
 """
 
@@ -372,7 +388,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "9f12a55a61427955709a2cafc3e0b3adb33eb25d"
+project_hash = "16895b62172a00451ef4b872dc2a1b8eb289116a"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -3583,6 +3599,7 @@ version = "1.4.1+1"
 # ╟─c9e9faa8-f5f0-479c-bc85-877ff7114883
 # ╠═104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 # ╠═2acbfc79-3926-4c5a-9994-e3222c60c377
+# ╠═8b1cc95b-c5c9-44cb-86a7-ff14e48ce811
 # ╟─171fa252-7a35-4d4a-a940-60de77327cf4
 # ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
@@ -3600,8 +3617,9 @@ version = "1.4.1+1"
 # ╟─63b68e72-76c1-4104-bf76-dd9eefc4e225
 # ╠═397e5491-56ce-44ba-81d4-2982b0c3f503
 # ╟─c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-# ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
+# ╠═b4841dc0-c257-45e0-8657-79121f2c9ce8
 # ╟─33fb4a15-b5ef-46f8-9e4e-c20da4536195
+# ╠═44bdc51f-9e95-4a40-b299-5554c6514e06
 # ╟─1a6af0eb-ab2a-4999-8063-f218b2f3f651
 # ╟─15077957-64d5-46a5-8a87-a76ad619cf38
 # ╟─6e43a2af-bf01-4f42-a4ba-1874a8cf4885
