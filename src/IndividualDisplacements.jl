@@ -1,13 +1,11 @@
 module IndividualDisplacements
 
-using MeshArrays, CyclicArrays, OrdinaryDiffEq, DataFrames
-using Random, Artifacts, LazyArtifacts
+using MeshArrays, CyclicArrays, OrdinaryDiffEq, DataFrames, Random
 
 include("API.jl")
 include("compute.jl")
 include("data_wrangling.jl")
 include("toy_models.jl")
-include("various.jl")
 include("Downloads.jl")
 
 DiffEqBase.solve!(I::Individuals,args...)=∫!(I::Individuals,args...)
@@ -27,5 +25,8 @@ export random_flow_field, vortex_flow_field
 __init__() = begin
     datadeps.__init__datadeps()
 end
+
+#flt_example_path = datadeps.getdata("flt_example")
+#flt_example_download() = datadeps.getdata("flt_example")
 
 end # module

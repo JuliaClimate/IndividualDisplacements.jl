@@ -5,7 +5,11 @@ Climatology.get_ecco_velocity_if_needed()
 Climatology.get_occa_velocity_if_needed()
 MeshArrays.GridLoad(MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90))
 MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360))
-IndividualDisplacements.flt_example_download()
+
+@testset "downloads" begin
+    IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
+    IndividualDisplacements.datadeps.getdata("flt_example")
+end
 
 @testset "global" begin
     p=dirname(pathof(IndividualDisplacements))

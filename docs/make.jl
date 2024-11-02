@@ -2,7 +2,7 @@ using Documenter, Literate, PlutoSliderServer, IndividualDisplacements
 using Climatology
 
 #download data dependencies if needed
-IndividualDisplacements.flt_example_download()
+IndividualDisplacements.datadeps.getdata("flt_example")
 Climatology.get_ecco_velocity_if_needed();
 Climatology.get_occa_velocity_if_needed();
 

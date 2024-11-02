@@ -37,6 +37,10 @@ function __init__datadeps()
         ["https://zenodo.org/records/14029202/files/global_ocean_circulation_outputs.tar.gz"],
         ["2c308e84d598afba9bb9f6d20736dfb76d62d8e10befea6ac6fb1127da8ed609"],      
         post_fetch_method=unpackDV))
+    register(DataDep("flt_example","files for MITgcm/pkg/flt example",
+        ["https://github.com/gaelforget/flt_example/archive/v1.0.tar.gz"],
+        ["3306d37f5e70d0fa253a5b87b527f727891b84179d8411971bbc10f3164d5fde"],      
+        post_fetch_method=unpackDV))
 end
 
 """
@@ -51,6 +55,8 @@ function getdata(nam::String)
             datadep"global_ocean_circulation_inputs"
         elseif nam=="global_ocean_circulation_outputs"
             datadep"global_ocean_circulation_outputs"
+        elseif nam=="flt_example"
+            datadep"flt_example"
         else
             println("unknown dataset")
         end

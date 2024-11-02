@@ -92,10 +92,9 @@ example2_xy()
 Read MITgcm/pkg/flt output
 """
 function example2_xy(𝑃)
-IndividualDisplacements.flt_example_download()
-dirIn=IndividualDisplacements.flt_example_path
+flt_example_path = IndividualDisplacements.datadeps.getdata("flt_example")
 prec=Float32
-df=read_flt(dirIn,prec)
+df=read_flt(flt_example_path*"/",prec)
 #
 tmp=df[df.ID .== 200, :]
 nSteps=Int32(tmp[end,:time]/3600)-2
@@ -124,9 +123,8 @@ function example2_setup()
 
    ###### 1) Get gridded variables via MeshArrays.jl
 
-   IndividualDisplacements.flt_example_download()
-   dirIn=IndividualDisplacements.flt_example_path
-   γ=gcmgrid(dirIn,"PeriodicChannel",1,[(80,42)], [80 42], Float32, read, write)
+   flt_example_path = IndividualDisplacements.datadeps.getdata("flt_example")
+   γ=gcmgrid(flt_example_path*"/","PeriodicChannel",1,[(80,42)], [80 42], Float32, read, write)
    nr=8
 
    ## Put grid variables in a dictionary:
