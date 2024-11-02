@@ -1,7 +1,0 @@
-[flt_example]
-git-tree-sha1 = "1c7877a93e8573e8f41e159f3ab97dafbec1bbaa"
-lazy = true
-
-    [[flt_example.download]]
-    sha256 = "3306d37f5e70d0fa253a5b87b527f727891b84179d8411971bbc10f3164d5fde"
-    url = "https://github.com/gaelforget/flt_example/archive/v1.0.tar.gz"

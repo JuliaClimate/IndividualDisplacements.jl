@@ -1,383 +1,8 @@
-### A Pluto.jl notebook ###
-# v0.20.1
-
-using Markdown
-using InteractiveUtils
-
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
-        el
-    end
-end
-
-# ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
-begin
-	using Statistics, PlutoUI
-	output_path=joinpath(tempdir(),"global_ocean_tmp")
-	!isdir(output_path) ? mkdir(output_path) : nothing
-end
-
-# ╔═╡ 2acbfc79-3926-4c5a-9994-e3222c60c377
-module inc 
-	using IndividualDisplacements, GLMakie, DataFrames
-	using Climatology, MITgcm, CSV, JLD2, MeshArrays
-	using FileIO, NetCDF, DataDeps, Colors
-	include("ECCO_FlowFields.jl")
-	include("global_ocean_plotting.jl")
-end	
-
-# ╔═╡ c9e9faa8-f5f0-479c-bc85-877ff7114883
-md"""# Global Climatology
-
-Simulate the displacement of a set of individuals (or particles) according to 
-climatological monthly mean flow at selected depth level
-(or in 3D). The flow fields are from a global ocean state estimate ([ECCO v4 r2](https://eccov4.readthedocs.io/en/latest/) ; see also <https://ecco-group.org>). It is here repeated for `ny` years to simulate trajectories. 
-
-For additional documentation see :
-[1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
-[2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
-[3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
-[4](https://en.wikipedia.org/wiki/Displacement_(vector))
-
-[![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
-"""
-
-# ╔═╡ 171fa252-7a35-4d4a-a940-60de77327cf4
-TableOfContents()
-
-# ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
-begin
-	✔0="selected parameters"
-	
-	bind_j = (@bind j Select(1:6,default=1))
-	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
-	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="10"))
-	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
-	bind_replay = (@bind do_replay CheckBox(default=true))
-	bind_zoomin = (@bind zoom_in CheckBox(default=false))
-	bind_zrng = @bind zrng Select([0:11,11:21,21:27],default=0:11)
-	
-    path_IC = IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
-    file_IC = joinpath(path_IC,"initial_10_1.csv")
-	backward_time = false
-	file_base = basename(file_IC)[1:end-4]
-	backward_time ? file_base=file_base*"_◀◀" : file_base=file_base*"_▶▶"
-
-#	- k  = $(bind_k) = flow field vertical level (set to 0 for 3D)
-#  - _optional :_ zrng = $(bind_zrng) = vertical coordindate range 
-#  - _(only used if k==0; if otherwise then zrng effectively is k-0.5:k-0.5)_
-
-	md"""## 1. Simulation Parameters
-
-	The following parameters are used:
-
-	- latitude box : $(bind_j)
-	- ny = $(bind_ny) = similated period (1/12 = 1 month)
-	- np = $(bind_np) = number of individuals (100 by default)
-	- replay = $(bind_replay) = load results from csv instead of recomputing
-	- zoom in = $(bind_zoomin) = zoom in rather than plotting whole Earth
-	"""
-end
-
-# ╔═╡ 94ca10ae-6a8a-4038-ace0-07d7d9026712
-md"""## 2. Configure `FlowFields` 
-
-####
-
-`global_ocean_circulation` reads in the global Ocean model grid and flow fields. It returns the `FlowFields` data structure `𝑃`. Ancillary variables are stored in NamedTuple `𝐷`.
-
-!!! note
-    The global grid is handled via `MeshArrays.jl` and monthly climatology fields accessed via `Climatology.jl`.
-
-```
-zrng=ARGS[1]
-zrng=parse.(Int,split(zrng,":"))
-zrng=zrng[1]:zrng[2]
-println(zrng)
-```
-
-!!! note
-    For non-interactive, one can add here code as shown above. Then `julia --project=. main.jl 21:27 &`.
-"""
-
-# ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
-begin
-    #file_base=file_base*"_$(zrng[1])_$(zrng[end])"
-    #println("file_base = "*file_base)
-
-	k=parse(Int,ktxt) #vertical level or 0
-	k!==0 ? zs=[k-0.5:k-0.5] : zs=zrng
-	
-	inc.Climatology.get_ecco_velocity_if_needed()
-	
-	𝑃,𝐷=inc.ECCO_FlowFields.init_FlowFields(k=k,backward_time=backward_time)
-
-	println("Done with Setting Up FlowFields")
-	tmp1="  - flow field depth level = "*(k==0 ? "three-dimensional" : "level $(k)") 
-	println(tmp1)
-	tmp1="  - inital depth range = $(round.([𝐷.Γ.RF[zrng[1]+1] 𝐷.Γ.RF[zrng[end]+1]]))"
-	println(tmp1)
-end
-
-# ╔═╡ 2fb4d76d-56d5-4c3e-bc7c-ba0cac57e0e3
-output_path
-
-# ╔═╡ f1215951-2eb2-490b-875a-91c1205b8f63
-md"""## 3. Trajectory Computation
-
-### 3.1 Initialization
-
-- initialize individual positions (`init_gulf_stream`)
-- initial integration from time 0 to 0.5 month
-"""
-
-# ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
-begin
-	✔0
-
-	np=parse(Int,nptxt) #number of individuals
-	if nytxt=="1/12"
-		ny=1 #number of years
-		nm=1 #number of months
-	else
-		ny=parse(Int,nytxt) #number of years
-		nm=12 #number of months
-	end
-	
-	df = inc.ECCO_FlowFields.init_gulf_stream(np , 𝐷, zs=zs)
-
-	if !(k==0)
-		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,1,50)
-		𝐼 = Individuals(𝑃,df.x,df.y,df.f,(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫))
-		my∫! = ∫!
-	else		
-		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,length(𝐷.Γ.RC),50)
-		𝐼 = inc.Individuals(𝑃,df.x,df.y,df.z,df.f,
-			(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫,🔧=inc.ECCO_FlowFields.custom🔧,🔴=deepcopy(inc.ECCO_FlowFields.custom🔴)))
-		my∫! = inc.ECCO_FlowFields.custom∫!
-	end
-
-	📌_reference=deepcopy(𝐼.📌)
-	𝐼
-end
-
-# ╔═╡ 6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
-md""" ### 3.2 Monthly Step Function
-
-Since the Ocean circulation varies from month to month, the `𝐼.𝐷.🔄` function is used to update flow fields from one month to the next. 
-
-Time variable flow fields are easily handled by defining a `step!` function that wraps around `∫!`. Here it does three things
-
-- `𝐼.𝐷.🔄` resets the velocity inputs (`𝐼.𝐷.u0` etc) to bracket time `t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])`
-- `reset_📌!` randomly selects a fraction of the individuals and resets their positions. This can be useful to maintain homogeneous coverage of the domain by the fleet of individuals.
-- `∫!(𝐼)` solves for the individual trajectories over one month (`𝐼.𝑃.𝑇`) with updated velocity fields (`𝐼.𝑃.u0` etc). It also adds diagnostics to the `DataFrame` used to record variables along the trajectory (`𝐼.🔴`).
-"""
-
-# ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
-function step!(𝐼::inc.Individuals)
-    𝐼.𝐷.🔄(𝐼)
-    𝐼.𝐷.frac > 0 ? inc.ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
-    my∫!(𝐼)
-end
-
-# ╔═╡ 7efadea7-4542-40cf-893a-40a75e9c52be
-md"""### 3.3 Monthly Simulation Loop
-
-!!! note
-    `add_lonlat!` derives geographic locations (longitude and latitude) from local grid coordinates (x, y, etc).
-"""
-
-# ╔═╡ a3e45927-5d53-42be-b7b7-489d6e7a6fe5
-if !do_replay
-	𝑇=(0.0,𝐼.𝑃.𝑇[2])
-	my∫!(𝐼,𝑇)
-	✔1="Done with Initial Integration"
-else
-	✔1="Skipping Initial Integration (replay instead)"
-end
-
-# ╔═╡ 1044c5aa-1a56-45b6-a4c6-63d24eea878d
-if !do_replay
-	✔1	
-	[step!(𝐼) for y=1:ny, m=1:nm]
-	"lon" in names(𝐼.🔴) ? nothing : add_lonlat!(𝐼.🔴,𝐷.XC,𝐷.YC)
-	✔2="Done with Main Computation"
-else
-	✔2="Skipping Main Computation (replay instead)"
-end
-
-# ╔═╡ 42959eb9-7c14-4892-bf41-a1a434b00e27
-if !do_replay
-	✔2
-	!isdir(output_path) ? mkdir(output_path) : nothing
-	file_output=joinpath(output_path,file_base*".csv")
-	inc.CSV.write(file_output, Float32.(𝐼.🔴))
-	✔3="Done with saving trajectories"
-else
-	✔3="Skipping save (replay instead)"
-end		
-
-# ╔═╡ fc16b761-8b1f-41de-b4fe-7fa9987d6167
-if !do_replay
-	✔3
-	file_output_csv=joinpath(output_path,file_base*".csv")
-	inc.CSV.write(file_output_csv, Float32.(𝐼.🔴))
-else
-	✔3
-	"Skipping File Output (replay instead)"
-end
-
-# ╔═╡ 63b68e72-76c1-4104-bf76-dd9eefc4e225
-md"""### 3.4 Replay previous simulation
-
-If the replay option ($(bind_replay)) has been selected then we reload the result of a previous computation from file.
-"""
-
-# ╔═╡ 397e5491-56ce-44ba-81d4-2982b0c3f503
-begin
-	#@bind fil_replay FilePicker()    
-    path_IC = IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
-    fil_replay=joinpath(path_replay,"initial_10_$(j)_▶▶.csv")
-end
-
-# ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-md"""## 4. Visualize Displacements
-
-!!! note
-    For offline visualization, see code below.
-
-```
-using Pkg; Pkg.activate(temp=true)
-Pkg.add.(["CSV", "DataFrames", "FileIO", "Colors", "GLMakie"])
-
-using CSV, DataFrames, FileIO, Colors, GLMakie
-include("global_ocean_plotting.jl")
-
-fil=joinpath("inputs","initial_21_27.csv")
-df=CSV.read(fil,DataFrame)
-
-nt=length(unique(df.t)); xlims=(-85.0,5.0); ylims=(20.0,67.0)
-fig,tt=PlottingFunctions.plot([],df,xlims=xlims,ylims=ylims,
-	colormap=:linear_wcmr_100_45_c42_n256,colorrange=(-1300,00), add_colorbar=false)
-fig
-
-file_output_mp4=tempname()*".mp4"
-PlottingFunctions.record(fig, file_output_mp4, -50:nt, framerate = 25) do t
-    tt[]=max(t,0)
-end
-```
-"""
-
-# ╔═╡ e49948eb-8b62-4579-a80c-b07624da6f3b
-md"""latitude box : $(bind_j)"""
-
-# ╔═╡ 33fb4a15-b5ef-46f8-9e4e-c20da4536195
-if do_replay&&isa(fil_replay,Dict)&&haskey(fil_replay,"name")
-	#tmp_🔴=CSV.read(fil_replay["name"],DataFrame)
-	tmp_🔴=UInt8.(fil_replay["data"]) |> IOBuffer |> inc.CSV.File |> inc.DataFrame
-	tmp_file_base=split(fil_replay["name"],'.')[1]
-elseif do_replay&&isa(fil_replay,String)
-	tmp_🔴=inc.CSV.read(fil_replay,inc.DataFrame)
-#	tmp_file_base=basename(fil_replay)[1:end-4]
-	tmp_file_base=basename(fil_replay)
-	tmp_file_base=split(tmp_file_base,"_▶▶")[1]
-else
-	tmp_🔴=𝐼.🔴
-	tmp_file_base=file_base
-end
-
-# ╔═╡ b4841dc0-c257-45e0-8657-79121f2c9ce8
-if !isempty(tmp_🔴)
-	✔3
-	nt=length(unique(tmp_🔴.t))
-	
-	if zoom_in
-		xlims=extrema(tmp_🔴.lon)
-	    ylims=extrema(tmp_🔴.lat)
-	else
-		xlims=(-85.0,5.0)
-		ylims=(20.0,67.0)
-	end
-
-	fig,tt=inc.PlottingFunctions.plot(𝐼,tmp_🔴) #,xlims=xlims,ylims=ylims)
-
-	file_output_png=joinpath(output_path,tmp_file_base*".png")
-	inc.save(file_output_png,fig)
-
-#	file_output_mp4=joinpath(output_path,tmp_file_base*".mp4")
-#	inc.record(fig, file_output_mp4, 1:nt, framerate = 30) do t
-#		tt[]=t
-#	end
-	
-	fig
-else
-	"nothing to plot"
-end
-
-# ╔═╡ 1a6af0eb-ab2a-4999-8063-f218b2f3f651
-"output path is $(output_path)"
-
-# ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
-md"""## 5. Summary Statistics
-
-Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) to analyze the output (𝐼.🔴) of our simulation.
-"""
-
-# ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
-begin
-	✔2
-	gdf = inc.groupby(tmp_🔴, :ID)
-	sgdf= inc.combine(gdf,inc.nrow,:lat => mean)
-end
-
-# ╔═╡ 0251b905-82e1-41c7-9917-dfdb980eef4f
-tmp_🔴
-
-# ╔═╡ 00000000-0000-0000-0000-000000000001
-PLUTO_PROJECT_TOML_CONTENTS = """
-[deps]
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
-Climatology = "9e9a4d37-2d2e-41e3-8b85-f7978328d9c7"
-Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
-DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
-IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-MITgcm = "dce5fa8e-68ce-4431-a242-9469c69627a0"
-MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
-NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
-PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-
-[compat]
-CSV = "~0.10.15"
-Climatology = "~0.5.12"
-Colors = "~0.12.11"
-DataDeps = "~0.7.13"
-DataFrames = "~1.7.0"
-FileIO = "~1.16.4"
-GLMakie = "~0.10.15"
-IndividualDisplacements = "~0.5.0"
-JLD2 = "~0.4.53"
-MITgcm = "~0.5.0"
-MeshArrays = "~0.3.16"
-NetCDF = "~0.12.0"
-PlutoUI = "~0.7.60"
-"""
-
-# ╔═╡ 00000000-0000-0000-0000-000000000002
-PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "5732c569eda94c62b37dfdb8c4ff55b89529936f"
+project_hash = "f81655ad39678531151bed8c8ea9d411a131b07d"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -435,12 +60,6 @@ version = "0.1.38"
     StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
     Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
-
-[[deps.AccurateArithmetic]]
-deps = ["LinearAlgebra", "Random", "VectorizationBase"]
-git-tree-sha1 = "07af26e8d08c211ef85918f3e25d4c0990d20d70"
-uuid = "22286c92-06ac-501d-9306-4abd417d9753"
-version = "0.3.8"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
@@ -648,22 +267,6 @@ version = "0.3.6"
     Oceananigans = "9e8cae18-63c1-5223-a75c-80ca9d6e9a09"
     PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
     Zarr = "0a941bbe-ad1d-11e8-39d9-ab76183a1d99"
-
-[[deps.Climatology]]
-deps = ["CSV", "DataDeps", "DataFrames", "DataStructures", "Dataverse", "Dates", "Distributed", "Glob", "JLD2", "MeshArrays", "Pkg", "Printf", "RollingFunctions", "STAC", "Scratch", "SharedArrays", "Statistics", "TOML", "URIs"]
-git-tree-sha1 = "b65709587c9f9deee00823ae63a07c0aa2ebdbc6"
-uuid = "9e9a4d37-2d2e-41e3-8b85-f7978328d9c7"
-version = "0.5.12"
-
-    [deps.Climatology.extensions]
-    ClimatologyMITgcmExt = ["MITgcm"]
-    ClimatologyMakieExt = ["Makie"]
-    ClimatologyNCDatasetsExt = ["NCDatasets"]
-
-    [deps.Climatology.weakdeps]
-    MITgcm = "dce5fa8e-68ce-4431-a242-9469c69627a0"
-    Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-    NCDatasets = "85f8d34a-cbdd-5861-8df4-14fed0d494ab"
 
 [[deps.CloseOpenIntervals]]
 deps = ["Static", "StaticArrayInterface"]
@@ -1315,28 +918,6 @@ git-tree-sha1 = "2f6fce56cdb8373637a6614e14a5768a88450de2"
 uuid = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
 version = "1.3.7"
 
-[[deps.GeoInterfaceMakie]]
-deps = ["GeoInterface", "GeometryBasics", "MakieCore"]
-git-tree-sha1 = "3f87fd8414194dd25ea5d0371c3950985e3c8d86"
-uuid = "0edc0954-3250-4c18-859d-ec71c1660c08"
-version = "0.1.8"
-
-[[deps.GeoInterfaceRecipes]]
-deps = ["GeoInterface", "RecipesBase"]
-git-tree-sha1 = "fb1156076f24f1dfee45b3feadb31d05730a49ac"
-uuid = "0329782f-3d07-4b52-b9f6-d3137cf03c7a"
-version = "1.0.2"
-
-[[deps.GeoJSON]]
-deps = ["Extents", "GeoFormatTypes", "GeoInterface", "GeoInterfaceMakie", "GeoInterfaceRecipes", "JSON3", "StructTypes", "Tables"]
-git-tree-sha1 = "e2ae0c6d4f6b8c49eccc261fef29c290998e44a5"
-uuid = "61d90e0f-e114-555e-ac52-39dfb47a3ef9"
-version = "0.8.1"
-weakdeps = ["Makie"]
-
-    [deps.GeoJSON.extensions]
-    GeoJSONMakieExt = "Makie"
-
 [[deps.GeometryBasics]]
 deps = ["EarCut_jll", "Extents", "GeoInterface", "IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
 git-tree-sha1 = "b62f2b2d76cee0d61a2ef2b3118cd2a3215d3134"
@@ -1509,9 +1090,9 @@ version = "1.0.0"
 
 [[deps.IndividualDisplacements]]
 deps = ["Artifacts", "CyclicArrays", "DataFrames", "LazyArtifacts", "MeshArrays", "OrdinaryDiffEq", "Random"]
-path = "/Users/gaelforget/.julia/dev/IndividualDisplacements"
+git-tree-sha1 = "c55af1fbfae5603067d7ee9711b8c0e9cc7b83fc"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.5.0"
+version = "0.4.8"
 
 [[deps.Inflate]]
 git-tree-sha1 = "d1b1b796e47d94588b3757fe84fbf65a5ec4a80d"
@@ -1618,9 +1199,9 @@ version = "1.0.0"
 
 [[deps.JLD2]]
 deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "PrecompileTools", "Requires", "TranscodingStreams"]
-git-tree-sha1 = "a0746c21bdc986d0dc293efa6b1faee112c37c28"
+git-tree-sha1 = "783c1be5213a09609b23237a0c9e5dfd258ae6f2"
 uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-version = "0.4.53"
+version = "0.5.7"
 
 [[deps.JLLWrappers]]
 deps = ["Artifacts", "Preferences"]
@@ -1633,18 +1214,6 @@ deps = ["Dates", "Mmap", "Parsers", "Unicode"]
 git-tree-sha1 = "31e996f0a15c7b280ba9f76636b3ff9e2ae58c9a"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.21.4"
-
-[[deps.JSON3]]
-deps = ["Dates", "Mmap", "Parsers", "PrecompileTools", "StructTypes", "UUIDs"]
-git-tree-sha1 = "1d322381ef7b087548321d3f878cb4c9bd8f8f9b"
-uuid = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
-version = "1.14.1"
-
-    [deps.JSON3.extensions]
-    JSON3ArrowExt = ["ArrowTypes"]
-
-    [deps.JSON3.weakdeps]
-    ArrowTypes = "31f734f8-188a-4ce0-8406-c8a06bd891cd"
 
 [[deps.JpegTurbo]]
 deps = ["CEnum", "FileIO", "ImageCore", "JpegTurbo_jll", "TOML"]
@@ -1663,11 +1232,6 @@ deps = ["LinearAlgebra", "SparseArrays", "SuiteSparse_jll"]
 git-tree-sha1 = "07649c499349dad9f08dde4243a4c597064663e9"
 uuid = "ef3ab10e-7fda-4108-b977-705223b18434"
 version = "0.6.0"
-
-[[deps.KahanSummation]]
-git-tree-sha1 = "6292e7878fe190651e74148edb11356dbbc2e194"
-uuid = "8e2b3108-d4c1-50be-a7a2-16352aec75c3"
-version = "0.3.1"
 
 [[deps.KernelDensity]]
 deps = ["Distributions", "DocStringExtensions", "FFTW", "Interpolations", "StatsBase"]
@@ -2744,12 +2308,6 @@ git-tree-sha1 = "58cdd8fb2201a6267e1db87ff148dd6c1dbd8ad8"
 uuid = "f50d1b31-88e8-58de-be2c-1cc44531875f"
 version = "0.5.1+0"
 
-[[deps.RollingFunctions]]
-deps = ["AccurateArithmetic", "FastBroadcast", "KahanSummation", "LinearAlgebra", "LoopVectorization", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "4a54152985fea23b0b0e99a77566a87137221a0a"
-uuid = "b0e4dd01-7b14-53d8-9b45-175a3e362653"
-version = "0.8.0"
-
 [[deps.RootedTrees]]
 deps = ["LaTeXStrings", "Latexify", "LinearAlgebra", "Preferences", "RecipesBase", "Requires"]
 git-tree-sha1 = "c0c464d3063e46e4128d21fd677ca575ace44fdc"
@@ -2794,12 +2352,6 @@ git-tree-sha1 = "456f610ca2fbd1c14f5fcf31c6bfadc55e7d66e0"
 uuid = "476501e8-09a2-5ece-8869-fb82de89a1fa"
 version = "0.6.43"
 
-[[deps.STAC]]
-deps = ["CFTime", "DataStructures", "Dates", "GeoJSON", "HTTP", "JSON3", "LRUCache", "Preferences", "Printf", "URIs"]
-git-tree-sha1 = "7157a414f324cc0594c3a0d1f30535a4454bf20f"
-uuid = "08e62803-e111-4f53-be9b-274ff296e9da"
-version = "0.1.3"
-
 [[deps.SciMLBase]]
 deps = ["ADTypes", "Accessors", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "Expronicon", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "SciMLStructures", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface"]
 git-tree-sha1 = "7a54136472ca0cb0f66ef22aa3f0ff198f379fa7"
@@ -2833,9 +2385,9 @@ version = "0.1.1"
 
 [[deps.SciMLOperators]]
 deps = ["Accessors", "ArrayInterface", "DocStringExtensions", "LinearAlgebra", "MacroTools"]
-git-tree-sha1 = "ef388ca9e4921ec5614ce714f8aa59a5cd33d867"
+git-tree-sha1 = "6149620767866d4b0f0f7028639b6e661b6a1e44"
 uuid = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
-version = "0.3.11"
+version = "0.3.12"
 weakdeps = ["SparseArrays", "StaticArraysCore"]
 
     [deps.SciMLOperators.extensions]
@@ -3108,12 +2660,6 @@ weakdeps = ["Adapt", "GPUArraysCore", "SparseArrays", "StaticArrays"]
     StructArraysGPUArraysCoreExt = "GPUArraysCore"
     StructArraysSparseArraysExt = "SparseArrays"
     StructArraysStaticArraysExt = "StaticArrays"
-
-[[deps.StructTypes]]
-deps = ["Dates", "UUIDs"]
-git-tree-sha1 = "159331b30e94d7b11379037feeb9b690950cace8"
-uuid = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
-version = "1.11.0"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
@@ -3582,35 +3128,3 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Wayland_jll", "Wayland_prot
 git-tree-sha1 = "9c304562909ab2bab0262639bd4f444d7bc2be37"
 uuid = "d8fb68d0-12a3-5cfd-a85a-d49703b185fd"
 version = "1.4.1+1"
-"""
-
-# ╔═╡ Cell order:
-# ╟─c9e9faa8-f5f0-479c-bc85-877ff7114883
-# ╠═104ce9b0-3fd1-11ec-3eff-3b029552e3d9
-# ╠═2acbfc79-3926-4c5a-9994-e3222c60c377
-# ╟─171fa252-7a35-4d4a-a940-60de77327cf4
-# ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
-# ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
-# ╟─218b9beb-68f2-4498-a96d-08e0719b4cff
-# ╟─2fb4d76d-56d5-4c3e-bc7c-ba0cac57e0e3
-# ╟─f1215951-2eb2-490b-875a-91c1205b8f63
-# ╟─f727992f-b72a-45bc-93f1-cc8daf89af0f
-# ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
-# ╟─a2375720-f599-43b9-a7fb-af17956309b6
-# ╟─7efadea7-4542-40cf-893a-40a75e9c52be
-# ╟─a3e45927-5d53-42be-b7b7-489d6e7a6fe5
-# ╟─1044c5aa-1a56-45b6-a4c6-63d24eea878d
-# ╟─42959eb9-7c14-4892-bf41-a1a434b00e27
-# ╟─fc16b761-8b1f-41de-b4fe-7fa9987d6167
-# ╟─63b68e72-76c1-4104-bf76-dd9eefc4e225
-# ╟─397e5491-56ce-44ba-81d4-2982b0c3f503
-# ╟─c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-# ╟─e49948eb-8b62-4579-a80c-b07624da6f3b
-# ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
-# ╟─33fb4a15-b5ef-46f8-9e4e-c20da4536195
-# ╟─1a6af0eb-ab2a-4999-8063-f218b2f3f651
-# ╟─15077957-64d5-46a5-8a87-a76ad619cf38
-# ╟─6e43a2af-bf01-4f42-a4ba-1874a8cf4885
-# ╟─0251b905-82e1-41c7-9917-dfdb980eef4f
-# ╟─00000000-0000-0000-0000-000000000001
-# ╟─00000000-0000-0000-0000-000000000002

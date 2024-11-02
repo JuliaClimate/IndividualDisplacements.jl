@@ -3,15 +3,25 @@ using IndividualDisplacements, Climatology, MeshArrays, NetCDF
 
 Climatology.get_ecco_velocity_if_needed()
 Climatology.get_occa_velocity_if_needed()
+Climatology.get_ecco_variable_if_needed("THETA")
+Climatology.get_ecco_variable_if_needed("SALT")
+
 MeshArrays.GridLoad(MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90))
 MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360))
-IndividualDisplacements.flt_example_download()
+
+@testset "downloads" begin
+    p0=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
+    IndividualDisplacements.datadeps.getdata("flt_example")
+    @test ispath(p0)
+end
 
 @testset "global" begin
-    p=dirname(pathof(IndividualDisplacements))
-    include(joinpath(p,"../examples/worldwide/ECCO_FlowFields.jl"))
-    P,D=ECCO_FlowFields.global_ocean_circulation()
-    df = ECCO_FlowFields.init_from_file(10)
+    p0=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
+    p1=dirname(pathof(IndividualDisplacements))
+    include(joinpath(p1,"../examples/worldwide/ECCO_FlowFields.jl"))
+    P,D=ECCO_FlowFields.init_FlowFields()
+    file_input=joinpath(p0,"initial_10_1.csv")
+    df = ECCO_FlowFields.init_positions(10,filename=file_input)
     I=Individuals(P,df.x,df.y,df.f,(D=D,))
     T=(0.0,I.P.T[2])
     ∫!(I,T)

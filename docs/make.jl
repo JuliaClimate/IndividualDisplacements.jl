@@ -2,9 +2,11 @@ using Documenter, Literate, PlutoSliderServer, IndividualDisplacements
 using Climatology
 
 #download data dependencies if needed
-IndividualDisplacements.flt_example_download()
+IndividualDisplacements.datadeps.getdata("flt_example")
 Climatology.get_ecco_velocity_if_needed();
 Climatology.get_occa_velocity_if_needed();
+Climatology.get_ecco_variable_if_needed("THETA")
+Climatology.get_ecco_variable_if_needed("SALT")
 
 # generate tutorials and how-to guides using Literate
 src = joinpath(@__DIR__, "src/")

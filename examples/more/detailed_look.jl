@@ -32,10 +32,9 @@ include(joinpath(p,"../examples/more/example123.jl"))
 #
 # from `MITgcm/pkg/flt`
 
-IndividualDisplacements.flt_example_download()
-dirIn=IndividualDisplacements.flt_example_path
+flt_example_path = IndividualDisplacements.datadeps.getdata("flt_example")
 prec=Float32
-df=read_flt(dirIn,prec);
+df=read_flt(flt_example_path*"/",prec);
 
 #md plt=plot_paths(df,300,100000.0)
 
