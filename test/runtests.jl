@@ -12,9 +12,11 @@ MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
 @testset "downloads" begin
     p0=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
     IndividualDisplacements.datadeps.getdata("flt_example")
+    @test ispath(p0)
 end
 
 @testset "global" begin
+    p0=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
     p1=dirname(pathof(IndividualDisplacements))
     include(joinpath(p1,"../examples/worldwide/ECCO_FlowFields.jl"))
     P,D=ECCO_FlowFields.init_FlowFields()
