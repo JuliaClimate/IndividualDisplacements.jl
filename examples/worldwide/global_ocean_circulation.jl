@@ -14,12 +14,6 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ e786643e-f406-4ac5-a43b-510a468ed595
-begin 
-	using Pkg
-	Pkg.status()
-end
-
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
 	using Statistics, PlutoUI
@@ -52,9 +46,6 @@ For additional documentation see :
 [![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
 """
 
-# ╔═╡ 8b1cc95b-c5c9-44cb-86a7-ff14e48ce811
-
-
 # ╔═╡ 171fa252-7a35-4d4a-a940-60de77327cf4
 TableOfContents()
 
@@ -62,6 +53,7 @@ TableOfContents()
 begin
 	✔0="selected parameters"
 	
+	bind_j = (@bind j Select(1:6,default=1))
 	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
 	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="10"))
 	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
@@ -69,18 +61,20 @@ begin
 	bind_zoomin = (@bind zoom_in CheckBox(default=false))
 	bind_zrng = @bind zrng Select([0:11,11:21,21:27],default=0:11)
 	
-	file_IC = joinpath("global_ocean_circulation_inputs","initial_8_6.csv")
+	file_IC = joinpath("global_ocean_circulation_inputs","initial_10_1.csv")
 	backward_time = false
 	file_base = basename(file_IC)[1:end-4]
 	backward_time ? file_base=file_base*"_◀◀" : file_base=file_base*"_▶▶"
+
+#	- k  = $(bind_k) = flow field vertical level (set to 0 for 3D)
+#  - _optional :_ zrng = $(bind_zrng) = vertical coordindate range 
+#  - _(only used if k==0; if otherwise then zrng effectively is k-0.5:k-0.5)_
 
 	md"""## 1. Simulation Parameters
 
 	The following parameters are used:
 
-	- k  = $(bind_k) = flow field vertical level (set to 0 for 3D)
-	  - _optional :_ zrng = $(bind_zrng) = vertical coordindate range 
-	  - _(only used if k==0; if otherwise then zrng effectively is k-0.5:k-0.5)_
+	- latitude box : $(bind_j)
 	- ny = $(bind_ny) = similated period (1/12 = 1 month)
 	- np = $(bind_np) = number of individuals (100 by default)
 	- replay = $(bind_replay) = load results from csv instead of recomputing
@@ -246,8 +240,7 @@ If the replay option ($(bind_replay)) has been selected then we reload the resul
 begin
 	#@bind fil_replay FilePicker()
     path_replay="global_ocean_circulation_outputs"
-    #fil_replay=joinpath(path_replay,"initial_$(zrng[1])_$(zrng[end])_▶▶.csv")
-    fil_replay=joinpath(path_replay,"initial_10_1_▶▶.csv")
+    fil_replay=joinpath(path_replay,"initial_10_$(j)_▶▶.csv")
 end
 
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
@@ -277,6 +270,9 @@ PlottingFunctions.record(fig, file_output_mp4, -50:nt, framerate = 25) do t
 end
 ```
 """
+
+# ╔═╡ e49948eb-8b62-4579-a80c-b07624da6f3b
+md"""latitude box : $(bind_j)"""
 
 # ╔═╡ 33fb4a15-b5ef-46f8-9e4e-c20da4536195
 if do_replay&&isa(fil_replay,Dict)&&haskey(fil_replay,"name")
@@ -321,13 +317,6 @@ else
 	"nothing to plot"
 end
 
-# ╔═╡ 44bdc51f-9e95-4a40-b299-5554c6514e06
-let
-#	tmp_fil_replay=tmp_fil_replay[1:(length(tmp_fil_replay)-4)]
-	#file_base[1:length(file_base)-4]
-#	inc.PlottingFunctions.plot
-end
-
 # ╔═╡ 1a6af0eb-ab2a-4999-8063-f218b2f3f651
 "output path is $(output_path)"
 
@@ -362,7 +351,6 @@ JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 MITgcm = "dce5fa8e-68ce-4431-a242-9469c69627a0"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
 NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
-Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
@@ -388,7 +376,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "16895b62172a00451ef4b872dc2a1b8eb289116a"
+project_hash = "5732c569eda94c62b37dfdb8c4ff55b89529936f"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -3599,7 +3587,6 @@ version = "1.4.1+1"
 # ╟─c9e9faa8-f5f0-479c-bc85-877ff7114883
 # ╠═104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 # ╠═2acbfc79-3926-4c5a-9994-e3222c60c377
-# ╠═8b1cc95b-c5c9-44cb-86a7-ff14e48ce811
 # ╟─171fa252-7a35-4d4a-a940-60de77327cf4
 # ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
@@ -3615,15 +3602,14 @@ version = "1.4.1+1"
 # ╟─42959eb9-7c14-4892-bf41-a1a434b00e27
 # ╟─fc16b761-8b1f-41de-b4fe-7fa9987d6167
 # ╟─63b68e72-76c1-4104-bf76-dd9eefc4e225
-# ╠═397e5491-56ce-44ba-81d4-2982b0c3f503
+# ╟─397e5491-56ce-44ba-81d4-2982b0c3f503
 # ╟─c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-# ╠═b4841dc0-c257-45e0-8657-79121f2c9ce8
+# ╟─e49948eb-8b62-4579-a80c-b07624da6f3b
+# ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
 # ╟─33fb4a15-b5ef-46f8-9e4e-c20da4536195
-# ╠═44bdc51f-9e95-4a40-b299-5554c6514e06
 # ╟─1a6af0eb-ab2a-4999-8063-f218b2f3f651
 # ╟─15077957-64d5-46a5-8a87-a76ad619cf38
 # ╟─6e43a2af-bf01-4f42-a4ba-1874a8cf4885
 # ╟─0251b905-82e1-41c7-9917-dfdb980eef4f
-# ╠═e786643e-f406-4ac5-a43b-510a468ed595
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

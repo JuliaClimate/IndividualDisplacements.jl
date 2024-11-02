@@ -59,20 +59,20 @@ function plot(𝐼::Individuals,🔴::DataFrame;time=0,xlims=(0.0,360.0),ylims=(
     tmp2=🔴[np*0 .+ ii,:lat].!==🔴[np*(nt-1) .+ ii,:lat]
     jj=ii[findall(tmp1.*tmp2)] 
 
-    time==0 ? tt=Observable(nt) : tt=Observable(time)
-    tmp1=groupby(🔴, :t)
-    lon_t1=tmp1[1][jj,:lon]
-    lat_t1=tmp1[1][jj,:lat]
-    
-    scatter!(ax,lon_t1,lat_t1,markersize=1.0,color=:lightblue)
+    🔴_by_t=groupby(🔴, :t)
+    time==0 ? tt=Observable(nt) : tt=Observable(time)    
     for tx in -12:0 
         ttt=@lift(max(1,$tt+tx))
-        lon_tt=@lift(lon360.(tmp1[$ttt][jj,:lon]))
-        lat_tt=@lift(tmp1[$ttt][jj,:lat])
-        d_tt=@lift(max.(tmp1[$ttt][jj,:d],Ref(-1200)))
+        lon_tt=@lift(lon360.(🔴_by_t[$ttt][jj,:lon]))
+        lat_tt=@lift(🔴_by_t[$ttt][jj,:lat])
+        d_tt=@lift(max.(🔴_by_t[$ttt][jj,:d],Ref(-1200)))
         scatter!(ax,lon_tt,lat_tt,markersize=4.0,
         color=d_tt,colorrange=colorrange,colormap=colormap)
     end
+
+    lon_t1=🔴_by_t[1][jj,:lon]
+    lat_t1=🔴_by_t[1][jj,:lat]
+    scatter!(ax,lon_t1,lat_t1,markersize=1.0,color=:lightblue)
 
     limits!(ax,xlims...,ylims...)
 
