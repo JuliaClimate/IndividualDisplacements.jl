@@ -61,7 +61,8 @@ begin
 	bind_zoomin = (@bind zoom_in CheckBox(default=false))
 	bind_zrng = @bind zrng Select([0:11,11:21,21:27],default=0:11)
 	
-	file_IC = joinpath("global_ocean_circulation_inputs","initial_10_1.csv")
+    path_IC = IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
+    file_IC = joinpath(path_IC,"initial_10_1.csv")
 	backward_time = false
 	file_base = basename(file_IC)[1:end-4]
 	backward_time ? file_base=file_base*"_◀◀" : file_base=file_base*"_▶▶"
@@ -238,8 +239,8 @@ If the replay option ($(bind_replay)) has been selected then we reload the resul
 
 # ╔═╡ 397e5491-56ce-44ba-81d4-2982b0c3f503
 begin
-	#@bind fil_replay FilePicker()
-    path_replay="global_ocean_circulation_outputs"
+	#@bind fil_replay FilePicker()    
+    path_IC = IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
     fil_replay=joinpath(path_replay,"initial_10_$(j)_▶▶.csv")
 end
 

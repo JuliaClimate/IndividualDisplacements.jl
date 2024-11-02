@@ -5,7 +5,7 @@ if !isdefined(Main,:ECCO_FlowFields) && myid()==1
     @everywhere include("ECCO_FlowFields.jl")
     @everywhere using Main.ECCO_FlowFields, IndividualDisplacements,  CSV
 
-    @everywhere path="global_ocean_circulation_inputs"
+    @everywhere path=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
     @everywhere list=readdir(path)
     @everywhere ii=findall(occursin.(Ref("initial_"),list) .& occursin.(Ref(".csv"),list))
     @everywhere n_per_worker=Int(ceil(length(ii)/nworkers()))
@@ -36,7 +36,8 @@ end
 and for plotting
 
 ```
-fil=joinpath("global_ocean_circulation_outputs","initial_5_4_▶▶.csv")
+pth=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
+fil=joinpath(pth,"initial_5_4_▶▶.csv")
 df=CSV.read(fil,DataFrame)
 
 include("global_ocean_plotting.jl")
