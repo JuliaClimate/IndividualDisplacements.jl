@@ -93,12 +93,12 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
     w[:,k]=tmpw
    end
 
-   𝑃=FlowFields(u,u,v,v,w,w,[t0,t1],func)
+   P=FlowFields(u,u,v,v,w,w,[t0,t1],func)
 
    D = (θ0=θ, θ1=θ, XC=MeshArrays.exchange(Γ.XC), YC=MeshArrays.exchange(Γ.YC), 
    RF=Γ.RF, RC=Γ.RC,ioSize=(360,160,n), Γ=Γ)
 
-   return 𝑃,D
+   return P,D
 
 end
 
@@ -125,9 +125,9 @@ custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[],
    lon=Float64[], lat=Float64[], dlon=Float64[], dlat=Float64[], 
    year=Float64[], col=Symbol[])
 
-function custom🔧(sol,𝑃::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
-   df=postprocess_MeshArray(sol,𝑃,D,id=id,T=T)
-   add_lonlat!(df,D.XC,D.YC)
+function custom🔧(sol,P::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
+   df=postprocess_MeshArray(sol,P,D,id=id,T=T)
+   add_lonlat!(df,D.Γ.XC,D.Γ.YC)
    df.dlon=0*df.lon
    df.dlat=0*df.lat
 
