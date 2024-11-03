@@ -83,7 +83,7 @@ end
 # ╔═╡ dffe1032-a247-4008-be22-692abcbe458a
 md"""## Compute Trajectories
 
-The time period is `I.𝑃.T` by default, unless `∫!(I,T)` is called instead as done below. 
+The time period is `I.P.T` by default, unless `∫!(I,T)` is called instead as done below. 
 
 Note that the size of 🔴 is different from before -- this DataFrame is a record of the trajectories.
 """

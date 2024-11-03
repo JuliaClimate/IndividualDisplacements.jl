@@ -26,17 +26,6 @@ begin
 	!isdir(output_path) ? mkdir(output_path) : nothing
 end
 
-# ╔═╡ 2acbfc79-3926-4c5a-9994-e3222c60c377
-module inc 
-	using IndividualDisplacements, GLMakie, DataFrames
-	using Climatology, MITgcm, CSV, JLD2, MeshArrays
-	using FileIO, NetCDF, DataDeps, Colors
-	include("ECCO_FlowFields.jl")
-	include("global_ocean_plotting.jl")
-    path_input = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
-    path_replay = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
-end	
-
 # ╔═╡ c9e9faa8-f5f0-479c-bc85-877ff7114883
 md"""# Global Climatology
 
@@ -54,11 +43,95 @@ For additional documentation see :
 # ╔═╡ 171fa252-7a35-4d4a-a940-60de77327cf4
 TableOfContents()
 
+# ╔═╡ 94ca10ae-6a8a-4038-ace0-07d7d9026712
+md"""## 2. Configure `FlowFields` 
+
+####
+
+`global_ocean_circulation` reads in the global Ocean model grid and flow fields. It returns the `FlowFields` data structure `𝑃`. Ancillary variables are stored in NamedTuple `𝐷`.
+
+!!! note
+    The global grid is handled via `MeshArrays.jl` and monthly climatology fields accessed via `Climatology.jl`.
+
+```
+zrng=ARGS[1]
+zrng=parse.(Int,split(zrng,":"))
+zrng=zrng[1]:zrng[2]
+println(zrng)
+```
+
+!!! note
+    For non-interactive, one can add here code as shown above. Then `julia --project=. main.jl 21:27 &`.
+"""
+
+# ╔═╡ 2fb4d76d-56d5-4c3e-bc7c-ba0cac57e0e3
+output_path
+
+# ╔═╡ f1215951-2eb2-490b-875a-91c1205b8f63
+md"""## 3. Trajectory Computation
+
+### 3.1 Initialization
+
+- initialize individual positions (`init_gulf_stream`)
+- initial integration from time 0 to 0.5 month
+"""
+
+# ╔═╡ 6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
+md""" ### 3.2 Monthly Step Function
+
+Since the Ocean circulation varies from month to month, the `𝐼.𝐷.🔄` function is used to update flow fields from one month to the next. 
+
+Time variable flow fields are easily handled by defining a `step!` function that wraps around `∫!`. Here it does three things
+
+- `𝐼.𝐷.🔄` resets the velocity inputs (`𝐼.𝐷.u0` etc) to bracket time `t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])`
+- `reset_📌!` randomly selects a fraction of the individuals and resets their positions. This can be useful to maintain homogeneous coverage of the domain by the fleet of individuals.
+- `∫!(𝐼)` solves for the individual trajectories over one month (`𝐼.𝑃.𝑇`) with updated velocity fields (`𝐼.𝑃.u0` etc). It also adds diagnostics to the `DataFrame` used to record variables along the trajectory (`𝐼.🔴`).
+"""
+
+# ╔═╡ 7efadea7-4542-40cf-893a-40a75e9c52be
+md"""### 3.3 Monthly Simulation Loop
+
+!!! note
+    `add_lonlat!` derives geographic locations (longitude and latitude) from local grid coordinates (x, y, etc).
+"""
+
+# ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
+md"""## 4. Visualize Displacements
+
+!!! note
+    For offline visualization, see code below.
+"""
+
+# ╔═╡ 1a6af0eb-ab2a-4999-8063-f218b2f3f651
+"output path is $(output_path)"
+
+# ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
+md"""## 5. Summary Statistics
+
+Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) to analyze the output (𝐼.🔴) of our simulation.
+"""
+
+# ╔═╡ 6bcd1a14-6bee-4549-8007-61952909b18f
+md"""## Appendix"""
+
+# ╔═╡ 2acbfc79-3926-4c5a-9994-e3222c60c377
+module inc 
+	import IndividualDisplacements
+	import Climatology, MITgcm, MeshArrays
+    import CairoMakie, Makie
+    import DataFrames, CSV, JLD2
+	import FileIO, NetCDF, DataDeps, Colors
+	include("ECCO_FlowFields.jl")
+	include("global_ocean_plotting.jl")
+    path_input = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
+    path_replay = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
+end	
+
 # ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
 begin
 	✔0="selected parameters"
 	
-	bind_j = (@bind j Select(1:6,default=1))
+	bind_j = (@bind j Select(1:6,default=3))
 	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
 	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="10"))
 	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
@@ -88,26 +161,14 @@ begin
 	"""
 end
 
-# ╔═╡ 94ca10ae-6a8a-4038-ace0-07d7d9026712
-md"""## 2. Configure `FlowFields` 
+# ╔═╡ 63b68e72-76c1-4104-bf76-dd9eefc4e225
+md"""### 3.4 Replay previous simulation
 
-####
-
-`global_ocean_circulation` reads in the global Ocean model grid and flow fields. It returns the `FlowFields` data structure `𝑃`. Ancillary variables are stored in NamedTuple `𝐷`.
-
-!!! note
-    The global grid is handled via `MeshArrays.jl` and monthly climatology fields accessed via `Climatology.jl`.
-
-```
-zrng=ARGS[1]
-zrng=parse.(Int,split(zrng,":"))
-zrng=zrng[1]:zrng[2]
-println(zrng)
-```
-
-!!! note
-    For non-interactive, one can add here code as shown above. Then `julia --project=. main.jl 21:27 &`.
+If the replay option ($(bind_replay)) has been selected then we reload the result of a previous computation from file.
 """
+
+# ╔═╡ e49948eb-8b62-4579-a80c-b07624da6f3b
+md"""latitude box : $(bind_j)"""
 
 # ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
 begin
@@ -127,18 +188,6 @@ begin
 	tmp1="  - inital depth range = $(round.([𝐷.Γ.RF[zrng[1]+1] 𝐷.Γ.RF[zrng[end]+1]]))"
 	println(tmp1)
 end
-
-# ╔═╡ 2fb4d76d-56d5-4c3e-bc7c-ba0cac57e0e3
-output_path
-
-# ╔═╡ f1215951-2eb2-490b-875a-91c1205b8f63
-md"""## 3. Trajectory Computation
-
-### 3.1 Initialization
-
-- initialize individual positions (`init_gulf_stream`)
-- initial integration from time 0 to 0.5 month
-"""
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
@@ -161,7 +210,7 @@ begin
 		my∫! = ∫!
 	else		
 		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,length(𝐷.Γ.RC),50)
-		𝐼 = inc.Individuals(𝑃,df.x,df.y,df.z,df.f,
+		𝐼 = inc.IndividualDisplacements.Individuals(𝑃,df.x,df.y,df.z,df.f,
 			(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫,🔧=inc.ECCO_FlowFields.custom🔧,🔴=deepcopy(inc.ECCO_FlowFields.custom🔴)))
 		my∫! = inc.ECCO_FlowFields.custom∫!
 	end
@@ -170,32 +219,6 @@ begin
 	𝐼
 end
 
-# ╔═╡ 6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
-md""" ### 3.2 Monthly Step Function
-
-Since the Ocean circulation varies from month to month, the `𝐼.𝐷.🔄` function is used to update flow fields from one month to the next. 
-
-Time variable flow fields are easily handled by defining a `step!` function that wraps around `∫!`. Here it does three things
-
-- `𝐼.𝐷.🔄` resets the velocity inputs (`𝐼.𝐷.u0` etc) to bracket time `t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])`
-- `reset_📌!` randomly selects a fraction of the individuals and resets their positions. This can be useful to maintain homogeneous coverage of the domain by the fleet of individuals.
-- `∫!(𝐼)` solves for the individual trajectories over one month (`𝐼.𝑃.𝑇`) with updated velocity fields (`𝐼.𝑃.u0` etc). It also adds diagnostics to the `DataFrame` used to record variables along the trajectory (`𝐼.🔴`).
-"""
-
-# ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
-function step!(𝐼::inc.Individuals)
-    𝐼.𝐷.🔄(𝐼)
-    𝐼.𝐷.frac > 0 ? inc.ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
-    my∫!(𝐼)
-end
-
-# ╔═╡ 7efadea7-4542-40cf-893a-40a75e9c52be
-md"""### 3.3 Monthly Simulation Loop
-
-!!! note
-    `add_lonlat!` derives geographic locations (longitude and latitude) from local grid coordinates (x, y, etc).
-"""
-
 # ╔═╡ a3e45927-5d53-42be-b7b7-489d6e7a6fe5
 if !do_replay
 	𝑇=(0.0,𝐼.𝑃.𝑇[2])
@@ -203,6 +226,13 @@ if !do_replay
 	✔1="Done with Initial Integration"
 else
 	✔1="Skipping Initial Integration (replay instead)"
+end
+
+# ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
+function step!(𝐼::inc.IndividualDisplacements.Individuals)
+    𝐼.𝐷.🔄(𝐼)
+    𝐼.𝐷.frac > 0 ? inc.ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
+    my∫!(𝐼)
 end
 
 # ╔═╡ 1044c5aa-1a56-45b6-a4c6-63d24eea878d
@@ -236,35 +266,19 @@ else
 	"Skipping File Output (replay instead)"
 end
 
-# ╔═╡ 63b68e72-76c1-4104-bf76-dd9eefc4e225
-md"""### 3.4 Replay previous simulation
-
-If the replay option ($(bind_replay)) has been selected then we reload the result of a previous computation from file.
-"""
-
 # ╔═╡ 397e5491-56ce-44ba-81d4-2982b0c3f503
 begin
 	#@bind fil_replay FilePicker()    
     fil_replay=joinpath(inc.path_replay,"initial_10_$(j)_▶▶.csv")
 end
 
-# ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-md"""## 4. Visualize Displacements
-
-!!! note
-    For offline visualization, see code below.
-"""
-
-# ╔═╡ 1a6af0eb-ab2a-4999-8063-f218b2f3f651
-"output path is $(output_path)"
-
 # ╔═╡ 33fb4a15-b5ef-46f8-9e4e-c20da4536195
 if do_replay&&isa(fil_replay,Dict)&&haskey(fil_replay,"name")
 	#tmp_🔴=CSV.read(fil_replay["name"],DataFrame)
-	tmp_🔴=UInt8.(fil_replay["data"]) |> IOBuffer |> inc.CSV.File |> inc.DataFrame
+	tmp_🔴=UInt8.(fil_replay["data"]) |> IOBuffer |> inc.CSV.File |> inc.DataFrames.DataFrame
 	tmp_file_base=split(fil_replay["name"],'.')[1]
 elseif do_replay&&isa(fil_replay,String)
-	tmp_🔴=inc.CSV.read(fil_replay,inc.DataFrame)
+	tmp_🔴=inc.CSV.read(fil_replay,inc.DataFrames.DataFrame)
 #	tmp_file_base=basename(fil_replay)[1:end-4]
 	tmp_file_base=basename(fil_replay)
 	tmp_file_base=split(tmp_file_base,"_▶▶")[1]
@@ -289,7 +303,7 @@ if !isempty(tmp_🔴)
 	fig,tt=inc.PlottingFunctions.plot(𝐼,tmp_🔴) #,xlims=xlims,ylims=ylims)
 
 	file_output_png=joinpath(output_path,tmp_file_base*".png")
-	inc.save(file_output_png,fig)
+	inc.Makie.save(file_output_png,fig)
 
 #	file_output_mp4=joinpath(output_path,tmp_file_base*".mp4")
 #	inc.record(fig, file_output_mp4, 1:nt, framerate = 30) do t
@@ -301,27 +315,15 @@ else
 	"nothing to plot"
 end
 
-# ╔═╡ e49948eb-8b62-4579-a80c-b07624da6f3b
-md"""latitude box : $(bind_j)"""
-
-# ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
-md"""## 5. Summary Statistics
-
-Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) to analyze the output (𝐼.🔴) of our simulation.
-"""
+# ╔═╡ 0251b905-82e1-41c7-9917-dfdb980eef4f
+tmp_🔴
 
 # ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
 begin
 	✔2
-	gdf = inc.groupby(tmp_🔴, :ID)
-	sgdf= inc.combine(gdf,inc.nrow,:lat => mean)
+	gdf = inc.DataFrames.groupby(tmp_🔴, :ID)
+	sgdf= inc.DataFrames.combine(gdf,inc.DataFrames.nrow,:lat => mean)
 end
-
-# ╔═╡ 0251b905-82e1-41c7-9917-dfdb980eef4f
-tmp_🔴
-
-# ╔═╡ 6bcd1a14-6bee-4549-8007-61952909b18f
-md"""## Appendix"""
 
 # ╔═╡ e9862707-3c00-434b-9501-e590e331b0b3
 md"""
@@ -354,15 +356,16 @@ end
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Climatology = "9e9a4d37-2d2e-41e3-8b85-f7978328d9c7"
 Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 IndividualDisplacements = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 MITgcm = "dce5fa8e-68ce-4431-a242-9469c69627a0"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
 NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
@@ -371,12 +374,13 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 CSV = "~0.10.15"
+CairoMakie = "~0.12.15"
 Climatology = "~0.5.12"
 Colors = "~0.12.11"
 DataDeps = "~0.7.13"
 DataFrames = "~1.7.0"
 FileIO = "~1.16.4"
-GLMakie = "~0.10.15"
+IndividualDisplacements = "~0.5.0"
 JLD2 = "~0.5.7"
 MITgcm = "~0.5.0"
 MeshArrays = "~0.3.16"
@@ -390,7 +394,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "2483ff10e8afc1ea25eca33d5e58e3bdb88533b9"
+project_hash = "79460fd5e9d38248cf71b724b866ab6daa96f575"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -615,6 +619,18 @@ deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers
 git-tree-sha1 = "deddd8725e5e1cc49ee205a1964256043720a6c3"
 uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 version = "0.10.15"
+
+[[deps.Cairo]]
+deps = ["Cairo_jll", "Colors", "Glib_jll", "Graphics", "Libdl", "Pango_jll"]
+git-tree-sha1 = "7b6ad8c35f4bc3bca8eb78127c8b99719506a5fb"
+uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
+version = "1.1.0"
+
+[[deps.CairoMakie]]
+deps = ["CRC32c", "Cairo", "Cairo_jll", "Colors", "FileIO", "FreeType", "GeometryBasics", "LinearAlgebra", "Makie", "PrecompileTools"]
+git-tree-sha1 = "fbfdb7cbe17bd14b60646c14c27a16e5038cde54"
+uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+version = "0.12.15"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -863,12 +879,6 @@ version = "0.2.5"
 deps = ["Printf"]
 uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
-[[deps.Dbus_jll]]
-deps = ["Artifacts", "Expat_jll", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "fc173b380865f70627d7dd1190dc2fce6cc105af"
-uuid = "ee1fde0b-3d02-5ea6-8484-8dfef6360eab"
-version = "1.14.10+0"
-
 [[deps.DelaunayTriangulation]]
 deps = ["AdaptivePredicates", "EnumX", "ExactPredicates", "PrecompileTools", "Random"]
 git-tree-sha1 = "89df54fbe66e5872d91d8c2cd3a375f660c3fd64"
@@ -1046,12 +1056,6 @@ weakdeps = ["Adapt"]
 
     [deps.EnzymeCore.extensions]
     AdaptExt = "Adapt"
-
-[[deps.EpollShim_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "8e9441ee83492030ace98f9789a654a6d0b1f643"
-uuid = "2702e6a9-849d-5ed8-8c21-79e8b8f9ee43"
-version = "0.0.20230411+0"
 
 [[deps.ExactPredicates]]
 deps = ["IntervalArithmetic", "Random", "StaticArrays"]
@@ -1276,24 +1280,6 @@ version = "0.1.3"
 deps = ["Random"]
 uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
-[[deps.GLFW]]
-deps = ["GLFW_jll"]
-git-tree-sha1 = "7ed24cfc4cb29fb10c0e8cca871ddff54c32a4c3"
-uuid = "f7f18e0c-5ee9-5ccd-a5bf-e8befd85ed98"
-version = "3.4.3"
-
-[[deps.GLFW_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll", "libdecor_jll", "xkbcommon_jll"]
-git-tree-sha1 = "532f9126ad901533af1d4f5c198867227a7bb077"
-uuid = "0656b61e-2033-5cc2-a64a-77c0f6c09b89"
-version = "3.4.0+1"
-
-[[deps.GLMakie]]
-deps = ["ColorTypes", "Colors", "FileIO", "FixedPointNumbers", "FreeTypeAbstraction", "GLFW", "GeometryBasics", "LinearAlgebra", "Makie", "Markdown", "MeshIO", "ModernGL", "Observables", "PrecompileTools", "Printf", "ShaderAbstractions", "StaticArrays"]
-git-tree-sha1 = "b6b8bf25367affab7096312f31a081c7fd8a5186"
-uuid = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
-version = "0.10.15"
-
 [[deps.GMP_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "781609d7-10c4-51f6-84f2-b8444358ff6d"
@@ -1396,6 +1382,12 @@ deps = ["Artifacts", "GMP_jll", "JLLWrappers", "Libdl", "Nettle_jll", "P11Kit_jl
 git-tree-sha1 = "383db7d3f900f4c1f47a8a04115b053c095e48d3"
 uuid = "0951126a-58fd-58f1-b5b3-b08c7c4a876d"
 version = "3.8.4+0"
+
+[[deps.Graphics]]
+deps = ["Colors", "LinearAlgebra", "NaNMath"]
+git-tree-sha1 = "d61890399bc535850c4bf08e4e0d3a7ad0f21cbd"
+uuid = "a2bd30eb-e257-5431-a919-1863eab51364"
+version = "1.1.2"
 
 [[deps.Graphite2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -2079,12 +2071,6 @@ version = "0.3.16"
     Proj = "c94c279d-25a6-4763-9509-64d165bea63e"
     Shapefile = "8e980c4a-a4fe-5da2-b3a7-4b4b0353a2f4"
 
-[[deps.MeshIO]]
-deps = ["ColorTypes", "FileIO", "GeometryBasics", "Printf"]
-git-tree-sha1 = "dc182956229ff16d5a4d90a562035e633bd2561d"
-uuid = "7269a6da-0436-5bbc-96c2-40638cbb6118"
-version = "0.4.12"
-
 [[deps.MicrosoftMPI_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "f12a29c4400ba812841c6ace3f4efbb6dbb3ba01"
@@ -2099,12 +2085,6 @@ version = "1.2.0"
 
 [[deps.Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
-
-[[deps.ModernGL]]
-deps = ["Libdl"]
-git-tree-sha1 = "b76ea40b5c0f45790ae09492712dd326208c28b2"
-uuid = "66fc600b-dfda-50eb-8b99-91cfa97b1301"
-version = "1.1.7"
 
 [[deps.MosaicViews]]
 deps = ["MappedArrays", "OffsetArrays", "PaddedViews", "StackViews"]
@@ -3325,18 +3305,6 @@ git-tree-sha1 = "8351f8d73d7e880bfc042a8b6922684ebeafb35c"
 uuid = "19fa3120-7c27-5ec5-8db8-b0b0aa330d6f"
 version = "0.2.0"
 
-[[deps.Wayland_jll]]
-deps = ["Artifacts", "EpollShim_jll", "Expat_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg", "XML2_jll"]
-git-tree-sha1 = "7558e29847e99bc3f04d6569e82d0f5c54460703"
-uuid = "a2964d1f-97da-50d4-b82a-358c7fce9d89"
-version = "1.21.0+1"
-
-[[deps.Wayland_protocols_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "93f43ab61b16ddfb2fd3bb13b3ce241cafb0e6c9"
-uuid = "2381bf8a-dfd0-557d-9999-79630e7b1b91"
-version = "1.31.0+0"
-
 [[deps.WeakRefStrings]]
 deps = ["DataAPI", "InlineStrings", "Parsers"]
 git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
@@ -3390,12 +3358,6 @@ git-tree-sha1 = "6035850dcc70518ca32f012e46015b9beeda49d8"
 uuid = "0c0b7dd1-d40b-584c-a123-a41640f87eec"
 version = "1.0.11+0"
 
-[[deps.Xorg_libXcursor_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXfixes_jll", "Xorg_libXrender_jll"]
-git-tree-sha1 = "12e0eb3bc634fa2080c1c37fccf56f7c22989afd"
-uuid = "935fb764-8cf2-53bf-bb30-45bb1f8bf724"
-version = "1.2.0+4"
-
 [[deps.Xorg_libXdmcp_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "34d526d318358a859d7de23da945578e8e8727b7"
@@ -3407,30 +3369,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
 git-tree-sha1 = "d2d1a5c49fae4ba39983f63de6afcbea47194e85"
 uuid = "1082639a-0dae-5f34-9b06-72781eeb8cb3"
 version = "1.3.6+0"
-
-[[deps.Xorg_libXfixes_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libX11_jll"]
-git-tree-sha1 = "0e0dc7431e7a0587559f9294aeec269471c991a4"
-uuid = "d091e8ba-531a-589c-9de9-94069b037ed8"
-version = "5.0.3+4"
-
-[[deps.Xorg_libXi_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXext_jll", "Xorg_libXfixes_jll"]
-git-tree-sha1 = "89b52bc2160aadc84d707093930ef0bffa641246"
-uuid = "a51aa0fd-4e3c-5386-b890-e753decda492"
-version = "1.7.10+4"
-
-[[deps.Xorg_libXinerama_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXext_jll"]
-git-tree-sha1 = "26be8b1c342929259317d8b9f7b53bf2bb73b123"
-uuid = "d1454406-59df-5ea1-beac-c340f2130bc3"
-version = "1.1.4+4"
-
-[[deps.Xorg_libXrandr_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll"]
-git-tree-sha1 = "34cea83cb726fb58f325887bf0612c6b3fb17631"
-uuid = "ec84b674-ba8e-5d96-8ba1-2a689ba10484"
-version = "1.5.2+4"
 
 [[deps.Xorg_libXrender_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
@@ -3449,24 +3387,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "XSLT_jll", "Xorg_libXau_jll", "Xor
 git-tree-sha1 = "bcd466676fef0878338c61e655629fa7bbc69d8e"
 uuid = "c7cfdc94-dc32-55de-ac96-5a1b8d977c5b"
 version = "1.17.0+0"
-
-[[deps.Xorg_libxkbfile_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
-git-tree-sha1 = "730eeca102434283c50ccf7d1ecdadf521a765a4"
-uuid = "cc61e674-0454-545c-8b26-ed2c68acab7a"
-version = "1.1.2+0"
-
-[[deps.Xorg_xkbcomp_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libxkbfile_jll"]
-git-tree-sha1 = "330f955bc41bb8f5270a369c473fc4a5a4e4d3cb"
-uuid = "35661453-b289-5fab-8a00-3d9160c6a3a4"
-version = "1.4.6+0"
-
-[[deps.Xorg_xkeyboard_config_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_xkbcomp_jll"]
-git-tree-sha1 = "691634e5453ad362044e2ad653e79f3ee3bb98c3"
-uuid = "33bec58e-1273-512f-9401-5d533626f822"
-version = "2.39.0+0"
 
 [[deps.Xorg_xtrans_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -3519,12 +3439,6 @@ version = "0.15.2+0"
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
 version = "5.11.0+0"
-
-[[deps.libdecor_jll]]
-deps = ["Artifacts", "Dbus_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pango_jll", "Wayland_jll", "xkbcommon_jll"]
-git-tree-sha1 = "9bf7903af251d2050b467f76bdbe57ce541f7f4f"
-uuid = "1183f4f0-6f2a-5f1a-908b-139f9cdfea6f"
-version = "0.2.2+0"
 
 [[deps.libfdk_aac_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
@@ -3589,12 +3503,6 @@ deps = ["Artifacts", "JLLWrappers", "Libdl"]
 git-tree-sha1 = "dcc541bb19ed5b0ede95581fb2e41ecf179527d2"
 uuid = "dfaa095f-4041-5dcd-9319-2fabd8486b76"
 version = "3.6.0+0"
-
-[[deps.xkbcommon_jll]]
-deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg", "Wayland_jll", "Wayland_protocols_jll", "Xorg_libxcb_jll", "Xorg_xkeyboard_config_jll"]
-git-tree-sha1 = "9c304562909ab2bab0262639bd4f444d7bc2be37"
-uuid = "d8fb68d0-12a3-5cfd-a85a-d49703b185fd"
-version = "1.4.1+1"
 """
 
 # ╔═╡ Cell order:
