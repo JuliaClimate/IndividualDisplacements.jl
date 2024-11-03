@@ -28,21 +28,21 @@ md"""## Initialize Data Structures"""
 
 # ╔═╡ 66c95828-227c-4db5-a6f1-3e3004a99785
 begin
-	𝑃,𝐷=OCCA_FlowFields.setup(nmax=5)
+	P,D=OCCA_FlowFields.setup(nmax=5)
 	"Done with FlowFields"
 end
 
 # ╔═╡ c21d725b-7adf-4918-bddd-39f225ea9858
 begin
 	nf=100; lo=(-160.0,-150.0); la=(30.0,40.0); level=2.5;
-	df=OCCA_FlowFields.initial_positions(𝐷.Γ, nf, lo, la, level)
+	df=OCCA_FlowFields.initial_positions(D.Γ, nf, lo, la, level)
 	"Done with initial positions"
 end
 
 # ╔═╡ f199f321-976a-4ccd-a003-140211aa67fe
 begin	
-	𝐼=Individuals(𝑃,df.x,df.y,df.z,df.f,
-		(🔴=OCCA_FlowFields.custom🔴,🔧=OCCA_FlowFields.custom🔧, 𝐷=𝐷))
+	I=Individuals(P,df.x,df.y,df.z,df.f,
+		(🔴=OCCA_FlowFields.custom🔴,🔧=OCCA_FlowFields.custom🔧, D=D))
 	"Done with Individuals"
 end
 
@@ -51,37 +51,41 @@ md"""## Compute Displacements"""
 
 # ╔═╡ 938fdaa8-357d-477e-8fa2-e6da53806242
 begin
-	𝑇=(0.0,10*86400.0)
-	∫!(𝐼,𝑇)
+	T=(0.0,10*86400.0)
+	∫!(I,T)
 end
 
 # ╔═╡ 09d31a7b-f411-429f-b42b-4c5cd0e5a420
 md"""## Visualize Displacements"""
 
 # ╔═╡ 8e371f54-d7f7-4f59-a2e1-9f673486f1fa
-a_plot(𝐼)
+begin
+    """
+    plot(I::Individuals)
 
-# ╔═╡ a6f4b5a0-7818-41a6-a4e5-30d80a727625
-"""
-    plot(𝐼::Individuals)
-
-Plot the initial and final positions as scatter plot in `lon,lat` or `x,y` plane.
-"""
-function a_plot(𝐼::Individuals)
-	🔴_by_t = IndividualDisplacements.DataFrames.groupby(𝐼.🔴, :t)
-	set_theme!(theme_light())
-	fig=Figure(size = (900, 600))
-	try
-		a = Axis(fig[1, 1],xlabel="longitude",ylabel="latitude")		
-		scatter!(a,🔴_by_t[1].lon,🔴_by_t[1].lat,color=:green2)
-		scatter!(a,🔴_by_t[end].lon,🔴_by_t[end].lat,color=:red)
-	catch
-		a = Axis(fig[1, 1],xlabel="longitude",ylabel="latitude")		
-		scatter!(a,🔴_by_t[1].x,🔴_by_t[1].y,color=:green2)
-		scatter!(a,🔴_by_t[end].x,🔴_by_t[end].y,color=:red)
+    Plot the initial and final positions as scatter plot in `lon,lat` or `x,y` plane.
+    """
+    function myplot(I::Individuals)
+    🔴_by_t = IndividualDisplacements.DataFrames.groupby(I.🔴, :t)
+    set_theme!(theme_light())
+    fig=Figure(size = (900, 600))
+    try
+        a = Axis(fig[1, 1],xlabel="longitude",ylabel="latitude")		
+        scatter!(a,🔴_by_t[1].lon,🔴_by_t[1].lat,color=:green2)
+        scatter!(a,🔴_by_t[end].lon,🔴_by_t[end].lat,color=:red)
+    catch
+        a = Axis(fig[1, 1],xlabel="longitude",ylabel="latitude")		
+        scatter!(a,🔴_by_t[1].x,🔴_by_t[1].y,color=:green2)
+        scatter!(a,🔴_by_t[end].x,🔴_by_t[end].y,color=:red)
     end
     return fig
+    end
+
+    myplot(I)
 end
+
+# ╔═╡ a6f4b5a0-7818-41a6-a4e5-30d80a727625
+
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """

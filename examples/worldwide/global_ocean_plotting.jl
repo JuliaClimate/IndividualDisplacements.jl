@@ -1,7 +1,7 @@
 
 module PlottingFunctions 
 
-using GLMakie, DataFrames, FileIO, Colors
+using Makie, DataFrames, FileIO, Colors
 using DataDeps, MeshArrays, IndividualDisplacements
 
 lon180(x)=Float64(x>180.0 ? x-360.0 : x)
