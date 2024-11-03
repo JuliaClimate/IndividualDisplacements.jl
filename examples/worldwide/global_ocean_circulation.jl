@@ -1,18 +1,23 @@
 ### A Pluto.jl notebook ###
-# v0.20.1
+# v0.20.3
 
 using Markdown
 using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
+    #! format: off
     quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
+    #! format: on
 end
+
+# ╔═╡ 1821a034-5a3f-4a3a-a971-a80a26aa01cb
+using Pkg; Pkg.status()
 
 # ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
 begin
@@ -28,6 +33,8 @@ module inc
 	using FileIO, NetCDF, DataDeps, Colors
 	include("ECCO_FlowFields.jl")
 	include("global_ocean_plotting.jl")
+    path_input = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
+    path_replay = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
 end	
 
 # ╔═╡ c9e9faa8-f5f0-479c-bc85-877ff7114883
@@ -42,8 +49,6 @@ For additional documentation see :
 [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 [4](https://en.wikipedia.org/wiki/Displacement_(vector))
-
-[![simulated particle movie (5m)](https://user-images.githubusercontent.com/20276764/84766999-b801ad80-af9f-11ea-922a-610ad8a257dc.png)](https://youtu.be/W5DNqJG9jt0)
 """
 
 # ╔═╡ 171fa252-7a35-4d4a-a940-60de77327cf4
@@ -61,7 +66,7 @@ begin
 	bind_zoomin = (@bind zoom_in CheckBox(default=false))
 	bind_zrng = @bind zrng Select([0:11,11:21,21:27],default=0:11)
 	
-    path_IC = IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
+    path_IC = inc.path_input
     file_IC = joinpath(path_IC,"initial_10_1.csv")
 	backward_time = false
 	file_base = basename(file_IC)[1:end-4]
@@ -240,8 +245,7 @@ If the replay option ($(bind_replay)) has been selected then we reload the resul
 # ╔═╡ 397e5491-56ce-44ba-81d4-2982b0c3f503
 begin
 	#@bind fil_replay FilePicker()    
-    path_IC = IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
-    fil_replay=joinpath(path_replay,"initial_10_$(j)_▶▶.csv")
+    fil_replay=joinpath(inc.path_replay,"initial_10_$(j)_▶▶.csv")
 end
 
 # ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
@@ -249,31 +253,10 @@ md"""## 4. Visualize Displacements
 
 !!! note
     For offline visualization, see code below.
-
-```
-using Pkg; Pkg.activate(temp=true)
-Pkg.add.(["CSV", "DataFrames", "FileIO", "Colors", "GLMakie"])
-
-using CSV, DataFrames, FileIO, Colors, GLMakie
-include("global_ocean_plotting.jl")
-
-fil=joinpath("inputs","initial_21_27.csv")
-df=CSV.read(fil,DataFrame)
-
-nt=length(unique(df.t)); xlims=(-85.0,5.0); ylims=(20.0,67.0)
-fig,tt=PlottingFunctions.plot([],df,xlims=xlims,ylims=ylims,
-	colormap=:linear_wcmr_100_45_c42_n256,colorrange=(-1300,00), add_colorbar=false)
-fig
-
-file_output_mp4=tempname()*".mp4"
-PlottingFunctions.record(fig, file_output_mp4, -50:nt, framerate = 25) do t
-    tt[]=max(t,0)
-end
-```
 """
 
-# ╔═╡ e49948eb-8b62-4579-a80c-b07624da6f3b
-md"""latitude box : $(bind_j)"""
+# ╔═╡ 1a6af0eb-ab2a-4999-8063-f218b2f3f651
+"output path is $(output_path)"
 
 # ╔═╡ 33fb4a15-b5ef-46f8-9e4e-c20da4536195
 if do_replay&&isa(fil_replay,Dict)&&haskey(fil_replay,"name")
@@ -318,8 +301,8 @@ else
 	"nothing to plot"
 end
 
-# ╔═╡ 1a6af0eb-ab2a-4999-8063-f218b2f3f651
-"output path is $(output_path)"
+# ╔═╡ e49948eb-8b62-4579-a80c-b07624da6f3b
+md"""latitude box : $(bind_j)"""
 
 # ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
 md"""## 5. Summary Statistics
@@ -337,6 +320,36 @@ end
 # ╔═╡ 0251b905-82e1-41c7-9917-dfdb980eef4f
 tmp_🔴
 
+# ╔═╡ 6bcd1a14-6bee-4549-8007-61952909b18f
+md"""## Appendix"""
+
+# ╔═╡ e9862707-3c00-434b-9501-e590e331b0b3
+md"""
+!!! note
+    For offline visualization, see code below.
+
+```
+using Pkg; Pkg.activate(temp=true)
+Pkg.add.(["CSV", "DataFrames", "FileIO", "Colors", "GLMakie"])
+
+using CSV, DataFrames, FileIO, Colors, GLMakie
+include("global_ocean_plotting.jl")
+
+fil=joinpath("inputs","initial_21_27.csv")
+df=CSV.read(fil,DataFrame)
+
+nt=length(unique(df.t)); xlims=(-85.0,5.0); ylims=(20.0,67.0)
+fig,tt=PlottingFunctions.plot([],df,xlims=xlims,ylims=ylims,
+	colormap=:linear_wcmr_100_45_c42_n256,colorrange=(-1300,00), add_colorbar=false)
+fig
+
+file_output_mp4=tempname()*".mp4"
+PlottingFunctions.record(fig, file_output_mp4, -50:nt, framerate = 25) do t
+    tt[]=max(t,0)
+end
+```
+"""
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -352,6 +365,7 @@ JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 MITgcm = "dce5fa8e-68ce-4431-a242-9469c69627a0"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
 NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
@@ -363,8 +377,7 @@ DataDeps = "~0.7.13"
 DataFrames = "~1.7.0"
 FileIO = "~1.16.4"
 GLMakie = "~0.10.15"
-IndividualDisplacements = "~0.5.0"
-JLD2 = "~0.4.53"
+JLD2 = "~0.5.7"
 MITgcm = "~0.5.0"
 MeshArrays = "~0.3.16"
 NetCDF = "~0.12.0"
@@ -377,7 +390,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "5732c569eda94c62b37dfdb8c4ff55b89529936f"
+project_hash = "2483ff10e8afc1ea25eca33d5e58e3bdb88533b9"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -1408,10 +1421,10 @@ uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
 
 [[deps.HDF5_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "LazyArtifacts", "LibCURL_jll", "Libdl", "MPICH_jll", "MPIPreferences", "MPItrampoline_jll", "MicrosoftMPI_jll", "OpenMPI_jll", "OpenSSL_jll", "TOML", "Zlib_jll", "libaec_jll"]
-git-tree-sha1 = "38c8874692d48d5440d5752d6c74b0c6b0b60739"
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "LibCURL_jll", "Libdl", "MPICH_jll", "MPIPreferences", "MPItrampoline_jll", "MicrosoftMPI_jll", "OpenMPI_jll", "OpenSSL_jll", "TOML", "Zlib_jll", "libaec_jll"]
+git-tree-sha1 = "82a471768b513dc39e471540fdadc84ff80ff997"
 uuid = "0234f1f7-429e-5d53-9886-15a909be8d59"
-version = "1.14.2+1"
+version = "1.14.3+3"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
@@ -1508,8 +1521,8 @@ uuid = "9b13fd28-a010-5f03-acff-a1bbcff69959"
 version = "1.0.0"
 
 [[deps.IndividualDisplacements]]
-deps = ["Artifacts", "CyclicArrays", "DataFrames", "LazyArtifacts", "MeshArrays", "OrdinaryDiffEq", "Random"]
-path = "/Users/gaelforget/.julia/dev/IndividualDisplacements"
+deps = ["CyclicArrays", "DataDeps", "DataFrames", "Dataverse", "Glob", "MeshArrays", "OrdinaryDiffEq", "Random"]
+git-tree-sha1 = "8cc84c3f7846adb1f526ba6895a837e8ca42fdb7"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 version = "0.5.0"
 
@@ -1618,9 +1631,9 @@ version = "1.0.0"
 
 [[deps.JLD2]]
 deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "PrecompileTools", "Requires", "TranscodingStreams"]
-git-tree-sha1 = "a0746c21bdc986d0dc293efa6b1faee112c37c28"
+git-tree-sha1 = "783c1be5213a09609b23237a0c9e5dfd258ae6f2"
 uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-version = "0.4.53"
+version = "0.5.7"
 
 [[deps.JLLWrappers]]
 deps = ["Artifacts", "Preferences"]
@@ -2145,10 +2158,10 @@ uuid = "30363a11-5582-574a-97bb-aa9a979735b9"
 version = "0.12.0"
 
 [[deps.NetCDF_jll]]
-deps = ["Artifacts", "Blosc_jll", "Bzip2_jll", "HDF5_jll", "JLLWrappers", "LibCURL_jll", "Libdl", "OpenMPI_jll", "XML2_jll", "Zlib_jll", "Zstd_jll", "libzip_jll"]
-git-tree-sha1 = "a8af1798e4eb9ff768ce7fdefc0e957097793f15"
+deps = ["Artifacts", "Blosc_jll", "Bzip2_jll", "HDF5_jll", "JLLWrappers", "LazyArtifacts", "LibCURL_jll", "Libdl", "MPICH_jll", "MPIPreferences", "MPItrampoline_jll", "MicrosoftMPI_jll", "OpenMPI_jll", "TOML", "XML2_jll", "Zlib_jll", "Zstd_jll", "libzip_jll"]
+git-tree-sha1 = "4686378c4ae1d1948cfbe46c002a11a4265dcb07"
 uuid = "7243133f-43d8-5620-bbf4-c2c921802cf3"
-version = "400.902.209+0"
+version = "400.902.211+1"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]
@@ -2237,10 +2250,10 @@ uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
 version = "0.8.1+2"
 
 [[deps.OpenMPI_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "Hwloc_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "TOML", "Zlib_jll"]
-git-tree-sha1 = "bfce6d523861a6c562721b262c0d1aaeead2647f"
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "TOML"]
+git-tree-sha1 = "e25c1778a98e34219a00455d6e4384e017ea9762"
 uuid = "fe0851c0-eecd-5654-98d4-656369965a5c"
-version = "5.0.5+0"
+version = "4.1.6+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -2833,9 +2846,9 @@ version = "0.1.1"
 
 [[deps.SciMLOperators]]
 deps = ["Accessors", "ArrayInterface", "DocStringExtensions", "LinearAlgebra", "MacroTools"]
-git-tree-sha1 = "ef388ca9e4921ec5614ce714f8aa59a5cd33d867"
+git-tree-sha1 = "6149620767866d4b0f0f7028639b6e661b6a1e44"
 uuid = "c0aeaf25-5076-4817-a8d5-81caf7dfa961"
-version = "0.3.11"
+version = "0.3.12"
 weakdeps = ["SparseArrays", "StaticArraysCore"]
 
     [deps.SciMLOperators.extensions]
@@ -3586,8 +3599,7 @@ version = "1.4.1+1"
 
 # ╔═╡ Cell order:
 # ╟─c9e9faa8-f5f0-479c-bc85-877ff7114883
-# ╠═104ce9b0-3fd1-11ec-3eff-3b029552e3d9
-# ╠═2acbfc79-3926-4c5a-9994-e3222c60c377
+# ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
 # ╟─171fa252-7a35-4d4a-a940-60de77327cf4
 # ╟─7fec71b4-849f-4369-bec2-26bfe2e00a97
 # ╟─94ca10ae-6a8a-4038-ace0-07d7d9026712
@@ -3605,12 +3617,16 @@ version = "1.4.1+1"
 # ╟─63b68e72-76c1-4104-bf76-dd9eefc4e225
 # ╟─397e5491-56ce-44ba-81d4-2982b0c3f503
 # ╟─c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-# ╟─e49948eb-8b62-4579-a80c-b07624da6f3b
-# ╟─b4841dc0-c257-45e0-8657-79121f2c9ce8
-# ╟─33fb4a15-b5ef-46f8-9e4e-c20da4536195
 # ╟─1a6af0eb-ab2a-4999-8063-f218b2f3f651
+# ╟─33fb4a15-b5ef-46f8-9e4e-c20da4536195
+# ╟─e49948eb-8b62-4579-a80c-b07624da6f3b
 # ╟─15077957-64d5-46a5-8a87-a76ad619cf38
 # ╟─6e43a2af-bf01-4f42-a4ba-1874a8cf4885
 # ╟─0251b905-82e1-41c7-9917-dfdb980eef4f
+# ╟─6bcd1a14-6bee-4549-8007-61952909b18f
+# ╠═104ce9b0-3fd1-11ec-3eff-3b029552e3d9
+# ╠═2acbfc79-3926-4c5a-9994-e3222c60c377
+# ╟─1821a034-5a3f-4a3a-a971-a80a26aa01cb
+# ╟─e9862707-3c00-434b-9501-e590e331b0b3
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
