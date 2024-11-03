@@ -1157,9 +1157,13 @@ version = "1.0.0"
 
 [[deps.IndividualDisplacements]]
 deps = ["CyclicArrays", "DataDeps", "DataFrames", "Dataverse", "Glob", "MeshArrays", "OrdinaryDiffEq", "Random"]
-git-tree-sha1 = "8cc84c3f7846adb1f526ba6895a837e8ca42fdb7"
+git-tree-sha1 = "95ee982ea6f6c49c45cd0880877b884a50dcf74b"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.5.0"
+version = "0.5.1"
+weakdeps = ["Makie"]
+
+    [deps.IndividualDisplacements.extensions]
+    IndividualDisplacementsMakieExt = ["Makie"]
 
 [[deps.Inflate]]
 git-tree-sha1 = "d1b1b796e47d94588b3757fe84fbf65a5ec4a80d"
