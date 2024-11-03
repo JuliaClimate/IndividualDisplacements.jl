@@ -98,28 +98,7 @@ end
 md"""## Plot Results"""
 
 # ╔═╡ 22dde07e-95e1-4a49-a3a1-fba7702dd74d
-fig=begin
-	I_t = groupby(I, :t)
-	nt=length(I_t)
-
-	time = Observable(nt)
-	xp=@lift( I_t[$time].x )
-	yp=@lift( I_t[$time].y )
-
-	siz=size(ϕ)
-	xx=-0.5 .+ collect(1:siz[1])
-	yy=-0.5 .+ collect(1:siz[2])
-	ll=collect(-1.0:0.2:1.0)*maximum(ϕ)
-	
-	set_theme!(theme_light())
-	fig=Figure(size = (900, 600))
-	a = Axis(fig[1, 1],xlabel="x",ylabel="y", title="Positions and Streamfunction")		
-	contourf!(a, xx,yy, ϕ, levels=ll, colormap=:grayC)
-	scatter!(a,I_t[1].x,I_t[1].y,color=:green2)
-	scatter!(a,xp,yp,color=:red)
-
-	fig
-end
+fig=plot( InDiPlot( data=(I=I,ϕ=ϕ), options=(plot_type=:simple_plot1,) ) )
 
 # ╔═╡ 818b516f-c7ee-4da7-9954-8303c978bbd4
 begin
@@ -1180,9 +1159,13 @@ version = "1.0.0"
 
 [[deps.IndividualDisplacements]]
 deps = ["CyclicArrays", "DataDeps", "DataFrames", "Dataverse", "Glob", "MeshArrays", "OrdinaryDiffEq", "Random"]
-git-tree-sha1 = "8cc84c3f7846adb1f526ba6895a837e8ca42fdb7"
+path = "/Users/gaelforget/work/code/julia_pkg/IndividualDisplacements.jl"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 version = "0.5.0"
+weakdeps = ["Makie"]
+
+    [deps.IndividualDisplacements.extensions]
+    IndividualDisplacementsMakieExt = ["Makie"]
 
 [[deps.Inflate]]
 git-tree-sha1 = "d1b1b796e47d94588b3757fe84fbf65a5ec4a80d"

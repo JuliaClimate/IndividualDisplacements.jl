@@ -29,4 +29,17 @@ end
 #flt_example_path = datadeps.getdata("flt_example")
 #flt_example_download() = datadeps.getdata("flt_example")
 
+
+
+abstract type AbstractIndividualDisplacementsDiagnostic <: Any end
+
+Base.@kwdef struct InDiPlot <: AbstractIndividualDisplacementsDiagnostic
+    path :: String = tempdir()
+    name :: String = "unknown"
+    options :: NamedTuple = NamedTuple()
+    data :: NamedTuple = NamedTuple()
+end
+
+export InDiPlot
+
 end # module
