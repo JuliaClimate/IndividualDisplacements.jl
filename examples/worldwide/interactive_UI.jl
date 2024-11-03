@@ -145,6 +145,7 @@ end
 
 # ╔═╡ a13d6ea6-dff1-11ea-0713-cb235e28cf79
 begin
+	𝐶
 	plt_map=contourf(xx,yy,zz,clims=(-.5,4.),c = :ice, 
 		colorbar=false, xlims=(-180.0,180.0),ylims=(-90.0,90.0))
 	scatter!(plt_map,🔴_by_t[1].lon,🔴_by_t[1].lat,c=:gold,leg=:none,
@@ -173,6 +174,7 @@ DataFrames = "~1.7.0"
 IndividualDisplacements = "~0.5.0"
 NetCDF = "~0.12.0"
 PlutoUI = "~0.7.60"
+StatsPlots = "~0.15.7"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -181,7 +183,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "4d2f57a90efc24037f0d618cbc7f7a50f7492c81"
+project_hash = "edf43ae69def67644048155f4344e1650fce275d"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -1180,9 +1182,15 @@ version = "0.1.1"
 
 [[deps.IndividualDisplacements]]
 deps = ["CyclicArrays", "DataDeps", "DataFrames", "Dataverse", "Glob", "MeshArrays", "OrdinaryDiffEq", "Random"]
-git-tree-sha1 = "8cc84c3f7846adb1f526ba6895a837e8ca42fdb7"
+git-tree-sha1 = "95ee982ea6f6c49c45cd0880877b884a50dcf74b"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.5.0"
+version = "0.5.1"
+
+    [deps.IndividualDisplacements.extensions]
+    IndividualDisplacementsMakieExt = ["Makie"]
+
+    [deps.IndividualDisplacements.weakdeps]
+    Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 
 [[deps.Inflate]]
 git-tree-sha1 = "d1b1b796e47d94588b3757fe84fbf65a5ec4a80d"
