@@ -6,13 +6,8 @@ using InteractiveUtils
 
 # ╔═╡ 16eab80b-325b-43bd-8bda-6b9ed27513a8
 begin
-	using IndividualDisplacements, CairoMakie, Climatology, NetCDF
-
-    p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
-    f0=joinpath(p0,"worldwide","OCCA_FlowFields.jl")
-    f1=( isfile("OCCA_FlowFields.jl") ? "OCCA_FlowFields.jl" :  f0 )
-    include(f1)
-
+	using IndividualDisplacements, CairoMakie, Climatology
+    OCCAmodule=IndividualDisplacements.OCCA
 	"Done with loading packages"
 end
 
@@ -29,7 +24,7 @@ md"""## Initialize Data Structures"""
 
 # ╔═╡ 66c95828-227c-4db5-a6f1-3e3004a99785
 begin
-	P,D=OCCA_FlowFields.setup(nmax=5)
+	P,D=OCCAmodule.setup(nmax=5)
 	"Done with FlowFields"
 end
 
@@ -43,7 +38,7 @@ end
 # ╔═╡ f199f321-976a-4ccd-a003-140211aa67fe
 begin	
 	I=Individuals(P,df.x,df.y,df.z,df.fid,
-		(🔴=OCCA_FlowFields.custom🔴,🔧=OCCA_FlowFields.custom🔧, D=D))
+		(🔴=OCCAmodule.custom🔴,🔧=OCCAmodule.custom🔧, D=D))
 	"Done with Individuals"
 end
 

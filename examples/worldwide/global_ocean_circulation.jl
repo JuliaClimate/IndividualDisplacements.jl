@@ -19,12 +19,21 @@ end
 # ╔═╡ 1821a034-5a3f-4a3a-a971-a80a26aa01cb
 using Pkg; Pkg.status()
 
-# ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
+# ╔═╡ 2acbfc79-3926-4c5a-9994-e3222c60c377
 begin
-	using Statistics, PlutoUI
+	import IndividualDisplacements, Climatology, MITgcm
+    using Statistics, PlutoUI, CairoMakie
+
+    ECCOmodule = IndividualDisplacements.ECCO
+    CSV = IndividualDisplacements.CSV
+    DataFrames = IndividualDisplacements.DataFrames
+
 	output_path=joinpath(tempdir(),"global_ocean_tmp")
 	!isdir(output_path) ? mkdir(output_path) : nothing
-end
+
+    path_input = IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
+    path_replay = IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
+end	
 
 # ╔═╡ c9e9faa8-f5f0-479c-bc85-877ff7114883
 md"""# Global Climatology
@@ -42,6 +51,40 @@ For additional documentation see :
 
 # ╔═╡ 171fa252-7a35-4d4a-a940-60de77327cf4
 TableOfContents()
+
+# ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
+begin
+	✔0="selected parameters"
+	
+	bind_j = (@bind j Select(1:6,default=3))
+	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
+	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="10"))
+	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
+	bind_replay = (@bind do_replay CheckBox(default=true))
+	bind_zoomin = (@bind zoom_in CheckBox(default=false))
+	bind_zrng = @bind zrng Select([0:11,11:21,21:27],default=0:11)
+	
+    path_IC = path_input
+    file_IC = joinpath(path_IC,"initial_10_1.csv")
+	backward_time = false
+	file_base = basename(file_IC)[1:end-4]
+	backward_time ? file_base=file_base*"_◀◀" : file_base=file_base*"_▶▶"
+
+#	- k  = $(bind_k) = flow field vertical level (set to 0 for 3D)
+#  - _optional :_ zrng = $(bind_zrng) = vertical coordindate range 
+#  - _(only used if k==0; if otherwise then zrng effectively is k-0.5:k-0.5)_
+
+	md"""## 1. Simulation Parameters
+
+	The following parameters are used:
+
+	- latitude box : $(bind_j)
+	- ny = $(bind_ny) = similated period (1/12 = 1 month)
+	- np = $(bind_np) = number of individuals (100 by default)
+	- replay = $(bind_replay) = load results from csv instead of recomputing
+	- zoom in = $(bind_zoomin) = zoom in rather than plotting whole Earth
+	"""
+end
 
 # ╔═╡ 94ca10ae-6a8a-4038-ace0-07d7d9026712
 md"""## 2. Configure `FlowFields` 
@@ -64,6 +107,25 @@ println(zrng)
     For non-interactive, one can add here code as shown above. Then `julia --project=. main.jl 21:27 &`.
 """
 
+# ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
+begin
+    #file_base=file_base*"_$(zrng[1])_$(zrng[end])"
+    #println("file_base = "*file_base)
+
+	k=parse(Int,ktxt) #vertical level or 0
+	k!==0 ? zs=[k-0.5:k-0.5] : zs=zrng
+	
+	Climatology.get_ecco_velocity_if_needed()
+	
+	𝑃,𝐷=ECCOmodule.init_FlowFields(k=k,backward_time=backward_time)
+
+	println("Done with Setting Up FlowFields")
+	tmp1="  - flow field depth level = "*(k==0 ? "three-dimensional" : "level $(k)") 
+	println(tmp1)
+	tmp1="  - inital depth range = $(round.([𝐷.Γ.RF[zrng[1]+1] 𝐷.Γ.RF[zrng[end]+1]]))"
+	println(tmp1)
+end
+
 # ╔═╡ 2fb4d76d-56d5-4c3e-bc7c-ba0cac57e0e3
 output_path
 
@@ -75,123 +137,6 @@ md"""## 3. Trajectory Computation
 - initialize individual positions (`init_gulf_stream`)
 - initial integration from time 0 to 0.5 month
 """
-
-# ╔═╡ 6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
-md""" ### 3.2 Monthly Step Function
-
-Since the Ocean circulation varies from month to month, the `𝐼.𝐷.🔄` function is used to update flow fields from one month to the next. 
-
-Time variable flow fields are easily handled by defining a `step!` function that wraps around `∫!`. Here it does three things
-
-- `𝐼.𝐷.🔄` resets the velocity inputs (`𝐼.𝐷.u0` etc) to bracket time `t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])`
-- `reset_📌!` randomly selects a fraction of the individuals and resets their positions. This can be useful to maintain homogeneous coverage of the domain by the fleet of individuals.
-- `∫!(𝐼)` solves for the individual trajectories over one month (`𝐼.𝑃.𝑇`) with updated velocity fields (`𝐼.𝑃.u0` etc). It also adds diagnostics to the `DataFrame` used to record variables along the trajectory (`𝐼.🔴`).
-"""
-
-# ╔═╡ 7efadea7-4542-40cf-893a-40a75e9c52be
-md"""### 3.3 Monthly Simulation Loop
-
-!!! note
-    `add_lonlat!` derives geographic locations (longitude and latitude) from local grid coordinates (x, y, etc).
-"""
-
-# ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
-md"""## 4. Visualize Displacements
-
-!!! note
-    For offline visualization, see code below.
-"""
-
-# ╔═╡ 1a6af0eb-ab2a-4999-8063-f218b2f3f651
-"output path is $(output_path)"
-
-# ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
-md"""## 5. Summary Statistics
-
-Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) to analyze the output (𝐼.🔴) of our simulation.
-"""
-
-# ╔═╡ 6bcd1a14-6bee-4549-8007-61952909b18f
-md"""## Appendix"""
-
-# ╔═╡ 2acbfc79-3926-4c5a-9994-e3222c60c377
-module inc 
-	import IndividualDisplacements
-	import Climatology, MITgcm, MeshArrays
-    import CairoMakie, Makie
-    import DataFrames, CSV, JLD2
-	import FileIO, NetCDF, DataDeps, Colors
-
-    p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
-    f0=joinpath(p0,"worldwide","ECCO_FlowFields.jl")
-    f1=( isfile("ECCO_FlowFields.jl") ? "ECCO_FlowFields.jl" :  f0 )
-    include(f1)
-
-    path_input = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
-    path_replay = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
-end	
-
-# ╔═╡ 7fec71b4-849f-4369-bec2-26bfe2e00a97
-begin
-	✔0="selected parameters"
-	
-	bind_j = (@bind j Select(1:6,default=3))
-	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
-	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="10"))
-	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
-	bind_replay = (@bind do_replay CheckBox(default=true))
-	bind_zoomin = (@bind zoom_in CheckBox(default=false))
-	bind_zrng = @bind zrng Select([0:11,11:21,21:27],default=0:11)
-	
-    path_IC = inc.path_input
-    file_IC = joinpath(path_IC,"initial_10_1.csv")
-	backward_time = false
-	file_base = basename(file_IC)[1:end-4]
-	backward_time ? file_base=file_base*"_◀◀" : file_base=file_base*"_▶▶"
-
-#	- k  = $(bind_k) = flow field vertical level (set to 0 for 3D)
-#  - _optional :_ zrng = $(bind_zrng) = vertical coordindate range 
-#  - _(only used if k==0; if otherwise then zrng effectively is k-0.5:k-0.5)_
-
-	md"""## 1. Simulation Parameters
-
-	The following parameters are used:
-
-	- latitude box : $(bind_j)
-	- ny = $(bind_ny) = similated period (1/12 = 1 month)
-	- np = $(bind_np) = number of individuals (100 by default)
-	- replay = $(bind_replay) = load results from csv instead of recomputing
-	- zoom in = $(bind_zoomin) = zoom in rather than plotting whole Earth
-	"""
-end
-
-# ╔═╡ 63b68e72-76c1-4104-bf76-dd9eefc4e225
-md"""### 3.4 Replay previous simulation
-
-If the replay option ($(bind_replay)) has been selected then we reload the result of a previous computation from file.
-"""
-
-# ╔═╡ e49948eb-8b62-4579-a80c-b07624da6f3b
-md"""latitude box : $(bind_j)"""
-
-# ╔═╡ 218b9beb-68f2-4498-a96d-08e0719b4cff
-begin
-    #file_base=file_base*"_$(zrng[1])_$(zrng[end])"
-    #println("file_base = "*file_base)
-
-	k=parse(Int,ktxt) #vertical level or 0
-	k!==0 ? zs=[k-0.5:k-0.5] : zs=zrng
-	
-	inc.Climatology.get_ecco_velocity_if_needed()
-	
-	𝑃,𝐷=inc.ECCO_FlowFields.init_FlowFields(k=k,backward_time=backward_time)
-
-	println("Done with Setting Up FlowFields")
-	tmp1="  - flow field depth level = "*(k==0 ? "three-dimensional" : "level $(k)") 
-	println(tmp1)
-	tmp1="  - inital depth range = $(round.([𝐷.Γ.RF[zrng[1]+1] 𝐷.Γ.RF[zrng[end]+1]]))"
-	println(tmp1)
-end
 
 # ╔═╡ f727992f-b72a-45bc-93f1-cc8daf89af0f
 begin
@@ -206,22 +151,50 @@ begin
 		nm=12 #number of months
 	end
 	
-	df = inc.IndividualDisplacements.init.init_gulf_stream(np , 𝐷, zs=zs)
+	df = IndividualDisplacements.init.init_gulf_stream(np , 𝐷, zs=zs)
 
 	if !(k==0)
-		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,1,50)
-		𝐼 = Individuals(𝑃,df.x,df.y,df.fid,(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫))
+		𝑆 = ECCOmodule.init_storage(np,100,1,50)
+		𝐼 = Individuals(𝑃,df.x,df.y,df.fid,(𝐷=merge(𝐷,𝑆),∫=ECCOmodule.custom∫))
 		my∫! = ∫!
 	else		
-		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,length(𝐷.Γ.RC),50)
-		𝐼 = inc.IndividualDisplacements.Individuals(𝑃,df.x,df.y,df.z,df.fid,
-			(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫,🔧=inc.ECCO_FlowFields.custom🔧,🔴=deepcopy(inc.ECCO_FlowFields.custom🔴)))
-		my∫! = inc.ECCO_FlowFields.custom∫!
+		𝑆 = ECCOmodule.init_storage(np,100,length(𝐷.Γ.RC),50)
+		𝐼 = Individuals(𝑃,df.x,df.y,df.z,df.fid,
+			(𝐷=merge(𝐷,𝑆),∫=ECCOmodule.custom∫,
+            🔧=ECCOmodule.custom🔧,
+            🔴=deepcopy(ECCOmodule.custom🔴)))
+		my∫! = ECCOmodule.custom∫!
 	end
 
 	📌_reference=deepcopy(𝐼.📌)
 	𝐼
 end
+
+# ╔═╡ 6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
+md""" ### 3.2 Monthly Step Function
+
+Since the Ocean circulation varies from month to month, the `𝐼.𝐷.🔄` function is used to update flow fields from one month to the next. 
+
+Time variable flow fields are easily handled by defining a `step!` function that wraps around `∫!`. Here it does three things
+
+- `𝐼.𝐷.🔄` resets the velocity inputs (`𝐼.𝐷.u0` etc) to bracket time `t_ϵ=𝐼.𝑃.𝑇[2]+eps(𝐼.𝑃.𝑇[2])`
+- `reset_📌!` randomly selects a fraction of the individuals and resets their positions. This can be useful to maintain homogeneous coverage of the domain by the fleet of individuals.
+- `∫!(𝐼)` solves for the individual trajectories over one month (`𝐼.𝑃.𝑇`) with updated velocity fields (`𝐼.𝑃.u0` etc). It also adds diagnostics to the `DataFrame` used to record variables along the trajectory (`𝐼.🔴`).
+"""
+
+# ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
+function step!(𝐼::Individuals)
+    𝐼.𝐷.🔄(𝐼)
+    𝐼.𝐷.frac > 0 ? ECCOmodule.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
+    my∫!(𝐼)
+end
+
+# ╔═╡ 7efadea7-4542-40cf-893a-40a75e9c52be
+md"""### 3.3 Monthly Simulation Loop
+
+!!! note
+    `add_lonlat!` derives geographic locations (longitude and latitude) from local grid coordinates (x, y, etc).
+"""
 
 # ╔═╡ a3e45927-5d53-42be-b7b7-489d6e7a6fe5
 if !do_replay
@@ -230,13 +203,6 @@ if !do_replay
 	✔1="Done with Initial Integration"
 else
 	✔1="Skipping Initial Integration (replay instead)"
-end
-
-# ╔═╡ a2375720-f599-43b9-a7fb-af17956309b6
-function step!(𝐼::inc.IndividualDisplacements.Individuals)
-    𝐼.𝐷.🔄(𝐼)
-    𝐼.𝐷.frac > 0 ? inc.ECCO_FlowFields.reset_📌!(𝐼,𝐼.𝐷.frac,📌_reference) : nothing
-    my∫!(𝐼)
 end
 
 # ╔═╡ 1044c5aa-1a56-45b6-a4c6-63d24eea878d
@@ -254,7 +220,7 @@ if !do_replay
 	✔2
 	!isdir(output_path) ? mkdir(output_path) : nothing
 	file_output=joinpath(output_path,file_base*".csv")
-	inc.CSV.write(file_output, Float32.(𝐼.🔴))
+	CSV.write(file_output, Float32.(𝐼.🔴))
 	✔3="Done with saving trajectories"
 else
 	✔3="Skipping save (replay instead)"
@@ -264,25 +230,41 @@ end
 if !do_replay
 	✔3
 	file_output_csv=joinpath(output_path,file_base*".csv")
-	inc.CSV.write(file_output_csv, Float32.(𝐼.🔴))
+	CSV.write(file_output_csv, Float32.(𝐼.🔴))
 else
 	✔3
 	"Skipping File Output (replay instead)"
 end
 
+# ╔═╡ 63b68e72-76c1-4104-bf76-dd9eefc4e225
+md"""### 3.4 Replay previous simulation
+
+If the replay option ($(bind_replay)) has been selected then we reload the result of a previous computation from file.
+"""
+
 # ╔═╡ 397e5491-56ce-44ba-81d4-2982b0c3f503
 begin
 	#@bind fil_replay FilePicker()    
-    fil_replay=joinpath(inc.path_replay,"initial_10_$(j)_▶▶.csv")
+    fil_replay=joinpath(path_replay,"initial_10_$(j)_▶▶.csv")
 end
+
+# ╔═╡ c5ba37e9-2a68-4448-a2cb-dea1fbf08f1e
+md"""## 4. Visualize Displacements
+
+!!! note
+    For offline visualization, see code below.
+"""
+
+# ╔═╡ 1a6af0eb-ab2a-4999-8063-f218b2f3f651
+"output path is $(output_path)"
 
 # ╔═╡ 33fb4a15-b5ef-46f8-9e4e-c20da4536195
 if do_replay&&isa(fil_replay,Dict)&&haskey(fil_replay,"name")
 	#tmp_🔴=CSV.read(fil_replay["name"],DataFrame)
-	tmp_🔴=UInt8.(fil_replay["data"]) |> IOBuffer |> inc.CSV.File |> inc.DataFrames.DataFrame
+	tmp_🔴=UInt8.(fil_replay["data"]) |> IOBuffer |> CSV.File |> DataFrames.DataFrame
 	tmp_file_base=split(fil_replay["name"],'.')[1]
 elseif do_replay&&isa(fil_replay,String)
-	tmp_🔴=inc.CSV.read(fil_replay,inc.DataFrames.DataFrame)
+	tmp_🔴=CSV.read(fil_replay,DataFrames.DataFrame)
 #	tmp_file_base=basename(fil_replay)[1:end-4]
 	tmp_file_base=basename(fil_replay)
 	tmp_file_base=split(tmp_file_base,"_▶▶")[1]
@@ -304,14 +286,14 @@ if !isempty(tmp_🔴)
 		ylims=(20.0,67.0)
 	end
 
-    x=inc.IndividualDisplacements.InDiPlot( data=(I=𝐼,df=tmp_🔴,), options=(plot_type=:global_plot1,) )
-	fig,tt=inc.Makie.plot(x)
+    x=IndividualDisplacements.InDiPlot( data=(I=𝐼,df=tmp_🔴,), options=(plot_type=:global_plot1,) )
+	fig,tt=Makie.plot(x)
 
 	file_output_png=joinpath(output_path,tmp_file_base*".png")
-	inc.Makie.save(file_output_png,fig)
+	Makie.save(file_output_png,fig)
 
 #	file_output_mp4=joinpath(output_path,tmp_file_base*".mp4")
-#	inc.record(fig, file_output_mp4, 1:nt, framerate = 30) do t
+#	record(fig, file_output_mp4, 1:nt, framerate = 30) do t
 #		tt[]=t
 #	end
 	
@@ -320,14 +302,30 @@ else
 	"nothing to plot"
 end
 
-# ╔═╡ 0251b905-82e1-41c7-9917-dfdb980eef4f
-tmp_🔴
+# ╔═╡ e49948eb-8b62-4579-a80c-b07624da6f3b
+md"""latitude box : $(bind_j)"""
+
+# ╔═╡ 15077957-64d5-46a5-8a87-a76ad619cf38
+md"""## 5. Summary Statistics
+
+Here we briefly demontrate the use of [DataFrames.jl](https://juliadata.github.io/DataFrames.jl/latest/) to analyze the output (𝐼.🔴) of our simulation.
+"""
 
 # ╔═╡ 6e43a2af-bf01-4f42-a4ba-1874a8cf4885
 begin
 	✔2
-	gdf = inc.DataFrames.groupby(tmp_🔴, :ID)
-	sgdf= inc.DataFrames.combine(gdf,inc.DataFrames.nrow,:lat => mean)
+	gdf = DataFrames.groupby(tmp_🔴, :ID)
+	sgdf= DataFrames.combine(gdf,DataFrames.nrow,:lat => mean)
+end
+
+# ╔═╡ 0251b905-82e1-41c7-9917-dfdb980eef4f
+tmp_🔴
+
+# ╔═╡ 6bcd1a14-6bee-4549-8007-61952909b18f
+md"""## Appendix"""
+
+# ╔═╡ 104ce9b0-3fd1-11ec-3eff-3b029552e3d9
+begin
 end
 
 # ╔═╡ e9862707-3c00-434b-9501-e590e331b0b3

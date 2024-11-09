@@ -1,11 +1,10 @@
-module ECCO_FlowFields
+module ECCO
 
-using IndividualDisplacements
 import MeshArrays, DataDeps, CSV, JLD2
 
 import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, ODEProblem
-import IndividualDisplacements: update_location!
-import IndividualDisplacements: data_path
+import IndividualDisplacements: update_location!, Individuals, uvMeshArrays, uvwMeshArrays
+import IndividualDisplacements: FlowFields, data_path, read_data_ECCO
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
 import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
@@ -13,12 +12,6 @@ import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
 export init_FlowFields, init_storage
 export custom∫, custom🔧, custom🔴, custom∫!
 #export reset_📌!, init_z_if_needed
-
-import MITgcm, NetCDF
-function read_data(m0,v0,path,grid,k)
-    MITgcm.read_nctiles(joinpath(path,v0),v0,grid,I=(:,:,k,m0))
-end
-read_data(m0,v0,P,D)=read_data(m0,v0, joinpath(D.pth,v0) , P.u0.grid , D.k )
 
 """
     reset_📌!(I::Individuals,frac::Number,📌::Array)
@@ -150,19 +143,19 @@ function update_FlowFields!(P::uvMeshArrays,D::NamedTuple,t::AbstractFloat)
     P.v0[:]=Float32.(v0.MA[:])
     P.v1[:]=Float32.(v1.MA[:])
 
-    θ0=read_data(m0,"THETA",P,D)
+    θ0=read_data_ECCO(m0,"THETA",P,D)
     θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
     D.θ0[:]=Float32.(θ0[:,1])
 
-    θ1=read_data(m1,"THETA",P,D)
+    θ1=read_data_ECCO(m1,"THETA",P,D)
     θ1[findall(isnan.(θ1))]=0.0 #mask with 0s rather than NaNs
     D.θ1[:]=Float32.(θ1[:,1])
 
-    S0=read_data(m0,"SALT",P,D)
+    S0=read_data_ECCO(m0,"SALT",P,D)
     S0[findall(isnan.(S0))]=0.0 #mask with 0s rather than NaNs
     D.S0[:]=Float32.(S0[:,1])
 
-    S1=read_data(m1,"SALT",P,D)
+    S1=read_data_ECCO(m1,"SALT",P,D)
     S1[findall(isnan.(S1))]=0.0 #mask with 0s rather than NaNs
     D.S1[:]=Float32.(S1[:,1])
 
@@ -216,7 +209,7 @@ function update_FlowFields!(P::uvwMeshArrays,D::NamedTuple,t::AbstractFloat)
         u0[:,k]=tmpu.MA
         v0[:,k]=tmpv.MA
     end
-    w0=velocity_factor*read_data(m0,"WVELMASS",joinpath(D.pth,"WVELMASS"),P.u0.grid,:)
+    w0=velocity_factor*read_data_ECCO(m0,"WVELMASS",joinpath(D.pth,"WVELMASS"),P.u0.grid,:)
     w0[findall(isnan.(w0))]=0.0 #mask with 0s rather than NaNs
 
     (U,V)=read_velocities(P.u0.grid,m1,D.pth)
@@ -228,7 +221,7 @@ function update_FlowFields!(P::uvwMeshArrays,D::NamedTuple,t::AbstractFloat)
         u1[:,k]=tmpu.MA
         v1[:,k]=tmpv.MA
     end
-    w1=velocity_factor*read_data(m1,"WVELMASS",joinpath(D.pth,"WVELMASS"),P.u0.grid,:)
+    w1=velocity_factor*read_data_ECCO(m1,"WVELMASS",joinpath(D.pth,"WVELMASS"),P.u0.grid,:)
     w1[findall(isnan.(w1))]=0.0 #mask with 0s rather than NaNs
 
     P.u0[:,:]=Float32.(u0[:,:])
@@ -246,19 +239,19 @@ function update_FlowFields!(P::uvwMeshArrays,D::NamedTuple,t::AbstractFloat)
     P.w0[:,nr+1]=0*exchange(-w0[:,1],1).MA
     P.w1[:,nr+1]=0*exchange(-w1[:,1],1).MA
 
-    θ0=read_data(m0,"THETA",joinpath(D.pth,"THETA"),P.u0.grid,:)
+    θ0=read_data_ECCO(m0,"THETA",joinpath(D.pth,"THETA"),P.u0.grid,:)
     θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
     D.θ0[:,:]=Float32.(θ0[:,:])
 
-    θ1=read_data(m1,"THETA",joinpath(D.pth,"THETA"),P.u0.grid,:)
+    θ1=read_data_ECCO(m1,"THETA",joinpath(D.pth,"THETA"),P.u0.grid,:)
     θ1[findall(isnan.(θ1))]=0.0 #mask with 0s rather than NaNs
     D.θ1[:,:]=Float32.(θ1[:,:])
 
-    S0=read_data(m0,"SALT",joinpath(D.pth,"SALT"),P.u0.grid,:)
+    S0=read_data_ECCO(m0,"SALT",joinpath(D.pth,"SALT"),P.u0.grid,:)
     S0[findall(isnan.(S0))]=0.0 #mask with 0s rather than NaNs
     D.S0[:,:]=Float32.(S0[:,:])
 
-    S1=read_data(m1,"SALT",joinpath(D.pth,"SALT"),P.u0.grid,:)
+    S1=read_data_ECCO(m1,"SALT",joinpath(D.pth,"SALT"),P.u0.grid,:)
     S1[findall(isnan.(S1))]=0.0 #mask with 0s rather than NaNs
     D.S1[:,:]=Float32.(S1[:,:])
 
@@ -293,8 +286,8 @@ end
 Read velocity components `u,v` from files in `pth`for time `t`
 """
 function read_velocities(γ::gcmgrid,t::Int,pth::String)
-    u=read_data(t,"UVELMASS",joinpath(pth,"UVELMASS"),γ,:)
-    v=read_data(t,"VVELMASS",joinpath(pth,"VVELMASS"),γ,:)
+    u=read_data_ECCO(t,"UVELMASS",joinpath(pth,"UVELMASS"),γ,:)
+    v=read_data_ECCO(t,"VVELMASS",joinpath(pth,"VVELMASS"),γ,:)
     return u,v
 end
 

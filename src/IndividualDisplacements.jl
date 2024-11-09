@@ -1,7 +1,10 @@
 module IndividualDisplacements
 
 using MeshArrays, CyclicArrays, OrdinaryDiffEq, DataFrames, Random
+import NetCDF, CSV
+
 function data_path end
+function read_data_ECCO end
 
 include("API.jl")
 include("compute.jl")
@@ -9,6 +12,8 @@ include("data_wrangling.jl")
 include("toy_models.jl")
 include("initial_positions.jl")
 include("Downloads.jl")
+include("example_ECCO.jl")
+include("example_OCCA.jl")
 
 DiffEqBase.solve!(I::Individuals,args...)=∫!(I::Individuals,args...)
 DataFrames.groupby(I::Individuals,args...) = groupby(I.🔴,args...)
