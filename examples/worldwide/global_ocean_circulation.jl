@@ -121,7 +121,12 @@ module inc
     import CairoMakie, Makie
     import DataFrames, CSV, JLD2
 	import FileIO, NetCDF, DataDeps, Colors
-	include("ECCO_FlowFields.jl")
+
+    p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
+    f0=joinpath(p0,"worldwide","ECCO_FlowFields.jl")
+    f1=( isfile("ECCO_FlowFields.jl") ? "ECCO_FlowFields.jl" :  f0 )
+    include(f1)
+
     path_input = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
     path_replay = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
 end	
@@ -205,11 +210,11 @@ begin
 
 	if !(k==0)
 		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,1,50)
-		𝐼 = Individuals(𝑃,df.x,df.y,df.f,(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫))
+		𝐼 = Individuals(𝑃,df.x,df.y,df.fid,(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫))
 		my∫! = ∫!
 	else		
 		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,length(𝐷.Γ.RC),50)
-		𝐼 = inc.IndividualDisplacements.Individuals(𝑃,df.x,df.y,df.z,df.f,
+		𝐼 = inc.IndividualDisplacements.Individuals(𝑃,df.x,df.y,df.z,df.fid,
 			(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫,🔧=inc.ECCO_FlowFields.custom🔧,🔴=deepcopy(inc.ECCO_FlowFields.custom🔴)))
 		my∫! = inc.ECCO_FlowFields.custom∫!
 	end
