@@ -1,5 +1,6 @@
 using Test, Documenter
 using IndividualDisplacements, Climatology, MeshArrays, NetCDF, Suppressor
+import MITgcm
 
 Climatology.get_ecco_velocity_if_needed()
 Climatology.get_occa_velocity_if_needed()
@@ -17,11 +18,10 @@ end
 
 @testset "global" begin
     p0=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
-    p1=dirname(pathof(IndividualDisplacements))
-    include(joinpath(p1,"../examples/worldwide/ECCO_FlowFields.jl"))
-    P,D=ECCO_FlowFields.init_FlowFields()
+    ECCOmodule=IndividualDisplacements.ECCO
+    P,D=ECCOmodule.init_FlowFields()
     file_input=joinpath(p0,"initial_10_1.csv")
-    df = ECCO_FlowFields.init_positions(10,filename=file_input)
+    df = IndividualDisplacements.init.init_positions(10,filename=file_input)
     I=Individuals(P,df.x,df.y,df.f,(D=D,))
     T=(0.0,I.P.T[2])
     ∫!(I,T)

@@ -4,28 +4,40 @@ authors = ["gaelforget <gforget@mit.edu>"]
 version = "0.5.2"
 
 [deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CyclicArrays = "6023044f-b3ef-4c22-8399-3ec90a0c9b75"
 DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-Dataverse = "9c0b9be8-e31e-490f-90fe-77697562404d"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Dataverse = "9c0b9be8-e31e-490f-90fe-77697562404d"
 Glob = "c27321d9-0574-5035-807b-f59d2c89b15c"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 MeshArrays = "cb8c808f-1acf-59a3-9d2b-6e38d009f683"
+NetCDF = "30363a11-5582-574a-97bb-aa9a979735b9"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [weakdeps]
+Climatology = "9e9a4d37-2d2e-41e3-8b85-f7978328d9c7"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+MITgcm = "dce5fa8e-68ce-4431-a242-9469c69627a0"
 
 [extensions]
+IndividualDisplacementsClimatologyExt = ["Climatology"]
 IndividualDisplacementsMakieExt = ["Makie"]
+IndividualDisplacementsMITgcmExt = ["MITgcm"]
 
 [compat]
+CSV = "0.10"
+Climatology = "0.5"
 CyclicArrays = "0.5"
 DataDeps = "0.7"
 DataFrames = "1"
 Dataverse = "0.2"
 Glob = "1"
+JLD2 = "0.5"
 Makie = "0.21"
 MeshArrays = "0.3"
+MITgcm = "0.5"
+NetCDF = "0.12"
 OrdinaryDiffEq = "6"
 julia = "^1.10"
