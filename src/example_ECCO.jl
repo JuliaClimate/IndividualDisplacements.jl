@@ -4,7 +4,7 @@ import MeshArrays, DataDeps, CSV, JLD2
 
 import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, ODEProblem
 import IndividualDisplacements: update_location!, Individuals, uvMeshArrays, uvwMeshArrays
-import IndividualDisplacements: FlowFields, data_path, read_data_ECCO
+import IndividualDisplacements: FlowFields, data_path, read_data_ECCO, order
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
 import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
@@ -341,7 +341,7 @@ function OceanDepthLog(λ,Γ)
     (lon=λ.lon[:,1],lat=λ.lat[1,:],fld=DL,rng=(1.5,5))
 end
 
-custom∫(prob) = IndividualDisplacements.ensemble_solver(prob,solver=Tsit5(),reltol=1e-5,abstol=1e-5)
+custom∫(prob) = ensemble_solver(prob,solver=Tsit5(),reltol=1e-5,abstol=1e-5)
 
 custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[], 
 lon=Float64[], lat=Float64[], z=Float64[], d=Float64[], 
@@ -454,7 +454,7 @@ function custom∫!(I::Individuals,T)
         end
       end
     end
-    sort!(tmp, IndividualDisplacements.order(:t))
+    sort!(tmp, order(:t))
 
     isempty(🔴) ? np =0 : np=length(🆔)
     append!(🔴,tmp[np+1:end,:])
