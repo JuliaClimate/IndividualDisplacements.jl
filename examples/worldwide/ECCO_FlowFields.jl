@@ -1,6 +1,8 @@
 module ECCO_FlowFields
 
-using IndividualDisplacements, Climatology, MITgcm, CSV, JLD2, NetCDF
+using IndividualDisplacements
+import MeshArrays, DataDeps, CSV
+import JLD2
 
 import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, ODEProblem
 import IndividualDisplacements: update_location!
@@ -8,61 +10,29 @@ import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
 import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
 
-export init_FlowFields, init_positions, init_storage
+export init_FlowFields, init_storage
 export custom∫, custom🔧, custom🔴, custom∫!
 #export reset_📌!, init_z_if_needed
 
-"""
-    init_positions(np ::Int)
-
-Randomly distribute `np` points over the Earth, within `P.msk` 
-region, and return position in grid index space (`i,j,subdomain`).
-"""
-function init_positions(np ::Int; filename="global_ocean_circulation.csv")
-    if filename=="global_ocean_circulation.csv"
-        p=dirname(pathof(IndividualDisplacements))
-        fil=joinpath(p,"../examples/worldwide/global_ocean_circulation.csv")
+import Climatology
+Climatology.get_ecco_velocity_if_needed()
+Climatology.get_ecco_variable_if_needed("THETA")
+Climatology.get_ecco_variable_if_needed("SALT")
+function data_path(sym::Symbol)
+    if sym==:ECCO4R2c
+        Climatology.ScratchSpaces.ECCO
     else
-        fil=filename
+        tempdir()
     end
-    return DataFrame(CSV.File(fil))[1:np,:]
 end
 
-"""
-    init_global_randn(np ::Int , D::NamedTuple)
-
-Randomly distribute `np` points over the Earth, within `D.msk` 
-region, and return position in grid index space (`i,j,subdomain`).
-"""
-function init_global_randn(np ::Int , D::NamedTuple)
-    (lon, lat) = randn_lonlat(maximum([2*np 10]))
-    (_,_,_,_,f,x,y)=InterpolationFactors(D.Γ,lon,lat)
-    m=findall( (f.!==0).*((!isnan).(x)) )
-    n=findall(nearest_to_xy(D.msk,x[m],y[m],f[m]).==1.0)[1:np]
-    xyf=permutedims([x[m[n]] y[m[n]] f[m[n]]])
-    return DataFrame(x=xyf[1,:],y=xyf[2,:],fid=xyf[3,:])
+import MITgcm, NetCDF
+#read_data(m0,v0,P,D)=read_nctiles(joinpath(D.pth,"$(v0)/$(v0)"),v0,P.u0.grid,I=(:,:,D.k,m0))
+read_data(m0,v0,path,grid,k)=begin
+    println(joinpath(path,v0)*" $(v0) $(m0) $(k)")
+    MITgcm.read_nctiles(joinpath(path,v0),v0,grid,I=(:,:,k,m0))
 end
-
-"""
-    init_gulf_stream(np ::Int , D::NamedTuple)
-
-Randomly distribute `np` points in the Florida Strait region, within 
-`D.msk` region, and return position in grid index space (`i,j,subdomain`).
-"""
-function init_gulf_stream(np ::Int , D::NamedTuple; zs=0:27)
-	lons=[-81,-79]
-	lats=[26,28]
-	lon=rand(2*np)*diff(lons)[1].+lons[1]
-	lat=rand(2*np)*diff(lats)[1].+lats[1]
-	
-	(_,_,_,_,f,x,y)=IndividualDisplacements.InterpolationFactors(D.Γ,lon,lat)
-    m=findall( (f.!==0).*((!isnan).(x)) )
-    n=findall(IndividualDisplacements.nearest_to_xy(D.msk,x[m],y[m],f[m]).==1.0)[1:np]
-    xyf=permutedims([x[m[n]] y[m[n]] f[m[n]]])
-
-	z=zs[1] .+rand(np)*(zs[end]-zs[1])
-    return DataFrame(x=xyf[1,:],y=xyf[2,:],z=z,fid=xyf[3,:])
-end
+read_data(m0,v0,P,D)=read_data(m0,v0, joinpath(D.pth,v0) , P.u0.grid , D.k )
 
 """
     reset_📌!(I::Individuals,frac::Number,📌::Array)
@@ -194,19 +164,19 @@ function update_FlowFields!(P::uvMeshArrays,D::NamedTuple,t::AbstractFloat)
     P.v0[:]=Float32.(v0.MA[:])
     P.v1[:]=Float32.(v1.MA[:])
 
-    θ0=read_nctiles(joinpath(D.pth,"THETA/THETA"),"THETA",P.u0.grid,I=(:,:,D.k,m0))
+    θ0=read_data(m0,"THETA",P,D)
     θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
     D.θ0[:]=Float32.(θ0[:,1])
 
-    θ1=read_nctiles(joinpath(D.pth,"THETA/THETA"),"THETA",P.u0.grid,I=(:,:,D.k,m1))
+    θ1=read_data(m1,"THETA",P,D)
     θ1[findall(isnan.(θ1))]=0.0 #mask with 0s rather than NaNs
     D.θ1[:]=Float32.(θ1[:,1])
 
-    S0=read_nctiles(joinpath(D.pth,"SALT/SALT"),"SALT",P.u0.grid,I=(:,:,D.k,m0))
+    S0=read_data(m0,"SALT",P,D)
     S0[findall(isnan.(S0))]=0.0 #mask with 0s rather than NaNs
     D.S0[:]=Float32.(S0[:,1])
 
-    S1=read_nctiles(joinpath(D.pth,"SALT/SALT"),"SALT",P.u0.grid,I=(:,:,D.k,m1))
+    S1=read_data(m1,"SALT",P,D)
     S1[findall(isnan.(S1))]=0.0 #mask with 0s rather than NaNs
     D.S1[:]=Float32.(S1[:,1])
 
@@ -260,7 +230,7 @@ function update_FlowFields!(P::uvwMeshArrays,D::NamedTuple,t::AbstractFloat)
         u0[:,k]=tmpu.MA
         v0[:,k]=tmpv.MA
     end
-    w0=velocity_factor*read_nctiles(joinpath(D.pth,"WVELMASS/WVELMASS"),"WVELMASS",P.u0.grid,I=(:,:,:,m0))
+    w0=velocity_factor*read_data(m0,"WVELMASS",joinpath(D.pth,"WVELMASS"),P.u0.grid,:)
     w0[findall(isnan.(w0))]=0.0 #mask with 0s rather than NaNs
 
     (U,V)=read_velocities(P.u0.grid,m1,D.pth)
@@ -272,7 +242,7 @@ function update_FlowFields!(P::uvwMeshArrays,D::NamedTuple,t::AbstractFloat)
         u1[:,k]=tmpu.MA
         v1[:,k]=tmpv.MA
     end
-    w1=velocity_factor*read_nctiles(joinpath(D.pth,"WVELMASS/WVELMASS"),"WVELMASS",P.u0.grid,I=(:,:,:,m1))
+    w1=velocity_factor*read_data(m1,"WVELMASS",joinpath(D.pth,"WVELMASS"),P.u0.grid,:)
     w1[findall(isnan.(w1))]=0.0 #mask with 0s rather than NaNs
 
     P.u0[:,:]=Float32.(u0[:,:])
@@ -290,19 +260,19 @@ function update_FlowFields!(P::uvwMeshArrays,D::NamedTuple,t::AbstractFloat)
     P.w0[:,nr+1]=0*exchange(-w0[:,1],1).MA
     P.w1[:,nr+1]=0*exchange(-w1[:,1],1).MA
 
-    θ0=read_nctiles(joinpath(D.pth,"THETA/THETA"),"THETA",P.u0.grid,I=(:,:,:,m0))
+    θ0=read_data(m0,"THETA",joinpath(D.pth,"THETA"),P.u0.grid,:)
     θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
     D.θ0[:,:]=Float32.(θ0[:,:])
 
-    θ1=read_nctiles(joinpath(D.pth,"THETA/THETA"),"THETA",P.u0.grid,I=(:,:,:,m1))
+    θ1=read_data(m1,"THETA",joinpath(D.pth,"THETA"),P.u0.grid,:)
     θ1[findall(isnan.(θ1))]=0.0 #mask with 0s rather than NaNs
     D.θ1[:,:]=Float32.(θ1[:,:])
 
-    S0=read_nctiles(joinpath(D.pth,"SALT/SALT"),"SALT",P.u0.grid,I=(:,:,:,m0))
+    S0=read_data(m0,"SALT",joinpath(D.pth,"SALT"),P.u0.grid,:)
     S0[findall(isnan.(S0))]=0.0 #mask with 0s rather than NaNs
     D.S0[:,:]=Float32.(S0[:,:])
 
-    S1=read_nctiles(joinpath(D.pth,"SALT/SALT"),"SALT",P.u0.grid,I=(:,:,:,m1))
+    S1=read_data(m1,"SALT",joinpath(D.pth,"SALT"),P.u0.grid,:)
     S1[findall(isnan.(S1))]=0.0 #mask with 0s rather than NaNs
     D.S1[:,:]=Float32.(S1[:,:])
 
@@ -337,8 +307,8 @@ end
 Read velocity components `u,v` from files in `pth`for time `t`
 """
 function read_velocities(γ::gcmgrid,t::Int,pth::String)
-    u=read_nctiles(joinpath(pth,"UVELMASS/UVELMASS"),"UVELMASS",γ,I=(:,:,:,t))
-    v=read_nctiles(joinpath(pth,"VVELMASS/VVELMASS"),"VVELMASS",γ,I=(:,:,:,t))
+    u=read_data(t,"UVELMASS",joinpath(pth,"UVELMASS"),γ,:)
+    v=read_data(t,"VVELMASS",joinpath(pth,"VVELMASS"),γ,:)
     return u,v
 end
 
@@ -348,10 +318,6 @@ end
 Set up Global Ocean particle simulation in 2D with seasonally varying flow field.
 """
 function init_FlowFields(; k=1, backward_time=false)
-
-  Climatology.get_ecco_velocity_if_needed()
-  Climatology.get_ecco_variable_if_needed("THETA")
-  Climatology.get_ecco_variable_if_needed("SALT")
   
   #read grid and set up connections between subdomains
   γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
@@ -364,7 +330,7 @@ function init_FlowFields(; k=1, backward_time=false)
   func=(u -> MeshArrays.update_location_llc!(u,Γ))
 
   #initialize u0,u1 etc
-  P,D=setup_FlowFields(k,Γ,func,ScratchSpaces.ECCO,backward_time)
+  P,D=setup_FlowFields(k,Γ,func,data_path(:ECCO4R2c),backward_time)
   D.🔄(P,D,0.0)
 
   #add background map for plotting
@@ -382,12 +348,7 @@ function init_FlowFields(; k=1, backward_time=false)
 end
 
 function get_interp_coefficients(Γ)
-    fil=joinpath(ScratchSpaces.ECCO,"interp_coeffs_halfdeg.jld2")
-    if !isfile(fil)
-        url="https://zenodo.org/record/5784905/files/interp_coeffs_halfdeg.jld2"
-        Climatology.ScratchSpaces.Downloads.download(url,fil;timeout=60000.0)
-        #Climatology.ECCOdiags_add("interp_coeffs") : nothing
-    end
+    fil=joinpath(MeshArrays.mydatadep("interp_halfdeg"),"interp_coeffs_halfdeg.jld2")
     λ=JLD2.load(fil)
     λ=MeshArrays.Dict_to_NamedTuple(λ)
 end

@@ -6,6 +6,7 @@ include("API.jl")
 include("compute.jl")
 include("data_wrangling.jl")
 include("toy_models.jl")
+include("initial_positions.jl")
 include("Downloads.jl")
 
 DiffEqBase.solve!(I::Individuals,args...)=∫!(I::Individuals,args...)

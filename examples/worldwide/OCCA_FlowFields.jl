@@ -1,6 +1,11 @@
 module OCCA_FlowFields
 
-using IndividualDisplacements, Climatology, NetCDF
+using IndividualDisplacements
+import NetCDF
+
+import Climatology
+Climatology.get_occa_velocity_if_needed()
+data_path=Climatology.ScratchSpaces.OCCA
 
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
@@ -35,24 +40,22 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
    return tmp
    end
 
-   Climatology.get_occa_velocity_if_needed()
-
-   fileIn=joinpath(ScratchSpaces.OCCA,"DDuvel.0406clim.nc")
+   fileIn=joinpath(data_path,"DDuvel.0406clim.nc")
    u=s*read(rd(fileIn,"u",n),MeshArray(γ,Float32,n))
 
-   fileIn=joinpath(ScratchSpaces.OCCA,"DDvvel.0406clim.nc")
+   fileIn=joinpath(data_path,"DDvvel.0406clim.nc")
    v=s*read(rd(fileIn,"v",n),MeshArray(γ,Float32,n))
 
-   fileIn=joinpath(ScratchSpaces.OCCA,"DDwvel.0406clim.nc")
+   fileIn=joinpath(data_path,"DDwvel.0406clim.nc")
    w=s*rd(fileIn,"w",n)
    w=-cat(w,zeros(360, 160),dims=3)
    w[:,:,1] .=0.0
    w=read(w,MeshArray(γ,Float32,n+1))
 
-   fileIn=joinpath(ScratchSpaces.OCCA,"DDtheta.0406clim.nc")
+   fileIn=joinpath(data_path,"DDtheta.0406clim.nc")
    θ=read(rd(fileIn,"theta",n),MeshArray(γ,Float32,n))
 
-#   fileIn=joinpath(ScratchSpaces.OCCA,"DDsalt.0406clim.nc")
+#   fileIn=joinpath(data_path,"DDsalt.0406clim.nc")
 #   𝑆=read(rd(fileIn,"salt",n),MeshArray(γ,Float64,n))
 
    for i in eachindex(u)
@@ -95,29 +98,11 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
 
    P=FlowFields(u,u,v,v,w,w,[t0,t1],func)
 
-   D = (θ0=θ, θ1=θ, XC=MeshArrays.exchange(Γ.XC).MA, YC=MeshArrays.exchange(Γ.YC).MA, 
+   D = (θ0=θ, θ1=θ, XC=MeshArrays.exchange(Γ.XC), YC=MeshArrays.exchange(Γ.YC), 
    RF=Γ.RF, RC=Γ.RC,ioSize=(360,160,n), Γ=Γ)
 
    return P,D
 
-end
-
-"""
-    initial_positions(Γ; nf=10000, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0))
-
-Randomly assign initial positions in longitude,latitude ranges. Positions are 
-expressed in, normalized, grid point units (x,y in the 0,nx and 0,ny range). 
-To convert from longitude,latitude here we take advantage of the regularity 
-of the 1 degree grid being used -- for a more general alternative, see the 
-global ocean example.
-"""
-function initial_positions(Γ::NamedTuple, nf=10000, lon_rng=(-160.0,-159.0), lat_rng=(30.0,31.0), level=1)
-   lon=lon_rng[1] .+(lon_rng[2]-lon_rng[1]).*rand(nf)
-   lat=lat_rng[1] .+(lat_rng[2]-lat_rng[1]).*rand(nf)
-   x=lon .+ (21. - Γ.XC[1][21,1])
-   y=lat .+ (111. - Γ.YC[1][1,111])
-
-   return DataFrame(:x => x, :y => y, :z => fill(level,nf),:fid => fill(1,nf))
 end
 
 custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[],
@@ -127,7 +112,7 @@ custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[],
 
 function custom🔧(sol,P::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
    df=postprocess_MeshArray(sol,P,D,id=id,T=T)
-   add_lonlat!(df,D.Γ.XC,D.Γ.YC)
+   add_lonlat!(df,D.XC,D.YC)
    df.dlon=0*df.lon
    df.dlat=0*df.lat
 
@@ -145,7 +130,7 @@ function custom🔧(sol,P::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
    θ=0.5*(D.θ0+D.θ1)
    d=MeshArrays.isosurface(θ,15,D)
    d[findall(isnan.(d))].=0.
-   df.iso=interp_to_xy(df,MeshArrays.exchange(d).MA)
+   df.iso=interp_to_xy(df,MeshArrays.exchange(d))
 
    #add color = f(iso-z)
    c=fill(:gold,length(df.iso))
