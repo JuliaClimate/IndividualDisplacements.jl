@@ -1,5 +1,5 @@
 using Test, Documenter
-using IndividualDisplacements, Climatology, MeshArrays, NetCDF
+using IndividualDisplacements, Climatology, MeshArrays, NetCDF, Suppressor
 
 Climatology.get_ecco_velocity_if_needed()
 Climatology.get_occa_velocity_if_needed()
@@ -44,7 +44,7 @@ end
     I=Individuals(F,pos...)
     ∫!(I)
     
-    show(I)
+    @suppress show(I)
     diff(I)
     size(I)
     J=similar(I)

@@ -118,7 +118,7 @@ function setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String,backw
         (_,nr)=size(msk)
         exmsk=similar(msk)
         for k=1:nr
-            exmsk[:,k]=exchange(msk[:,k])
+            exmsk[:,k]=exchange(msk[:,k]).MA
         end
         P=FlowFields(MeshArray(γ,Float32,nr),MeshArray(γ,Float32,nr),
         MeshArray(γ,Float32,nr),MeshArray(γ,Float32,nr),
@@ -127,7 +127,7 @@ function setup_FlowFields(k::Int,Γ::NamedTuple,func::Function,pth::String,backw
     else
         msk=Γ.hFacC[:, k]
         msk=1.0*(msk .> 0.0)
-        exmsk=exchange(msk)
+        exmsk=exchange(msk).MA
         P=FlowFields(MeshArray(γ,Float32),MeshArray(γ,Float32),
         MeshArray(γ,Float32),MeshArray(γ,Float32),[-mon/2,mon/2],func)    
     end
@@ -189,10 +189,10 @@ function update_FlowFields!(P::uvMeshArrays,D::NamedTuple,t::AbstractFloat)
     u1=u1.*D.iDXC; v1=v1.*D.iDYC; #normalize to grid units
     (u1,v1)=exchange(u1,v1,1) #add 1 point at each edge for u and v
 
-    P.u0[:]=Float32.(u0[:])
-    P.u1[:]=Float32.(u1[:])
-    P.v0[:]=Float32.(v0[:])
-    P.v1[:]=Float32.(v1[:])
+    P.u0[:]=Float32.(u0.MA[:])
+    P.u1[:]=Float32.(u1.MA[:])
+    P.v0[:]=Float32.(v0.MA[:])
+    P.v1[:]=Float32.(v1.MA[:])
 
     θ0=read_nctiles(joinpath(D.pth,"THETA/THETA"),"THETA",P.u0.grid,I=(:,:,D.k,m0))
     θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
@@ -210,10 +210,10 @@ function update_FlowFields!(P::uvMeshArrays,D::NamedTuple,t::AbstractFloat)
     S1[findall(isnan.(S1))]=0.0 #mask with 0s rather than NaNs
     D.S1[:]=Float32.(S1[:,1])
 
-    D.θ0[:]=exchange(D.θ0)
-    D.θ1[:]=exchange(D.θ1)
-    D.S0[:]=exchange(D.S0)
-    D.S1[:]=exchange(D.S1)
+    D.θ0[:]=exchange(D.θ0).MA
+    D.θ1[:]=exchange(D.θ1).MA
+    D.S0[:]=exchange(D.S0).MA
+    D.S1[:]=exchange(D.S1).MA
 
     P.T[:]=[t0,t1]
 
@@ -257,8 +257,8 @@ function update_FlowFields!(P::uvwMeshArrays,D::NamedTuple,t::AbstractFloat)
     for k=1:nr
         u0[:,k]=u0[:,k].*D.iDXC; v0[:,k]=v0[:,k].*D.iDYC; #normalize to grid units
         (tmpu,tmpv)=exchange(u0[:,k],v0[:,k],1) #add 1 point at each edge for u and v
-        u0[:,k]=tmpu
-        v0[:,k]=tmpv
+        u0[:,k]=tmpu.MA
+        v0[:,k]=tmpv.MA
     end
     w0=velocity_factor*read_nctiles(joinpath(D.pth,"WVELMASS/WVELMASS"),"WVELMASS",P.u0.grid,I=(:,:,:,m0))
     w0[findall(isnan.(w0))]=0.0 #mask with 0s rather than NaNs
@@ -269,8 +269,8 @@ function update_FlowFields!(P::uvwMeshArrays,D::NamedTuple,t::AbstractFloat)
     for k=1:nr
         u1[:,k]=u1[:,k].*D.iDXC; v1[:,k]=v1[:,k].*D.iDYC; #normalize to grid units
         (tmpu,tmpv)=exchange(u1[:,k],v1[:,k],1) #add 1 point at each edge for u and v
-        u1[:,k]=tmpu
-        v1[:,k]=tmpv
+        u1[:,k]=tmpu.MA
+        v1[:,k]=tmpv.MA
     end
     w1=velocity_factor*read_nctiles(joinpath(D.pth,"WVELMASS/WVELMASS"),"WVELMASS",P.u0.grid,I=(:,:,:,m1))
     w1[findall(isnan.(w1))]=0.0 #mask with 0s rather than NaNs
@@ -280,15 +280,15 @@ function update_FlowFields!(P::uvwMeshArrays,D::NamedTuple,t::AbstractFloat)
     P.v0[:,:]=Float32.(v0[:,:])
     P.v1[:,:]=Float32.(v1[:,:])
     for k=1:nr
-        tmpw=exchange(-w0[:,k],1)
+        tmpw=exchange(-w0[:,k],1).MA
         P.w0[:,k]=Float32.(tmpw./D.Γ.DRC[k])
-        tmpw=exchange(-w1[:,k],1)
+        tmpw=exchange(-w1[:,k],1).MA
         P.w1[:,k]=Float32.(tmpw./D.Γ.DRC[k])
     end
-    P.w0[:,1]=0*exchange(-w0[:,1],1)
-    P.w1[:,1]=0*exchange(-w1[:,1],1)
-    P.w0[:,nr+1]=0*exchange(-w0[:,1],1)
-    P.w1[:,nr+1]=0*exchange(-w1[:,1],1)
+    P.w0[:,1]=0*exchange(-w0[:,1],1).MA
+    P.w1[:,1]=0*exchange(-w1[:,1],1).MA
+    P.w0[:,nr+1]=0*exchange(-w0[:,1],1).MA
+    P.w1[:,nr+1]=0*exchange(-w1[:,1],1).MA
 
     θ0=read_nctiles(joinpath(D.pth,"THETA/THETA"),"THETA",P.u0.grid,I=(:,:,:,m0))
     θ0[findall(isnan.(θ0))]=0.0 #mask with 0s rather than NaNs
@@ -307,10 +307,10 @@ function update_FlowFields!(P::uvwMeshArrays,D::NamedTuple,t::AbstractFloat)
     D.S1[:,:]=Float32.(S1[:,:])
 
     for k=1:nr
-        D.θ0[:,k]=exchange(D.θ0[:,k])
-        D.θ1[:,k]=exchange(D.θ1[:,k])
-        D.S0[:,k]=exchange(D.S0[:,k])
-        D.S1[:,k]=exchange(D.S1[:,k])
+        D.θ0[:,k]=exchange(D.θ0[:,k]).MA
+        D.θ1[:,k]=exchange(D.θ1[:,k]).MA
+        D.S0[:,k]=exchange(D.S0[:,k]).MA
+        D.S1[:,k]=exchange(D.S1[:,k]).MA
     end
 
     P.T[:]=[t0,t1]
@@ -411,7 +411,7 @@ function custom🔧(sol,𝐹::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
 
     df=postprocess_MeshArray(sol,𝐹,D,id=id,T=T)
     np=length(sol.u)
-    z=[[sol.u[i][1][3] for i in 1:np];[sol.u[i][end][3] for i in 1:np]]
+    z=[[sol.u[i][:,1][3] for i in 1:np];[sol.u[i][:,end][3] for i in 1:np]]
     df.z=z[:]
     df.year=df.t ./86400/365
     add_lonlat!(df,D.XC,D.YC)

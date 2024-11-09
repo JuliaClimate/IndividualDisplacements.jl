@@ -85,17 +85,17 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
 
    for k=1:n
     (tmpu,tmpv)=MeshArrays.exchange(u[:,k],v[:,k],1)
-    u[:,k]=tmpu
-    v[:,k]=tmpv
+    u[:,k]=tmpu.MA
+    v[:,k]=tmpv.MA
    end
    for k=1:n+1
     tmpw=MeshArrays.exchange(w[:,k],1)
-    w[:,k]=tmpw
+    w[:,k]=tmpw.MA
    end
 
    P=FlowFields(u,u,v,v,w,w,[t0,t1],func)
 
-   D = (θ0=θ, θ1=θ, XC=MeshArrays.exchange(Γ.XC), YC=MeshArrays.exchange(Γ.YC), 
+   D = (θ0=θ, θ1=θ, XC=MeshArrays.exchange(Γ.XC).MA, YC=MeshArrays.exchange(Γ.YC).MA, 
    RF=Γ.RF, RC=Γ.RC,ioSize=(360,160,n), Γ=Γ)
 
    return P,D
@@ -145,7 +145,7 @@ function custom🔧(sol,P::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
    θ=0.5*(D.θ0+D.θ1)
    d=MeshArrays.isosurface(θ,15,D)
    d[findall(isnan.(d))].=0.
-   df.iso=interp_to_xy(df,MeshArrays.exchange(d));
+   df.iso=interp_to_xy(df,MeshArrays.exchange(d).MA)
 
    #add color = f(iso-z)
    c=fill(:gold,length(df.iso))

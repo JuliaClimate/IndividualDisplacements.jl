@@ -15,7 +15,7 @@ function convert_to_FlowFields(U::Array{T,2},V::Array{T,2},t1::T) where T
     (u,v)=exchange(u,v,1)
     func=(u -> MeshArrays.update_location_dpdo!(u,g))
 
-    uvMeshArrays{eltype(u)}(u,u,v,v,[0,t1],func)
+    uvMeshArrays{eltype(u.MA)}(u.MA,u.MA,v.MA,v.MA,[0,t1],func)
 end
 
 """
@@ -29,11 +29,11 @@ function postprocess_MeshArray(sol,P::FlowFields, D::NamedTuple; id=missing, T=m
     ismissing(T) ? T=P.T : nothing
     
     if isa(sol,EnsembleSolution)
-        nd=length(sol.u[1][1])
+        nd=length(sol.u[1][:,1])
         np=length(sol)
-        x=[[sol.u[i][1][1] for i in 1:np];[sol.u[i][end][1] for i in 1:np]]
-        y=[[sol.u[i][1][2] for i in 1:np];[sol.u[i][end][2] for i in 1:np]]
-        fIndex=[[sol.u[i][1][nd] for i in 1:np];[sol.u[i][end][nd] for i in 1:np]];
+        x=[[sol.u[i][:,1][1] for i in 1:np];[sol.u[i][:,end][1] for i in 1:np]]
+        y=[[sol.u[i][:,1][2] for i in 1:np];[sol.u[i][:,end][2] for i in 1:np]]
+        fIndex=[[sol.u[i][:,1][nd] for i in 1:np];[sol.u[i][:,end][nd] for i in 1:np]]
         t=[fill(T[1],np);fill(T[2],np)]
         id=[id[:,1];id[:,1]]
     else
@@ -70,10 +70,10 @@ end
 
 Add lon & lat to dataframe using "exchanged" XC, YC
 """
-function add_lonlat!(df::DataFrame,XC,YC)
-    x = cosd.(YC) * cosd.(XC)
-    y = cosd.(YC) * sind.(XC)
-    z = sind.(YC)
+function add_lonlat!(df::DataFrame,XC::MeshArray_wh,YC::MeshArray_wh)
+    x = cosd.(YC.MA) * cosd.(XC.MA)
+    y = cosd.(YC.MA) * sind.(XC.MA)
+    z = sind.(YC.MA)
 
     df.lon=0*df.x
     df.lat=0*df.x
@@ -94,8 +94,8 @@ end
 Add lon & lat to dataframe using "exchanged" XC, YC after updating 
 subdomain indices (via func) if needed (MeshArrays.location_is_out)
 """
-function add_lonlat!(df::DataFrame,XC,YC,func::Function)
-    g=XC.grid
+function add_lonlat!(df::DataFrame,XC::MeshArray_wh,YC::MeshArray_wh,func::Function)
+    g=XC.MA.grid
     u=zeros(3)
 
     for i in eachindex(df.x)
@@ -221,7 +221,7 @@ end
 
 Interpolate "exchanged" / "hallo-included" Zin to df[!,:x], df[!,:y] on df[!,:fid]
 """
-function interp_to_xy(df::DataFrame,Zin::MeshArray)
+function interp_to_xy(df::DataFrame,Zin::MeshArray_wh)
     x=df[!,:x];
     y=df[!,:y];
     f=Int.(df[!,:fid]);
@@ -230,7 +230,7 @@ function interp_to_xy(df::DataFrame,Zin::MeshArray)
     j_c = Int32.(floor.(y)) .+ 1;
 
     Z=zeros(length(x),4)
-    [Z[k,:]=Zin[f[k]][i_c[k]:i_c[k]+1,j_c[k]:j_c[k]+1][:] for k in 1:length(i_c)]
+    [Z[k,:]=Zin.MA[f[k]][i_c[k]:i_c[k]+1,j_c[k]:j_c[k]+1][:] for k in 1:length(i_c)]
 
     return (1.0 .-dx).*(1.0 .-dy).*Z[:,1]+dx.*(1.0 .-dy).*Z[:,2] +
            (1.0 .-dx).*dy.*Z[:,3]+dx.*dy.*Z[:,4]
