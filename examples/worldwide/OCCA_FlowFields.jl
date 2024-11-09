@@ -98,8 +98,14 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
 
    P=FlowFields(u,u,v,v,w,w,[t0,t1],func)
 
-   D = (θ0=θ, θ1=θ, XC=MeshArrays.exchange(Γ.XC), YC=MeshArrays.exchange(Γ.YC), 
-   RF=Γ.RF, RC=Γ.RC,ioSize=(360,160,n), Γ=Γ)
+   XC=MeshArrays.exchange(Γ.XC)
+   YC=MeshArrays.exchange(Γ.YC)
+
+   iso=MeshArrays.isosurface(θ,15,Γ)
+   iso[findall(isnan.(iso))].=0.
+   iso=MeshArrays.exchange(iso)
+
+   D = (iso=iso, XC=XC, YC=YC, RF=Γ.RF, RC=Γ.RC,ioSize=(360,160,n), Γ=Γ)
 
    return P,D
 
@@ -126,11 +132,8 @@ function custom🔧(sol,P::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
    k=Int.(floor.(df.k)); w=(df.k-k);
    df.z=D.RF[1 .+ k].*(1 .- w)+D.RF[2 .+ k].*w #depth
 
-   #add one isotherm depth
-   θ=0.5*(D.θ0+D.θ1)
-   d=MeshArrays.isosurface(θ,15,D)
-   d[findall(isnan.(d))].=0.
-   df.iso=interp_to_xy(df,MeshArrays.exchange(d))
+   #add selected isotherm depth
+   df.iso=interp_to_xy(df,D.iso)
 
    #add color = f(iso-z)
    c=fill(:gold,length(df.iso))
