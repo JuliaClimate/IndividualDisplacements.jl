@@ -1,12 +1,9 @@
 module OCCA_FlowFields
 
 using IndividualDisplacements
+import IndividualDisplacements: data_path
 
 ##
-
-import Climatology
-Climatology.get_occa_velocity_if_needed()
-data_path=Climatology.ScratchSpaces.OCCA
 
 import NetCDF
 function rd(filename, varname,n)
@@ -62,17 +59,18 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
 
    backward_in_time ? s=-1.0 : s=1.0
    s=Float32(s)
+   pth=data_path(:OCCA)
   
-   u=s*read(read_data("u",data_path,n),MeshArray(γ,Float32,n))
-   v=s*read(read_data("u",data_path,n),MeshArray(γ,Float32,n))
+   u=s*read(read_data("u",pth,n),MeshArray(γ,Float32,n))
+   v=s*read(read_data("u",pth,n),MeshArray(γ,Float32,n))
 
-   w=s*read_data("w",data_path,n)
+   w=s*read_data("w",pth,n)
    w=-cat(w,zeros(360, 160),dims=3)
    w[:,:,1] .=0.0
    w=read(w,MeshArray(γ,Float32,n+1))
 
-   θ=read(read_data("theta",data_path,n),MeshArray(γ,Float32,n))
-   #𝑆=read(read_data("salt",data_path,n),MeshArray(γ,Float32,n))
+   θ=read(read_data("theta",pth,n),MeshArray(γ,Float32,n))
+   #𝑆=read(read_data("salt",pth,n),MeshArray(γ,Float32,n))
 
    for i in eachindex(u)
       u[i]=u[i]./Γ.DXC[1]

@@ -18,12 +18,15 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [weakdeps]
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+Climatology = "9e9a4d37-2d2e-41e3-8b85-f7978328d9c7"
 
 [extensions]
 IndividualDisplacementsMakieExt = ["Makie"]
+IndividualDisplacementsClimatologyExt = ["Climatology"]
 
 [compat]
 CSV = "0.10"
+Climatology = "0.5"
 CyclicArrays = "0.5"
 DataDeps = "0.7"
 DataFrames = "1"

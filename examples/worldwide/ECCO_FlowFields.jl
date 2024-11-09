@@ -5,6 +5,7 @@ import MeshArrays, DataDeps, CSV, JLD2
 
 import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, ODEProblem
 import IndividualDisplacements: update_location!
+import IndividualDisplacements: data_path
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
 import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
@@ -12,18 +13,6 @@ import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
 export init_FlowFields, init_storage
 export custom∫, custom🔧, custom🔴, custom∫!
 #export reset_📌!, init_z_if_needed
-
-import Climatology
-Climatology.get_ecco_velocity_if_needed()
-Climatology.get_ecco_variable_if_needed("THETA")
-Climatology.get_ecco_variable_if_needed("SALT")
-function data_path(sym::Symbol)
-    if sym==:ECCO4R2c
-        Climatology.ScratchSpaces.ECCO
-    else
-        tempdir()
-    end
-end
 
 import MITgcm, NetCDF
 function read_data(m0,v0,path,grid,k)
@@ -327,7 +316,7 @@ function init_FlowFields(; k=1, backward_time=false)
   func=(u -> MeshArrays.update_location_llc!(u,Γ))
 
   #initialize u0,u1 etc
-  P,D=setup_FlowFields(k,Γ,func,data_path(:ECCO4R2c),backward_time)
+  P,D=setup_FlowFields(k,Γ,func,data_path(:ECCO),backward_time)
   D.🔄(P,D,0.0)
 
   #add background map for plotting
