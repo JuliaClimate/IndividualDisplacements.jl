@@ -1,8 +1,7 @@
 module ECCO_FlowFields
 
 using IndividualDisplacements
-import MeshArrays, DataDeps, CSV
-import JLD2
+import MeshArrays, DataDeps, CSV, JLD2
 
 import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, ODEProblem
 import IndividualDisplacements: update_location!
