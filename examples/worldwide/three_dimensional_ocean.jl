@@ -42,7 +42,7 @@ end
 
 # ╔═╡ f199f321-976a-4ccd-a003-140211aa67fe
 begin	
-	I=Individuals(P,df.x,df.y,df.z,df.f,
+	I=Individuals(P,df.x,df.y,df.z,df.fid,
 		(🔴=OCCA_FlowFields.custom🔴,🔧=OCCA_FlowFields.custom🔧, D=D))
 	"Done with Individuals"
 end

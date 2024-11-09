@@ -40,7 +40,7 @@ function init_global_randn(np ::Int , D::NamedTuple)
     m=findall( (f.!==0).*((!isnan).(x)) )
     n=findall(nearest_to_xy(D.msk,x[m],y[m],f[m]).==1.0)[1:np]
     xyf=permutedims([x[m[n]] y[m[n]] f[m[n]]])
-    return DataFrame(x=xyf[1,:],y=xyf[2,:],f=xyf[3,:])
+    return DataFrame(x=xyf[1,:],y=xyf[2,:],fid=xyf[3,:])
 end
 
 """
@@ -61,7 +61,7 @@ function init_gulf_stream(np ::Int , D::NamedTuple; zs=0:27)
     xyf=permutedims([x[m[n]] y[m[n]] f[m[n]]])
 
 	z=zs[1] .+rand(np)*(zs[end]-zs[1])
-    return DataFrame(x=xyf[1,:],y=xyf[2,:],z=z,f=xyf[3,:])
+    return DataFrame(x=xyf[1,:],y=xyf[2,:],z=z,fid=xyf[3,:])
 end
 
 """

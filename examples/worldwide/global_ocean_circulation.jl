@@ -210,11 +210,11 @@ begin
 
 	if !(k==0)
 		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,1,50)
-		𝐼 = Individuals(𝑃,df.x,df.y,df.f,(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫))
+		𝐼 = Individuals(𝑃,df.x,df.y,df.fid,(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫))
 		my∫! = ∫!
 	else		
 		𝑆 = inc.ECCO_FlowFields.init_storage(np,100,length(𝐷.Γ.RC),50)
-		𝐼 = inc.IndividualDisplacements.Individuals(𝑃,df.x,df.y,df.z,df.f,
+		𝐼 = inc.IndividualDisplacements.Individuals(𝑃,df.x,df.y,df.z,df.fid,
 			(𝐷=merge(𝐷,𝑆),∫=inc.ECCO_FlowFields.custom∫,🔧=inc.ECCO_FlowFields.custom🔧,🔴=deepcopy(inc.ECCO_FlowFields.custom🔴)))
 		my∫! = inc.ECCO_FlowFields.custom∫!
 	end

@@ -117,7 +117,7 @@ function initial_positions(Γ::NamedTuple, nf=10000, lon_rng=(-160.0,-159.0), la
    x=lon .+ (21. - Γ.XC[1][21,1])
    y=lat .+ (111. - Γ.YC[1][1,111])
 
-   return DataFrame(:x => x, :y => y, :z => fill(level,nf),:f => fill(1,nf))
+   return DataFrame(:x => x, :y => y, :z => fill(level,nf),:fid => fill(1,nf))
 end
 
 custom🔴 = DataFrame(ID=Int[], fid=Int[], x=Float64[], y=Float64[],
