@@ -121,7 +121,12 @@ module inc
     import CairoMakie, Makie
     import DataFrames, CSV, JLD2
 	import FileIO, NetCDF, DataDeps, Colors
-	include("ECCO_FlowFields.jl")
+
+    p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
+    f0=joinpath(p0,"worldwide","ECCO_FlowFields.jl")
+    f1=( isfile("ECCO_FlowFields.jl") ? "ECCO_FlowFields.jl" :  f0 )
+    include(f1)
+
     path_input = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
     path_replay = inc.IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
 end	

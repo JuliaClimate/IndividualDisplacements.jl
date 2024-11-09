@@ -8,10 +8,10 @@ using InteractiveUtils
 begin
 	using IndividualDisplacements, CairoMakie, Climatology, NetCDF
 
-	#p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
-	#f0=joinpath(p0,"worldwide","OCCA_FlowFields.jl")
-	#include(f0)
-    include("OCCA_FlowFields.jl")
+    p0=joinpath(dirname(pathof(IndividualDisplacements)),"..","examples")
+    f0=joinpath(p0,"worldwide","OCCA_FlowFields.jl")
+    f1=( isfile("OCCA_FlowFields.jl") ? "OCCA_FlowFields.jl" :  f0 )
+    include(f1)
 
 	"Done with loading packages"
 end
