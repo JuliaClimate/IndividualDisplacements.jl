@@ -1,11 +1,44 @@
 module OCCA_FlowFields
 
 using IndividualDisplacements
-import NetCDF
+
+##
 
 import Climatology
 Climatology.get_occa_velocity_if_needed()
 data_path=Climatology.ScratchSpaces.OCCA
+
+import NetCDF
+function rd(filename, varname,n)
+   fil = NetCDF.open(filename, varname)
+   siz = size(fil)
+   tmp = zeros(siz[1:2]...,n)
+   [tmp .+= fil[:,:,1:n,t] for t=1:12]
+   tmp ./= 12.0
+   tmp[findall(tmp.<-1e22)] .= 0.0
+   return tmp
+end
+
+read_data(v0,data_path,n)=begin
+   file_name=
+   if v0=="u"
+      "DDuvel.0406clim.nc"
+   elseif v0=="v"
+      "DDvvel.0406clim.nc"
+   elseif v0=="w"
+      "DDwvel.0406clim.nc"
+   elseif v0=="theta"
+      "DDtheta.0406clim.nc"
+   elseif v0=="salt"
+      "DDsalt.0406clim.nc"
+   else
+      "unknown"
+   end
+   fileIn=joinpath(data_path,file_name)
+   rd(fileIn,v0,n)
+end
+
+##
 
 import IndividualDisplacements.DataFrames: DataFrame
 import IndividualDisplacements.MeshArrays as MeshArrays
@@ -29,34 +62,17 @@ function setup(;backward_in_time::Bool=false,nmax=Inf)
 
    backward_in_time ? s=-1.0 : s=1.0
    s=Float32(s)
+  
+   u=s*read(read_data("u",data_path,n),MeshArray(γ,Float32,n))
+   v=s*read(read_data("u",data_path,n),MeshArray(γ,Float32,n))
 
-   function rd(filename, varname,n)
-   fil = NetCDF.open(filename, varname)
-   siz = size(fil)
-   tmp = zeros(siz[1:2]...,n)
-   [tmp .+= fil[:,:,1:n,t] for t=1:12]
-   tmp ./= 12.0
-   tmp[findall(tmp.<-1e22)] .= 0.0
-   return tmp
-   end
-
-   fileIn=joinpath(data_path,"DDuvel.0406clim.nc")
-   u=s*read(rd(fileIn,"u",n),MeshArray(γ,Float32,n))
-
-   fileIn=joinpath(data_path,"DDvvel.0406clim.nc")
-   v=s*read(rd(fileIn,"v",n),MeshArray(γ,Float32,n))
-
-   fileIn=joinpath(data_path,"DDwvel.0406clim.nc")
-   w=s*rd(fileIn,"w",n)
+   w=s*read_data("w",data_path,n)
    w=-cat(w,zeros(360, 160),dims=3)
    w[:,:,1] .=0.0
    w=read(w,MeshArray(γ,Float32,n+1))
 
-   fileIn=joinpath(data_path,"DDtheta.0406clim.nc")
-   θ=read(rd(fileIn,"theta",n),MeshArray(γ,Float32,n))
-
-#   fileIn=joinpath(data_path,"DDsalt.0406clim.nc")
-#   𝑆=read(rd(fileIn,"salt",n),MeshArray(γ,Float64,n))
+   θ=read(read_data("theta",data_path,n),MeshArray(γ,Float32,n))
+   #𝑆=read(read_data("salt",data_path,n),MeshArray(γ,Float32,n))
 
    for i in eachindex(u)
       u[i]=u[i]./Γ.DXC[1]

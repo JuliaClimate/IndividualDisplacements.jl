@@ -27,9 +27,7 @@ function data_path(sym::Symbol)
 end
 
 import MITgcm, NetCDF
-#read_data(m0,v0,P,D)=read_nctiles(joinpath(D.pth,"$(v0)/$(v0)"),v0,P.u0.grid,I=(:,:,D.k,m0))
-read_data(m0,v0,path,grid,k)=begin
-    println(joinpath(path,v0)*" $(v0) $(m0) $(k)")
+function read_data(m0,v0,path,grid,k)
     MITgcm.read_nctiles(joinpath(path,v0),v0,grid,I=(:,:,k,m0))
 end
 read_data(m0,v0,P,D)=read_data(m0,v0, joinpath(D.pth,v0) , P.u0.grid , D.k )
