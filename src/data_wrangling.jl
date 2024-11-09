@@ -29,11 +29,11 @@ function postprocess_MeshArray(sol,P::FlowFields, D::NamedTuple; id=missing, T=m
     ismissing(T) ? T=P.T : nothing
     
     if isa(sol,EnsembleSolution)
-        nd=length(sol.u[1][1])
+        nd=length(sol.u[1][:,1])
         np=length(sol)
-        x=[[sol.u[i][1][1] for i in 1:np];[sol.u[i][end][1] for i in 1:np]]
-        y=[[sol.u[i][1][2] for i in 1:np];[sol.u[i][end][2] for i in 1:np]]
-        fIndex=[[sol.u[i][1][nd] for i in 1:np];[sol.u[i][end][nd] for i in 1:np]];
+        x=[[sol.u[i][:,1][1] for i in 1:np];[sol.u[i][:,end][1] for i in 1:np]]
+        y=[[sol.u[i][:,1][2] for i in 1:np];[sol.u[i][:,end][2] for i in 1:np]]
+        fIndex=[[sol.u[i][:,1][nd] for i in 1:np];[sol.u[i][:,end][nd] for i in 1:np]]
         t=[fill(T[1],np);fill(T[2],np)]
         id=[id[:,1];id[:,1]]
     else
@@ -70,7 +70,7 @@ end
 
 Add lon & lat to dataframe using "exchanged" XC, YC
 """
-function add_lonlat!(df::DataFrame,XC,YC)
+function add_lonlat!(df::DataFrame,XC::MeshArray_wh,YC::MeshArray_wh)
     x = cosd.(YC.MA) * cosd.(XC.MA)
     y = cosd.(YC.MA) * sind.(XC.MA)
     z = sind.(YC.MA)
@@ -94,7 +94,7 @@ end
 Add lon & lat to dataframe using "exchanged" XC, YC after updating 
 subdomain indices (via func) if needed (MeshArrays.location_is_out)
 """
-function add_lonlat!(df::DataFrame,XC,YC,func::Function)
+function add_lonlat!(df::DataFrame,XC::MeshArray_wh,YC::MeshArray_wh,func::Function)
     g=XC.MA.grid
     u=zeros(3)
 

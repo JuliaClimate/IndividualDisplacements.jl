@@ -410,13 +410,12 @@ function ∫!(I::Individuals,T::Tuple)
     sol = ∫(prob)
 
     tmp = 🔧(sol,P,D, id=🆔, T=T)
-
     isempty(🔴) ? np =0 : np=length(🆔)
     append!(🔴,tmp[np+1:end,:],promote=true)
 
     if isa(sol,EnsembleSolution)
         np=length(sol)
-        📌[:] = deepcopy([sol[i].u[end] for i in 1:np])
+        📌[:] = deepcopy([sol[:,i].u[end] for i in 1:np])
         if isa(P,uvwMeshArrays)||isa(P,uvMeshArrays)
             [update_location!(i,P) for i in I.📌]
         end

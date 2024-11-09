@@ -411,7 +411,7 @@ function custom🔧(sol,𝐹::uvwMeshArrays,D::NamedTuple;id=missing,T=missing)
 
     df=postprocess_MeshArray(sol,𝐹,D,id=id,T=T)
     np=length(sol.u)
-    z=[[sol.u[i][1][3] for i in 1:np];[sol.u[i][end][3] for i in 1:np]]
+    z=[[sol.u[i][:,1][3] for i in 1:np];[sol.u[i][:,end][3] for i in 1:np]]
     df.z=z[:]
     df.year=df.t ./86400/365
     add_lonlat!(df,D.XC,D.YC)
