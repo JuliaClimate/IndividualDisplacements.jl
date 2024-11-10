@@ -1,4 +1,4 @@
-using Test, Documenter, IndividualDisplacements, Suppressor
+using Test, Documenter, Drifters, Suppressor
 import Climatology, MeshArrays, NetCDF, MITgcm, CairoMakie
 
 Climatology.get_ecco_velocity_if_needed()
@@ -10,15 +10,15 @@ MeshArrays.GridLoad(MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90))
 MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360))
 
 @testset "ECCO" begin
-    ECCOmodule = IndividualDisplacements.ECCO
-    CSV = IndividualDisplacements.CSV
-    DataFrames = IndividualDisplacements.DataFrames
-    Individuals = IndividualDisplacements.Individuals
+    ECCOmodule = Drifters.ECCO
+    CSV = Drifters.CSV
+    DataFrames = Drifters.DataFrames
+    Individuals = Drifters.Individuals
 
     k=0
     P,D=ECCOmodule.init_FlowFields(k=k); np=100
-    df0 = IndividualDisplacements.init.init_global_randn(np , D)
-    df = IndividualDisplacements.init.init_gulf_stream(np , D)
+    df0 = Drifters.init.init_global_randn(np , D)
+    df = Drifters.init.init_gulf_stream(np , D)
     S = ECCOmodule.init_storage(np,100,length(D.Γ.RC),50)
     I = Individuals(P,df.x,df.y,df.z,df.fid,
         (D=merge(D,S),∫=ECCOmodule.custom∫,🔧=ECCOmodule.custom🔧,🔴=deepcopy(ECCOmodule.custom🔴)))
@@ -32,14 +32,14 @@ MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
     xlims=(-85.0,5.0)
     ylims=(20.0,67.0)
 
-    x=IndividualDisplacements.InDiPlot( data=(I=I,df=tmp_🔴,), options=(plot_type=:global_plot1,) )
+    x=Drifters.InDiPlot( data=(I=I,df=tmp_🔴,), options=(plot_type=:global_plot1,) )
     fig,tt=CairoMakie.plot(x)
     @test isa(fig,CairoMakie.Figure)
 end
 
 @testset "OCCA" begin
-    OCCAmodule=IndividualDisplacements.OCCA
-	initial_positions=IndividualDisplacements.init.initial_positions
+    OCCAmodule=Drifters.OCCA
+	initial_positions=Drifters.init.initial_positions
 	P,D=OCCAmodule.setup(nmax=5)
 	nf=100; lo=(-160.0,-150.0); la=(30.0,40.0); level=2.5;
 	df=initial_positions(D.Γ, nf, lo, la, level)
@@ -79,17 +79,17 @@ end
 end
 
 @testset "downloads" begin
-    p0=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
-    IndividualDisplacements.datadeps.getdata("flt_example")
+    p0=Drifters.datadeps.getdata("global_ocean_circulation_inputs")
+    Drifters.datadeps.getdata("flt_example")
     @test ispath(p0)
 end
 
 @testset "global" begin
-    p0=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
-    ECCOmodule=IndividualDisplacements.ECCO
+    p0=Drifters.datadeps.getdata("global_ocean_circulation_inputs")
+    ECCOmodule=Drifters.ECCO
     P,D=ECCOmodule.init_FlowFields()
     file_input=joinpath(p0,"initial_10_1.csv")
-    df = IndividualDisplacements.init.init_positions(10,filename=file_input)
+    df = Drifters.init.init_positions(10,filename=file_input)
     I=Individuals(P,df.x,df.y,df.f,(D=D,))
     T=(0.0,I.P.T[2])
     ∫!(I,T)
@@ -135,5 +135,5 @@ end
 end
 
 @testset "doctests" begin
-    doctest(IndividualDisplacements; manual = false)
+    doctest(Drifters; manual = false)
 end

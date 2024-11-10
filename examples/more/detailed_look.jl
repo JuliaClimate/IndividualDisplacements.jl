@@ -5,7 +5,7 @@
 #
 # A more detailed look at spatial interpolation, integration through time, and I/O. 
 # For additional documentation e.g. see
-# [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
+# [1](https://JuliaClimate.github.io/Drifters.jl/dev/),
 # [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector)). 
@@ -21,10 +21,10 @@
 
 # ## 1. Import Software
 
-using IndividualDisplacements, MITgcm
-import IndividualDisplacements.OrdinaryDiffEq as OrdinaryDiffEq
-import IndividualDisplacements.DataFrames as DataFrames
-p=dirname(pathof(IndividualDisplacements))
+using Drifters, MITgcm
+import Drifters.OrdinaryDiffEq as OrdinaryDiffEq
+import Drifters.DataFrames as DataFrames
+p=dirname(pathof(Drifters))
 include(joinpath(p,"../examples/more/example123.jl"))
 #md include(joinpath(p,"../examples/more/recipes_plots.jl"))
 
@@ -32,7 +32,7 @@ include(joinpath(p,"../examples/more/example123.jl"))
 #
 # from `MITgcm/pkg/flt`
 
-flt_example_path = IndividualDisplacements.datadeps.getdata("flt_example")
+flt_example_path = Drifters.datadeps.getdata("flt_example")
 prec=Float32
 df=read_flt(flt_example_path*"/",prec);
 

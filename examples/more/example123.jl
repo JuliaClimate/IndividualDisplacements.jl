@@ -1,5 +1,5 @@
-using IndividualDisplacements, MeshArrays, MITgcm, Statistics
-import IndividualDisplacements.OrdinaryDiffEq as OrdinaryDiffEq
+using Drifters, MeshArrays, MITgcm, Statistics
+import Drifters.OrdinaryDiffEq as OrdinaryDiffEq
 
 """
     read_mds(filRoot::String,x::MeshArray)
@@ -39,13 +39,13 @@ earlier, rather than computing trajectories as in the other examples.
 ```
 df=example1()
 
-p=dirname(pathof(IndividualDisplacements))
+p=dirname(pathof(Drifters))
 include(joinpath(p,"../examples/recipes_pyplot.jl"))
 PyPlot.figure(); PlotMapProj(df,300); gcf()
 ```
 """
 function example1()
-   p=dirname(pathof(IndividualDisplacements))
+   p=dirname(pathof(Drifters))
    dirIn=joinpath(p,"../examples/run_offflt/")
    prec=Float32
    df=read_flt(dirIn,prec)
@@ -60,7 +60,7 @@ extended and modified configuration of the standard MITgcm test case.
 ```
 (𝐼,df,ref)=example2();
 
-p=dirname(pathof(IndividualDisplacements))
+p=dirname(pathof(Drifters))
 include(joinpath(p,"../examples/recipes_plots.jl"))
 PlotBasic(df,300,100000.0)
 
@@ -92,7 +92,7 @@ example2_xy()
 Read MITgcm/pkg/flt output
 """
 function example2_xy(𝑃)
-flt_example_path = IndividualDisplacements.datadeps.getdata("flt_example")
+flt_example_path = Drifters.datadeps.getdata("flt_example")
 prec=Float32
 df=read_flt(flt_example_path*"/",prec)
 #
@@ -123,7 +123,7 @@ function example2_setup()
 
    ###### 1) Get gridded variables via MeshArrays.jl
 
-   flt_example_path = IndividualDisplacements.datadeps.getdata("flt_example")
+   flt_example_path = Drifters.datadeps.getdata("flt_example")
    γ=gcmgrid(flt_example_path*"/","PeriodicChannel",1,[(80,42)], [80 42], Float32, read, write)
    nr=8
 

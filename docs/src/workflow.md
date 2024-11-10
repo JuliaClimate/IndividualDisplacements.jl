@@ -16,7 +16,7 @@ A central goal of this package is to support scientific analysis of model simula
 
 As a starting point, the package supports all types of gridded model output (on Arakawa C-grids) from the [MIT General Circulation Model](https://mitgcm.readthedocs.io/en/latest/?badge=latest) via the [MeshArrays.jl](https://github.com/JuliaClimate/MeshArrays.jl) package ([docs found here](https://juliaclimate.github.io/MeshArrays.jl/dev/)). 
 
-By convention, `IndividualDisplacements.jl` expects input flow fields to be provided in a uniform fashion (see [`FlowFields`](@ref)) summarized below: 
+By convention, `Drifters.jl` expects input flow fields to be provided in a uniform fashion (see [`FlowFields`](@ref)) summarized below: 
 
 1. normalized to grid index units (i.e. in 1/s rather than m/s units)
 1. positive towards increasing indices
@@ -31,7 +31,7 @@ For an overview of the examples, please refer to the **example guide**. The rest
 The `Individuals` struct contains a `FlowFields` struct (incl. e.g. arrays), initial positions for the individuals, and the other elements (e.g. functions) involved in `∫!(I,T)` as documented hereafter.
 
 ```@autodocs
-Modules = [IndividualDisplacements]
+Modules = [Drifters]
 Order   = [:type]
 ```
 

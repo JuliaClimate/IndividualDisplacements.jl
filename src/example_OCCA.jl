@@ -1,7 +1,7 @@
 module OCCA
 
-import IndividualDisplacements: data_path, uvwMeshArrays, FlowFields
-import IndividualDisplacements: postprocess_MeshArray, add_lonlat!, interp_to_xy
+import Drifters: data_path, uvwMeshArrays, FlowFields
+import Drifters: postprocess_MeshArray, add_lonlat!, interp_to_xy
 
 ##
 
@@ -37,11 +37,11 @@ end
 
 ##
 
-import IndividualDisplacements.DataFrames: DataFrame
-import IndividualDisplacements.MeshArrays as MeshArrays
-import IndividualDisplacements.MeshArrays: MeshArray
-import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5, remake
-import IndividualDisplacements.OrdinaryDiffEq: ODEProblem, EnsembleProblem
+import Drifters.DataFrames: DataFrame
+import Drifters.MeshArrays as MeshArrays
+import Drifters.MeshArrays: MeshArray
+import Drifters.OrdinaryDiffEq: solve, Tsit5, remake
+import Drifters.OrdinaryDiffEq: ODEProblem, EnsembleProblem
 
 function setup(;backward_in_time::Bool=false,nmax=Inf)
 

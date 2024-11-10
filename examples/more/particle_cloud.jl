@@ -6,19 +6,19 @@
 # Using the same setup as `detailed_look.jl` or `example2()`, here we simulate
 # a point cloud getting advected by the flow field. 
 # For additional documentation e.g. see :
-# [1](https://JuliaClimate.github.io/IndividualDisplacements.jl/dev/),
+# [1](https://JuliaClimate.github.io/Drifters.jl/dev/),
 # [2](https://JuliaClimate.github.io/MeshArrays.jl/dev/),
 # [3](https://docs.juliadiffeq.org/latest/solvers/ode_solve.html),
 # [4](https://en.wikipedia.org/wiki/Displacement_(vector))
 
 # ## 1. Import Software
 
-using IndividualDisplacements, Statistics
+using Drifters, Statistics
 
-import IndividualDisplacements.OrdinaryDiffEq: solve, Tsit5
-import IndividualDisplacements.DataFrames: DataFrame
+import Drifters.OrdinaryDiffEq: solve, Tsit5
+import Drifters.DataFrames: DataFrame
 
-p=dirname(pathof(IndividualDisplacements))
+p=dirname(pathof(Drifters))
 include(joinpath(p,"../examples/more/example123.jl"));
 #md include(joinpath(p,"../examples/more/recipes_plots.jl"))
 
@@ -31,7 +31,7 @@ x=vec([x-0.5 for x in ii1, y in ii2])
 y=vec([y-0.5 for x in ii1, y in ii2])
 xy = permutedims([[x[i];y[i];1.0] for i in eachindex(x)])
 
-solv(prob) = IndividualDisplacements.ensemble_solver(prob,solver=Tsit5(),reltol=1e-6,abstol=1e-6)
+solv(prob) = Drifters.ensemble_solver(prob,solver=Tsit5(),reltol=1e-6,abstol=1e-6)
 tr = DataFrame(ID=Int[], x=Float64[], y=Float64[], t=Float64[])
 
 #𝐼 = Individuals{Float64,2}(📌=xy[:,:], 🔴=tr, 🆔=collect(1:size(xy,2)),
@@ -54,6 +54,6 @@ I=(position=xy,record=deepcopy(tr),velocity=dxdt!,
 
 # Compare with trajectory output from `MITgcm`
 
-#flt_example_path = IndividualDisplacements.datadeps.getdata("flt_example")
+#flt_example_path = Drifters.datadeps.getdata("flt_example")
 #df=read_flt(flt_example_path*"/",Float32)
 #ref=plot_paths(df,size(xy,2),100000.0)

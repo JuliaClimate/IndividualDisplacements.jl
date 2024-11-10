@@ -1,7 +1,7 @@
-module IndividualDisplacementsMakieExt
+module DriftersMakieExt
 
-	using Makie, IndividualDisplacements
-	import IndividualDisplacements: InDiPlot, DataFrame, demo
+	using Makie, Drifters
+	import Drifters: InDiPlot, DataFrame, demo
 	import Makie: plot
 
 	function plot(x::InDiPlot)
@@ -29,7 +29,7 @@ module IndividualDisplacementsMakieExt
     simple_plot1(I,ϕ)
 
 ```
-using IndividualDisplacements, CairoMakie
+using Drifters, CairoMakie
 include("basics/random_flow_field.jl")
 x=InDiPlot( data=(I=I,ϕ=ϕ), options=(plot_type=:simple_plot1,) )
 plot(x)
@@ -63,7 +63,7 @@ end
     simple_plot2(I)
 
 ```
-using IndividualDisplacements, CairoMakie
+using Drifters, CairoMakie
 include("basics/solid_body_rotation.jl")
 x=InDiPlot( data=(I=I,), options=(plot_type=:simple_plot2,) )
 plot(x)
@@ -91,7 +91,7 @@ end
 ##
 
 #using Makie, DataFrames, FileIO, Colors
-#using DataDeps, MeshArrays, IndividualDisplacements
+#using DataDeps, MeshArrays, Drifters
 
 lon180(x)=Float64(x>180.0 ? x-360.0 : x)
 lon360(x)=Float64(x<0.0 ? x+360.0 : x)
@@ -112,7 +112,7 @@ end
 Plot initial and final positions, superimposed on a globalmap of ocean depth log.
 
 ```
-using IndividualDisplacements, GLMakie
+using Drifters, GLMakie
 include("worldwide/global_ocean_circulation.jl")
 
 x=InDiPlot( data=(I=𝐼,df=tmp_🔴,), options=(plot_type=:global_plot1,) )
@@ -170,7 +170,7 @@ end
 Plot the initial and final positions as scatter plot in `lon,lat` or `x,y` plane.
 """
 function plot_start_end(I::Individuals)
-🔴_by_t = IndividualDisplacements.DataFrames.groupby(I.🔴, :t)
+🔴_by_t = Drifters.DataFrames.groupby(I.🔴, :t)
 set_theme!(theme_light())
 fig=Figure(size = (900, 600))
 try

@@ -1,8 +1,8 @@
-using Documenter, Literate, PlutoSliderServer, IndividualDisplacements
+using Documenter, Literate, PlutoSliderServer, Drifters
 using Climatology
 
 #download data dependencies if needed
-IndividualDisplacements.datadeps.getdata("flt_example")
+Drifters.datadeps.getdata("flt_example")
 Climatology.get_ecco_velocity_if_needed();
 Climatology.get_occa_velocity_if_needed();
 Climatology.get_ecco_variable_if_needed("THETA")
@@ -35,8 +35,8 @@ ismd(f) = splitext(f)[2] == ".md"
 pages(folder) = [joinpath(folder, f) for f in readdir(joinpath(src, folder)) if ismd(f)]
 
 makedocs(;
-    sitename = "IndividualDisplacements.jl",
-    repo = Remotes.GitHub("JuliaClimate", "IndividualDisplacements.jl"),
+    sitename = "Drifters.jl",
+    repo = Remotes.GitHub("JuliaClimate", "Drifters.jl"),
     authors="JuliaClimate <gforget@mit.edu>",
     format = Documenter.HTML(),
     pages = [
@@ -46,7 +46,7 @@ makedocs(;
         "Tool Box" => "API.md"],
     doctest = false,
     warnonly = [:cross_references,:missing_docs],
-    modules = [IndividualDisplacements]
+    modules = [Drifters]
 )
 
 pth_in = joinpath(@__DIR__, "..","examples")
@@ -66,5 +66,5 @@ end
 # See "Hosting Documentation" and deploydocs() in the Documenter manual
 # for more information.
 deploydocs(
-    repo = "github.com/JuliaClimate/IndividualDisplacements.jl.git",
+    repo = "github.com/JuliaClimate/Drifters.jl.git",
 )

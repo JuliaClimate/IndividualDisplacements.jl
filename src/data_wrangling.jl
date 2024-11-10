@@ -181,8 +181,8 @@ Use MeshArrays.Interpolate() to interpolate to arbitrary positions (e.g., a regu
 # Extended help
 
 ```jldoctest
-using IndividualDisplacements
-import IndividualDisplacements: MeshArrays
+using Drifters
+import Drifters: MeshArrays
 γ=MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90)
 Γ=MeshArrays.GridLoad(γ,option="full")
 

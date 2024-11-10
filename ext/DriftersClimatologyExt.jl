@@ -1,7 +1,7 @@
-module IndividualDisplacementsClimatologyExt
+module DriftersClimatologyExt
 
-using Climatology, IndividualDisplacements
-import IndividualDisplacements: data_path
+using Climatology, Drifters
+import Drifters: data_path
 
 
 function data_path(name::Symbol)

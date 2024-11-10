@@ -1,6 +1,6 @@
 
 using PyPlot, PyCall
-import IndividualDisplacements.DataFrames: DataFrame, groupby
+import Drifters.DataFrames: DataFrame, groupby
 
 """
     PlotMapProj(df::DataFrame,nn::Integer)
@@ -19,7 +19,7 @@ function PlotMapProj(df::DataFrame,nn::Integer)
    ax.stock_img()
 
    # Draw trajectories
-   IDs = IndividualDisplacements.randperm(maximum(df.ID))
+   IDs = Drifters.randperm(maximum(df.ID))
    COs=["w" "y" "g" "k"]
 
    #for global ocean case:

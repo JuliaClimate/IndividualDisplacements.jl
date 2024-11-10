@@ -1,7 +1,7 @@
-name = "IndividualDisplacements"
-uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
+name = "Drifters"
+uuid = "bd752fb7-3f37-44cb-a8fb-f461137b623f"
 authors = ["gaelforget <gforget@mit.edu>"]
-version = "0.5.4"
+version = "0.6.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -22,9 +22,9 @@ Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 MITgcm = "dce5fa8e-68ce-4431-a242-9469c69627a0"
 
 [extensions]
-IndividualDisplacementsClimatologyExt = ["Climatology"]
-IndividualDisplacementsMakieExt = ["Makie"]
-IndividualDisplacementsMITgcmExt = ["MITgcm"]
+DriftersClimatologyExt = ["Climatology"]
+DriftersMakieExt = ["Makie"]
+DriftersMITgcmExt = ["MITgcm"]
 
 [compat]
 CSV = "0.10"

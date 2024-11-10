@@ -2,13 +2,13 @@ module ECCO
 
 import MeshArrays, DataDeps, CSV, JLD2
 
-import IndividualDisplacements: postprocess_MeshArray, add_lonlat!, OrdinaryDiffEq
+import Drifters: postprocess_MeshArray, add_lonlat!, OrdinaryDiffEq
 import OrdinaryDiffEq: solve, Tsit5, ODEProblem
-import IndividualDisplacements: update_location!, Individuals, uvMeshArrays, uvwMeshArrays
-import IndividualDisplacements: FlowFields, ensemble_solver, data_path, read_data_ECCO, order
-import IndividualDisplacements.DataFrames: DataFrame
-import IndividualDisplacements.MeshArrays as MeshArrays
-import IndividualDisplacements.MeshArrays: gcmgrid, MeshArray, exchange
+import Drifters: update_location!, Individuals, uvMeshArrays, uvwMeshArrays
+import Drifters: FlowFields, ensemble_solver, data_path, read_data_ECCO, order
+import Drifters.DataFrames: DataFrame
+import Drifters.MeshArrays as MeshArrays
+import Drifters.MeshArrays: gcmgrid, MeshArray, exchange
 
 export init_FlowFields, init_storage
 export custom∫, custom🔧, custom🔴, custom∫!

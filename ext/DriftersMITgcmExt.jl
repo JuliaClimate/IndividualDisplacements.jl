@@ -1,8 +1,8 @@
 
-module IndividualDisplacementsMITgcmExt
+module DriftersMITgcmExt
 
-using MITgcm, IndividualDisplacements
-import IndividualDisplacements: read_data_ECCO, NetCDF
+using MITgcm, Drifters
+import Drifters: read_data_ECCO, NetCDF
 
 function read_data_ECCO(m0,v0,path,grid,k)
     MITgcm.read_nctiles(joinpath(path,v0),v0,grid,I=(:,:,k,m0))

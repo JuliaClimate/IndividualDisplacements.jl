@@ -20,7 +20,7 @@ Interpolate velocity from gridded fields (3D; with halos) to position `u`
 # Extended help
 
 ```jldoctest; output = false
-using IndividualDisplacements
+using Drifters
 u,v,w,pos,func=vortex_flow_field(format=:MeshArray)
 F=FlowFields(u,u,v,v,0*w,1*w,[0,3*pi],func)
 I=Individuals(F,pos...)
@@ -107,7 +107,7 @@ Interpolate velocity from gridded fields (2D; with halos) to position `u`
 # Extended help
 
 ```jldoctest; output = false
-using IndividualDisplacements
+using Drifters
 u,v,w,pos,func=random_flow_field(format=:MeshArray)
 F=FlowFields(u,u,v,v,[0,1.0],func)
 I=Individuals(F,pos...)
@@ -169,7 +169,7 @@ Interpolate velocity from gridded fields (3D; NO halos) to position `u`
 # Extended help
 
 ```jldoctest; output = false
-using IndividualDisplacements
+using Drifters
 u,v,w,pos=vortex_flow_field(format=:Array)
 F=FlowFields(u,u,v,v,0*w,1*w,[0,3*pi])
 I=Individuals(F,pos...)
@@ -243,7 +243,7 @@ Interpolate velocity from gridded fields (2D; NO halos) to position `u`
 # Extended help
 
 ```jldoctest; output = false
-using IndividualDisplacements
+using Drifters
 u,v,w,pos=random_flow_field(format=:Array)
 F=FlowFields(u,u,v,v,[0,1.0])
 I=Individuals(F,pos...)
@@ -301,8 +301,8 @@ not needed when CyclicArrays is used to extend valid indice ranges).
 _notes:_ spatial interpolation & temporal interpolation are lacking
 
 ```jldoctest; output = false
-using IndividualDisplacements
-p=dirname(pathof(IndividualDisplacements))
+using Drifters
+p=dirname(pathof(Drifters))
 include(joinpath(p,"../examples/more/example_CyclicArray.jl"))
 (x,y)=cyclicarray_example()
 
@@ -338,8 +338,8 @@ position increment `du`.
 # Extended help
 
 ```jldoctest; output = false
-using IndividualDisplacements
-p=dirname(pathof(IndividualDisplacements))
+using Drifters
+p=dirname(pathof(Drifters))
 include(joinpath(p,"../examples/more/detailed_look.jl"))
 prod(isapprox.(sol[:,end],ref[:,end],atol=1.0))
 

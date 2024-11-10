@@ -1,4 +1,4 @@
-module IndividualDisplacements
+module Drifters
 
 using MeshArrays, CyclicArrays, OrdinaryDiffEq, DataFrames, Random
 import NetCDF, CSV
@@ -36,9 +36,9 @@ end
 #flt_example_path = datadeps.getdata("flt_example")
 #flt_example_download() = datadeps.getdata("flt_example")
 
-abstract type AbstractIndividualDisplacementsDiagnostic <: Any end
+abstract type AbstractDriftersDiagnostic <: Any end
 
-Base.@kwdef struct InDiPlot <: AbstractIndividualDisplacementsDiagnostic
+Base.@kwdef struct InDiPlot <: AbstractDriftersDiagnostic
     path :: String = tempdir()
     name :: String = "unknown"
     options :: NamedTuple = NamedTuple()
