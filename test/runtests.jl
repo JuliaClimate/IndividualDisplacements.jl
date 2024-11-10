@@ -17,11 +17,12 @@ MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
 
     k=0
     P,D=ECCOmodule.init_FlowFields(k=k); np=100
+    df0 = IndividualDisplacements.init.init_global_randn(np , D)
     df = IndividualDisplacements.init.init_gulf_stream(np , D)
     S = ECCOmodule.init_storage(np,100,length(D.Γ.RC),50)
     I = Individuals(P,df.x,df.y,df.z,df.fid,
         (D=merge(D,S),∫=ECCOmodule.custom∫,🔧=ECCOmodule.custom🔧,🔴=deepcopy(ECCOmodule.custom🔴)))
-    my∫! = ∫!
+    my∫! = ECCOmodule.custom∫!
     T=(0.0,I.P.T[2])
     my∫!(I,T)
     @test isa(I,Individuals)
@@ -122,6 +123,15 @@ end
     @test isa(tmp2,Array)
     tmp3=nearest_to_xy(F.u0,3.,3.)
     @test isa(tmp3,Array)
+
+    uC, vC, _ = random_flow_field(np=16)
+    F=FlowFields(u=uC,v=vC,period=(0,10.))
+    @test isa(F,uvArrays)
+
+    df=DataFrame( ID=[], x=[], y=[], z=[], t = [])
+    I=(position=zeros(3,2),ID=1:2,record=deepcopy(df))
+    I=Individuals(I)
+    @test isa(I,Individuals)
 end
 
 @testset "doctests" begin
