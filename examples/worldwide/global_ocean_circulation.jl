@@ -21,14 +21,14 @@ using Pkg; Pkg.status()
 
 # ╔═╡ 2acbfc79-3926-4c5a-9994-e3222c60c377
 begin
-	import IndividualDisplacements, Climatology, MITgcm
+	using IndividualDisplacements
+	import Climatology, MITgcm
     using Statistics, PlutoUI, CairoMakie
 
     ECCOmodule = IndividualDisplacements.ECCO
     CSV = IndividualDisplacements.CSV
     DataFrames = IndividualDisplacements.DataFrames
-    Individuals = IndividualDisplacements.Individuals
-
+    
 	output_path=joinpath(tempdir(),"global_ocean_tmp")
 	!isdir(output_path) ? mkdir(output_path) : nothing
 
@@ -59,9 +59,9 @@ begin
 	
 	bind_j = (@bind j Select(1:6,default=3))
 	bind_k = (@bind ktxt Select(["0","1","10","30","40"],default="0"))
-	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="10"))
-	bind_np = (@bind nptxt Select(["10","100","10000"],default="10000"))
-	bind_replay = (@bind do_replay CheckBox(default=true))
+	bind_ny = (@bind nytxt Select(["1/12","1","3","10"],default="1"))
+	bind_np = (@bind nptxt Select(["10","100","10000"],default="100"))
+	bind_replay = (@bind do_replay CheckBox(default=false))
 	bind_zoomin = (@bind zoom_in CheckBox(default=false))
 	bind_zrng = @bind zrng Select([0:11,11:21,21:27],default=0:11)
 	
@@ -71,7 +71,6 @@ begin
 	file_base = basename(file_IC)[1:end-4]
 	backward_time ? file_base=file_base*"_◀◀" : file_base=file_base*"_▶▶"
 
-#	- k  = $(bind_k) = flow field vertical level (set to 0 for 3D)
 #  - _optional :_ zrng = $(bind_zrng) = vertical coordindate range 
 #  - _(only used if k==0; if otherwise then zrng effectively is k-0.5:k-0.5)_
 
@@ -82,6 +81,7 @@ begin
 	- latitude box : $(bind_j)
 	- ny = $(bind_ny) = similated period (1/12 = 1 month)
 	- np = $(bind_np) = number of individuals (100 by default)
+	- k  = $(bind_k) = flow field vertical level (set to 0 for 3D)
 	- replay = $(bind_replay) = load results from csv instead of recomputing
 	- zoom in = $(bind_zoomin) = zoom in rather than plotting whole Earth
 	"""
@@ -114,7 +114,7 @@ begin
     #println("file_base = "*file_base)
 
 	k=parse(Int,ktxt) #vertical level or 0
-	k!==0 ? zs=[k-0.5:k-0.5] : zs=zrng
+	k!==0 ? zs=(k-0.5:k-0.5) : zs=zrng
 	
 	Climatology.get_ecco_velocity_if_needed()
 	
@@ -171,8 +171,8 @@ begin
 	I
 end
 
-# ╔═╡ 20ff7f0a-3b44-4580-8920-2ae6aa22c78f
-I.D
+# ╔═╡ f639ec15-a9a1-4dab-a37f-b2c96f6a80e1
+#D.Γ.RC
 
 # ╔═╡ 6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
 md""" ### 3.2 Monthly Step Function
@@ -214,6 +214,7 @@ if !do_replay
 	✔1	
 	[step!(I) for y=1:ny, m=1:nm]
 	"lon" in names(I.🔴) ? nothing : add_lonlat!(I.🔴,D.XC,D.YC)
+	"d" in names(I.🔴) ? nothing : I.🔴.d.=-D.Γ.RC[k]
 	✔2="Done with Main Computation"
 else
 	✔2="Skipping Main Computation (replay instead)"
@@ -367,6 +368,7 @@ PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+CairoMakie = "~0.12.16"
 Climatology = "~0.5.12"
 MITgcm = "~0.5.0"
 PlutoUI = "~0.7.60"
@@ -378,7 +380,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.10.5"
 manifest_format = "2.0"
-project_hash = "e5a750eb23dc50dfae9c98cecb0cd5985fd84fd0"
+project_hash = "bb5811c0e79a88f3ec92251cfbda3ab33172d8ba"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -1417,10 +1419,10 @@ uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.2"
 
 [[deps.HDF5_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "LibCURL_jll", "Libdl", "MPICH_jll", "MPIPreferences", "MPItrampoline_jll", "MicrosoftMPI_jll", "OpenMPI_jll", "OpenSSL_jll", "TOML", "Zlib_jll", "libaec_jll"]
-git-tree-sha1 = "82a471768b513dc39e471540fdadc84ff80ff997"
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "LazyArtifacts", "LibCURL_jll", "Libdl", "MPICH_jll", "MPIPreferences", "MPItrampoline_jll", "MicrosoftMPI_jll", "OpenMPI_jll", "OpenSSL_jll", "TOML", "Zlib_jll", "libaec_jll"]
+git-tree-sha1 = "38c8874692d48d5440d5752d6c74b0c6b0b60739"
 uuid = "0234f1f7-429e-5d53-9886-15a909be8d59"
-version = "1.14.3+3"
+version = "1.14.2+1"
 
 [[deps.HTTP]]
 deps = ["Base64", "CodecZlib", "ConcurrentUtilities", "Dates", "ExceptionUnwrapping", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "OpenSSL", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
@@ -2148,10 +2150,10 @@ uuid = "30363a11-5582-574a-97bb-aa9a979735b9"
 version = "0.12.0"
 
 [[deps.NetCDF_jll]]
-deps = ["Artifacts", "Blosc_jll", "Bzip2_jll", "HDF5_jll", "JLLWrappers", "LazyArtifacts", "LibCURL_jll", "Libdl", "MPICH_jll", "MPIPreferences", "MPItrampoline_jll", "MicrosoftMPI_jll", "OpenMPI_jll", "TOML", "XML2_jll", "Zlib_jll", "Zstd_jll", "libzip_jll"]
-git-tree-sha1 = "4686378c4ae1d1948cfbe46c002a11a4265dcb07"
+deps = ["Artifacts", "Blosc_jll", "Bzip2_jll", "HDF5_jll", "JLLWrappers", "LibCURL_jll", "Libdl", "OpenMPI_jll", "XML2_jll", "Zlib_jll", "Zstd_jll", "libzip_jll"]
+git-tree-sha1 = "a8af1798e4eb9ff768ce7fdefc0e957097793f15"
 uuid = "7243133f-43d8-5620-bbf4-c2c921802cf3"
-version = "400.902.211+1"
+version = "400.902.209+0"
 
 [[deps.Netpbm]]
 deps = ["FileIO", "ImageCore", "ImageMetadata"]
@@ -2240,10 +2242,10 @@ uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
 version = "0.8.1+2"
 
 [[deps.OpenMPI_jll]]
-deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "TOML"]
-git-tree-sha1 = "e25c1778a98e34219a00455d6e4384e017ea9762"
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Hwloc_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "MPIPreferences", "TOML", "Zlib_jll"]
+git-tree-sha1 = "bfce6d523861a6c562721b262c0d1aaeead2647f"
 uuid = "fe0851c0-eecd-5654-98d4-656369965a5c"
-version = "4.1.6+0"
+version = "5.0.5+0"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
@@ -3525,12 +3527,12 @@ version = "3.6.0+0"
 # ╟─2fb4d76d-56d5-4c3e-bc7c-ba0cac57e0e3
 # ╟─f1215951-2eb2-490b-875a-91c1205b8f63
 # ╠═f727992f-b72a-45bc-93f1-cc8daf89af0f
-# ╠═20ff7f0a-3b44-4580-8920-2ae6aa22c78f
+# ╠═f639ec15-a9a1-4dab-a37f-b2c96f6a80e1
 # ╟─6158a5e4-89e0-4496-ab4a-044d1e3e8cc0
 # ╟─a2375720-f599-43b9-a7fb-af17956309b6
 # ╟─7efadea7-4542-40cf-893a-40a75e9c52be
 # ╟─a3e45927-5d53-42be-b7b7-489d6e7a6fe5
-# ╟─1044c5aa-1a56-45b6-a4c6-63d24eea878d
+# ╠═1044c5aa-1a56-45b6-a4c6-63d24eea878d
 # ╟─42959eb9-7c14-4892-bf41-a1a434b00e27
 # ╟─fc16b761-8b1f-41de-b4fe-7fa9987d6167
 # ╟─63b68e72-76c1-4104-bf76-dd9eefc4e225

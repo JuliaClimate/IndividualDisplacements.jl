@@ -1,5 +1,6 @@
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Climatology = "9e9a4d37-2d2e-41e3-8b85-f7978328d9c7"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"

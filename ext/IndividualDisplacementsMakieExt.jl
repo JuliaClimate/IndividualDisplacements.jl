@@ -13,6 +13,8 @@ module IndividualDisplacementsMakieExt
 				simple_plot2(x.data[:I])
 			elseif string(o.plot_type)=="global_plot1"
 				global_plot1(x.data[:I],x.data[:df])
+			elseif string(o.plot_type)=="plot_start_end"
+				plot_start_end(x.data[:I])
 			else
 				println("unknown option (b)")	
 			end
@@ -132,7 +134,7 @@ function global_plot1(I::Individuals,🔴::DataFrame;
 
     np=Int(maximum(🔴.ID))
     nt=length(unique(🔴.t))
-    ii=1:10000
+    ii=1:min(10000,np)
 
     tmp1=🔴[np*0 .+ ii,:lon].!==🔴[np*(nt-1) .+ ii,:lon]
     tmp2=🔴[np*0 .+ ii,:lat].!==🔴[np*(nt-1) .+ ii,:lat]
@@ -161,5 +163,26 @@ function global_plot1(I::Individuals,🔴::DataFrame;
 end
 
 ##
+
+"""
+    plot_start_end(I::Individuals)
+
+Plot the initial and final positions as scatter plot in `lon,lat` or `x,y` plane.
+"""
+function plot_start_end(I::Individuals)
+🔴_by_t = IndividualDisplacements.DataFrames.groupby(I.🔴, :t)
+set_theme!(theme_light())
+fig=Figure(size = (900, 600))
+try
+	a = Axis(fig[1, 1],xlabel="longitude",ylabel="latitude")		
+	scatter!(a,🔴_by_t[1].lon,🔴_by_t[1].lat,color=:green2)
+	scatter!(a,🔴_by_t[end].lon,🔴_by_t[end].lat,color=:red)
+catch
+	a = Axis(fig[1, 1],xlabel="longitude",ylabel="latitude")		
+	scatter!(a,🔴_by_t[1].x,🔴_by_t[1].y,color=:green2)
+	scatter!(a,🔴_by_t[end].x,🔴_by_t[end].y,color=:red)
+end
+return fig
+end
 
 end

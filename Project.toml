@@ -1,7 +1,7 @@
 name = "IndividualDisplacements"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
 authors = ["gaelforget <gforget@mit.edu>"]
-version = "0.5.2"
+version = "0.5.3"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
