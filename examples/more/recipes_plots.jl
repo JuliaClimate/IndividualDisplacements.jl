@@ -1,5 +1,5 @@
 using Plots
-import IndividualDisplacements.DataFrames: DataFrame, groupby
+import Drifters.DataFrames: DataFrame, groupby
 
 """
     plot(𝐼::Individuals)
@@ -24,7 +24,7 @@ end
 Plot random subset of size nn trajectories / paths.
 """
 function plot_paths(df::DataFrame,nn::Integer,dMax::Float64=0.)
-   IDs = IndividualDisplacements.randperm(maximum(df.ID))
+   IDs = Drifters.randperm(maximum(df.ID))
    COs=["w" "y" "g" "k"]
 
    plt=plot(leg=false)

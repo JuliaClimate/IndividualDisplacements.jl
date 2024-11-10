@@ -1,6 +1,6 @@
 
 using Makie, MeshArrays, ColorSchemes, Statistics
-import IndividualDisplacements.DataFrames: DataFrame, groupby
+import Drifters.DataFrames: DataFrame, groupby
 
 """
     plot(𝐼::Individuals)
@@ -25,7 +25,7 @@ end
 Plot random subset of size nn trajectories.
 """
 function plot_paths(df::DataFrame,nn::Integer,dMax::Float64=0.)
-   IDs = IndividualDisplacements.randperm(maximum(df.ID))
+   IDs = Drifters.randperm(maximum(df.ID))
    COs=[:gray76 :gold :limegreen :black]
 
    #scene=Scene(limits=FRect(0, 0, 40, 40),show_axis = false)
@@ -57,8 +57,8 @@ MakieScatterMovie(scene,df,tt,fil::String)
 Animate positions, according to time vector tt, and save movie to mp4 file.
 
 ```
-using IndividualDisplacements
-p=dirname(pathof(IndividualDisplacements))
+using Drifters
+p=dirname(pathof(Drifters))
 include(joinpath(p,"../examples/more/recipes_Makie.jl"))
 module ex3
     fil="../examples/worldwide/three_dimensional_ocean.jl"

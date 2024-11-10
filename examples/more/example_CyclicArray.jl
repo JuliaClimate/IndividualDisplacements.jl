@@ -1,7 +1,7 @@
 
-using IndividualDisplacements
-import IndividualDisplacements.CyclicArrays as CyclicArrays
-import IndividualDisplacements.OrdinaryDiffEq as OrdinaryDiffEq 
+using Drifters
+import Drifters.CyclicArrays as CyclicArrays
+import Drifters.OrdinaryDiffEq as OrdinaryDiffEq 
 
 function cyclicarray_example()
     𝑃=cyclicarray_setup()
