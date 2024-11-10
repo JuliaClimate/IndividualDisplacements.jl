@@ -1,5 +1,5 @@
 using Test, Documenter, IndividualDisplacements, Suppressor
-import Climatology, MeshArrays, NetCDF, MITgcm
+import Climatology, MeshArrays, NetCDF, MITgcm, CairoMakie
 
 Climatology.get_ecco_velocity_if_needed()
 Climatology.get_occa_velocity_if_needed()
@@ -10,8 +10,6 @@ MeshArrays.GridLoad(MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90))
 MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360))
 
 @testset "ECCO" begin
-    import MITgcm, CairoMakie, Climatology, MITgcm
-
     ECCOmodule = IndividualDisplacements.ECCO
     CSV = IndividualDisplacements.CSV
     DataFrames = IndividualDisplacements.DataFrames
@@ -39,7 +37,6 @@ MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
 end
 
 @testset "OCCA" begin
-	import CairoMakie, Climatology
     OCCAmodule=IndividualDisplacements.OCCA
 	initial_positions=IndividualDisplacements.init.initial_positions
 	P,D=OCCAmodule.setup(nmax=5)
@@ -50,6 +47,33 @@ end
 	∫!(I,T)
 
     fig=CairoMakie.plot( InDiPlot( data=(I=I,), options=(plot_type=:plot_start_end,) ) )
+    @test isa(fig,CairoMakie.Figure)
+end
+
+@testset "simple" begin
+    function SimpleFlowFields(nx,dx)
+        XC = dx*(collect(1:2*nx) .- 0.5)
+        YC = dx*(collect(1:nx) .- 0.5)        
+        fac=0.1
+        f(x, y) = sin(x) + cos(y) #streamfunction
+        ϕ = fac*[f(x, y) for x in XC,y in YC] #streamfunction
+        uC = -fac*[sin(y) for x in XC,y in YC] #dphi/dy at cell center
+        vC = -fac*[cos(x) for x in XC,y in YC] #-dphi/dx at cell center
+        return uC, vC, ϕ
+    end
+    
+    nx=16; dx= π/nx; T=(0.,10.)
+    uC, vC, ϕ = SimpleFlowFields(nx,dx)
+    F=FlowFields(u=uC/dx,v=vC/dx,period=T)
+
+    np,nq=size(F.u0)
+    x=np*(0.4 .+ 0.2*rand(100))
+    y=nq*(0.4 .+ 0.2*rand(100))
+    I=Individuals(F,x,y)
+    solve!(I,T)
+
+    fig=CairoMakie.plot( InDiPlot( data=(I=I,ϕ=ϕ), options=(plot_type=:simple_plot1,) ) )
+
     @test isa(fig,CairoMakie.Figure)
 end
 
