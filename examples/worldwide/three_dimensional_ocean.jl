@@ -1149,9 +1149,9 @@ version = "1.0.0"
 
 [[deps.IndividualDisplacements]]
 deps = ["CSV", "CyclicArrays", "DataDeps", "DataFrames", "Dataverse", "Glob", "JLD2", "MeshArrays", "NetCDF", "OrdinaryDiffEq", "Random"]
-git-tree-sha1 = "5e2e4188c338311a648735fe58efa7ab69139330"
+git-tree-sha1 = "8d0a655186dad00c334c058bb1ee4346372d7d6e"
 uuid = "b92f0c32-5b7e-11e9-1d7b-238b2da8b0e6"
-version = "0.5.2"
+version = "0.5.3"
 
     [deps.IndividualDisplacements.extensions]
     IndividualDisplacementsClimatologyExt = ["Climatology"]
@@ -2419,9 +2419,9 @@ version = "0.1.3"
 
 [[deps.SciMLBase]]
 deps = ["ADTypes", "Accessors", "ArrayInterface", "CommonSolve", "ConstructionBase", "Distributed", "DocStringExtensions", "EnumX", "Expronicon", "FunctionWrappersWrappers", "IteratorInterfaceExtensions", "LinearAlgebra", "Logging", "Markdown", "PrecompileTools", "Preferences", "Printf", "RecipesBase", "RecursiveArrayTools", "Reexport", "RuntimeGeneratedFunctions", "SciMLOperators", "SciMLStructures", "StaticArraysCore", "Statistics", "SymbolicIndexingInterface"]
-git-tree-sha1 = "ad0d4e32b7adf6871f60c3379d76fdc231b434c8"
+git-tree-sha1 = "7527b9adb22904f0f51d8ab85d826f81ebb6f78d"
 uuid = "0bca4576-84f4-4d90-8ffe-ffa030f20462"
-version = "2.59.1"
+version = "2.59.2"
 
     [deps.SciMLBase.extensions]
     SciMLBaseChainRulesCoreExt = "ChainRulesCore"
