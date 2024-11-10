@@ -1,8 +1,8 @@
 
 module init
 
-using IndividualDisplacements, MeshArrays, DataFrames, CSV
-import IndividualDisplacements: randn_lonlat
+using Drifters, MeshArrays, DataFrames, CSV
+import Drifters: randn_lonlat
 
 """
     init_positions(np ::Int)
@@ -12,7 +12,7 @@ region, and return position in grid index space (`i,j,subdomain`).
 """
 function init_positions(np ::Int; filename="global_ocean_circulation.csv")
     if filename=="global_ocean_circulation.csv"
-        p=dirname(pathof(IndividualDisplacements))
+        p=dirname(pathof(Drifters))
         fil=joinpath(p,"../examples/worldwide/global_ocean_circulation.csv")
     else
         fil=filename
@@ -47,9 +47,9 @@ function init_gulf_stream(np ::Int , D::NamedTuple; zs=0:27)
 	lon=rand(2*np)*diff(lons)[1].+lons[1]
 	lat=rand(2*np)*diff(lats)[1].+lats[1]
 	
-	(_,_,_,_,f,x,y)=IndividualDisplacements.InterpolationFactors(D.Γ,lon,lat)
+	(_,_,_,_,f,x,y)=Drifters.InterpolationFactors(D.Γ,lon,lat)
     m=findall( (f.!==0).*((!isnan).(x)) )
-    n=findall(IndividualDisplacements.nearest_to_xy(D.msk,x[m],y[m],f[m]).==1.0)[1:np]
+    n=findall(Drifters.nearest_to_xy(D.msk,x[m],y[m],f[m]).==1.0)[1:np]
     xyf=permutedims([x[m[n]] y[m[n]] f[m[n]]])
 
 	z=zs[1] .+rand(np)*(zs[end]-zs[1])
