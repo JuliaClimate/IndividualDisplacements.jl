@@ -55,30 +55,7 @@ end
 md"""## Visualize Displacements"""
 
 # ╔═╡ 8e371f54-d7f7-4f59-a2e1-9f673486f1fa
-begin
-    """
-    plot(I::Individuals)
-
-    Plot the initial and final positions as scatter plot in `lon,lat` or `x,y` plane.
-    """
-    function myplot(I::Individuals)
-    🔴_by_t = IndividualDisplacements.DataFrames.groupby(I.🔴, :t)
-    set_theme!(theme_light())
-    fig=Figure(size = (900, 600))
-    try
-        a = Axis(fig[1, 1],xlabel="longitude",ylabel="latitude")		
-        scatter!(a,🔴_by_t[1].lon,🔴_by_t[1].lat,color=:green2)
-        scatter!(a,🔴_by_t[end].lon,🔴_by_t[end].lat,color=:red)
-    catch
-        a = Axis(fig[1, 1],xlabel="longitude",ylabel="latitude")		
-        scatter!(a,🔴_by_t[1].x,🔴_by_t[1].y,color=:green2)
-        scatter!(a,🔴_by_t[end].x,🔴_by_t[end].y,color=:red)
-    end
-    return fig
-    end
-
-    myplot(I)
-end
+plot( InDiPlot( data=(I=I,), options=(plot_type=:plot_start_end,) ) )
 
 # ╔═╡ a6f4b5a0-7818-41a6-a4e5-30d80a727625
 
