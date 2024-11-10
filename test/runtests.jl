@@ -1,6 +1,5 @@
-using Test, Documenter
-using IndividualDisplacements, Climatology, MeshArrays, NetCDF, Suppressor
-import MITgcm
+using Test, Documenter, IndividualDisplacements, Suppressor
+import Climatology, MeshArrays, NetCDF, MITgcm
 
 Climatology.get_ecco_velocity_if_needed()
 Climatology.get_occa_velocity_if_needed()
@@ -9,6 +8,35 @@ Climatology.get_ecco_variable_if_needed("SALT")
 
 MeshArrays.GridLoad(MeshArrays.GridSpec("LatLonCap",MeshArrays.GRID_LLC90))
 MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360))
+
+@testset "ECCO" begin
+    import MITgcm, CairoMakie, Climatology, MITgcm
+
+    ECCOmodule = IndividualDisplacements.ECCO
+    CSV = IndividualDisplacements.CSV
+    DataFrames = IndividualDisplacements.DataFrames
+    Individuals = IndividualDisplacements.Individuals
+
+    k=0
+    P,D=ECCOmodule.init_FlowFields(k=k); np=100
+    df = IndividualDisplacements.init.init_gulf_stream(np , D)
+    S = ECCOmodule.init_storage(np,100,length(D.Γ.RC),50)
+    I = Individuals(P,df.x,df.y,df.z,df.fid,
+        (D=merge(D,S),∫=ECCOmodule.custom∫,🔧=ECCOmodule.custom🔧,🔴=deepcopy(ECCOmodule.custom🔴)))
+    my∫! = ∫!
+    T=(0.0,I.P.T[2])
+    my∫!(I,T)
+    @test isa(I,Individuals)
+
+    tmp_🔴=I.🔴
+    nt=length(unique(tmp_🔴.t))	
+    xlims=(-85.0,5.0)
+    ylims=(20.0,67.0)
+
+    x=IndividualDisplacements.InDiPlot( data=(I=I,df=tmp_🔴,), options=(plot_type=:global_plot1,) )
+    fig,tt=CairoMakie.plot(x)
+    @test isa(fig,CairoMakie.Figure)
+end
 
 @testset "downloads" begin
     p0=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")

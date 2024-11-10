@@ -132,7 +132,7 @@ function global_plot1(I::Individuals,🔴::DataFrame;
 
     np=Int(maximum(🔴.ID))
     nt=length(unique(🔴.t))
-    ii=1:10000
+    ii=1:min(10000,np)
 
     tmp1=🔴[np*0 .+ ii,:lon].!==🔴[np*(nt-1) .+ ii,:lon]
     tmp2=🔴[np*0 .+ ii,:lat].!==🔴[np*(nt-1) .+ ii,:lat]

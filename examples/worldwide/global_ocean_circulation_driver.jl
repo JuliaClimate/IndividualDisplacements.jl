@@ -1,9 +1,10 @@
 
-using Distributed, IndividualDisplacements
+using Distributed, IndividualDisplacements, Climatology, MITgcm
 
-if !isdefined(Main,:ECCO_FlowFields) && myid()==1
-    @everywhere include("ECCO_FlowFields.jl")
-    @everywhere using Main.ECCO_FlowFields, IndividualDisplacements,  CSV
+if !isdefined(Main,:CSV) && myid()==1
+    @everywhere using IndividualDisplacements, Climatology, MITgcm
+    @everywhere CSV=IndividualDisplacements.CSV
+    @everywhere ECCOmodule=IndividualDisplacements.ECCO
 
     @everywhere path=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
     @everywhere list=readdir(path)
@@ -65,21 +66,21 @@ backward_time = false
 backward_time ? file_output=file_base*"_◀◀" : file_base=file_base*"_▶▶"
 
 k=0
-np=10000
-ny=3 #number of years
+np=1000 #number of particles
+ny=1 #number of years
 nm=12 #number of months
 
-P,D=init_FlowFields(k=k,backward_time=backward_time)
+P,D=ECCOmodule.init_FlowFields(k=k,backward_time=backward_time)
 
-df = init_positions(np,filename=file_input)
+df = IndividualDisplacements.init.init_positions(np,filename=file_input)
 #"z" in names(df) ? nothing : df.z=10.0 .+ 0.0*df.x
 
-S = init_storage(np,100,length(D.Γ.RC),50)
+S = ECCOmodule.init_storage(np,100,length(D.Γ.RC),50)
 I = Individuals(P,df.x,df.y,df.z,df.f,
-    (D=merge(D,S),∫=custom∫,🔧=custom🔧,🔴=deepcopy(custom🔴)))
+    (D=merge(D,S),∫=ECCOmodule.custom∫,🔧=ECCOmodule.custom🔧,🔴=deepcopy(ECCOmodule.custom🔴)))
 
 T=(0.0,I.P.T[2])
-custom∫!(I,T)
+ECCOmodule.custom∫!(I,T)
 
 [step!(I) for y=1:ny, m=1:nm]
 
@@ -92,5 +93,5 @@ end
 
 function step!(I::Individuals)
     I.D.🔄(I)
-    custom∫!(I)
+    ECCOmodule.custom∫!(I)
 end
