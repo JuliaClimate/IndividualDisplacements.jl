@@ -9,5 +9,5 @@ function Gulf_of_Mexico_setup()
     x0=jld["x0"]; y0=jld["y0"]
     dT=jld["dT"]; nt=jld["nt"]
     T=(0.0,dT)
-    (x0,y0,u=u,v=v,T=T,dT=dT,nt=nt)
+    (x0,y0,u=u,v=v,T=T,dT=dT,nt=nt,pol=pol)
 end
