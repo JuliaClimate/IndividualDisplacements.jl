@@ -10,6 +10,25 @@ As shown in the [Examples](@ref) section, the typical worflow is:
 
 The data structures for steps `1` and `2` are documented below. Steps `3` and `4` normally take place as part of `solve!` (i.e. `∫!`) which post-processes results, using 🔧, records them in 🔴, and finally updates the positions of individuals in 📌. Since 🔴 is a [DataFrame](https://juliadata.github.io/DataFrames.jl/latest/), it is easily manipulated, plotted, or saved in step `4` or after the fact.
 
+```@example ex1
+using Drifters, CairoMakie
+P=Drifters.Gulf_of_Mexico_setup()
+F=FlowFields(u=P.u,v=P.v,period=P.T)
+I=Individuals(F,P.x0,P.y0);
+[solve!(I,P.T .+P.dT*(n-1)) for n in 1:P.nt]
+I.🔴
+```
+
+Plotting functions are provided in the `Makie.jl` extension, and operated via `DriftersDataset`.
+
+```@example ex1
+#prefix="real "; gdf=Drifters.groupby(P.obs,:ID)
+prefix="virtual "; gdf=Drifters.groupby(I.🔴,:ID)
+options=(plot_type="jcon_drifters",prefix=prefix,xlims=(-98,-78),ylims=(18,31),pol=P.pol)
+LoopC=DriftersDataset(  data=(gdf=gdf,), options=options )
+plot(LoopC)
+```
+
 ## Overview
 
 A central goal of this package is to support scientific analysis of model simulations and observations of materials and particles within the Climate System. The package scope thus includes, for example, drifting plastics in the Ocean or chemical compounds in the Atmosphere. 

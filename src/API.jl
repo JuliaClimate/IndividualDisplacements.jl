@@ -507,3 +507,22 @@ Great circle distance (gcd in radians) between two positions.
 gcdist(lo1,lo2,la1,la2) = acos(min(1.0,max(-1.0,sind(la1)*sind(la2)+cosd(la1)*cosd(la2)*cosd(lo1-lo2))))
 
 EarthRadius=6371e3 #in meters
+
+"""
+    abstract type AbstractDriftersDataset
+
+Data structure used for plotting. See the docs for examples.
+"""
+abstract type AbstractDriftersDataset <: Any end
+
+Base.@kwdef struct DriftersDataset <: AbstractDriftersDataset
+    path :: String = tempdir()
+    name :: String = "unknown"
+    options :: NamedTuple = NamedTuple()
+    data :: NamedTuple = NamedTuple()
+end
+
+#to avoid unicode try these:
+DiffEqBase.solve!(I::Individuals,args...)=∫!(I::Individuals,args...)
+DataFrames.groupby(I::Individuals,args...) = groupby(I.🔴,args...)
+DataFrames.DataFrame(I::Individuals) = I.🔴
