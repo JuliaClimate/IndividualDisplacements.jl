@@ -1,10 +1,10 @@
 module DriftersMakieExt
 
 	using Makie, Drifters
-	import Drifters: InDiPlot, DataFrame, demo, gcdist
+	import Drifters: DriftersDataset, DataFrame, demo, gcdist
 	import Makie: plot
 
-	function plot(x::InDiPlot)
+	function plot(x::DriftersDataset)
 		if !isempty(x.options)
 			o=x.options
 			if string(o.plot_type)=="simple_plot1"
@@ -33,7 +33,7 @@ module DriftersMakieExt
 ```
 using Drifters, CairoMakie
 include("basics/random_flow_field.jl")
-x=InDiPlot( data=(I=I,ϕ=ϕ), options=(plot_type=:simple_plot1,) )
+x=DriftersDataset( data=(I=I,ϕ=ϕ), options=(plot_type=:simple_plot1,) )
 plot(x)
 ```
 """
@@ -67,7 +67,7 @@ end
 ```
 using Drifters, CairoMakie
 include("basics/solid_body_rotation.jl")
-x=InDiPlot( data=(I=I,), options=(plot_type=:simple_plot2,) )
+x=DriftersDataset( data=(I=I,), options=(plot_type=:simple_plot2,) )
 plot(x)
 ```
 """
@@ -117,7 +117,7 @@ Plot initial and final positions, superimposed on a globalmap of ocean depth log
 using Drifters, GLMakie
 include("worldwide/global_ocean_circulation.jl")
 
-x=InDiPlot( data=(I=𝐼,df=tmp_🔴,), options=(plot_type=:global_plot1,) )
+x=DriftersDataset( data=(I=𝐼,df=tmp_🔴,), options=(plot_type=:global_plot1,) )
 fig,tt=plot(x)
 fig
 
@@ -198,7 +198,7 @@ lola(x,y)=(-100+x*res,17+y*res) #convert x/y to lon/lat
 
 ```
 include("LoopCurrent_replay.jl")
-LoopC=InDiPlot( data=(gdf=gdf,), options=(plot_type="jcon_drifters",
+LoopC=DriftersDataset( data=(gdf=gdf,), options=(plot_type="jcon_drifters",
 				prefix=prefix,xlims=(-98,-78),ylims=(18,31),pol=pol) )
 plot(LoopC)
 ```
