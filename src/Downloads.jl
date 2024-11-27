@@ -41,6 +41,10 @@ function __init__datadeps()
         ["https://github.com/gaelforget/flt_example/archive/v1.0.tar.gz"],
         ["3306d37f5e70d0fa253a5b87b527f727891b84179d8411971bbc10f3164d5fde"],      
         post_fetch_method=unpackDV))
+    register(DataDep("Gulf_of_Mexico","Sample Drifter Dataset for example in JuliaConProceedings2023",
+        ["https://zenodo.org/records/14229203/files/Drifters_example.jld2"],
+        ["8c6ae8865821ac261316bfea3f31d1d362f210f806a85bfe5bb9775f3f91c2fa"],
+        ))
 end
 
 """
@@ -57,6 +61,8 @@ function getdata(nam::String)
             datadep"global_ocean_circulation_outputs"
         elseif nam=="flt_example"
             datadep"flt_example"
+        elseif nam=="Gulf_of_Mexico"
+            datadep"Gulf_of_Mexico"
         else
             println("unknown dataset")
         end

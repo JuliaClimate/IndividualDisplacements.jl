@@ -27,7 +27,7 @@ I=Individuals(F,pos...)
 ∫!(I)
 
 using CairoMakie
-J=InDiPlot( data=(I=I,), options=(plot_type=:simple_plot2,) )
+J=DriftersDataset( data=(I=I,), options=(plot_type=:simple_plot2,) )
 f=plot(J)
 
 ref=[6.16, 7.23, 1.29, 1.0] # hide

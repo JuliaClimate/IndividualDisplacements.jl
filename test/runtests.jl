@@ -32,7 +32,7 @@ MeshArrays.GridLoad(MeshArrays.GridSpec("PeriodicChannel",MeshArrays.GRID_LL360)
     xlims=(-85.0,5.0)
     ylims=(20.0,67.0)
 
-    x=Drifters.InDiPlot( data=(I=I,df=tmp_🔴,), options=(plot_type=:global_plot1,) )
+    x=Drifters.DriftersDataset( data=(I=I,df=tmp_🔴,), options=(plot_type=:global_plot1,) )
     fig,tt=CairoMakie.plot(x)
     @test isa(fig,CairoMakie.Figure)
 end
@@ -47,7 +47,7 @@ end
 	T=(0.0,10*86400.0)
 	∫!(I,T)
 
-    fig=CairoMakie.plot( InDiPlot( data=(I=I,), options=(plot_type=:plot_start_end,) ) )
+    fig=CairoMakie.plot( DriftersDataset( data=(I=I,), options=(plot_type=:plot_start_end,) ) )
     @test isa(fig,CairoMakie.Figure)
 end
 
@@ -73,7 +73,7 @@ end
     I=Individuals(F,x,y)
     solve!(I,T)
 
-    fig=CairoMakie.plot( InDiPlot( data=(I=I,ϕ=ϕ), options=(plot_type=:simple_plot1,) ) )
+    fig=CairoMakie.plot( DriftersDataset( data=(I=I,ϕ=ϕ), options=(plot_type=:simple_plot1,) ) )
 
     @test isa(fig,CairoMakie.Figure)
 end
@@ -132,6 +132,9 @@ end
     I=(position=zeros(3,2),ID=1:2,record=deepcopy(df))
     I=Individuals(I)
     @test isa(I,Individuals)
+
+    GM=Drifters.Gulf_of_Mexico_setup()
+    @test isa(GM.T,Tuple)
 end
 
 @testset "doctests" begin

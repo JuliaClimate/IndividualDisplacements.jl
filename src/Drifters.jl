@@ -14,13 +14,14 @@ include("initial_positions.jl")
 include("Downloads.jl")
 include("example_ECCO.jl")
 include("example_OCCA.jl")
+include("example_GOM.jl")
 
 DiffEqBase.solve!(I::Individuals,args...)=∫!(I::Individuals,args...)
 DataFrames.groupby(I::Individuals,args...) = groupby(I.🔴,args...)
 DataFrames.DataFrame(I::Individuals) = I.🔴
 
 export Individuals, ∫!, solve!, DataFrame, groupby
-export FlowFields, convert_to_FlowFields
+export FlowFields, convert_to_FlowFields, to_C_grid!
 export uvwArrays, uvArrays, uvwMeshArrays, uvMeshArrays
 export dxdt!, dxy_dt_CyclicArray, dxy_dt_replay
 export postprocess_MeshArray, add_lonlat!, postprocess_xy, interp_to_xy
@@ -36,15 +37,18 @@ end
 #flt_example_path = datadeps.getdata("flt_example")
 #flt_example_download() = datadeps.getdata("flt_example")
 
-abstract type AbstractDriftersDiagnostic <: Any end
+abstract type AbstractDriftersDataset <: Any end
 
-Base.@kwdef struct InDiPlot <: AbstractDriftersDiagnostic
+Base.@kwdef struct DriftersDataset <: AbstractDriftersDataset
     path :: String = tempdir()
     name :: String = "unknown"
     options :: NamedTuple = NamedTuple()
     data :: NamedTuple = NamedTuple()
 end
 
-export InDiPlot
+export DriftersDataset
+
+#backward compatibility:
+InDiPlot=DriftersDataset; export InDiPlot
 
 end # module
