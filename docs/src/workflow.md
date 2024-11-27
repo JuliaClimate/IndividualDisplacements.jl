@@ -16,7 +16,7 @@ P=Drifters.Gulf_of_Mexico_setup()
 F=FlowFields(u=P.u,v=P.v,period=P.T)
 I=Individuals(F,P.x0,P.y0);
 [solve!(I,P.T .+P.dT*(n-1)) for n in 1:P.nt]
-I.🔴
+summary(I.🔴)
 ```
 
 Plotting functions are provided in the `Makie.jl` extension, and operated via `DriftersDataset`.
