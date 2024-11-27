@@ -1,12 +1,12 @@
 
-using Distributed, IndividualDisplacements, Climatology, MITgcm
+using Distributed, Drifters, Climatology, MITgcm
 
 if !isdefined(Main,:CSV) && myid()==1
-    @everywhere using IndividualDisplacements, Climatology, MITgcm
-    @everywhere CSV=IndividualDisplacements.CSV
-    @everywhere ECCOmodule=IndividualDisplacements.ECCO
+    @everywhere using Drifters, Climatology, MITgcm
+    @everywhere CSV=Drifters.CSV
+    @everywhere ECCOmodule=Drifters.ECCO
 
-    @everywhere path=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_inputs")
+    @everywhere path=Drifters.datadeps.getdata("global_ocean_circulation_inputs")
     @everywhere list=readdir(path)
     @everywhere ii=findall(occursin.(Ref("initial_"),list) .& occursin.(Ref(".csv"),list))
     @everywhere n_per_worker=Int(ceil(length(ii)/nworkers()))
@@ -37,7 +37,7 @@ end
 and for plotting
 
 ```
-pth=IndividualDisplacements.datadeps.getdata("global_ocean_circulation_outputs")
+pth=Drifters.datadeps.getdata("global_ocean_circulation_outputs")
 fil=joinpath(pth,"initial_5_4_▶▶.csv")
 df=CSV.read(fil,DataFrame)
 
@@ -72,7 +72,7 @@ nm=12 #number of months
 
 P,D=ECCOmodule.init_FlowFields(k=k,backward_time=backward_time)
 
-df = IndividualDisplacements.init.init_positions(np,filename=file_input)
+df = Drifters.init.init_positions(np,filename=file_input)
 #"z" in names(df) ? nothing : df.z=10.0 .+ 0.0*df.x
 
 S = ECCOmodule.init_storage(np,100,length(D.Γ.RC),50)
