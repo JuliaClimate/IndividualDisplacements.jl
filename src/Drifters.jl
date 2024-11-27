@@ -14,6 +14,7 @@ include("initial_positions.jl")
 include("Downloads.jl")
 include("example_ECCO.jl")
 include("example_OCCA.jl")
+include("example_GOM.jl")
 
 DiffEqBase.solve!(I::Individuals,args...)=∫!(I::Individuals,args...)
 DataFrames.groupby(I::Individuals,args...) = groupby(I.🔴,args...)

@@ -132,6 +132,9 @@ end
     I=(position=zeros(3,2),ID=1:2,record=deepcopy(df))
     I=Individuals(I)
     @test isa(I,Individuals)
+
+    GM=Drifters.Gulf_of_Mexico_setup()
+    @test isa(GM.T,Tuple)
 end
 
 @testset "doctests" begin
