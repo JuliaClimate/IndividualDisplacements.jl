@@ -20,7 +20,7 @@ DataFrames.groupby(I::Individuals,args...) = groupby(I.🔴,args...)
 DataFrames.DataFrame(I::Individuals) = I.🔴
 
 export Individuals, ∫!, solve!, DataFrame, groupby
-export FlowFields, convert_to_FlowFields
+export FlowFields, convert_to_FlowFields, to_C_grid!
 export uvwArrays, uvArrays, uvwMeshArrays, uvMeshArrays
 export dxdt!, dxy_dt_CyclicArray, dxy_dt_replay
 export postprocess_MeshArray, add_lonlat!, postprocess_xy, interp_to_xy

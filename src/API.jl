@@ -64,34 +64,25 @@ struct uvwArrays{Ty} <: FlowFields
 end
 
 """
-    FlowFields(; u::Union{Array,Tuple}=[], v::Union{Array,Tuple}=[], w::Union{Array,Tuple}=[], 
-    period::Union{Array,Tuple}=[], gridtype::Symbol=:centered)
+    FlowFields(;    u::Union{Array,Tuple}=[], v::Union{Array,Tuple}=[], w::Union{Array,Tuple}=[], 
+                    period::Union{Array,Tuple}=[])
 
 Construct FlowFields data structure based on keywords.
 
 ```
 uC, vC, _ = SimpleFlowFields(16)
+to_C_grid!(uC,dims=1)
+to_C_grid!(uC,dims=2)
 F=FlowFields(u=uC,v=vC,period=(0,10.))
 ```
 """
 function FlowFields(; u::Union{Array,Tuple}=[], v::Union{Array,Tuple}=[], w::Union{Array,Tuple}=[], 
-    period::Union{Array,Tuple}=[], gridtype::Symbol=:centered)
+    period::Union{Array,Tuple}=[])
     (isa(u,Tuple)||length(u[:])==2) ? (u0=u[1]; u1=u[2]) : (u0=u; u1=u)
     (isa(v,Tuple)||length(v[:])==2) ? (v0=v[1]; v1=v[2]) : (v0=v; v1=v)
     (isa(w,Tuple)||length(w[:])==2) ? (w0=w[1]; w1=w[2]) : (w0=w; w1=w)
     if isempty(period)
         @warn "period needs to be defined"
-    else
-        if gridtype==:centered
-            to_C_grid!(u0,dims=1)
-            to_C_grid!(u1,dims=1)
-            to_C_grid!(v0,dims=2)
-            to_C_grid!(v1,dims=2)
-            if !isempty(w0)
-                to_C_grid!(w0,dims=3)
-                to_C_grid!(w1,dims=3)
-            end
-        end
     end
     if !isempty(u0) && !isempty(v0)
         if !isempty(w0)
@@ -104,6 +95,22 @@ function FlowFields(; u::Union{Array,Tuple}=[], v::Union{Array,Tuple}=[], w::Uni
     end
 end
 
+"""
+    to_C_grid!(x;dims=0)
+
+```
+if gridtype==:centered
+    to_C_grid!(u0,dims=1)
+    to_C_grid!(u1,dims=1)
+    to_C_grid!(v0,dims=2)
+    to_C_grid!(v1,dims=2)
+    if !isempty(w0)
+        to_C_grid!(w0,dims=3)
+        to_C_grid!(w1,dims=3)
+    end
+end
+```
+"""
 to_C_grid!(x;dims=0) = begin
     if (dims==1)&&(ndims(x)==2)
         x.=0.5*(circshift(x, (1,0))+x)
@@ -488,8 +495,15 @@ function gcdist(I::Individuals)
     :lon => first => :lo1,:lon => last => :lo2,
     :lat => first => :la1,:lat => last => :la2)
 
-    gcdist(lo1,lo2,la1,la2) = acos(sind(la1)*sind(la2)+cosd(la1)*cosd(la2)*cosd(lo1-lo2))
     tmp.gcd=[gcdist(tmp.lo1[i],tmp.lo2[i],tmp.la1[i],tmp.la2[i]) for i in 1:size(tmp,1)]
     return tmp
 end
 
+"""
+    gcdist(lo1,lo2,la1,la2)
+
+Great circle distance (gcd in radians) between two positions.
+"""
+gcdist(lo1,lo2,la1,la2) = acos(min(1.0,max(-1.0,sind(la1)*sind(la2)+cosd(la1)*cosd(la2)*cosd(lo1-lo2))))
+
+EarthRadius=6371e3 #in meters
